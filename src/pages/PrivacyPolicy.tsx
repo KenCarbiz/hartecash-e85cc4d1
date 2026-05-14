@@ -122,8 +122,51 @@ const PrivacyPolicy = () => {
             </p>
           </section>
 
+          <section id="vehicle-value-tracker">
+            <h2 className="text-xl font-bold text-foreground">5. Vehicle Value Tracker (Optional Service)</h2>
+            <p>
+              When you complete the appraisal flow on this site, you will see a
+              toggle labelled <strong>"Track my vehicle value monthly via email"</strong>.
+              This toggle is <strong>enabled by default</strong>. If you leave it
+              enabled when you verify your phone number, you are opting in to our
+              free Vehicle Value Tracker service.
+            </p>
+
+            <div className="bg-muted/50 border border-border rounded-lg p-4 my-4">
+              <h3 className="font-bold text-foreground mb-2">What the tracker does:</h3>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li><strong>Weekly recompute.</strong> We re-run your vehicle's value against the same data sources we use to price your trade-in (Kelley Blue Book and Black Book), adjusted for drifted mileage.</li>
+                <li><strong>Monthly email.</strong> You will receive a dealer-branded email from {config.dealership_name} with your current estimated value and the change since you signed up.</li>
+                <li><strong>Threshold alerts.</strong> If your vehicle's value moves more than $200 between checks, we may send an additional notification so you can decide whether to sell or trade.</li>
+                <li><strong>One-click refresh.</strong> Each email includes a link back to a fresh appraisal page so you can update your information and request a new firm offer at any time.</li>
+              </ul>
+            </div>
+
+            <h3 className="font-bold text-foreground mt-4 mb-2">Information stored for the tracker:</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Your name, email address, and phone number.</li>
+              <li>Vehicle details: VIN (or year, make, model, trim), mileage at signup, and the condition you reported.</li>
+              <li>The baseline valuation we computed for you and each subsequent weekly snapshot.</li>
+            </ul>
+
+            <h3 className="font-bold text-foreground mt-4 mb-2">How to opt out:</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Before you verify your phone:</strong> simply toggle off "Track my vehicle value monthly via email" on the contact step. No tracker record will be created.</li>
+              <li><strong>After you've signed up:</strong> click the <strong>Unsubscribe</strong> link at the bottom of any value-tracking email, or open your tracker page (<code className="text-xs">/watch-my-car/&lt;your-link&gt;</code>) and disable notifications.</li>
+              <li><strong>Anytime:</strong> contact {config.dealership_name} directly and we will delete your tracker record on request.</li>
+            </ul>
+
+            <p>
+              The tracker uses your contact information solely to send the value-update
+              emails described above. We do not sell, rent, or share your tracker data
+              with third parties for their own marketing purposes. The data is stored in
+              the same database that holds your appraisal record and is subject to all
+              other rights described in this policy.
+            </p>
+          </section>
+
           <section id="payoff-authorization">
-            <h2 className="text-xl font-bold text-foreground">5. Loan Payoff Verification Authorization (Conditional)</h2>
+            <h2 className="text-xl font-bold text-foreground">6. Loan Payoff Verification Authorization (Conditional)</h2>
             <p>
               <strong>This section only applies if you have indicated on our form that there is an
               outstanding loan, lease, or lien on your vehicle.</strong> If you own your vehicle
@@ -175,7 +218,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-foreground">6. How We Share Your Information</h2>
+            <h2 className="text-xl font-bold text-foreground">7. How We Share Your Information</h2>
             <p>We do not sell your personal information. We may share your information with:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li><strong>Service providers (sub-processors):</strong> the named third parties below, each contractually limited to delivering the service on our behalf:</li>
@@ -245,7 +288,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-foreground">7. Data Security</h2>
+            <h2 className="text-xl font-bold text-foreground">8. Data Security</h2>
             <p>
               We implement industry-standard security measures to protect your personal information,
               including encrypted data transmission (SSL/TLS), access controls, and secure cloud
@@ -255,7 +298,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-foreground">8. Data Retention</h2>
+            <h2 className="text-xl font-bold text-foreground">9. Data Retention</h2>
             <p>
               We retain your personal information for as long as reasonably necessary to fulfill the
               purposes for which it was collected, including to satisfy legal, accounting, or reporting
@@ -265,7 +308,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-foreground">9. Your Rights</h2>
+            <h2 className="text-xl font-bold text-foreground">10. Your Rights</h2>
             <p>Depending on your jurisdiction, you may have the right to:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>Access, correct, or delete your personal information.</li>
@@ -359,7 +402,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-foreground">10. Children's Privacy</h2>
+            <h2 className="text-xl font-bold text-foreground">11. Children's Privacy</h2>
             <p>
               Our services are not directed to individuals under 18 years of age. We do not
               knowingly collect personal information from children.
@@ -367,7 +410,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-foreground">11. Changes to This Policy</h2>
+            <h2 className="text-xl font-bold text-foreground">12. Changes to This Policy</h2>
             <p>
               We may update this Privacy Policy from time to time. Changes will be posted on this
               page with a revised "Last updated" date. Your continued use of our website after any
@@ -376,7 +419,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-foreground">12. Contact Us</h2>
+            <h2 className="text-xl font-bold text-foreground">13. Contact Us</h2>
             <p>If you have questions about this Privacy Policy or our data practices, contact us:</p>
             <div className="bg-muted/50 border border-border rounded-lg p-4">
               <p className="font-bold">Our Dealership</p>

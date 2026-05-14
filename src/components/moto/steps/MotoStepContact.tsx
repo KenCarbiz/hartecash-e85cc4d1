@@ -206,13 +206,17 @@ const MotoStepContact = ({
             onChange={(e) => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
             maxLength={5}
           />
-          <div className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2.5">
-            <span className="text-sm text-zinc-700">Track my vehicle value monthly via email</span>
+          <label className="flex items-center gap-3 rounded-lg bg-[hsl(var(--cta-offer)/0.06)] px-3 py-2.5">
             <Switch checked={trackValue} onCheckedChange={setTrackValue} />
-          </div>
+            <span className="text-sm text-zinc-700">Track my vehicle value monthly via email</span>
+          </label>
           <p className="text-[11px] leading-relaxed text-zinc-500">
             By tapping Verify you agree to receive a one-time SMS verification code at the number
-            above. Standard message and data rates may apply.
+            above. Standard message and data rates may apply. See our{" "}
+            <a href="/privacy" className="font-medium text-[hsl(var(--cta-offer))] underline-offset-2 hover:underline">
+              Privacy Policy
+            </a>{" "}
+            for how we use your information.
           </p>
         </div>
       </MotoCard>
