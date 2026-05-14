@@ -1,23 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
 import MotoCard from "../MotoCard";
-import MotoFormField from "../MotoFormField";
 import MotoPrimaryButton from "../MotoPrimaryButton";
+import { MotoOutlinedInput, MotoOutlinedSelect } from "../MotoOutlinedField";
 import type { LookupMode, MotoFlowState } from "../types";
 import type { BBVehicle } from "@/components/sell-form/types";
+import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "../ymmData";
 import { cn } from "@/lib/utils";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
-];
+].map((s) => ({ value: s, label: s }));
 
-const TABS: { id: LookupMode; label: string }[] = [
-  { id: "vin", label: "VIN" },
+const TABS: { id: Exclude<LookupMode, "ymm">; label: string }[] = [
+  { id: "vin", label: "Vehicle Search" },
   { id: "plate", label: "License Plate" },
-  { id: "ymm", label: "Year / Make / Model" },
 ];
 
 const MotoStepVehicleSearch = ({
@@ -27,107 +26,79 @@ const MotoStepVehicleSearch = ({
   state: MotoFlowState;
   onResolved: (next: Partial<MotoFlowState>) => void;
 }) => {
-  const { config } = useSiteConfig();
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
-  const [mode, setMode] = useState<LookupMode>(state.lookupMode);
+
+  const [tab, setTab] = useState<Exclude<LookupMode, "ymm">>(
+    state.lookupMode === "plate" ? "plate" : "vin",
+  );
+  const [year, setYear] = useState(state.ymm.year);
+  const [make, setMake] = useState(state.ymm.make);
+  const [model, setModel] = useState(state.ymm.model);
+  const [trim, setTrim] = useState(state.ymm.trim);
+  const [modelOptions, setModelOptions] = useState<{ value: string; label: string }[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+
   const [vin, setVin] = useState(state.vin);
   const [plate, setPlate] = useState(state.plate);
   const [plateState, setPlateState] = useState(state.plateState || "");
-  const [ymm, setYmm] = useState(state.ymm);
   const [loading, setLoading] = useState(false);
+
+  // Load model options whenever Year + Make change.
+  useEffect(() => {
+    let cancelled = false;
+    if (!year || !make) {
+      setModelOptions([]);
+      return;
+    }
+    setModelsLoading(true);
+    fetchModelsForMakeYear(make, year).then((opts) => {
+      if (cancelled) return;
+      setModelOptions(opts);
+      setModelsLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [year, make]);
+
+  const vinClean = vin.trim().toUpperCase();
+  const plateClean = plate.trim().toUpperCase();
+
+  const ymmReady = !!year && !!make && !!model;
+  const vinReady = vinClean.length === 17;
+  const plateReady = plateClean.length >= 2 && !!plateState;
+  const canSubmit = tab === "vin" ? vinReady || ymmReady : plateReady;
 
   const submit = async () => {
     setLoading(true);
     try {
-      if (mode === "vin") {
-        const cleanVin = vin.trim().toUpperCase();
-        if (cleanVin.length !== 17) {
-          toast({ title: "VIN must be 17 characters", variant: "destructive" });
-          return;
-        }
+      if (tab === "vin" && vinReady) {
         const { data, error } = await supabase.functions.invoke("bb-lookup", {
-          body: {
-            lookup_type: "vin",
-            vin: cleanVin,
-            dealership_id: dealershipId,
-          },
+          body: { lookup_type: "vin", vin: vinClean, dealership_id: dealershipId },
         });
         if (error || data?.error || !data?.vehicles?.length) {
           toast({
             title: "Couldn't decode that VIN",
-            description: "Double-check the VIN or try plate / year-make-model.",
+            description: "Double-check the VIN or use Year / Make / Model.",
             variant: "destructive",
           });
           return;
         }
         const bb = data.vehicles[0] as BBVehicle;
-        onResolved({
-          lookupMode: "vin",
-          vin: cleanVin,
-          bbVehicle: bb,
-          step: "condition",
-        });
-      } else if (mode === "plate") {
-        const cleanPlate = plate.trim().toUpperCase();
-        if (!cleanPlate || !plateState) {
-          toast({ title: "Plate + state required", variant: "destructive" });
-          return;
-        }
-        const { data, error } = await supabase.functions.invoke("bb-lookup", {
-          body: {
-            lookup_type: "plate",
-            plate: cleanPlate,
-            state: plateState,
-            dealership_id: dealershipId,
-          },
-        });
-        if (error || data?.error || !data?.vehicles?.length) {
-          toast({
-            title: "Plate lookup unavailable",
-            description: "Try VIN or year-make-model.",
-            variant: "destructive",
-          });
-          return;
-        }
-        const bb = data.vehicles[0] as BBVehicle;
-        onResolved({
-          lookupMode: "plate",
-          plate: cleanPlate,
-          plateState,
-          vin: bb.vin || "",
-          bbVehicle: bb,
-          step: "condition",
-        });
-      } else {
-        if (!ymm.year || !ymm.make || !ymm.model) {
-          toast({ title: "Year, make, and model required", variant: "destructive" });
-          return;
-        }
-        // YMM has no BB lookup — synthesize a partial BBVehicle so
-        // the rest of the flow still shows a hero image. The offer
-        // step will route to AI photo appraisal because there's no
-        // pricing baseline.
+        onResolved({ lookupMode: "vin", vin: vinClean, bbVehicle: bb, step: "condition" });
+        return;
+      }
+
+      if (tab === "vin" && ymmReady) {
         const stub: BBVehicle = {
-          uvc: "",
-          vin: "",
-          year: ymm.year,
-          make: ymm.make,
-          model: ymm.model,
-          series: ymm.trim,
-          style: "",
-          class_name: "",
-          msrp: 0,
-          price_includes: "",
-          drivetrain: "",
-          transmission: "",
-          engine: "",
-          fuel_type: "",
+          uvc: "", vin: "",
+          year, make, model, series: trim, style: "", class_name: "",
+          msrp: 0, price_includes: "",
+          drivetrain: "", transmission: "", engine: "", fuel_type: "",
           exterior_colors: [],
-          mileage_adj: 0,
-          regional_adj: 0,
-          base_whole_avg: 0,
+          mileage_adj: 0, regional_adj: 0, base_whole_avg: 0,
           add_deduct_list: [],
           wholesale: { xclean: 0, clean: 0, avg: 0, rough: 0 },
           tradein: { clean: 0, avg: 0, rough: 0 },
@@ -136,8 +107,32 @@ const MotoStepVehicleSearch = ({
         };
         onResolved({
           lookupMode: "ymm",
-          ymm,
+          ymm: { year, make, model, trim },
           bbVehicle: stub,
+          step: "condition",
+        });
+        return;
+      }
+
+      if (tab === "plate") {
+        const { data, error } = await supabase.functions.invoke("bb-lookup", {
+          body: { lookup_type: "plate", plate: plateClean, state: plateState, dealership_id: dealershipId },
+        });
+        if (error || data?.error || !data?.vehicles?.length) {
+          toast({
+            title: "Plate lookup unavailable",
+            description: "Try VIN or Year / Make / Model.",
+            variant: "destructive",
+          });
+          return;
+        }
+        const bb = data.vehicles[0] as BBVehicle;
+        onResolved({
+          lookupMode: "plate",
+          plate: plateClean,
+          plateState,
+          vin: bb.vin || "",
+          bbVehicle: bb,
           step: "condition",
         });
       }
@@ -151,107 +146,125 @@ const MotoStepVehicleSearch = ({
 
   return (
     <>
-      <h1 className="mb-1 text-2xl font-bold tracking-tight text-zinc-900">
-        Get your offer in 60 seconds
+      <h1 className="mt-1 text-4xl font-extrabold leading-[1.05] tracking-tight text-zinc-900">
+        Get an Instant{" "}
+        <span className="text-[hsl(var(--cta-offer))]">Vehicle Valuation</span>
       </h1>
-      <p className="mb-5 text-sm text-zinc-600">
-        Start with VIN, license plate, or year-make-model. {config.dealership_name || "Your dealer"} handles
-        the rest.
+      <p className="mt-3 text-base text-zinc-500">
+        Get an instant valuation &amp; then add more info to get a firm offer.
       </p>
 
-      <div className="mb-4 grid grid-cols-3 rounded-lg border border-zinc-200 bg-zinc-100 p-1 text-sm font-medium">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setMode(t.id)}
-            className={cn(
-              "rounded-md py-2 transition",
-              mode === t.id
-                ? "bg-white text-zinc-900 shadow-sm"
-                : "text-zinc-600 hover:text-zinc-800",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <MotoCard className="mt-6">
+        <div className="mb-5 grid grid-cols-2 rounded-full bg-zinc-100 p-1 text-sm font-semibold">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "rounded-full py-2.5 transition",
+                tab === t.id
+                  ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)] shadow-sm"
+                  : "text-zinc-600 hover:text-zinc-800",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-      <MotoCard>
-        {mode === "vin" && (
-          <MotoFormField
-            label="VIN"
-            placeholder="17 characters"
-            value={vin}
-            onChange={(e) => setVin(e.target.value.toUpperCase())}
-            maxLength={17}
-            autoComplete="off"
-            hint="Find your VIN on the dashboard near the windshield or on your registration."
-          />
-        )}
-        {mode === "plate" && (
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-2">
-              <MotoFormField
-                label="License Plate"
-                value={plate}
-                onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                autoComplete="off"
+        {tab === "vin" && (
+          <div className="space-y-4">
+            <MotoOutlinedSelect
+              label="Vehicle Year"
+              value={year}
+              onChange={(e) => {
+                setYear(e.target.value);
+                setMake("");
+                setModel("");
+                setTrim("");
+              }}
+              options={YEAR_OPTIONS}
+            />
+            {year && (
+              <MotoOutlinedSelect
+                label="Vehicle Make"
+                value={make}
+                onChange={(e) => {
+                  setMake(e.target.value);
+                  setModel("");
+                  setTrim("");
+                }}
+                options={MAKE_OPTIONS}
               />
+            )}
+            {year && make && (
+              <MotoOutlinedSelect
+                label={modelsLoading ? "Vehicle Model (loading…)" : "Vehicle Model"}
+                value={model}
+                onChange={(e) => {
+                  setModel(e.target.value);
+                  setTrim("");
+                }}
+                options={modelOptions}
+                disabled={modelsLoading || modelOptions.length === 0}
+              />
+            )}
+            {year && make && model && (
+              <MotoOutlinedInput
+                label="Vehicle Trim"
+                value={trim}
+                onChange={(e) => setTrim(e.target.value)}
+                placeholder="e.g. EX-L, Sport, Premium Luxury"
+              />
+            )}
+            <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+              <span className="h-px flex-1 bg-zinc-200" />
+              OR
+              <span className="h-px flex-1 bg-zinc-200" />
             </div>
-            <div>
-              <label className="block">
-                <span className="mb-1 block text-xs font-medium text-zinc-600">State</span>
-                <select
-                  value={plateState}
-                  onChange={(e) => setPlateState(e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-base outline-none focus:border-[hsl(var(--cta-offer))] focus:ring-2 focus:ring-[hsl(var(--cta-offer)/0.15)]"
-                >
-                  <option value="">—</option>
-                  {US_STATES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          </div>
-        )}
-        {mode === "ymm" && (
-          <div className="grid grid-cols-2 gap-3">
-            <MotoFormField
-              label="Year"
-              inputMode="numeric"
-              value={ymm.year}
-              onChange={(e) => setYmm({ ...ymm, year: e.target.value.replace(/\D/g, "").slice(0, 4) })}
-              maxLength={4}
-              placeholder="2022"
-            />
-            <MotoFormField
-              label="Make"
-              value={ymm.make}
-              onChange={(e) => setYmm({ ...ymm, make: e.target.value })}
-              placeholder="Honda"
-            />
-            <MotoFormField
-              label="Model"
-              value={ymm.model}
-              onChange={(e) => setYmm({ ...ymm, model: e.target.value })}
-              placeholder="Accord"
-            />
-            <MotoFormField
-              label="Trim (optional)"
-              value={ymm.trim}
-              onChange={(e) => setYmm({ ...ymm, trim: e.target.value })}
-              placeholder="EX-L"
+            <MotoOutlinedInput
+              label="VIN"
+              value={vin}
+              onChange={(e) => setVin(e.target.value.toUpperCase())}
+              maxLength={17}
+              autoComplete="off"
+              placeholder="17-character VIN"
             />
           </div>
         )}
+
+        {tab === "plate" && (
+          <div className="space-y-4">
+            <MotoOutlinedInput
+              label="License Plate*"
+              value={plate}
+              onChange={(e) => setPlate(e.target.value.toUpperCase())}
+              autoComplete="off"
+            />
+            <MotoOutlinedSelect
+              label="State*"
+              value={plateState}
+              onChange={(e) => setPlateState(e.target.value)}
+              options={US_STATES}
+            />
+          </div>
+        )}
+
+        <div className="mt-5">
+          <MotoPrimaryButton
+            className="rounded-full"
+            onClick={submit}
+            disabled={!canSubmit}
+            loading={loading}
+          >
+            Next
+          </MotoPrimaryButton>
+        </div>
       </MotoCard>
 
-      <div className="mt-5">
-        <MotoPrimaryButton onClick={submit} loading={loading}>
-          Get My Offer
-        </MotoPrimaryButton>
+      <div className="mt-4 rounded-md bg-zinc-50 py-3 text-center text-sm font-semibold text-[hsl(var(--cta-offer))]">
+        Get a valuation in less than 30 seconds!
       </div>
     </>
   );
