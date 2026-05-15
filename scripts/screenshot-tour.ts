@@ -155,7 +155,7 @@ async function snap(page: Page, shot: Shot, viewport: typeof DESKTOP) {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
   }
   if (shot.waitFor) {
-    await page.waitForSelector(shot.waitFor, { timeout: 10_000 }).catch(() => {});
+    await page.waitForSelector(shot.waitFor, { timeout: 10_000 }).catch(() => null);
   }
   if (shot.scroll) await page.evaluate((y) => window.scrollTo(0, y), shot.scroll);
   if (shot.delayMs) await page.waitForTimeout(shot.delayMs);

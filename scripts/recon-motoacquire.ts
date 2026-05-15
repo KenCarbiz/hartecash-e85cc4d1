@@ -252,7 +252,7 @@ async function walk(page: Page) {
   currentStep = "00-landing";
   console.log(`→ Landing: ${TARGET_URL}`);
   await page.goto(TARGET_URL, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null);
   await snap(page, "00-landing");
   await recordFields(page, "00-landing");
 
@@ -278,7 +278,7 @@ async function walk(page: Page) {
   await recordFields(page, "01-vehicle-identifier");
 
   await clickByText(page, ["get.{0,8}(offer|value|quote|started)", "continue", "next", "see (my )?value"]);
-  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null);
 
   // ── Step 2: zip / mileage / condition ───────────────────
   currentStep = "02-vehicle-details";
@@ -288,7 +288,7 @@ async function walk(page: Page) {
   await recordFields(page, "02-vehicle-details");
 
   await clickByText(page, ["continue", "next", "get.{0,8}offer", "see value"]);
-  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null);
 
   // ── Step 3: range/firm offer screen ─────────────────────
   currentStep = "03-valuation";
@@ -299,7 +299,7 @@ async function walk(page: Page) {
   // ── Step 4: try to advance one more screen to see the firm-offer upsell ──
   currentStep = "04-firm-offer-prompt";
   await clickByText(page, ["firm offer", "upgrade", "get.{0,8}firm", "tell us more", "continue"]);
-  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null);
   await page.waitForTimeout(1500);
   await snap(page, "04-firm-offer-prompt");
   await recordFields(page, "04-firm-offer-prompt");
@@ -386,7 +386,7 @@ async function main() {
     await walk(page);
   } catch (err) {
     console.error("Walk failed:", err);
-    await snap(page, "ZZ-error-state").catch(() => {});
+    await snap(page, "ZZ-error-state").catch(() => null);
   } finally {
     await writeOutputs();
     await browser.close();
