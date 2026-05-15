@@ -68,26 +68,26 @@ const MotoTrackValueBlock = ({ state }: { state: MotoFlowState }) => {
 
   const bb = state.bbVehicle;
 
-  // If the customer explicitly opted out at the contact step, respect
-  // that — don't render the card at all from that point on.
-  if (bb && state.contact.phoneVerified && !state.trackValue) return null;
-  if (!bb || !bb.year || !bb.make || !bb.model) return null;
-
   // Re-use the same token across reloads so the same browser session
   // doesn't insert duplicate watched_vehicles rows for one customer.
   // Keyed on VIN (or year+make+model when there is no VIN) so two
   // different cars in the same browser still get separate trackers.
-  const storageKey = SUB_STORAGE_PREFIX + (bb.vin || `${bb.year}-${bb.make}-${bb.model}`);
+  // Computed for all renders (hooks rule); the effect body itself
+  // bails if there's no usable vehicle.
+  const storageKey = bb
+    ? SUB_STORAGE_PREFIX + (bb.vin || `${bb.year}-${bb.make}-${bb.model}`)
+    : null;
 
   useEffect(() => {
     if (savedToken) return;
+    if (!bb || !storageKey) return;
     try {
       const existing = localStorage.getItem(storageKey);
       if (existing) {
         setSavedToken(existing);
         return;
       }
-    } catch { /* private mode */ }
+    } catch (e) { console.debug("localStorage read blocked:", e); }
 
     // Auto-subscribe gate: must have phone verified + opt-in toggle
     // still on + a usable email.
@@ -118,12 +118,18 @@ const MotoTrackValueBlock = ({ state }: { state: MotoFlowState }) => {
         console.warn("[track-value] auto-subscribe failed (non-fatal):", error.message);
         return;
       }
-      try { localStorage.setItem(storageKey, token); } catch { /* ignore */ }
+      try { localStorage.setItem(storageKey, token); } catch (e) { console.debug("localStorage write blocked:", e); }
       setSavedToken(token);
     };
     void insert();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.contact.phoneVerified, state.trackValue, state.contact.email, state.submissionId]);
+
+  // Conditional renders AFTER all hooks have run (rules-of-hooks).
+  // If the customer explicitly opted out at the contact step, or we
+  // don't yet have a usable BB vehicle, render nothing.
+  if (bb && state.contact.phoneVerified && !state.trackValue) return null;
+  if (!bb || !bb.year || !bb.make || !bb.model) return null;
 
   // ── Confirmed state: customer is already on the auto-subscribe list ──
   if (savedToken) {
