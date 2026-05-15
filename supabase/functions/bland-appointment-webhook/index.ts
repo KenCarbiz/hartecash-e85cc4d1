@@ -39,6 +39,14 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+/** SHA-256 hex — fingerprint for processed_webhook_calls dedupe. */
+async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 /** Strip to digits, drop leading "1" for 11-digit US numbers. Matches
  *  the app's existing `formatPhone` normalization semantics but collapses
  *  to a canonical 10-digit key so we can match submissions reliably. */
@@ -117,9 +125,10 @@ serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   // ── Parse ───────────────────────────────────────────────────────────
+  const rawBody = await req.text();
   let body: BlandAppointmentPayload;
   try {
-    body = (await req.json()) as BlandAppointmentPayload;
+    body = JSON.parse(rawBody) as BlandAppointmentPayload;
   } catch (e) {
     console.error("bland-appointment-webhook: invalid JSON", e);
     return json({ ok: false, error: "Invalid JSON" }, 200);
@@ -129,6 +138,34 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  // ── Replay-protection dedupe ──
+  // Bland can redrive the same appointment payload after a timeout.
+  // Without this, duplicate appointment rows + duplicate confirmation
+  // SMS would land. See processed_webhook_calls table comment.
+  const callIdForDedupe = String(
+    body.external_ref || body.metadata?.call_log_id || body.customer_phone || "unknown"
+  );
+  const payloadHash = await sha256Hex(rawBody);
+  const { error: dedupeErr } = await supabase
+    .from("processed_webhook_calls")
+    .insert({
+      provider: "bland_appointment",
+      provider_call_id: callIdForDedupe,
+      payload_hash: payloadHash,
+    });
+  if (dedupeErr) {
+    if ((dedupeErr as { code?: string }).code === "23505") {
+      console.log(
+        `[bland-appointment-webhook] duplicate payload skipped: ref=${callIdForDedupe} hash=${payloadHash.slice(0, 12)}`
+      );
+      return json({ ok: true, deduplicated: true, external_ref: callIdForDedupe }, 200);
+    }
+    console.warn(
+      "[bland-appointment-webhook] dedupe insert failed (continuing):",
+      dedupeErr.message
+    );
+  }
 
   try {
     // Required fields — name + phone + some notion of when.

@@ -119,6 +119,15 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+/** SHA-256 hex of a string. Used to fingerprint webhook payloads for
+ *  replay dedupe (see processed_webhook_calls). */
+async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -153,7 +162,18 @@ serve(async (req) => {
       );
     }
 
-    const payload = await req.json();
+    // Read raw body for hash-based dedupe, then parse. JSON.parse is
+    // cheap; the duplicate body read isn't a concern.
+    const rawBody = await req.text();
+    let payload: any;
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     console.log(
       "Voice call webhook received:",
@@ -168,6 +188,40 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // ── Replay-protection dedupe ──
+    // Bland occasionally redrives the exact same webhook payload after
+    // a 5xx response or transient timeout. Without this guard, replays
+    // double-counted campaign totals, sent duplicate follow-up SMS,
+    // and could re-flip progress_status on a stale "accepted" event.
+    // Hash the raw body; ON CONFLICT means we've already done the work.
+    const callIdForDedupe = String(payload.call_id || "unknown");
+    const payloadHash = await sha256Hex(rawBody);
+    const { error: dedupeErr } = await supabase
+      .from("processed_webhook_calls")
+      .insert({
+        provider: "bland",
+        provider_call_id: callIdForDedupe,
+        payload_hash: payloadHash,
+      });
+    if (dedupeErr) {
+      // 23505 = unique_violation. Anything else (e.g. table missing on
+      // a pre-migration env) we log and continue — dedupe is a safety
+      // net, not a hard dependency.
+      if ((dedupeErr as { code?: string }).code === "23505") {
+        console.log(
+          `[voice-call-webhook] duplicate payload skipped: call_id=${callIdForDedupe} hash=${payloadHash.slice(0, 12)}`
+        );
+        return new Response(
+          JSON.stringify({ success: true, deduplicated: true, call_id: callIdForDedupe }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      console.warn(
+        "[voice-call-webhook] dedupe insert failed (continuing):",
+        dedupeErr.message
+      );
+    }
 
     // Extract data from Bland.ai webhook payload
     const callId = payload.call_id;
