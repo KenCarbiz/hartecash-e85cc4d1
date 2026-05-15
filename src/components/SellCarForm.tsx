@@ -37,6 +37,18 @@ import LiveOfferPreview from "./sell-form/LiveOfferPreview";
 // domain dot, whitespace) without trying to be RFC-5322 compliant.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Browser's IANA TZ (e.g. "America/Chicago"). Used to seed
+// submissions.customer_timezone so TCPA quiet-hours calc is accurate
+// for split-TZ states. SSR / Intl-disabled fallback returns null and
+// the DB trigger falls back to state-derivation.
+const getBrowserTimezone = (): string | null => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+};
+
 const stepTimeEstimates: Record<string, string> = {
   "Vehicle Info": "30 sec",
   "Select Your Vehicle": "15 sec",
@@ -229,6 +241,11 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
       overall_condition: formData.overallCondition || null,
       lead_source: leadSource,
       dealership_id: tenant.dealership_id,
+      // Browser-reported IANA TZ — more accurate than state-derived for
+      // split-TZ states (TN, KY, IN, FL, MI, ND, SD, OR, KS, NE, TX).
+      // The DB trigger only fills customer_timezone when NULL, so this
+      // wins. Falls back to state-derivation if Intl is unavailable.
+      customer_timezone: getBrowserTimezone(),
     };
 
     if (partialIdRef.current) {
@@ -655,6 +672,9 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
           bb_selected_options: selectedAddDeducts.length > 0 ? selectedAddDeducts : [],
           referral_code: referralCode || null,
           assigned_rep_email: repCode || null,
+          // Browser-reported IANA TZ for accurate TCPA quiet-hours
+          // (see partial-insert site above for the why).
+          customer_timezone: getBrowserTimezone(),
         });
 
       if (error) throw error;
