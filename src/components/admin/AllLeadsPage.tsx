@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import DesirabilityPill from "./DesirabilityPill";
 import {
   type Submission,
   type DealerLocation,
@@ -556,13 +557,16 @@ const AllLeadsPage = ({
                         {formatAge(s.created_at).label}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {score != null ? (
-                          <span className="inline-flex items-center justify-center min-w-[32px] h-6 px-1.5 rounded-full bg-muted text-foreground text-xs font-semibold">
-                            {score}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
+                        <div className="inline-flex items-center gap-1.5 justify-end">
+                          {score != null ? (
+                            <span className="inline-flex items-center justify-center min-w-[32px] h-6 px-1.5 rounded-full bg-muted text-foreground text-xs font-semibold">
+                              {score}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                          <DesirabilityPill submission={s} compact />
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
