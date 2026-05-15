@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { logStaffAction } from "@/lib/staffAuditLog";
 
 interface QualityRow {
   call_id: string;
@@ -643,6 +644,14 @@ export default function VoiceQualityPanel() {
         title: "Couldn't update pin",
         description: error?.message || result?.reason || "no_grade_yet",
         variant: "destructive",
+      });
+    } else {
+      void logStaffAction({
+        action: next ? "voice_call_pinned_golden" : "voice_call_unpinned_golden",
+        targetType: "voice_call",
+        targetId: callId,
+        before: { golden_pinned: !next },
+        after:  { golden_pinned: next },
       });
     }
   };

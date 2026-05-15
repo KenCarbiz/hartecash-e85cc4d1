@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logStaffAction } from "@/lib/staffAuditLog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -283,6 +284,15 @@ const GroupManagement = () => {
       toast({ title: "Detach failed", description: error.message, variant: "destructive" });
       return;
     }
+    void logStaffAction({
+      action: "rooftop_detached",
+      dealershipId: confirmDetach.dealershipId,
+      targetType: "rooftop",
+      targetId: confirmDetach.dealershipId,
+      before: { dealer_group_id: selectedGroup.id, dealer_group_name: selectedGroup.name },
+      after:  { dealer_group_id: null },
+      notes: detachReason.trim(),
+    });
     setConfirmDetach(null);
     setDetachReason("");
     await reload();
@@ -310,6 +320,15 @@ const GroupManagement = () => {
       toast({ title: "Merge failed", description: error.message, variant: "destructive" });
       return;
     }
+    void logStaffAction({
+      action: "rooftop_merged",
+      dealershipId: confirmMerge.dealershipId,
+      targetType: "rooftop",
+      targetId: confirmMerge.dealershipId,
+      before: { dealer_group_id: null },
+      after:  { dealer_group_id: selectedGroup.id, dealer_group_name: selectedGroup.name, pilot_created: mergeCreatePilot },
+      notes: mergeReason.trim(),
+    });
     setConfirmMerge(null);
     setMergeReason("");
     setMergeCreatePilot(true);

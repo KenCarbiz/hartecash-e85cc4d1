@@ -21,6 +21,7 @@ import AvatarCropDialog from "./AvatarCropDialog";
 import StaffSectionEditor from "./StaffSectionEditor";
 import { ALL_SECTIONS } from "./PermissionManagement";
 import { useTenant } from "@/contexts/TenantContext";
+import { logStaffAction } from "@/lib/staffAuditLog";
 import { ROLE_LABELS_LONG } from "@/lib/adminConstants";
 
 interface StaffMember {
@@ -240,6 +241,14 @@ const StaffManagement = () => {
     } else {
       toast({ title: "Role updated", description: `${member.email || "User"} is now ${ROLE_LABELS[newRole] || newRole}.` });
       setStaff(prev => prev.map(s => s.role_id === member.role_id ? { ...s, role: newRole } : s));
+      void logStaffAction({
+        action: "staff_role_updated",
+        dealershipId,
+        targetType: "user_role",
+        targetId: member.role_id,
+        before: { user_id: member.user_id, email: member.email, role: member.role },
+        after:  { user_id: member.user_id, email: member.email, role: newRole },
+      });
     }
     setChangingRole(null);
   };
@@ -259,6 +268,14 @@ const StaffManagement = () => {
     } else {
       toast({ title: "Removed", description: `${member.email || "User"} has been removed.` });
       setStaff(prev => prev.filter(s => s.role_id !== member.role_id));
+      void logStaffAction({
+        action: "staff_role_removed",
+        dealershipId,
+        targetType: "user_role",
+        targetId: member.role_id,
+        before: { user_id: member.user_id, email: member.email, role: member.role },
+        after: null,
+      });
     }
   };
 
