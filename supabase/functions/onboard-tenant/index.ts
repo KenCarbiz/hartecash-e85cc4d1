@@ -469,8 +469,11 @@ serve(async (req) => {
         sort_order: i,
         is_active: true,
       }));
-      // Only insert if testimonials table exists (ignore errors)
-      await admin.from("testimonials").insert(testimonials).catch(() => {});
+      // Best-effort: testimonials table may not exist in older
+      // tenant bootstraps. Log so we know when it failed (reliability
+      // audit P2 — broken seed data previously silently survived).
+      await admin.from("testimonials").insert(testimonials)
+        .catch((e) => console.warn("[onboard-tenant] testimonials seed insert failed:", e));
     }
 
     // 11. Seed notification templates

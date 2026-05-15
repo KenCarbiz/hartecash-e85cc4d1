@@ -120,7 +120,7 @@ const CaptureWithOverlay = ({
       osc.stop(ctx.currentTime + 0.07);
       // Close the context after the click finishes so we don't
       // leak audio resources across multiple captures.
-      setTimeout(() => ctx.close().catch(() => {}), 200);
+      setTimeout(() => ctx.close().catch((e) => console.debug("[CaptureWithOverlay] AudioContext.close rejected:", e)), 200);
     } catch { /* audio is best-effort polish — never block capture */ }
   };
 
@@ -284,8 +284,10 @@ const CaptureWithOverlay = ({
       if (document.visibilityState === "hidden") {
         try { v.pause(); } catch { /* noop */ }
       } else if (!previewFile && streamRef.current) {
-        // Foreground + not in preview = resume.
-        v.play().catch(() => {});
+        // Foreground + not in preview = resume. Autoplay-block on
+        // some mobile browsers is expected; debug-log so it surfaces
+        // in DevTools without spamming console.warn.
+        v.play().catch((e) => console.debug("[CaptureWithOverlay] resume video.play rejected:", e));
       }
     };
     document.addEventListener("visibilitychange", handler);
@@ -353,7 +355,7 @@ const CaptureWithOverlay = ({
     setVerifying(false);
     setCapturing(false);
     if (videoRef.current) {
-      videoRef.current.play().catch(() => {});
+      videoRef.current.play().catch((e) => console.debug("[CaptureWithOverlay] retake video.play rejected:", e));
     }
   };
 

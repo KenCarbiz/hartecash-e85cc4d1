@@ -359,7 +359,7 @@ Deno.serve(async (req) => {
           new_value: matched[1],
           notes: `via SMS: "${bodyRaw.trim()}"`,
           performed_by: "Customer (SMS reply)",
-        } as any).catch(() => {});
+        } as any).catch((e) => console.warn("[sms-webhook] decline-reason activity_log insert failed:", e));
         // Don't auto-reply — the cadence engine will branch on this.
       }
     }
@@ -393,7 +393,7 @@ Deno.serve(async (req) => {
             recipient_email: sub.assigned_rep_email,
             custom_body: `${sub.name || "Customer"} replied: "${bodyRaw.slice(0, 140)}"`,
           },
-        }).catch(() => {});
+        }).catch((e) => console.warn("[sms-webhook] staff_customer_replied notify failed:", e));
       } else {
         // No assigned rep — fall back to the admin-level list.
         await supabase.functions.invoke("send-notification", {
@@ -402,7 +402,7 @@ Deno.serve(async (req) => {
             submission_id: sub.id,
             custom_body: `${sub.name || "Customer"} replied: "${bodyRaw.slice(0, 140)}"`,
           },
-        }).catch(() => {});
+        }).catch((e) => console.warn("[sms-webhook] staff_customer_replied notify failed:", e));
       }
     } else {
       // No matching submission — still log so we don't silently drop.

@@ -201,7 +201,11 @@ function TurnsTranscript({
     const audio = audioRef.current;
     if (!audio || turn.start_ms == null) return;
     audio.currentTime = turn.start_ms / 1000;
-    void audio.play().catch(() => {});
+    // Autoplay can be blocked by the browser when there's been no user
+    // gesture this load — that's expected here (gesture is the click
+    // that called this fn, but Safari sometimes still rejects). Log
+    // at debug so the failure surfaces in DevTools without being noisy.
+    void audio.play().catch((e) => console.debug("[VoiceQualityPanel] audio.play rejected:", e));
     setActiveIdx(turn.turn_index);
     onSeek?.(turn.turn_index);
   };

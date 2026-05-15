@@ -290,7 +290,7 @@ serve(async (req) => {
               trigger_key: "voice_warmup_sms",
               submission_id: sub.id,
             }
-          }).catch(() => {});
+          }).catch((e) => console.warn("[run-voice-campaign] voice_warmup_sms send failed:", e));
 
           // Brief delay to let SMS arrive before call
           await new Promise(r => setTimeout(r, 3000));

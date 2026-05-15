@@ -90,7 +90,7 @@ const EscalateToManagerDialog = ({ open, onOpenChange, submissionId, userEmail, 
         escalation_notes: notes.trim() || null,
         escalation_created_by: userEmail || null,
       },
-    }).catch(() => {});
+    }).catch((e) => console.warn("[EscalateToManagerDialog] notify-manager invoke failed:", e));
     setReason("");
     setNotes("");
     onEscalated?.();

@@ -186,7 +186,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
     resolveEffectiveSettings(tenant.dealership_id).then(({ settings, rules }) => {
       if (settings) setOfferSettingsEarly(settings);
       if (rules) setOfferRulesEarly(rules);
-    }).catch(() => {});
+    }).catch((e) => console.warn("[SellCarForm] early offer-rules prefetch failed:", e));
 
     // Fetch active promo bonus
     supabase
