@@ -120,17 +120,31 @@ const StaffFileUpload = ({ token, bucket, onUploadComplete }: StaffFileUploadPro
     setUploading(true);
     let dlFrontPath: string | null = null;
     try {
+      // Photos older than this at upload time are flagged "stale" via
+      // a filename marker. Threshold mirrors a typical inspection
+      // turnaround — a photo taken before the inspection started is
+      // suspicious (could be a re-used file rather than the actual car
+      // on the lot today). View-time UI badges these for the appraiser.
+      const STALE_MS = 24 * 60 * 60_000;
+      const now = Date.now();
       for (const file of files) {
         const ext = file.name.split(".").pop();
-        const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const uniqueName = `${now}-${Math.random().toString(36).slice(2)}.${ext}`;
         // Prefix staff-uploaded vehicle photos with "staff-" so the
         // appraisal Photos & Evidence panel can visually distinguish
         // them from customer-flow uploads (which use prefixes like
         // front- / back- / extra- / etc. set by the customer upload
         // page). Documents stay path-based (docType subfolder) and
         // don't need the prefix.
+        // File.lastModified is the filesystem mtime — for photos taken
+        // on a phone this is the capture time. For files dragged from
+        // a desktop folder it may be older than the actual capture but
+        // that's still the right signal: the file is not fresh.
+        const isStale =
+          isPhotos && file.lastModified > 0 && (now - file.lastModified) > STALE_MS;
+        const stalePrefix = isStale ? "stale-" : "";
         const path = isPhotos
-          ? `${token}/staff-${uniqueName}`
+          ? `${token}/staff-${stalePrefix}${uniqueName}`
           : `${token}/${docType}/${uniqueName}`;
 
         const { error } = await supabase.storage
