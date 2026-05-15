@@ -92,6 +92,39 @@ const makeDocSection = (title: string, images: string[]) =>
 const makeTextDocSection = (title: string, text: string) =>
   text ? `<div class="doc-section"><h2>${esc(title)}</h2><pre style="white-space:pre-wrap;font-family:Inter,-apple-system,sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafc;border:1px solid #e2e6ea;border-radius:8px;padding:16px;line-height:1.6;">${esc(text)}</pre></div>` : "";
 
+/**
+ * Vehicle photos render as a 4-per-row grid rather than one-per-page
+ * because acquisition jobs can attach 20+ shots. Each thumb is
+ * captioned with source (staff vs customer) so the printed file
+ * proves "we reviewed customer-uploaded photos AND walk-around
+ * photos before issuing the check."
+ */
+export type PrintPhoto = {
+  url: string;
+  name: string;
+  source: "staff" | "customer";
+};
+
+const makePhotoGridSection = (title: string, photos: PrintPhoto[]) => {
+  if (!photos || photos.length === 0) return "";
+  const customer = photos.filter((p) => p.source === "customer").length;
+  const staff    = photos.filter((p) => p.source === "staff").length;
+  const subtitle = customer > 0 && staff > 0
+    ? `${customer} customer-uploaded · ${staff} staff-uploaded`
+    : staff > 0
+      ? `${staff} staff-uploaded`
+      : `${customer} customer-uploaded`;
+
+  return `<div class="doc-section"><h2>${esc(title)}</h2>
+    <p style="font-size:11px;color:#6b7b8d;margin:-8px 0 16px;">${esc(subtitle)} · captured on or before check issue date</p>
+    <div class="photo-grid">${photos.map((p) => `
+      <figure class="photo-tile">
+        <img src="${esc(p.url)}" loading="lazy" />
+        <figcaption>${p.source === "staff" ? "Staff" : "Customer"}</figcaption>
+      </figure>
+    `).join("")}</div></div>`;
+};
+
 const waitAndPrint = (win: Window, html: string) => {
   win.document.write(html);
   win.document.close();
@@ -269,6 +302,15 @@ export function printCheckRequest(
   logoBase64: string,
   docSections: { title: string; images: string[] }[],
   textSections?: { title: string; text: string }[],
+  /**
+   * Vehicle photos to render as a 4-up grid AFTER the doc + text
+   * sections. Optional — when omitted, the printout matches the
+   * prior format. Defensibility win: when present, the paper file
+   * for the check request proves which photos were reviewed
+   * before the check was issued, with source (staff vs customer)
+   * labeled per tile.
+   */
+  vehiclePhotos?: PrintPhoto[],
 ) {
   const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ") || "N/A";
   const today = new Date().toLocaleDateString();
@@ -290,6 +332,10 @@ export function printCheckRequest(
     ".doc-section { page-break-before: always; padding: 24px 32px; }",
     ".doc-section h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; color: #2a4365; }",
     ".doc-img { max-width: 100%; margin-bottom: 16px; border: 1px solid #d1d5db; }",
+    ".photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }",
+    ".photo-tile { margin: 0; border: 1px solid #d1d5db; background: #fff; page-break-inside: avoid; }",
+    ".photo-tile img { display: block; width: 100%; height: 200px; object-fit: cover; }",
+    ".photo-tile figcaption { font-size: 10px; padding: 4px 6px; color: #4a5568; background: #f3f5f7; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }",
     "@page { margin: 0.75in; size: letter; }",
   ].join("\n");
 
@@ -322,6 +368,7 @@ export function printCheckRequest(
     </div>
     ${docSections.map(s => makeDocSection(s.title, s.images)).join("")}
     ${textSections ? textSections.map(s => makeTextDocSection(s.title, s.text)).join("") : ""}
+    ${vehiclePhotos && vehiclePhotos.length > 0 ? makePhotoGridSection("Vehicle Photos", vehiclePhotos) : ""}
   </body></html>`;
 
   const printWindow = window.open("", "_blank", "width=800,height=600");

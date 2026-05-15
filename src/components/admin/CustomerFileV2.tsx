@@ -1613,12 +1613,37 @@ function ContextRail({
     if (sub.internal_notes && sub.internal_notes.includes("[INSPECTION")) {
       inspectionTextSections.push({ title: "Inspection Report", text: sub.internal_notes });
     }
+
+    // Vehicle photos (customer + staff uploads) — printed as a 4-up
+    // grid after the document pages. Proves which photos were on
+    // file at the moment the check was issued. Staff-uploaded shots
+    // are filename-prefixed "staff-" (set by StaffFileUpload).
+    const vehiclePhotos: { url: string; name: string; source: "staff" | "customer" }[] = [];
+    if (sub.token) {
+      try {
+        const { data: photoFiles } = await supabase.storage
+          .from("submission-photos")
+          .list(sub.token, { limit: 200, sortBy: { column: "created_at", order: "asc" } });
+        if (photoFiles) {
+          for (const f of photoFiles) {
+            if (!f.name || f.name === ".emptyFolderPlaceholder") continue;
+            vehiclePhotos.push({
+              name: f.name,
+              url: supabase.storage.from("submission-photos")
+                .getPublicUrl(`${sub.token}/${f.name}`).data.publicUrl,
+              source: f.name.startsWith("staff-") ? "staff" : "customer",
+            });
+          }
+        }
+      } catch { /* non-fatal: print without photos */ }
+    }
+
     const html = printCheckRequest(sub, logoBase64, [
       { title: "Appraisal Document", images: apprImg },
       { title: "Driver's License", images: [...dlImg, ...dlFImg, ...dlBImg] },
       { title: "Title", images: titleImg },
       { title: "Payoff Documentation", images: payoffImg },
-    ], inspectionTextSections);
+    ], inspectionTextSections, vehiclePhotos);
     if (html) {
       try {
         const blob = new Blob([html], { type: "text/html" });
