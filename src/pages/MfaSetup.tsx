@@ -58,7 +58,11 @@ export default function MfaSetup() {
       // Clear any pending unverified factors so re-enrollment works.
       const stale = factors?.totp?.filter((f) => f.status !== "verified") ?? [];
       for (const f of stale) {
-        await supabase.auth.mfa.unenroll({ factorId: f.id }).catch(() => {});
+        // Best-effort cleanup of stale unverified factors — if it
+        // fails (e.g. factor already cleaned up by Supabase), enroll
+        // can still proceed.
+        await supabase.auth.mfa.unenroll({ factorId: f.id })
+          .catch((e) => console.warn("[MfaSetup] unenroll stale factor failed:", e));
       }
 
       // Enroll a fresh factor.

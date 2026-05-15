@@ -1053,7 +1053,7 @@ const InspectionCheckIn = () => {
                             recipient_phone: repPhone,
                             recipient_email: rep,
                           },
-                        }).catch(() => {});
+                        }).catch((e) => console.warn("[InspectionCheckIn] notify-rep invoke failed:", e));
                         await supabase.from("activity_log").insert({
                           submission_id: existing.id,
                           action: "Customer Arrived",

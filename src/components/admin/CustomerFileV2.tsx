@@ -1197,7 +1197,9 @@ function DealTab({
   useEffect(() => {
     if (!sub.id) return;
     let cancelled = false;
-    fetchSubmissionNotes(sub.id).then((rows) => { if (!cancelled) setNotes(rows); }).catch(() => {});
+    fetchSubmissionNotes(sub.id)
+      .then((rows) => { if (!cancelled) setNotes(rows); })
+      .catch((e) => console.warn("[CustomerFileV2] fetchSubmissionNotes failed:", e));
     return () => { cancelled = true; };
   }, [sub.id, notesOpen]);
 
@@ -1291,7 +1293,7 @@ function DealTab({
         open={notesOpen}
         onClose={() => setNotesOpen(false)}
         author={auditLabel || "Staff"}
-        onChange={() => fetchSubmissionNotes(sub.id).then(setNotes).catch(() => {})}
+        onChange={() => fetchSubmissionNotes(sub.id).then(setNotes).catch((e) => console.warn("[CustomerFileV2] refresh notes failed:", e))}
       />
     </div>
   );

@@ -214,7 +214,7 @@ serve(async (req) => {
     new_value: payload.outcome,
     notes: payload.notes || null,
     performed_by: user.email || user.id,
-  } as any).catch(() => {});
+  } as any).catch((e) => console.warn("[complete-bdc-call] activity_log insert failed:", e));
 
   return new Response(JSON.stringify({ ok: true, task_id: payload.task_id, outcome: payload.outcome }), {
     status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
