@@ -134,6 +134,48 @@ GATING DIMENSIONS: 1 (compliance), 4 (quote_band), 9 (hallucination). A score of
 
 Return ONLY a JSON object with all 10 dim_ keys (each a number from 1-5) plus a rationale string (≤ 240 chars) explaining the lowest score.`;
 
+/**
+ * Deterministic AI-disclosure check on the AI's first 1-2 turns.
+ *
+ * Belt-and-suspenders for dim_compliance: the LLM judge sometimes
+ * misses a missing disclosure when the rest of the call sounds
+ * polished. TCPA / state-level rules (CA, FL, IL etc) require the
+ * recipient to know they're talking to an AI *and* that the call
+ * is recorded — early in the call, not buried mid-conversation.
+ *
+ * We scan the FIRST two AI-speaker turns for any of the disclosure
+ * keywords. If none present, we hard-force dim_compliance to 1
+ * (gating failure) before composite scoring, overriding whatever
+ * the LLM returned. Annotated in the rationale so an analyst
+ * reviewing the row sees why we overrode.
+ *
+ * False-negative bias: any of the keywords counts. We'd rather miss
+ * an awkward-but-present disclosure than tank a good call's score.
+ */
+const DISCLOSURE_KEYWORDS = [
+  "recorded", "recording", "record this", "for quality",
+  "ai", "a.i.", "artificial intelligence", "automated", "virtual assistant",
+  "ai assistant", "ai agent", "digital assistant", "computer", "bot",
+];
+
+interface TurnLite {
+  turn_index: number;
+  speaker: string | null;
+  text: string | null;
+}
+
+function hasDisclosure(turns: TurnLite[]): boolean {
+  // Look at the first 2 AI-speaker turns (sometimes the opener
+  // splits across a greeting + a follow-up "by the way" line).
+  const aiTurns = (turns || []).filter((t) => {
+    const s = String(t.speaker || "").toLowerCase();
+    return s === "agent" || s === "ai" || s === "assistant" || s === "bot";
+  }).slice(0, 2);
+  if (aiTurns.length === 0) return true; // No AI turns parsed — don't override LLM.
+  const blob = aiTurns.map((t) => String(t.text || "").toLowerCase()).join(" ");
+  return DISCLOSURE_KEYWORDS.some((k) => blob.includes(k));
+}
+
 function computeComposite(g: RubricGrade): { score: number; gatingFailed: boolean } {
   const gatingFailed = g.dim_compliance === 1 || g.dim_quote_band === 1 || g.dim_hallucination === 1;
   if (gatingFailed) return { score: -2.0, gatingFailed: true };
@@ -262,6 +304,16 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Deterministic AI-disclosure override. Runs AFTER the LLM grade so
+  // the judge sees the same data, but BEFORE composite scoring so the
+  // gating failure cascades into auto-retire on the bandit side.
+  let disclosureOverride = false;
+  if (!hasDisclosure((turns as TurnLite[] | null) || [])) {
+    grade.dim_compliance = 1;
+    grade.rationale = `[disclosure-override] No AI/recording disclosure detected in first 2 AI turns. ${grade.rationale || ""}`.slice(0, 240);
+    disclosureOverride = true;
+  }
+
   const { score, gatingFailed } = computeComposite(grade);
 
   // Insert the grade row. When run_id is set this is a regression-
@@ -386,6 +438,7 @@ Deno.serve(async (req) => {
       ok: true,
       composite_score: score,
       gating_failed: gatingFailed,
+      disclosure_override: disclosureOverride,
       grader_model: GRADER_MODEL,
     }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
