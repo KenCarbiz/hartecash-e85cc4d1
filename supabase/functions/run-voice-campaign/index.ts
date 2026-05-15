@@ -29,6 +29,37 @@ function getTimezoneFromZip(zip: string | null): string {
   return ZIP_TO_TIMEZONE[zip[0]] || "America/New_York";
 }
 
+/** Mirror of public.tcpa_timezone_for_state(). Eastern-default for
+ *  unknown states so we never call too late. */
+function stateToTimezone(state: string | null): string {
+  const s = (state || "").toUpperCase();
+  if (["CT", "DE", "DC", "GA", "ME", "MD", "MA", "NH", "NJ", "NY", "NC", "OH", "PA", "RI", "SC", "VT", "VA", "WV", "FL", "IN", "KY", "MI", "TN"].includes(s)) return "America/New_York";
+  if (["AL", "AR", "IL", "IA", "LA", "MN", "MS", "MO", "OK", "WI", "KS", "NE", "TX", "ND", "SD"].includes(s)) return "America/Chicago";
+  if (["CO", "MT", "NM", "UT", "WY", "ID"].includes(s)) return "America/Denver";
+  if (s === "AZ") return "America/Phoenix";
+  if (["CA", "NV", "OR", "WA"].includes(s)) return "America/Los_Angeles";
+  if (s === "AK") return "America/Anchorage";
+  if (s === "HI") return "Pacific/Honolulu";
+  return "";
+}
+
+/** Resolution order matches launch-voice-call and send-notification:
+ *  customer_timezone (browser) → state-derived → ZIP-prefix. */
+function resolveCustomerTz(sub: { customer_timezone?: string | null; state?: string | null; zip?: string | null }): string {
+  const fromCol = (sub.customer_timezone || "").trim();
+  if (fromCol) {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: fromCol });
+      return fromCol;
+    } catch {
+      // bad cached value — fall through
+    }
+  }
+  const fromState = stateToTimezone(sub.state || null);
+  if (fromState) return fromState;
+  return getTimezoneFromZip(sub.zip || null);
+}
+
 function getCurrentTimeInTz(tz: string): string {
   try {
     const parts = new Intl.DateTimeFormat("en-US", {
@@ -189,7 +220,7 @@ serve(async (req) => {
       const submissionQuery = supabase
         .from("submissions")
         .select(
-          "id, name, phone, email, zip, vehicle_year, vehicle_make, vehicle_model, offered_price, progress_status, dealership_id, created_at"
+          "id, name, phone, email, zip, state, customer_timezone, vehicle_year, vehicle_make, vehicle_model, offered_price, progress_status, dealership_id, created_at"
         )
         .eq("dealership_id", campaign.dealership_id)
         .in("progress_status", targetStatus)
@@ -273,8 +304,10 @@ serve(async (req) => {
           continue;
         }
 
-        // Skip: outside calling hours for customer's timezone
-        const customerTz = getTimezoneFromZip(sub.zip);
+        // Skip: outside calling hours for customer's timezone.
+        // Uses the same resolution order as launch-voice-call:
+        // customer_timezone (browser) → state-derived → ZIP-prefix.
+        const customerTz = resolveCustomerTz(sub as { customer_timezone?: string | null; state?: string | null; zip?: string | null });
         const currentLocalTime = getCurrentTimeInTz(customerTz);
         if (
           !isWithinCallingHours(currentLocalTime, callingStart, callingEnd)
