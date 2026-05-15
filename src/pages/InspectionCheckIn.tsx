@@ -181,8 +181,11 @@ const InspectionCheckIn = () => {
     if (!scannerOpen) return;
     const orient = (screen.orientation as (ScreenOrientation & { lock?: (o: string) => Promise<void>; unlock?: () => void }) | undefined);
     if (orient && typeof orient.lock === "function") {
-      orient.lock("landscape").catch(() => {
-        // Ignore — we fall back to the soft overlay prompt
+      orient.lock("landscape").catch((e: unknown) => {
+        // Browsers that don't support orientation lock (iOS Safari)
+        // reject — we fall back to the soft overlay prompt. Debug-level
+        // so the noise doesn't drown out real errors.
+        console.debug("orientation.lock rejected:", e);
       });
     }
     return () => {
@@ -310,9 +313,10 @@ const InspectionCheckIn = () => {
       videoRef.current.srcObject = stream;
       // iOS Safari requires playsInline + muted (already set in JSX)
       // AND a play() call after srcObject is assigned.
-      await videoRef.current.play().catch(() => {
-        /* autoplay may fail silently; the user gesture that opened the
-         * scanner usually satisfies the autoplay policy */
+      await videoRef.current.play().catch((e: unknown) => {
+        // Autoplay may fail silently; the user gesture that opened
+        // the scanner usually satisfies the autoplay policy.
+        console.debug("scanner video.play deferred:", e);
       });
     }
 

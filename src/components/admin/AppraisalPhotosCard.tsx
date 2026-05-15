@@ -186,10 +186,12 @@ export default function AppraisalPhotosCard({
                     has_ai_flags: hasAiFlags,
                   },
                 })
-              ).catch(() => {
-                /* Soft-fail. Migration 20260509070000 may not be
-                 * applied yet; the access-log feature is value-
-                 * additive, not blocking. */
+              ).catch((e: unknown) => {
+                // Soft-fail. Migration 20260509070000 may not be
+                // applied yet; the access-log feature is value-
+                // additive, not blocking. Debug-level so the noise
+                // doesn't drown out real telemetry on pre-migration envs.
+                console.debug("photo_view access-log skipped:", e);
               });
             }
             return !v;

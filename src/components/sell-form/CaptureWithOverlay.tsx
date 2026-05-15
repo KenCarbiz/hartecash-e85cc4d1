@@ -153,9 +153,10 @@ const CaptureWithOverlay = ({
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          await videoRef.current.play().catch(() => {
+          await videoRef.current.play().catch((e: unknown) => {
             // iOS sometimes needs a second nudge after the user
             // gesture; safe to ignore — onLoadedMetadata still fires.
+            console.debug("video.play deferred (autoplay):", e);
           });
         }
         setReady(true);
