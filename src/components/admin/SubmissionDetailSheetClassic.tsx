@@ -17,6 +17,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback, Component, type ReactNode, type ErrorInfo } from "react";
 import { useLatestOfferBump } from "@/hooks/useLatestOfferBump";
 import type { OfferBumpRow } from "@/types/offerBumps";
+import DesirabilityPill from "./DesirabilityPill";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -1269,6 +1270,7 @@ export default function SubmissionDetailSheetClassic({
                     🔥 Hot Lead
                   </span>
                 )}
+                <DesirabilityPill submission={sub} variant="onDark" />
                 <span className="text-[11px] text-white/60 ml-auto">
                   Submitted {fmtDate(sub.created_at)}
                 </span>

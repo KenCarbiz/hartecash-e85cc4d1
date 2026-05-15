@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import CadenceTimeline from "./CadenceTimeline";
 import AppraisalPhotosCard from "./AppraisalPhotosCard";
+import DesirabilityPill from "./DesirabilityPill";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
 import { ALL_STATUS_OPTIONS, getStatusLabel } from "@/lib/adminConstants";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -407,6 +408,7 @@ function V2Header({
               <Flame className="w-3 h-3 mr-1" /> Hot Lead
             </Badge>
           )}
+          <DesirabilityPill submission={sub} variant="onDark" />
           {sub.created_at && (
             <span className="text-[11px] text-white/60 ml-auto">
               Submitted {new Date(sub.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
