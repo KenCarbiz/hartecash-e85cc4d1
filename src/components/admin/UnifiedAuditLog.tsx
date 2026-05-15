@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  Loader2, Search, RefreshCw, Eye, ArrowRightLeft, FileSearch, Webhook, Download, Filter, Pencil,
+  Loader2, Search, RefreshCw, Eye, ArrowRightLeft, FileSearch, Webhook, Download, Filter, Pencil, ShieldAlert,
 } from "lucide-react";
 
 type AuditKind =
@@ -13,7 +13,8 @@ type AuditKind =
   | "tenant_edit"
   | "rooftop_detach"
   | "data_egress"
-  | "stripe_event";
+  | "stripe_event"
+  | "staff_action";
 
 type AuditRow = {
   ts: string;
@@ -31,6 +32,7 @@ const KIND_META: Record<AuditKind, { label: string; icon: React.ComponentType<{ 
   rooftop_detach: { label: "Rooftop op", icon: ArrowRightLeft, color: "text-red-700"   },
   data_egress:    { label: "Data export",icon: FileSearch,     color: "text-info"   },
   stripe_event:   { label: "Stripe",     icon: Webhook,        color: "text-success" },
+  staff_action:   { label: "Staff action", icon: ShieldAlert,  color: "text-amber-600" },
 };
 
 function fmtRelative(iso: string): string {
@@ -61,13 +63,16 @@ function rowsToCSV(rows: AuditRow[]): string {
 }
 
 /**
- * Unified audit log surface — consolidates the four audit-trail tables
+ * Unified audit log surface — consolidates the audit-trail tables
  * the platform writes into one searchable view:
  *
  *   - tenant_view_log     — super-admin "View As" sessions
+ *   - tenant_edit_log     — inline tenant slug/domain edits
  *   - rooftop_detach_log  — rooftop detaches + merges
  *   - data_egress_log     — CSV exports by dealers
  *   - stripe_events       — webhook deliveries (failed + processed)
+ *   - staff_action_log    — role changes, golden-pin flips, demo-mode
+ *                            toggles, offer-increase requests/decisions
  *
  * Audience: platform admin's compliance officer / finance auditor.
  * Reads are RLS-gated per the underlying tables — a dealer admin
@@ -83,14 +88,14 @@ const UnifiedAuditLog = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [kindFilter, setKindFilter] = useState<Set<AuditKind>>(
-    () => new Set(["tenant_view", "tenant_edit", "rooftop_detach", "data_egress", "stripe_event"]),
+    () => new Set(["tenant_view", "tenant_edit", "rooftop_detach", "data_egress", "stripe_event", "staff_action"]),
   );
 
   const reload = useCallback(async () => {
     setLoading(true);
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    const [viewLogs, edits, detaches, egress, stripeEvents] = await Promise.all([
+    const [viewLogs, edits, detaches, egress, stripeEvents, staffActions] = await Promise.all([
       supabase
         .from("tenant_view_log")
         .select("started_at, super_admin_email, target_dealership_id, target_display_name, reason, ended_at")
@@ -120,6 +125,12 @@ const UnifiedAuditLog = () => {
         .select("received_at, type, livemode, summary, processed_at")
         .gte("received_at", since)
         .order("received_at", { ascending: false })
+        .limit(200),
+      supabase
+        .from("staff_action_log" as never)
+        .select("created_at, user_email, dealership_id, action, target_type, target_id, before, after, notes")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
         .limit(200),
     ]);
 
@@ -194,14 +205,50 @@ const UnifiedAuditLog = () => {
       });
     }
 
+    for (const r of (staffActions.data as any[]) ?? []) {
+      // Build a terse before→after diff for the detail line. Falls back
+      // to the notes if before/after are both null (e.g. demo_mode flips).
+      const summarize = (val: unknown): string => {
+        if (val === null || val === undefined) return "∅";
+        if (typeof val === "string" || typeof val === "number" || typeof val === "boolean") return String(val);
+        try {
+          const json = JSON.stringify(val);
+          return json.length > 80 ? `${json.slice(0, 77)}…` : json;
+        } catch {
+          return "{…}";
+        }
+      };
+      const beforeStr = summarize(r.before);
+      const afterStr = summarize(r.after);
+      const diff =
+        beforeStr === "∅" && afterStr === "∅"
+          ? null
+          : `${beforeStr} → ${afterStr}`;
+      const parts = [diff, r.notes].filter(Boolean);
+      const targetText = r.target_type
+        ? `${r.action} · ${r.target_type}${r.target_id ? `=${r.target_id}` : ""}`
+        : r.action;
+      out.push({
+        ts: r.created_at,
+        kind: "staff_action",
+        actor_email: r.user_email,
+        actor_role: r.dealership_id === "default" ? "platform-admin" : "dealer-staff",
+        target: targetText,
+        detail: parts.length > 0 ? parts.join(" · ") : r.action,
+        raw: r,
+      });
+    }
+
     out.sort((a, b) => (a.ts > b.ts ? -1 : 1));
     setRows(out);
     setLoading(false);
 
     if (viewLogs.error) console.warn("tenant_view_log read failed:", viewLogs.error.message);
+    if (edits.error) console.warn("tenant_edit_log read failed:", edits.error.message);
     if (detaches.error) console.warn("rooftop_detach_log read failed:", detaches.error.message);
     if (egress.error)   console.warn("data_egress_log read failed:", egress.error.message);
     if (stripeEvents.error) console.warn("stripe_events read failed:", stripeEvents.error.message);
+    if (staffActions.error) console.warn("staff_action_log read failed:", staffActions.error.message);
   }, []);
 
   useEffect(() => { void reload(); }, [reload]);
