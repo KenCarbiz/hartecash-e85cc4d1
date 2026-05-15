@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logStaffAction } from "@/lib/staffAuditLog";
 
 export type OfferApprovalStatus =
   | "pending" | "approved" | "denied" | "auto_approved" | "withdrawn";
@@ -102,13 +103,34 @@ export const useOfferApprovals = (
     decision: "approved" | "denied",
     notes?: string,
   ) => {
+    // Snapshot the request row BEFORE the decision so the audit
+    // captures the requested amount, the requester, and the reason.
+    const prior = requests.find((r) => r.id === requestId) ?? null;
     const { data, error } = await supabase.rpc(
       "decide_offer_request",
       { _request_id: requestId, _decision: decision, _decision_notes: notes || null } as never,
     );
     if (error) throw error;
+    const result = data as { ok: boolean; request_id: string; status: string; applied: boolean };
+    void logStaffAction({
+      action: decision === "approved" ? "offer_increase_approved" : "offer_increase_denied",
+      dealershipId: prior?.dealership_id ?? null,
+      targetType: "offer_approval_request",
+      targetId: requestId,
+      before: prior
+        ? {
+            submission_id: prior.submission_id,
+            current_offer: prior.current_offer,
+            requested_offer: prior.requested_offer,
+            reason: prior.reason,
+            requested_by: prior.requested_by,
+          }
+        : null,
+      after: { decision, applied: result.applied },
+      notes: notes || null,
+    });
     await refetch();
-    return data as { ok: boolean; request_id: string; status: string; applied: boolean };
+    return result;
   };
 
   return { requests, loading, missing, refetch, requestIncrease, decideRequest };

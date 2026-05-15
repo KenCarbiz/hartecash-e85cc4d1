@@ -3,6 +3,7 @@ import { MessageSquare, Mail, Phone, MicVocal, Loader2, MapPin, Repeat, ShieldCh
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
+import { logStaffAction } from "@/lib/staffAuditLog";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -415,6 +416,14 @@ const ChannelsSettings = () => {
     }
     if (data?.id) setSiteConfigId(data.id);
     setDemoDirty(false);
+    void logStaffAction({
+      action: demoMode ? "demo_mode_enabled" : "demo_mode_disabled",
+      dealershipId: tenant.dealership_id,
+      targetType: "site_config",
+      targetId: data?.id ?? siteConfigId ?? null,
+      before: null,
+      after: { demo_mode: demoMode, demo_offer_amount: Math.round(amt) },
+    });
     toast({
       title: demoMode ? "Demo mode ON" : "Demo mode OFF",
       description: demoMode

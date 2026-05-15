@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
+import { logStaffAction } from "@/lib/staffAuditLog";
 import { formatPhone } from "@/lib/utils";
 import {
   ALL_STATUS_OPTIONS, getStatusLabel,
@@ -2107,6 +2108,17 @@ export default function SubmissionDetailSheetClassic({
                         description: "You'll see this on the Manager Dispatch tab until decided.",
                       });
                     }
+                    void logStaffAction({
+                      action: result?.auto_approved
+                        ? "offer_increase_auto_approved"
+                        : "offer_increase_requested",
+                      dealershipId: (sub as { dealership_id?: string }).dealership_id ?? null,
+                      targetType: "submission",
+                      targetId: sub.id,
+                      before: { offered_price: (sub as { offered_price?: number }).offered_price ?? null },
+                      after:  { offered_price: Number(increaseAmount) },
+                      notes: `${increaseReason}${increaseNotes ? ` — ${increaseNotes}` : ""}`,
+                    });
                     setIncreaseOpen(false);
                     if (sub) onUpdate(sub);
                   } catch (e) {
