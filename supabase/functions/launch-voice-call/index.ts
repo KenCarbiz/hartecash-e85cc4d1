@@ -11,8 +11,10 @@ const corsHeaders = {
 
 /**
  * ZIP-code prefix → IANA timezone mapping for TCPA calling-hours compliance.
- * This covers the major US timezone bands. For edge-case ZIPs the function
- * falls back to America/New_York.
+ * Last-resort fallback only — submissions.customer_timezone (browser-reported)
+ * is far more accurate, and state-derivation via the SQL helper is the next
+ * preference. ZIP-prefix is coarse: a ZIP starting with "8" defaults to
+ * Mountain but misses Arizona (no DST) and Idaho's western Pacific chunk.
  */
 const ZIP_TO_TIMEZONE: Record<string, string> = {
   // Eastern
@@ -30,6 +32,42 @@ const ZIP_TO_TIMEZONE: Record<string, string> = {
 function getTimezoneFromZip(zip: string | null): string {
   if (!zip || zip.length < 1) return "America/New_York";
   return ZIP_TO_TIMEZONE[zip[0]] || "America/New_York";
+}
+
+/** Mirror of public.tcpa_timezone_for_state() — used as the second-
+ *  preference fallback when the customer_timezone column is null.
+ *  Cross-tz states default to the easternmost zone so we never call
+ *  too late under any interpretation. */
+function stateToTimezone(state: string | null): string {
+  const s = (state || "").toUpperCase();
+  if (["CT", "DE", "DC", "GA", "ME", "MD", "MA", "NH", "NJ", "NY", "NC", "OH", "PA", "RI", "SC", "VT", "VA", "WV", "FL", "IN", "KY", "MI", "TN"].includes(s)) return "America/New_York";
+  if (["AL", "AR", "IL", "IA", "LA", "MN", "MS", "MO", "OK", "WI", "KS", "NE", "TX", "ND", "SD"].includes(s)) return "America/Chicago";
+  if (["CO", "MT", "NM", "UT", "WY", "ID"].includes(s)) return "America/Denver";
+  if (s === "AZ") return "America/Phoenix";
+  if (["CA", "NV", "OR", "WA"].includes(s)) return "America/Los_Angeles";
+  if (s === "AK") return "America/Anchorage";
+  if (s === "HI") return "Pacific/Honolulu";
+  return ""; // signal "no state mapping" to caller
+}
+
+/** Resolution order for the customer's IANA tz (most → least accurate):
+ *    1. submissions.customer_timezone (browser-reported via PR #234)
+ *    2. State-derived via stateToTimezone()
+ *    3. ZIP-prefix via getTimezoneFromZip() — last-resort coarse heuristic. */
+function resolveCustomerTz(sub: { customer_timezone?: string | null; state?: string | null; zip?: string | null }): string {
+  const fromCol = (sub.customer_timezone || "").trim();
+  if (fromCol) {
+    // Sanity-check it parses as a valid IANA zone (Intl throws otherwise).
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: fromCol });
+      return fromCol;
+    } catch {
+      // Bad value cached — fall through to state/ZIP.
+    }
+  }
+  const fromState = stateToTimezone(sub.state || null);
+  if (fromState) return fromState;
+  return getTimezoneFromZip(sub.zip || null);
 }
 
 function getCurrentTimeInTz(tz: string): string {
@@ -423,7 +461,7 @@ serve(async (req) => {
     }
 
     // ── TCPA calling hours check ──
-    const customerTz = getTimezoneFromZip(submission.zip);
+    const customerTz = resolveCustomerTz(submission);
     const currentLocalTime = getCurrentTimeInTz(customerTz);
 
     // Fetch calling hours from campaign or use defaults
