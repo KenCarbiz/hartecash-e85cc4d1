@@ -45,16 +45,23 @@ interface PhotoEntry {
   created_at: string | null;
   size: number | null;
   source: "staff" | "customer";
+  stale: boolean;
 }
 
 /**
  * Customer-flow uploads use prefixes like front- / back- / dashboard-
  * (catIds set on the customer upload page) and extra- (manual adds).
- * Staff-uploaded photos via StaffFileUpload are prefixed staff-.
- * Detection is purely by filename; no schema change needed.
+ * Staff-uploaded photos via StaffFileUpload are prefixed staff-. When
+ * the file's lastModified was >24h before upload time, the prefix is
+ * `staff-stale-` instead — flags photos that may be re-used from an
+ * older shoot rather than taken on the lot today.
  */
 function classifyPhotoSource(filename: string): "staff" | "customer" {
   return filename.startsWith("staff-") ? "staff" : "customer";
+}
+
+function isStalePhoto(filename: string): boolean {
+  return filename.startsWith("staff-stale-");
 }
 
 interface AppraisalPhotosCardProps {
@@ -112,6 +119,7 @@ export default function AppraisalPhotosCard({
             ? f.metadata.size
             : null,
           source: classifyPhotoSource(f.name),
+          stale: isStalePhoto(f.name),
         }));
       setPhotos(rows);
       setLoading(false);
@@ -252,10 +260,12 @@ export default function AppraisalPhotosCard({
                   />
                   {p.source === "staff" && (
                     <span
-                      className="absolute bottom-0 left-0 right-0 text-[8px] font-bold uppercase tracking-wider text-white bg-blue-600/85 text-center leading-tight py-px"
-                      aria-label="Staff-uploaded photo"
+                      className={`absolute bottom-0 left-0 right-0 text-[8px] font-bold uppercase tracking-wider text-white text-center leading-tight py-px ${
+                        p.stale ? "bg-amber-600/90" : "bg-blue-600/85"
+                      }`}
+                      aria-label={p.stale ? "Stale staff photo" : "Staff-uploaded photo"}
                     >
-                      Staff
+                      {p.stale ? "Stale" : "Staff"}
                     </span>
                   )}
                 </div>
@@ -325,8 +335,13 @@ export default function AppraisalPhotosCard({
                   className="w-full h-full object-cover"
                 />
                 {p.source === "staff" && (
-                  <span className="absolute top-1 left-1 text-[9px] font-bold uppercase tracking-wider text-white bg-blue-600/90 rounded px-1.5 py-0.5">
-                    Staff
+                  <span
+                    className={`absolute top-1 left-1 text-[9px] font-bold uppercase tracking-wider text-white rounded px-1.5 py-0.5 ${
+                      p.stale ? "bg-amber-600/90" : "bg-blue-600/90"
+                    }`}
+                    title={p.stale ? "File last modified >24h before upload — may be re-used from an older shoot" : undefined}
+                  >
+                    {p.stale ? "Stale" : "Staff"}
                   </span>
                 )}
               </button>
