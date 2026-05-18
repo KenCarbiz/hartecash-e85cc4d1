@@ -4433,6 +4433,7 @@ export type Database = {
           check_request_done: boolean
           created_at: string
           customer_memory: Json
+          customer_timezone: string | null
           dealership_id: string
           decline_reason: string | null
           decline_reason_at: string | null
@@ -4586,6 +4587,7 @@ export type Database = {
           check_request_done?: boolean
           created_at?: string
           customer_memory?: Json
+          customer_timezone?: string | null
           dealership_id?: string
           decline_reason?: string | null
           decline_reason_at?: string | null
@@ -4739,6 +4741,7 @@ export type Database = {
           check_request_done?: boolean
           created_at?: string
           customer_memory?: Json
+          customer_timezone?: string | null
           dealership_id?: string
           decline_reason?: string | null
           decline_reason_at?: string | null
@@ -6457,6 +6460,10 @@ export type Database = {
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       is_submission_token_valid: { Args: { _token: string }; Returns: boolean }
+      is_tcpa_quiet_hour: {
+        Args: { _state: string; _ts?: string }
+        Returns: boolean
+      }
       licensed_states_valid: { Args: { _states: string[] }; Returns: boolean }
       log_customer_data_access: {
         Args: {
@@ -6666,6 +6673,7 @@ export type Database = {
             Args: { _comment?: string; _score: number; _token: string }
             Returns: Json
           }
+      tcpa_timezone_for_state: { Args: { _state: string }; Returns: string }
       update_staff_role: {
         Args: {
           _new_role: Database["public"]["Enums"]["app_role"]
