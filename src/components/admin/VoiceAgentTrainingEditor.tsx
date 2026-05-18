@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
+import { logStaffAction } from "@/lib/staffAuditLog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -801,11 +802,21 @@ const PhaseEditor = () => {
   const handleToggleRetire = async (row: PhaseRow) => {
     setSaving(row.id);
     try {
+      const wasRetired = !!row.retired_at;
+      const newRetiredAt = wasRetired ? null : new Date().toISOString();
       const { error } = await supabase.from("conversation_phases" as never)
-        .update({ retired_at: row.retired_at ? null : new Date().toISOString() } as never)
+        .update({ retired_at: newRetiredAt } as never)
         .eq("id", row.id);
       if (error) throw error;
-      toast({ title: row.retired_at ? "Reactivated" : "Retired" });
+      toast({ title: wasRetired ? "Reactivated" : "Retired" });
+      void logStaffAction({
+        action: wasRetired ? "voice_variant_revived" : "voice_variant_retired",
+        dealershipId: row.dealership_id,
+        targetType: "conversation_phase",
+        targetId: row.id,
+        before: { retired_at: row.retired_at, phase_key: row.phase_key, variant_label: row.variant_label },
+        after:  { retired_at: newRetiredAt },
+      });
       await refetch();
     } catch (e) {
       toast({ title: "Action failed", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
@@ -989,11 +1000,21 @@ const SignalEditor = () => {
   const handleToggleRetire = async (row: SignalRow) => {
     setSaving(row.id);
     try {
+      const wasRetired = !!row.retired_at;
+      const newRetiredAt = wasRetired ? null : new Date().toISOString();
       const { error } = await supabase.from("customer_signals" as never)
-        .update({ retired_at: row.retired_at ? null : new Date().toISOString() } as never)
+        .update({ retired_at: newRetiredAt } as never)
         .eq("id", row.id);
       if (error) throw error;
-      toast({ title: row.retired_at ? "Reactivated" : "Retired" });
+      toast({ title: wasRetired ? "Reactivated" : "Retired" });
+      void logStaffAction({
+        action: wasRetired ? "voice_variant_revived" : "voice_variant_retired",
+        dealershipId: row.dealership_id,
+        targetType: "customer_signal",
+        targetId: row.id,
+        before: { retired_at: row.retired_at, signal_key: row.signal_key, variant_label: row.variant_label },
+        after:  { retired_at: newRetiredAt },
+      });
       await refetch();
     } catch (e) {
       toast({ title: "Action failed", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
@@ -1161,11 +1182,21 @@ const IntelEditor = () => {
   const handleToggleRetire = async (row: IntelRow) => {
     setSaving(row.id);
     try {
+      const wasRetired = !!row.retired_at;
+      const newRetiredAt = wasRetired ? null : new Date().toISOString();
       const { error } = await supabase.from("industry_intel" as never)
-        .update({ retired_at: row.retired_at ? null : new Date().toISOString() } as never)
+        .update({ retired_at: newRetiredAt } as never)
         .eq("id", row.id);
       if (error) throw error;
-      toast({ title: row.retired_at ? "Reactivated" : "Retired" });
+      toast({ title: wasRetired ? "Reactivated" : "Retired" });
+      void logStaffAction({
+        action: wasRetired ? "voice_variant_revived" : "voice_variant_retired",
+        dealershipId: row.dealership_id,
+        targetType: "industry_intel",
+        targetId: row.id,
+        before: { retired_at: row.retired_at, scope: row.scope, topic: row.topic, variant_label: row.variant_label },
+        after:  { retired_at: newRetiredAt },
+      });
       await refetch();
     } catch (e) {
       toast({ title: "Action failed", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
