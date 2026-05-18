@@ -3459,6 +3459,33 @@ export type Database = {
         }
         Relationships: []
       }
+      processed_webhook_calls: {
+        Row: {
+          call_log_id: string | null
+          id: string
+          payload_hash: string
+          processed_at: string
+          provider: string
+          provider_call_id: string
+        }
+        Insert: {
+          call_log_id?: string | null
+          id?: string
+          payload_hash: string
+          processed_at?: string
+          provider: string
+          provider_call_id: string
+        }
+        Update: {
+          call_log_id?: string | null
+          id?: string
+          payload_hash?: string
+          processed_at?: string
+          provider?: string
+          provider_call_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -4241,6 +4268,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      staff_action_log: {
+        Row: {
+          action: string
+          after: Json | null
+          before: Json | null
+          created_at: string
+          dealership_id: string | null
+          id: string
+          ip_address: unknown
+          notes: string | null
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          dealership_id?: string | null
+          id?: string
+          ip_address?: unknown
+          notes?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          dealership_id?: string | null
+          id?: string
+          ip_address?: unknown
+          notes?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       staff_permission_assignments: {
         Row: {
