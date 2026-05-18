@@ -61,11 +61,26 @@ const MotoStepContact = ({
         },
       });
       if (error || data?.error || !data?.challenge_id) {
+        // Surface the actual server-side reason so support can tell
+        // "our Twilio creds are wrong" apart from "customer typed a
+        // bad number". Previously every error rendered the same
+        // "Check the number and try again" message, which made
+        // operator triage impossible.
+        const reason = data?.error || (error ? "network" : "unknown");
+        const description =
+          reason === "rate_limited"  ? "Too many attempts. Please wait an hour and try again." :
+          reason === "invalid_phone" ? "That phone number doesn't look right — please double-check." :
+          reason === "store_failed"  ? "We couldn't save your verification request. Please refresh and try again — if it persists, contact the dealer." :
+          reason === "send_failed"   ? "Our SMS provider couldn't deliver to that number. Try a different mobile number, or contact the dealer." :
+          reason === "internal"      ? "Something went wrong on our end. Please refresh and try again." :
+          reason === "network"       ? "Couldn't reach our servers. Check your connection and try again." :
+                                       "Couldn't send the code. Please try again.";
+        // Log to console so a power user or support can grep the
+        // server logs by reason. Never include the user's phone.
+        console.warn("[MotoStepContact] sendCode failed:", { reason, error_message: error?.message });
         toast({
           title: "Couldn't send code",
-          description: data?.error === "rate_limited"
-            ? "Too many attempts. Please wait an hour and try again."
-            : "Check the number and try again.",
+          description,
           variant: "destructive",
         });
         return;
