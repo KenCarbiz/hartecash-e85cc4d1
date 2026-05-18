@@ -6544,6 +6544,7 @@ export type Database = {
           status: string
         }[]
       }
+      prune_processed_webhook_calls: { Args: never; Returns: undefined }
       purge_customer_data: { Args: { _token: string }; Returns: Json }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
