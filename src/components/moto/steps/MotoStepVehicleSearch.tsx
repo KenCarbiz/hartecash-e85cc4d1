@@ -11,6 +11,7 @@ import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "../ymmData";
 import { cn } from "@/lib/utils";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
 import HeroTuner, { useHeroTuner } from "../HeroTuner";
+import ButtonTuner, { useButtonTuner } from "../ButtonTuner";
 import { useTunerConfig } from "../useTunerConfig";
 
 const US_STATES = [
@@ -52,6 +53,7 @@ const MotoStepVehicleSearch = ({
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
   const tuner = useHeroTuner();
+  const btn = useButtonTuner();
 
 
   const [tab, setTab] = useState<Exclude<LookupMode, "ymm">>(
@@ -202,23 +204,33 @@ const MotoStepVehicleSearch = ({
                 Get an instant valuation &amp; then add more info to get a firm offer.
               </p>
               <MotoCard className="mt-6 p-6">
-            <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
-              {TABS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTab(t.id)}
-                  className={cn(
-                    "rounded-md py-[9px] px-3 transition",
-                    tab === t.id
-                      ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)] shadow-sm"
-                      : "text-zinc-700 hover:text-zinc-900",
-                  )}
-                >
-                  {t.label}
-                </button>
-              ))}
+            <div
+              className="mb-5 grid grid-cols-2 gap-2 bg-zinc-100 p-1"
+              style={{ borderRadius: btn.tabRadius + 4 }}
+            >
+              {TABS.map((t) => {
+                const active = tab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTab(t.id)}
+                    className="py-[9px] px-3 transition"
+                    style={{
+                      borderRadius: btn.tabRadius,
+                      fontSize: `${btn.tabFontSize}px`,
+                      fontWeight: btn.tabFontWeight,
+                      backgroundColor: active ? btn.tabActiveBg : "transparent",
+                      color: active ? btn.tabActiveText : btn.tabInactiveText,
+                      boxShadow: active ? "0 1px 2px rgba(0,0,0,0.05)" : "none",
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
             </div>
+
 
 
             {tab === "vin" && (
@@ -301,7 +313,14 @@ const MotoStepVehicleSearch = ({
 
             <div className="mt-8">
               <MotoPrimaryButton
-                className="w-full py-2 rounded-full text-sm bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                className="w-full py-2"
+                style={{
+                  borderRadius: btn.nextRadius,
+                  backgroundColor: btn.nextBg,
+                  color: btn.nextText,
+                  fontSize: `${btn.nextFontSize}px`,
+                  fontWeight: btn.nextFontWeight,
+                }}
                 onClick={submit}
                 disabled={!canSubmit}
                 loading={loading}
@@ -311,7 +330,16 @@ const MotoStepVehicleSearch = ({
             </div>
               </MotoCard>
 
-              <div className="mt-4 rounded-md bg-zinc-100 py-3 text-center text-sm font-semibold text-zinc-700">
+              <div
+                className="mt-4 py-3 text-center"
+                style={{
+                  borderRadius: btn.badgeRadius,
+                  backgroundColor: btn.badgeBg,
+                  color: btn.badgeText,
+                  fontSize: `${btn.badgeFontSize}px`,
+                  fontWeight: btn.badgeFontWeight,
+                }}
+              >
                 Get a valuation in less than 30 seconds!
               </div>
             </div>
@@ -445,6 +473,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
         )}
       </div>
       <HeroTuner />
+      <ButtonTuner />
     </>
   );
 };
