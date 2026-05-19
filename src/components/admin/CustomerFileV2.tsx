@@ -1417,6 +1417,7 @@ function VehicleTab({
         >
           <StaffFileUpload
             token={sub.token}
+            submissionId={sub.id ?? undefined}
             bucket="submission-photos"
             onUploadComplete={() => setPhotoRefreshKey((k) => k + 1)}
           />

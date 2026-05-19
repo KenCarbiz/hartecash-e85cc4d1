@@ -6,11 +6,17 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTenant } from "@/contexts/TenantContext";
 import { useDocumentConfig } from "@/hooks/useDocumentConfig";
+import { parsePhotoExif, savePhotoMetadata } from "@/lib/photoExif";
 
 interface StaffFileUploadProps {
   token: string;
   bucket: "submission-photos" | "customer-documents";
   onUploadComplete: () => void;
+  /** When provided + bucket === "submission-photos", each upload is
+   *  EXIF-parsed client-side and a photo_metadata row is written so
+   *  the AppraisalPhotosCard trust badge populates for staff uploads
+   *  the same way it does for customer uploads via UploadPhotosClarity. */
+  submissionId?: string;
 }
 
 // Fallback shown when document_config has no rows yet (instance
@@ -32,7 +38,7 @@ const FALLBACK_DOC_TYPES = [
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-const StaffFileUpload = ({ token, bucket, onUploadComplete }: StaffFileUploadProps) => {
+const StaffFileUpload = ({ token, bucket, onUploadComplete, submissionId }: StaffFileUploadProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<{ [key: number]: string }>({});
   const [docType, setDocType] = useState("drivers_license_front");
@@ -153,6 +159,31 @@ const StaffFileUpload = ({ token, bucket, onUploadComplete }: StaffFileUploadPro
         if (error) throw error;
 
         if (!isPhotos && docType === "drivers_license_front") dlFrontPath = path;
+
+        // Photo uploads → parse EXIF + persist trust verdict so the
+        // AppraisalPhotosCard badge populates. Fire-and-forget, never
+        // blocks the upload. Skipped when submissionId isn't passed
+        // (older callers) or when uploading docs rather than photos.
+        // expected coords are null for staff uploads — we don't know
+        // the dealership's exact lat/lng here, so the trust tier is
+        // determined by freshness + software-tag signals alone (no
+        // distance-based suspicious flag, but software-edited and
+        // year-stale photos still get caught).
+        if (isPhotos && submissionId) {
+          parsePhotoExif(file, null)
+            .then((exif) =>
+              savePhotoMetadata({
+                submissionId,
+                submissionToken: token,
+                storageBucket: bucket,
+                storagePath: path,
+                photoCategory: "staff_upload",
+                expected: null,
+                exif,
+              }),
+            )
+            .catch((e) => console.warn("[StaffFileUpload] EXIF save failed:", e));
+        }
       }
 
       // Mark as uploaded
