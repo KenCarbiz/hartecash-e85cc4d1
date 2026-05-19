@@ -273,6 +273,16 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
           const Icon = ICON_BY_DOC[doc.doc_id] || FileText;
           const isActive = activeSlot === doc.doc_id;
           const isRequired = doc.role === "required";
+          const ocr = ocrStates[doc.doc_id];
+          const ocrBadge = doc.ocr_pipeline && ocr
+            ? ocr.status === "queued"
+              ? { label: "AI queued",   cls: "bg-muted text-muted-foreground border-border",            icon: <Sparkles className="w-2.5 h-2.5" /> }
+              : ocr.status === "running"
+              ? { label: "AI scanning", cls: "bg-primary/10 text-primary border-primary/30 animate-pulse", icon: <Loader2 className="w-2.5 h-2.5 animate-spin" /> }
+              : ocr.status === "completed"
+              ? { label: "AI verified", cls: "bg-success/10 text-success border-success/30",            icon: <Check    className="w-2.5 h-2.5" /> }
+              : { label: "AI failed",   cls: "bg-destructive/10 text-destructive border-destructive/30", icon: <CircleAlert className="w-2.5 h-2.5" /> }
+            : null;
           return (
             <button
               key={doc.doc_id}
