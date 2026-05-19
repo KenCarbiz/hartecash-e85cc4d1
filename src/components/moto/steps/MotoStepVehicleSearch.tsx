@@ -376,8 +376,9 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
 
   const { w, gap } = settings[bp];
   const reservedImageSpace = w + gap;
-  const update = (key: "w" | "gap", value: number) =>
+  const updateBp = (key: "w" | "gap", value: number) =>
     setSettings((s) => ({ ...s, [bp]: { ...s[bp], [key]: value } }));
+
 
   return (
     <>
