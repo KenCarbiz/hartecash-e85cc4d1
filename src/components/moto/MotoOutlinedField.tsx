@@ -54,7 +54,7 @@ export const MotoOutlinedInput = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
-            className="w-full bg-transparent px-3 py-3.5 text-base text-zinc-900 outline-none placeholder:text-zinc-400"
+            className="h-[52px] w-full bg-transparent px-3 py-3.5 text-base text-zinc-900 outline-none placeholder:text-zinc-400"
             {...rest}
           />
           {trailing ? <div className="absolute inset-y-0 right-2 flex items-center text-zinc-500">{trailing}</div> : null}
