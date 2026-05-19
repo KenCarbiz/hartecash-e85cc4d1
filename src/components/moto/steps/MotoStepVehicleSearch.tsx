@@ -218,10 +218,8 @@ const MotoStepVehicleSearch = ({
                 placeholder="e.g. EX-L, Sport, Premium Luxury"
               />
             )}
-            <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-              <span className="h-px flex-1 bg-zinc-200" />
+            <div className="text-center text-xs font-semibold uppercase tracking-wider text-zinc-400">
               OR
-              <span className="h-px flex-1 bg-zinc-200" />
             </div>
             <MotoOutlinedInput
               label="VIN"
