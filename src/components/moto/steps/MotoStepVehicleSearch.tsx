@@ -437,6 +437,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
           </button>
         )}
       </div>
+      <HeroTuner />
     </>
   );
 };
