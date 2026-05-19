@@ -11,6 +11,7 @@ import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "../ymmData";
 import { cn } from "@/lib/utils";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
 import HeroTuner, { useHeroTuner } from "../HeroTuner";
+import { useTunerConfig } from "../useTunerConfig";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
@@ -355,23 +356,29 @@ const useCurrentBreakpoint = (): BP => {
 
 const HeroVehicleTuner = ({ src }: { src: string }) => {
   const bp = useCurrentBreakpoint();
-  const [settings, setSettings] = useState<Record<BP, { w: number; gap: number }>>(() => {
-    try {
-      const raw = localStorage.getItem(TUNER_STORAGE_KEY);
-      if (raw) return { ...TUNER_DEFAULTS, ...JSON.parse(raw) };
-    } catch {}
-    return TUNER_DEFAULTS;
-  });
+  const { tenant } = useTenant();
+  const { config, update } = useTunerConfig(tenant.dealership_id);
+  const remote = (config.vehicle ?? {}) as Partial<Record<BP, { w: number; gap: number }>>;
+  const settings: Record<BP, { w: number; gap: number }> = {
+    ...TUNER_DEFAULTS,
+    ...remote,
+  };
+  const setSettings = (
+    updater:
+      | Record<BP, { w: number; gap: number }>
+      | ((s: Record<BP, { w: number; gap: number }>) => Record<BP, { w: number; gap: number }>),
+  ) => {
+    const next = typeof updater === "function" ? (updater as Function)(settings) : updater;
+    update("vehicle", next as unknown as Record<string, unknown>);
+  };
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    try { localStorage.setItem(TUNER_STORAGE_KEY, JSON.stringify(settings)); } catch {}
-  }, [settings]);
 
   const { w, gap } = settings[bp];
   const reservedImageSpace = w + gap;
-  const update = (key: "w" | "gap", value: number) =>
+  const updateBp = (key: "w" | "gap", value: number) =>
     setSettings((s) => ({ ...s, [bp]: { ...s[bp], [key]: value } }));
+
 
   return (
     <>
@@ -403,7 +410,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
             <input
               type="range" min={120} max={1800} step={10}
               value={w}
-              onChange={(e) => update("w", Number(e.target.value))}
+              onChange={(e) => updateBp("w", Number(e.target.value))}
               className="mb-3 w-full"
             />
             <label className="block text-xs font-medium text-zinc-600">
@@ -413,7 +420,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
             <input
               type="range" min={-400} max={400} step={4}
               value={gap}
-              onChange={(e) => update("gap", Number(e.target.value))}
+              onChange={(e) => updateBp("gap", Number(e.target.value))}
               className="mb-3 w-full"
             />
             <button

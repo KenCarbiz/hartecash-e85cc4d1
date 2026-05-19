@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useTenant } from "@/contexts/TenantContext";
+import { useTunerConfig } from "./useTunerConfig";
 
 export type HeroTunerValues = {
   size: number; // px
@@ -27,59 +29,49 @@ const DEFAULTS: HeroTunerValues = {
   font: FONT_OPTIONS[0].value,
 };
 
-const STORAGE_KEY = "moto-hero-tuner-v1";
+function merge(remote: unknown): HeroTunerValues {
+  if (!remote || typeof remote !== "object") return DEFAULTS;
+  return { ...DEFAULTS, ...(remote as Partial<HeroTunerValues>) };
+}
 
 export function useHeroTuner(): HeroTunerValues {
-  const [values, setValues] = useState<HeroTunerValues>(DEFAULTS);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setValues({ ...DEFAULTS, ...JSON.parse(raw) });
-    } catch {}
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<HeroTunerValues>).detail;
-      if (detail) setValues(detail);
-    };
-    window.addEventListener("hero-tuner:change", handler);
-    return () => window.removeEventListener("hero-tuner:change", handler);
-  }, []);
-  return values;
+  const { tenant } = useTenant();
+  const { config } = useTunerConfig(tenant.dealership_id);
+  return merge(config.hero);
 }
 
 export default function HeroTuner() {
+  const { tenant } = useTenant();
+  const { config, update } = useTunerConfig(tenant.dealership_id);
+  const values = merge(config.hero);
   const [open, setOpen] = useState(false);
-  const [values, setValues] = useState<HeroTunerValues>(DEFAULTS);
 
+  // local optimistic state so sliders feel snappy
+  const [local, setLocal] = useState<HeroTunerValues>(values);
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setValues({ ...DEFAULTS, ...JSON.parse(raw) });
-    } catch {}
-  }, []);
+    setLocal(values);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(values)]);
 
-  const update = (patch: Partial<HeroTunerValues>) => {
-    const next = { ...values, ...patch };
-    setValues(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {}
-    window.dispatchEvent(new CustomEvent("hero-tuner:change", { detail: next }));
+  const change = (patch: Partial<HeroTunerValues>) => {
+    const next = { ...local, ...patch };
+    setLocal(next);
+    update("hero", next as unknown as Record<string, unknown>);
   };
 
   const reset = () => {
-    setValues(DEFAULTS);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {}
-    window.dispatchEvent(new CustomEvent("hero-tuner:change", { detail: DEFAULTS }));
+    setLocal(DEFAULTS);
+    update("hero", DEFAULTS as unknown as Record<string, unknown>);
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] font-sans text-xs">
+    <div className="fixed bottom-4 right-20 z-[9999] font-sans text-xs">
       {open ? (
         <div className="w-72 rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
           <div className="mb-3 flex items-center justify-between">
-            <span className="font-semibold text-zinc-900">Hero Tuner</span>
+            <span className="font-semibold text-zinc-900">
+              Hero Tuner <span className="text-zinc-400">(synced)</span>
+            </span>
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -93,14 +85,14 @@ export default function HeroTuner() {
             <label className="block">
               <div className="flex justify-between text-zinc-600">
                 <span>Headline size</span>
-                <span>{values.size}px</span>
+                <span>{local.size}px</span>
               </div>
               <input
                 type="range"
                 min={16}
                 max={96}
-                value={values.size}
-                onChange={(e) => update({ size: Number(e.target.value) })}
+                value={local.size}
+                onChange={(e) => change({ size: Number(e.target.value) })}
                 className="w-full"
               />
             </label>
@@ -108,15 +100,15 @@ export default function HeroTuner() {
             <label className="block">
               <div className="flex justify-between text-zinc-600">
                 <span>Headline weight</span>
-                <span>{values.weight}</span>
+                <span>{local.weight}</span>
               </div>
               <input
                 type="range"
                 min={100}
                 max={900}
                 step={100}
-                value={values.weight}
-                onChange={(e) => update({ weight: Number(e.target.value) })}
+                value={local.weight}
+                onChange={(e) => change({ weight: Number(e.target.value) })}
                 className="w-full"
               />
             </label>
@@ -124,8 +116,8 @@ export default function HeroTuner() {
             <label className="block">
               <span className="text-zinc-600">Font</span>
               <select
-                value={values.font}
-                onChange={(e) => update({ font: e.target.value })}
+                value={local.font}
+                onChange={(e) => change({ font: e.target.value })}
                 className="mt-1 w-full rounded border border-zinc-300 px-2 py-1"
               >
                 {FONT_OPTIONS.map((f) => (
@@ -140,8 +132,8 @@ export default function HeroTuner() {
               <span className="text-zinc-600">Headline color</span>
               <input
                 type="color"
-                value={values.color}
-                onChange={(e) => update({ color: e.target.value })}
+                value={local.color}
+                onChange={(e) => change({ color: e.target.value })}
                 className="h-7 w-12 cursor-pointer rounded border border-zinc-300"
               />
             </label>
@@ -151,14 +143,14 @@ export default function HeroTuner() {
             <label className="block">
               <div className="flex justify-between text-zinc-600">
                 <span>Subline size</span>
-                <span>{values.subSize}px</span>
+                <span>{local.subSize}px</span>
               </div>
               <input
                 type="range"
                 min={10}
                 max={32}
-                value={values.subSize}
-                onChange={(e) => update({ subSize: Number(e.target.value) })}
+                value={local.subSize}
+                onChange={(e) => change({ subSize: Number(e.target.value) })}
                 className="w-full"
               />
             </label>
@@ -167,8 +159,8 @@ export default function HeroTuner() {
               <span className="text-zinc-600">Subline color</span>
               <input
                 type="color"
-                value={values.subColor}
-                onChange={(e) => update({ subColor: e.target.value })}
+                value={local.subColor}
+                onChange={(e) => change({ subColor: e.target.value })}
                 className="h-7 w-12 cursor-pointer rounded border border-zinc-300"
               />
             </label>
@@ -180,6 +172,10 @@ export default function HeroTuner() {
             >
               Reset to defaults
             </button>
+
+            <div className="text-[10px] leading-snug text-zinc-400">
+              Changes save to the server and update for every visitor in real time.
+            </div>
           </div>
         </div>
       ) : (

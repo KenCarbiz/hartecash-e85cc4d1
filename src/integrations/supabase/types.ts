@@ -4295,6 +4295,7 @@ export type Database = {
           hero_headline: string
           hero_layout: string
           hero_subtext: string
+          hero_tuner_config: Json
           id: string
           instagram_url: string | null
           landing_cta_color: string | null
@@ -4411,6 +4412,7 @@ export type Database = {
           hero_headline?: string
           hero_layout?: string
           hero_subtext?: string
+          hero_tuner_config?: Json
           id?: string
           instagram_url?: string | null
           landing_cta_color?: string | null
@@ -4527,6 +4529,7 @@ export type Database = {
           hero_headline?: string
           hero_layout?: string
           hero_subtext?: string
+          hero_tuner_config?: Json
           id?: string
           instagram_url?: string | null
           landing_cta_color?: string | null
