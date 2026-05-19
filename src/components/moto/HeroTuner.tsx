@@ -154,14 +154,25 @@ export const VEHICLE_DEFAULTS: VehicleTunerValues = {
 
 function mergeVehicle(remote: unknown): VehicleTunerValues {
   if (!remote || typeof remote !== "object") return VEHICLE_DEFAULTS;
-  return { ...VEHICLE_DEFAULTS, ...(remote as Partial<VehicleTunerValues>) };
+  const r = remote as Record<string, unknown>;
+  const num = (v: unknown, d: number) => (typeof v === "number" && Number.isFinite(v) ? v : d);
+  const angle = r.angle === "side" || r.angle === "three_quarter" || r.angle === "front"
+    ? (r.angle as VehicleTunerValues["angle"])
+    : VEHICLE_DEFAULTS.angle;
+  return {
+    width: num(r.width, VEHICLE_DEFAULTS.width),
+    offsetY: num(r.offsetY, VEHICLE_DEFAULTS.offsetY),
+    angle,
+    flip: typeof r.flip === "boolean" ? r.flip : VEHICLE_DEFAULTS.flip,
+  };
 }
 
 export function useVehicleTuner(): VehicleTunerValues {
   const { tenant } = useTenant();
   const { config } = useTunerConfig(tenant.dealership_id);
-  return mergeVehicle(config.vehicle);
+  return mergeVehicle((config as Record<string, unknown>).heroVehicle);
 }
+
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
@@ -235,7 +246,7 @@ export default function HeroTuner() {
   const { tenant } = useTenant();
   const { config, update, status, realtime, lastUpdatedAt } = useTunerConfig(tenant.dealership_id);
   const values = merge(config.hero);
-  const vehicleValues = mergeVehicle(config.vehicle);
+  const vehicleValues = mergeVehicle((config as Record<string, unknown>).heroVehicle);
   const { liveStatus, liveCheckedAt, liveError } = useLiveCheck(
     tenant.dealership_id,
     values,
@@ -264,15 +275,16 @@ export default function HeroTuner() {
   const changeVehicle = (patch: Partial<VehicleTunerValues>) => {
     const next = { ...localVehicle, ...patch };
     setLocalVehicle(next);
-    update("vehicle", next as unknown as Record<string, unknown>);
+    update("heroVehicle", next as unknown as Record<string, unknown>);
   };
 
   const reset = () => {
     setLocal(DEFAULTS);
     update("hero", DEFAULTS as unknown as Record<string, unknown>);
     setLocalVehicle(VEHICLE_DEFAULTS);
-    update("vehicle", VEHICLE_DEFAULTS as unknown as Record<string, unknown>);
+    update("heroVehicle", VEHICLE_DEFAULTS as unknown as Record<string, unknown>);
   };
+
 
   return (
     <div className="fixed bottom-4 right-20 z-[9999] font-sans text-xs">
