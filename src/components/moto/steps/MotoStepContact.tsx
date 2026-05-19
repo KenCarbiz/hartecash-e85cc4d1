@@ -271,14 +271,18 @@ const MotoStepContact = ({
               className="py-3 opacity-100 hover:opacity-100 active:opacity-100"
               loading={sending}
               disabled={sending}
-              onClick={sendCode}
+              onClick={requireVerify ? sendCode : advanceWithoutVerify}
             >
               Get Firm Offer
             </MotoPrimaryButton>
           </div>
           <p className="mt-3 text-center text-[11px] leading-relaxed text-zinc-500">
-            We'll send a one-time code to <span className="font-semibold">{phone}</span> to
-            verify your number before revealing your firm offer.{" "}
+            {requireVerify ? (
+              <>We'll send a one-time code to <span className="font-semibold">{phone}</span> to
+              verify your number before revealing your firm offer.{" "}</>
+            ) : (
+              <>Your firm offer will appear on the next screen.{" "}</>
+            )}
             <button
               type="button"
               onClick={() => setPhase("form")}
