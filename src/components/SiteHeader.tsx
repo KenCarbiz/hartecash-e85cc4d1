@@ -79,11 +79,27 @@ const SiteHeader = () => {
             {[
               { href: "#compare", label: `Why ${dealerName.split(" ")[0]}`, isAnchor: true },
               { to: "/trade", label: "Trade-In" },
-              { to: "/about", label: "About Us" },
+              { to: "/about", label: "About Us", scrollOnCurrent: true },
               { to: "/schedule", label: "Schedule a Visit" },
               { to: "/my-submission", label: "View My Offer" },
-            ].map((item, i) =>
-              item.isAnchor ? (
+            ].map((item, i) => {
+              const onCurrentPage = item.to && location.pathname === item.to;
+              if (item.scrollOnCurrent && onCurrentPage) {
+                return (
+                  <a
+                    key={i}
+                    href="#about-content"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById("about-content")?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="px-3 py-2 rounded-lg hover:bg-muted/70 hover:text-primary transition-all duration-200"
+                  >
+                    {item.label}
+                  </a>
+                );
+              }
+              return item.isAnchor ? (
                 <a
                   key={i}
                   href={item.href}
@@ -99,8 +115,8 @@ const SiteHeader = () => {
                 >
                   {item.label}
                 </Link>
-              )
-            )}
+              );
+            })}
           </nav>
 
           <div className="flex items-center gap-2 lg:hidden">
