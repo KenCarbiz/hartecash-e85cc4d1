@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/contexts/TenantContext";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import MotoCard from "../MotoCard";
 import MotoPrimaryButton from "../MotoPrimaryButton";
 import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
+import SaveOfferButton from "@/components/offer/SaveOfferButton";
 import type { MotoFlowState } from "../types";
 import { calculateAndPersistOffer } from "../motoSubmission";
 
@@ -19,6 +21,7 @@ const MotoStepOffer = ({
   onNext: (next: Partial<MotoFlowState>) => void;
 }) => {
   const { tenant } = useTenant();
+  const { config } = useSiteConfig();
   const { toast } = useToast();
   const [computing, setComputing] = useState(true);
   const [low, setLow] = useState<number | null>(state.offer.low);
@@ -121,6 +124,19 @@ const MotoStepOffer = ({
           {firm ? (
             <div className="space-y-2">
               <MotoPrimaryButton onClick={accept}>Accept &amp; Schedule Inspection</MotoPrimaryButton>
+              {state.submissionToken && (
+                <SaveOfferButton
+                  token={state.submissionToken}
+                  vehicleStr={[state.bbVehicle?.year, state.bbVehicle?.make, state.bbVehicle?.model]
+                    .filter(Boolean)
+                    .join(" ")}
+                  customerName={`${state.contact.firstName} ${state.contact.lastName}`.trim()}
+                  customerEmail={state.contact.email}
+                  customerPhone={state.contact.phone}
+                  guaranteeDays={Number(config.price_guarantee_days) || 8}
+                  dealershipName={config.dealership_name}
+                />
+              )}
               <button
                 type="button"
                 onClick={decline}

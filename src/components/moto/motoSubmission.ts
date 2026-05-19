@@ -41,6 +41,29 @@ export interface MotoOfferResult {
 }
 
 /**
+ * Load the dealer's pricing_reveal_mode for this rooftop. Soft-fails
+ * to 'contact_first' if offer_settings is unavailable.
+ */
+export async function loadPricingRevealMode(
+  dealershipId: string,
+): Promise<"price_first" | "range_then_price" | "contact_first"> {
+  try {
+    const { data } = await supabase
+      .from("offer_settings")
+      .select("pricing_reveal_mode")
+      .eq("dealership_id", dealershipId)
+      .maybeSingle();
+    const mode = (data as { pricing_reveal_mode?: string } | null)?.pricing_reveal_mode;
+    if (mode === "price_first" || mode === "range_then_price" || mode === "contact_first") {
+      return mode;
+    }
+  } catch (e) {
+    console.warn("[moto] loadPricingRevealMode failed:", e);
+  }
+  return "contact_first";
+}
+
+/**
  * Run the offer math and persist a submissions row. Resolves with the
  * raw estimate, the firm offer (if the dealer enabled auto-firm), and
  * the token we'll need for scheduling / photo upload.
