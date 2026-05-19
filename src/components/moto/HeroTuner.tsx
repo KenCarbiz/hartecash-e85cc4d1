@@ -24,6 +24,8 @@ export type HeroTunerValues = {
   // CTA color powering active tab + "valuation in 30 seconds" pill
   ctaColor: string;
   ctaTextColor: string;
+  // Vertical thickness (padding-y, px) of the VIN/Plate tab buttons
+  tabPadY: number;
 };
 
 const FONT_OPTIONS = [
@@ -54,6 +56,7 @@ export const DEFAULTS: HeroTunerValues = {
   instantWeight: 300,
   ctaColor: BRAND_YELLOW,
   ctaTextColor: BRAND_YELLOW_INK,
+  tabPadY: 9,
 };
 
 function merge(remote: unknown): HeroTunerValues {
@@ -346,6 +349,23 @@ export default function HeroTuner() {
               value={local.ctaTextColor}
               onChange={(ctaTextColor) => change({ ctaTextColor })}
             />
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Tab thickness</span>
+                <span>{local.tabPadY}px</span>
+              </div>
+              <input
+                type="range"
+                min={4}
+                max={32}
+                step={1}
+                value={local.tabPadY}
+                onChange={(e) => change({ tabPadY: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="text-[10px] text-zinc-400">Vertical padding of VIN / Plate buttons.</div>
+            </label>
+
 
             <button
               type="button"
