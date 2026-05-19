@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTunerConfig } from "./useTunerConfig";
+import TenantLiveStatus from "./TenantLiveStatus";
 
 type LiveStatus = "idle" | "checking" | "ok" | "fail";
 const LIVE_HOST = "hartecash.com";
@@ -497,6 +498,8 @@ export default function HeroTuner() {
               <div className="text-[10px] text-zinc-400">Vertical padding of VIN / Plate buttons.</div>
             </label>
 
+            <hr className="border-zinc-200" />
+            <TenantLiveStatus activeDealershipId={tenant.dealership_id} />
 
             <button
               type="button"
