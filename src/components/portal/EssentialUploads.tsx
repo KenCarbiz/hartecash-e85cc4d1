@@ -171,20 +171,62 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
       // OCR auto-fill — fired here when the customer uploaded directly.
       // Mirrors StaffFileUpload.tsx so dealer + customer paths share
       // the same hook into parse-drivers-license / parse-title-vin.
+      // Status is tracked in ocr_jobs so the tile shows live progress.
       if (doc.ocr_pipeline) {
+        let jobId: string | null = null;
         try {
+          setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "queued" } }));
+          const { data: jobRow } = await supabase
+            .from("ocr_jobs" as never)
+            .insert({
+              submission_id: submissionId,
+              submission_token: token,
+              dealership_id: dealershipId || null,
+              doc_id: doc.doc_id,
+              pipeline: doc.ocr_pipeline,
+              storage_bucket: bucket,
+              storage_path: path,
+              status: "queued",
+            } as never)
+            .select("id")
+            .single();
+          jobId = (jobRow as { id?: string } | null)?.id ?? null;
+
           const { data: signedData } = await supabase.storage
             .from(bucket)
             .createSignedUrl(path, 300);
+
+          if (jobId) {
+            await supabase.from("ocr_jobs" as never).update({ status: "running" } as never).eq("id", jobId);
+          }
+          setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "running" } }));
+
           if (signedData?.signedUrl) {
-            await supabase.functions.invoke(doc.ocr_pipeline, {
+            const { error: fnErr } = await supabase.functions.invoke(doc.ocr_pipeline, {
               body: { imageUrl: signedData.signedUrl, submissionToken: token },
             });
+            if (fnErr) throw fnErr;
+          } else {
+            throw new Error("Could not sign upload for OCR");
           }
+
+          if (jobId) {
+            await supabase.from("ocr_jobs" as never).update({ status: "completed" } as never).eq("id", jobId);
+          }
+          setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "completed" } }));
         } catch (ocrErr) {
+          const msg = ocrErr instanceof Error ? ocrErr.message : "OCR failed";
           console.warn(`OCR auto-fill skipped (${doc.ocr_pipeline}):`, ocrErr);
+          if (jobId) {
+            await supabase
+              .from("ocr_jobs" as never)
+              .update({ status: "failed", error_message: msg } as never)
+              .eq("id", jobId);
+          }
+          setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "failed", error: msg } }));
         }
       }
+
 
       setSlotStates((prev) => ({ ...prev, [doc.doc_id]: "done" }));
     } catch (e) {
