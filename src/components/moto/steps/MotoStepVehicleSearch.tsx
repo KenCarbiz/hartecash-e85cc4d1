@@ -418,7 +418,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
         />
       </div>
 
-      <div className="fixed bottom-4 right-4 z-50">
+      {isPlatformAdmin && <div className="fixed bottom-4 right-4 z-50">
         {open ? (
           <div className="w-72 rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
