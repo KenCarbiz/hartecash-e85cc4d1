@@ -29,13 +29,13 @@ const HERO_VEHICLE_WIDTHS = {
   base: 320, // < 640px  (mobile)
   sm: 480, //   ≥ 640px
   md: 640, //   ≥ 768px
-  lg: 760, //   ≥ 1024px
-  xl: 900, //   ≥ 1280px
-  "2xl": 1040, // ≥ 1536px
+  lg: 720, //   ≥ 1024px
+  xl: 820, //   ≥ 1280px
+  "2xl": 960, // ≥ 1536px
 } as const;
 
 const HERO_VEHICLE_WIDTH_CLASSES =
-  "w-[320px] sm:w-[480px] md:w-[640px] lg:w-[760px] xl:w-[900px] 2xl:w-[1040px]";
+  "w-[320px] sm:w-[480px] md:w-[640px] lg:w-[720px] xl:w-[820px] 2xl:w-[960px]";
 
 
 
