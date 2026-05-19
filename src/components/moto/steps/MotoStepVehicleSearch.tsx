@@ -291,15 +291,15 @@ const MotoStepVehicleSearch = ({
           </div>
         </div>
 
-        <div className="w-full lg:flex-1 lg:min-w-0 flex items-center justify-center overflow-visible lg:pl-12 xl:pl-20">
+        <div className="w-full lg:flex-1 lg:min-w-0 flex items-center justify-center overflow-visible lg:pl-24 xl:pl-32">
           <img
             src={tenantHeroVehicle}
             alt="Featured vehicle"
             className="h-auto object-contain mx-auto"
             style={{
               width: "100%",
-              maxWidth: "min(820px, 60vw)",
-              minWidth: "320px",
+              maxWidth: "min(1640px, 95vw)",
+              minWidth: "640px",
             }}
             loading="eager"
           />
