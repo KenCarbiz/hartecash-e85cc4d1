@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
 import { useHeroTuner } from "../HeroTuner";
 import { useTunerConfig } from "../useTunerConfig";
+import { useIsPlatformAdmin } from "@/hooks/useIsPlatformAdmin";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
@@ -358,6 +359,7 @@ const useCurrentBreakpoint = (): BP => {
 
 const HeroVehicleTuner = ({ src }: { src: string }) => {
   const bp = useCurrentBreakpoint();
+  const { isPlatformAdmin } = useIsPlatformAdmin();
   const { tenant } = useTenant();
   const { config, update, status, realtime, lastUpdatedAt } = useTunerConfig(tenant.dealership_id);
   const remote = (config.vehicle ?? {}) as Partial<Record<BP, { w: number; gap: number }>>;
@@ -416,7 +418,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
         />
       </div>
 
-      <div className="fixed bottom-4 right-4 z-50">
+      {isPlatformAdmin && <div className="fixed bottom-4 right-4 z-50">
         {open ? (
           <div className="w-72 rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
@@ -490,7 +492,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
             🚗 Tune ({bp})
           </button>
         )}
-      </div>
+      </div>}
     </>
   );
 };
