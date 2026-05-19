@@ -291,18 +291,123 @@ const MotoStepVehicleSearch = ({
           </div>
         </div>
 
-        <div className="flex w-full flex-1 items-center justify-center xl:justify-start xl:pl-8">
-          <img
-            src={tenantHeroVehicle}
-            alt="Featured vehicle"
-            className="h-auto w-full max-w-[420px] object-contain sm:max-w-[520px] md:max-w-[620px] xl:max-w-[640px] 2xl:max-w-[760px]"
-            loading="eager"
-          />
-        </div>
+        <HeroVehicleTuner src={tenantHeroVehicle} />
+      </div>
+    </>
+  );
+};
 
+// ----- Dev tuner for hero vehicle (width + gap from card, per breakpoint) -----
+type BP = "base" | "sm" | "md" | "lg" | "xl" | "2xl";
+const BP_MIN: Record<BP, number> = { base: 0, sm: 640, md: 768, lg: 1024, xl: 1280, "2xl": 1536 };
+const BP_ORDER: BP[] = ["base", "sm", "md", "lg", "xl", "2xl"];
+const TUNER_DEFAULTS: Record<BP, { w: number; gap: number }> = {
+  base: { w: 420, gap: 0 },
+  sm: { w: 520, gap: 0 },
+  md: { w: 620, gap: 0 },
+  lg: { w: 640, gap: 24 },
+  xl: { w: 640, gap: 32 },
+  "2xl": { w: 760, gap: 48 },
+};
+const TUNER_STORAGE_KEY = "heroVehicleTuner.v1";
 
+const useCurrentBreakpoint = (): BP => {
+  const [bp, setBp] = useState<BP>("base");
+  useEffect(() => {
+    const compute = () => {
+      const w = window.innerWidth;
+      let current: BP = "base";
+      for (const b of BP_ORDER) if (w >= BP_MIN[b]) current = b;
+      setBp(current);
+    };
+    compute();
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
+  }, []);
+  return bp;
+};
 
+const HeroVehicleTuner = ({ src }: { src: string }) => {
+  const bp = useCurrentBreakpoint();
+  const [settings, setSettings] = useState<Record<BP, { w: number; gap: number }>>(() => {
+    try {
+      const raw = localStorage.getItem(TUNER_STORAGE_KEY);
+      if (raw) return { ...TUNER_DEFAULTS, ...JSON.parse(raw) };
+    } catch {}
+    return TUNER_DEFAULTS;
+  });
+  const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    try { localStorage.setItem(TUNER_STORAGE_KEY, JSON.stringify(settings)); } catch {}
+  }, [settings]);
+
+  const { w, gap } = settings[bp];
+  const update = (key: "w" | "gap", value: number) =>
+    setSettings((s) => ({ ...s, [bp]: { ...s[bp], [key]: value } }));
+
+  return (
+    <>
+      <div
+        className="flex flex-1 items-center justify-center xl:justify-start"
+        style={{ paddingLeft: gap }}
+      >
+        <img
+          src={src}
+          alt="Featured vehicle"
+          className="h-auto object-contain"
+          style={{ width: w, maxWidth: "100%" }}
+          loading="eager"
+        />
+      </div>
+
+      <div className="fixed bottom-4 right-4 z-50">
+        {open ? (
+          <div className="w-72 rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="text-xs font-semibold uppercase tracking-wider text-zinc-700">
+                Vehicle Tuner · <span className="text-[hsl(var(--cta-offer))]">{bp}</span>
+              </div>
+              <button type="button" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-zinc-700">×</button>
+            </div>
+            <label className="block text-xs font-medium text-zinc-600">
+              Image width: <span className="font-mono">{w}px</span>
+            </label>
+            <input
+              type="range" min={120} max={1200} step={10}
+              value={w}
+              onChange={(e) => update("w", Number(e.target.value))}
+              className="mb-3 w-full"
+            />
+            <label className="block text-xs font-medium text-zinc-600">
+              Gap from card: <span className="font-mono">{gap}px</span>
+            </label>
+            <input
+              type="range" min={0} max={400} step={4}
+              value={gap}
+              onChange={(e) => update("gap", Number(e.target.value))}
+              className="mb-3 w-full"
+            />
+            <button
+              type="button"
+              onClick={() => setSettings((s) => ({ ...s, [bp]: TUNER_DEFAULTS[bp] }))}
+              className="w-full rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              Reset {bp}
+            </button>
+            <div className="mt-2 text-[10px] leading-snug text-zinc-400">
+              Adjusts only the current breakpoint. Saved to localStorage.
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="rounded-full bg-zinc-900 px-3 py-2 text-xs font-semibold text-white shadow-lg hover:bg-zinc-800"
+          >
+            🚗 Tune ({bp})
+          </button>
+        )}
       </div>
     </>
   );
