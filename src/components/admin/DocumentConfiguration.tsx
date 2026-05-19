@@ -227,11 +227,25 @@ const DocumentConfiguration = () => {
                           onChange={(e) => updateRow(idx, { label: e.target.value })}
                           className="h-7 text-sm font-semibold w-56"
                         />
-                        {doc.ocr_pipeline && (
-                          <Badge variant="outline" className="text-micro border-success/40 text-success">
-                            OCR auto-fill
-                          </Badge>
-                        )}
+                        <label className="inline-flex items-center gap-1.5 cursor-pointer select-none rounded-md border border-border bg-muted/30 px-2 py-1">
+                          <Sparkles className={`w-3 h-3 ${doc.ocr_pipeline ? "text-success" : "text-muted-foreground/60"}`} />
+                          <span className="text-[11px] font-medium text-muted-foreground">AI OCR</span>
+                          <Switch
+                            checked={!!doc.ocr_pipeline}
+                            onCheckedChange={(v) => {
+                              // Preserve the original pipeline key when re-enabling
+                              // (dl_ocr / title_ocr power downstream auto-fill).
+                              // Generic docs use "generic_ocr" so the worker still
+                              // captures text without driving auto-population.
+                              const fallback =
+                                doc.doc_id?.startsWith("dl_") ? "dl_ocr" :
+                                doc.doc_id?.startsWith("title_") ? "title_ocr" :
+                                "generic_ocr";
+                              updateRow(idx, { ocr_pipeline: v ? (doc.ocr_pipeline || fallback) : null });
+                            }}
+                            className="scale-75 -my-1"
+                          />
+                        </label>
                       </div>
                       <Input
                         value={doc.description}
