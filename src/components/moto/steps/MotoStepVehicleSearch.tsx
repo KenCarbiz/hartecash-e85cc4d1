@@ -324,7 +324,10 @@ const MotoStepVehicleSearch = ({
             </div>
               </MotoCard>
 
-              <div className="mt-4 rounded-md bg-zinc-100 py-3 text-center text-sm font-semibold text-zinc-700">
+              <div
+                className="mt-4 rounded-md py-3 text-center text-sm font-semibold"
+                style={{ background: tuner.ctaColor, color: tuner.ctaTextColor }}
+              >
                 Get a valuation in less than 30 seconds!
               </div>
             </div>
