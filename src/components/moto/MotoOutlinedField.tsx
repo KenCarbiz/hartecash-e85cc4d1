@@ -54,7 +54,7 @@ export const MotoOutlinedInput = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
-            className="w-full bg-transparent px-3 py-3.5 text-base text-zinc-900 outline-none placeholder:text-zinc-400"
+            className="h-[52px] w-full bg-transparent px-3 py-3.5 text-base text-zinc-900 outline-none placeholder:text-zinc-400"
             {...rest}
           />
           {trailing ? <div className="absolute inset-y-0 right-2 flex items-center text-zinc-500">{trailing}</div> : null}
@@ -88,7 +88,7 @@ export const MotoOutlinedSelect = forwardRef<HTMLSelectElement, SelectProps>(
           <RSelectTrigger
             id={inputId}
             className={cn(
-              "h-auto w-full justify-between rounded-md border bg-white px-3 py-3.5 pr-8 text-base text-zinc-900 hover:border-zinc-400 focus:ring-0 focus:ring-offset-0",
+              "h-[52px] w-full justify-between rounded-md border bg-white px-3 py-3.5 pr-8 text-base text-zinc-900 hover:border-zinc-400 focus:ring-0 focus:ring-offset-0",
               isActive && !error
                 ? "border-[hsl(var(--cta-offer))] ring-1 ring-[hsl(var(--cta-offer))]"
                 : "border-zinc-300",
