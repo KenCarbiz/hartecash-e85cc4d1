@@ -133,6 +133,36 @@ export function useHeroTuner(): HeroTunerValues {
   return merge(config.hero);
 }
 
+// ---------- Vehicle tuner ----------
+export type VehicleTunerValues = {
+  /** Max width in px of the vehicle image container. */
+  width: number;
+  /** Vertical offset in px (positive = lower, negative = higher). */
+  offsetY: number;
+  /** Camera angle for the generated image. */
+  angle: "side" | "three_quarter" | "front";
+  /** Horizontal flip (mirror so the car faces the other way). */
+  flip: boolean;
+};
+
+export const VEHICLE_DEFAULTS: VehicleTunerValues = {
+  width: 448,
+  offsetY: 0,
+  angle: "side",
+  flip: false,
+};
+
+function mergeVehicle(remote: unknown): VehicleTunerValues {
+  if (!remote || typeof remote !== "object") return VEHICLE_DEFAULTS;
+  return { ...VEHICLE_DEFAULTS, ...(remote as Partial<VehicleTunerValues>) };
+}
+
+export function useVehicleTuner(): VehicleTunerValues {
+  const { tenant } = useTenant();
+  const { config } = useTunerConfig(tenant.dealership_id);
+  return mergeVehicle(config.vehicle);
+}
+
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
 function ColorField({
