@@ -216,6 +216,45 @@ export type Database = {
           },
         ]
       }
+      bb_vin_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string
+          id: string
+          lookup_type: string
+          mileage: number | null
+          plate: string | null
+          response_json: Json
+          state: string | null
+          vin: string | null
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lookup_type: string
+          mileage?: number | null
+          plate?: string | null
+          response_json: Json
+          state?: string | null
+          vin?: string | null
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lookup_type?: string
+          mileage?: number | null
+          plate?: string | null
+          response_json?: Json
+          state?: string | null
+          vin?: string | null
+        }
+        Relationships: []
+      }
       bdc_call_tasks: {
         Row: {
           assigned_email: string | null
@@ -404,6 +443,7 @@ export type Database = {
         Row: {
           consent_text: string
           consent_type: string
+          consent_version: string
           created_at: string
           customer_email: string | null
           customer_name: string | null
@@ -422,6 +462,7 @@ export type Database = {
         Insert: {
           consent_text: string
           consent_type?: string
+          consent_version?: string
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
@@ -440,6 +481,7 @@ export type Database = {
         Update: {
           consent_text?: string
           consent_type?: string
+          consent_version?: string
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
@@ -464,6 +506,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      consent_text_versions: {
+        Row: {
+          consent_type: string
+          created_at: string
+          dealership_id: string
+          id: string
+          is_active: boolean
+          published_at: string
+          published_by: string | null
+          text: string
+          version: string
+        }
+        Insert: {
+          consent_type?: string
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          is_active?: boolean
+          published_at?: string
+          published_by?: string | null
+          text: string
+          version: string
+        }
+        Update: {
+          consent_type?: string
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          is_active?: boolean
+          published_at?: string
+          published_by?: string | null
+          text?: string
+          version?: string
+        }
+        Relationships: []
       }
       conversation_events: {
         Row: {
@@ -984,6 +1062,11 @@ export type Database = {
           start_date: string | null
           twilio_from_number: string | null
           updated_at: string
+          vauto_api_environment: string | null
+          vauto_api_key: string | null
+          vauto_auto_push: boolean | null
+          vauto_dealer_id: string | null
+          vauto_enabled: boolean | null
           voice_ai_beat_competitor_amount: number | null
           voice_ai_call_end: string | null
           voice_ai_call_start: string | null
@@ -1019,6 +1102,11 @@ export type Database = {
           start_date?: string | null
           twilio_from_number?: string | null
           updated_at?: string
+          vauto_api_environment?: string | null
+          vauto_api_key?: string | null
+          vauto_auto_push?: boolean | null
+          vauto_dealer_id?: string | null
+          vauto_enabled?: boolean | null
           voice_ai_beat_competitor_amount?: number | null
           voice_ai_call_end?: string | null
           voice_ai_call_start?: string | null
@@ -1054,6 +1142,11 @@ export type Database = {
           start_date?: string | null
           twilio_from_number?: string | null
           updated_at?: string
+          vauto_api_environment?: string | null
+          vauto_api_key?: string | null
+          vauto_auto_push?: boolean | null
+          vauto_dealer_id?: string | null
+          vauto_enabled?: boolean | null
           voice_ai_beat_competitor_amount?: number | null
           voice_ai_call_end?: string | null
           voice_ai_call_start?: string | null
@@ -2458,6 +2551,7 @@ export type Database = {
           quiet_hours_enabled: boolean
           quiet_hours_end: string
           quiet_hours_start: string
+          quiet_hours_timezone: string
           sms_recipients: string[]
           staff_customer_accepted_channels: string[]
           staff_deal_completed_channels: string[]
@@ -2503,6 +2597,7 @@ export type Database = {
           quiet_hours_enabled?: boolean
           quiet_hours_end?: string
           quiet_hours_start?: string
+          quiet_hours_timezone?: string
           sms_recipients?: string[]
           staff_customer_accepted_channels?: string[]
           staff_deal_completed_channels?: string[]
@@ -2548,6 +2643,7 @@ export type Database = {
           quiet_hours_enabled?: boolean
           quiet_hours_end?: string
           quiet_hours_start?: string
+          quiet_hours_timezone?: string
           sms_recipients?: string[]
           staff_customer_accepted_channels?: string[]
           staff_deal_completed_channels?: string[]
@@ -2586,6 +2682,51 @@ export type Database = {
           id?: string
           subject?: string | null
           trigger_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      obd_repair_estimates: {
+        Row: {
+          code: string
+          code_title: string
+          common_causes: string[]
+          cost_expected: number
+          cost_high: number
+          cost_low: number
+          created_at: string
+          id: string
+          often_trivial: boolean
+          repair_category: string
+          severity: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          code_title: string
+          common_causes?: string[]
+          cost_expected: number
+          cost_high: number
+          cost_low: number
+          created_at?: string
+          id?: string
+          often_trivial?: boolean
+          repair_category: string
+          severity: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          code_title?: string
+          common_causes?: string[]
+          cost_expected?: number
+          cost_high?: number
+          cost_low?: number
+          created_at?: string
+          id?: string
+          often_trivial?: boolean
+          repair_category?: string
+          severity?: string
           updated_at?: string
         }
         Relationships: []
@@ -2934,6 +3075,51 @@ export type Database = {
           updated_at?: string
           wholesale_only_age_years?: number
           wholesale_only_mileage?: number
+        }
+        Relationships: []
+      }
+      offer_watches: {
+        Row: {
+          created_at: string
+          current_offer: number | null
+          email: string
+          id: string
+          is_active: boolean
+          last_notified_at: string | null
+          notification_count: number
+          phone: string | null
+          token: string
+          unsubscribe_token: string
+          updated_at: string
+          vehicle: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_offer?: number | null
+          email: string
+          id?: string
+          is_active?: boolean
+          last_notified_at?: string | null
+          notification_count?: number
+          phone?: string | null
+          token: string
+          unsubscribe_token?: string
+          updated_at?: string
+          vehicle?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_offer?: number | null
+          email?: string
+          id?: string
+          is_active?: boolean
+          last_notified_at?: string | null
+          notification_count?: number
+          phone?: string | null
+          token?: string
+          unsubscribe_token?: string
+          updated_at?: string
+          vehicle?: string | null
         }
         Relationships: []
       }
@@ -3689,6 +3875,51 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          dealership_id: string
+          device_label: string | null
+          endpoint: string
+          id: string
+          is_active: boolean
+          last_active_at: string | null
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          dealership_id?: string
+          device_label?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean
+          last_active_at?: string | null
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          dealership_id?: string
+          device_label?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean
+          last_active_at?: string | null
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       rate_limit_hits: {
         Row: {
           created_at: string
@@ -3772,6 +4003,53 @@ export type Database = {
           {
             foreignKeyName: "referrals_referred_submission_id_fkey"
             columns: ["referred_submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      revaluation_log: {
+        Row: {
+          created_at: string
+          id: string
+          new_retail_avg: number | null
+          new_tradein_avg: number | null
+          notification_sent: boolean | null
+          old_retail_avg: number | null
+          old_tradein_avg: number | null
+          run_at: string
+          submission_id: string
+          value_change: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_retail_avg?: number | null
+          new_tradein_avg?: number | null
+          notification_sent?: boolean | null
+          old_retail_avg?: number | null
+          old_tradein_avg?: number | null
+          run_at?: string
+          submission_id: string
+          value_change?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_retail_avg?: number | null
+          new_tradein_avg?: number | null
+          notification_sent?: boolean | null
+          old_retail_avg?: number | null
+          old_tradein_avg?: number | null
+          run_at?: string
+          submission_id?: string
+          value_change?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revaluation_log_submission_id_fkey"
+            columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "submissions"
             referencedColumns: ["id"]
@@ -4320,6 +4598,71 @@ export type Database = {
           },
         ]
       }
+      sms_inbound_log: {
+        Row: {
+          body: string | null
+          created_at: string
+          dealership_id: string | null
+          from_phone: string
+          id: string
+          provider_message_id: string
+          submission_id: string | null
+          to_phone: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          dealership_id?: string | null
+          from_phone: string
+          id?: string
+          provider_message_id: string
+          submission_id?: string | null
+          to_phone?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          dealership_id?: string | null
+          from_phone?: string
+          id?: string
+          provider_message_id?: string
+          submission_id?: string | null
+          to_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_inbound_log_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_opt_outs: {
+        Row: {
+          dealership_id: string | null
+          id: string
+          opted_out_at: string
+          phone: string
+          reason: string | null
+        }
+        Insert: {
+          dealership_id?: string | null
+          id?: string
+          opted_out_at?: string
+          phone: string
+          reason?: string | null
+        }
+        Update: {
+          dealership_id?: string | null
+          id?: string
+          opted_out_at?: string
+          phone?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       staff_action_log: {
         Row: {
           action: string
@@ -4430,6 +4773,38 @@ export type Database = {
         }
         Relationships: []
       }
+      submission_notes: {
+        Row: {
+          author: string | null
+          body: string
+          created_at: string
+          id: string
+          submission_id: string
+        }
+        Insert: {
+          author?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          submission_id: string
+        }
+        Update: {
+          author?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_notes_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       submissions: {
         Row: {
           accidents: string | null
@@ -4513,6 +4888,8 @@ export type Database = {
           interior_damage: string[] | null
           internal_notes: string | null
           is_hot_lead: boolean
+          last_revalued_at: string | null
+          latest_scan_id: string | null
           lead_source: string
           legacy_id: string | null
           loan_balance: string | null
@@ -4531,6 +4908,10 @@ export type Database = {
           needs_appraisal: boolean
           next_step: string | null
           num_keys: string | null
+          obd_has_active_dtcs: boolean | null
+          obd_mil_on: boolean | null
+          obd_odometer_verified: boolean | null
+          obd_scan_completed: boolean | null
           offer_locked_at: string | null
           offer_made_at: string | null
           offer_subject_to_inspection: boolean
@@ -4554,6 +4935,7 @@ export type Database = {
           portal_view_count: number
           progress_status: string
           referral_code: string | null
+          revaluation_count: number | null
           review_requested: boolean
           review_requested_at: string | null
           salesperson_name: string | null
@@ -4577,6 +4959,9 @@ export type Database = {
           tires_replaced: string | null
           token: string
           token_expires_at: string | null
+          vauto_pushed: boolean | null
+          vauto_pushed_at: string | null
+          vauto_vehicle_id: string | null
           vehicle_make: string | null
           vehicle_model: string | null
           vehicle_year: string | null
@@ -4667,6 +5052,8 @@ export type Database = {
           interior_damage?: string[] | null
           internal_notes?: string | null
           is_hot_lead?: boolean
+          last_revalued_at?: string | null
+          latest_scan_id?: string | null
           lead_source?: string
           legacy_id?: string | null
           loan_balance?: string | null
@@ -4685,6 +5072,10 @@ export type Database = {
           needs_appraisal?: boolean
           next_step?: string | null
           num_keys?: string | null
+          obd_has_active_dtcs?: boolean | null
+          obd_mil_on?: boolean | null
+          obd_odometer_verified?: boolean | null
+          obd_scan_completed?: boolean | null
           offer_locked_at?: string | null
           offer_made_at?: string | null
           offer_subject_to_inspection?: boolean
@@ -4708,6 +5099,7 @@ export type Database = {
           portal_view_count?: number
           progress_status?: string
           referral_code?: string | null
+          revaluation_count?: number | null
           review_requested?: boolean
           review_requested_at?: string | null
           salesperson_name?: string | null
@@ -4731,6 +5123,9 @@ export type Database = {
           tires_replaced?: string | null
           token?: string
           token_expires_at?: string | null
+          vauto_pushed?: boolean | null
+          vauto_pushed_at?: string | null
+          vauto_vehicle_id?: string | null
           vehicle_make?: string | null
           vehicle_model?: string | null
           vehicle_year?: string | null
@@ -4821,6 +5216,8 @@ export type Database = {
           interior_damage?: string[] | null
           internal_notes?: string | null
           is_hot_lead?: boolean
+          last_revalued_at?: string | null
+          latest_scan_id?: string | null
           lead_source?: string
           legacy_id?: string | null
           loan_balance?: string | null
@@ -4839,6 +5236,10 @@ export type Database = {
           needs_appraisal?: boolean
           next_step?: string | null
           num_keys?: string | null
+          obd_has_active_dtcs?: boolean | null
+          obd_mil_on?: boolean | null
+          obd_odometer_verified?: boolean | null
+          obd_scan_completed?: boolean | null
           offer_locked_at?: string | null
           offer_made_at?: string | null
           offer_subject_to_inspection?: boolean
@@ -4862,6 +5263,7 @@ export type Database = {
           portal_view_count?: number
           progress_status?: string
           referral_code?: string | null
+          revaluation_count?: number | null
           review_requested?: boolean
           review_requested_at?: string | null
           salesperson_name?: string | null
@@ -4885,6 +5287,9 @@ export type Database = {
           tires_replaced?: string | null
           token?: string
           token_expires_at?: string | null
+          vauto_pushed?: boolean | null
+          vauto_pushed_at?: string | null
+          vauto_vehicle_id?: string | null
           vehicle_make?: string | null
           vehicle_model?: string | null
           vehicle_year?: string | null
@@ -4894,6 +5299,13 @@ export type Database = {
           zip?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "submissions_latest_scan_id_fkey"
+            columns: ["latest_scan_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_scans"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "submissions_store_location_id_fkey"
             columns: ["store_location_id"]
@@ -5296,6 +5708,59 @@ export type Database = {
           },
         ]
       }
+      vauto_push_log: {
+        Row: {
+          created_at: string
+          dealership_id: string | null
+          error_message: string | null
+          id: string
+          push_status: string
+          pushed_at: string
+          pushed_by: string | null
+          request_payload: Json | null
+          response_payload: Json | null
+          retry_count: number | null
+          submission_id: string
+          vauto_vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string | null
+          error_message?: string | null
+          id?: string
+          push_status?: string
+          pushed_at?: string
+          pushed_by?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          retry_count?: number | null
+          submission_id: string
+          vauto_vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string | null
+          error_message?: string | null
+          id?: string
+          push_status?: string
+          pushed_at?: string
+          pushed_by?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          retry_count?: number | null
+          submission_id?: string
+          vauto_vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vauto_push_log_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_image_cache: {
         Row: {
           cache_key: string
@@ -5331,6 +5796,92 @@ export type Database = {
           vehicle_year?: string
         }
         Relationships: []
+      }
+      vehicle_scans: {
+        Row: {
+          battery_voltage: number | null
+          created_at: string
+          dtc_codes: Json | null
+          dtc_count: number | null
+          ecu_name: string | null
+          engine_coolant_temp: number | null
+          fuel_system_status: string | null
+          id: string
+          mil_on: boolean | null
+          monitors_not_ready_count: number | null
+          monitors_ready_count: number | null
+          odometer_km: number | null
+          odometer_miles: number | null
+          pending_dtc_codes: Json | null
+          permanent_dtc_codes: Json | null
+          protocol: string | null
+          raw_data: Json | null
+          readiness_monitors: Json | null
+          scanned_at: string
+          scanned_by: string | null
+          scanner_device: string | null
+          submission_id: string
+          vin_from_obd: string | null
+        }
+        Insert: {
+          battery_voltage?: number | null
+          created_at?: string
+          dtc_codes?: Json | null
+          dtc_count?: number | null
+          ecu_name?: string | null
+          engine_coolant_temp?: number | null
+          fuel_system_status?: string | null
+          id?: string
+          mil_on?: boolean | null
+          monitors_not_ready_count?: number | null
+          monitors_ready_count?: number | null
+          odometer_km?: number | null
+          odometer_miles?: number | null
+          pending_dtc_codes?: Json | null
+          permanent_dtc_codes?: Json | null
+          protocol?: string | null
+          raw_data?: Json | null
+          readiness_monitors?: Json | null
+          scanned_at?: string
+          scanned_by?: string | null
+          scanner_device?: string | null
+          submission_id: string
+          vin_from_obd?: string | null
+        }
+        Update: {
+          battery_voltage?: number | null
+          created_at?: string
+          dtc_codes?: Json | null
+          dtc_count?: number | null
+          ecu_name?: string | null
+          engine_coolant_temp?: number | null
+          fuel_system_status?: string | null
+          id?: string
+          mil_on?: boolean | null
+          monitors_not_ready_count?: number | null
+          monitors_ready_count?: number | null
+          odometer_km?: number | null
+          odometer_miles?: number | null
+          pending_dtc_codes?: Json | null
+          permanent_dtc_codes?: Json | null
+          protocol?: string | null
+          raw_data?: Json | null
+          readiness_monitors?: Json | null
+          scanned_at?: string
+          scanned_by?: string | null
+          scanner_device?: string | null
+          submission_id?: string
+          vin_from_obd?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_scans_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       voice_agent_persona: {
         Row: {
@@ -6038,6 +6589,142 @@ export type Database = {
         }
         Relationships: []
       }
+      watched_vehicle_history: {
+        Row: {
+          bb_data: Json | null
+          checked_at: string
+          delta_from_previous: number
+          id: string
+          mileage_assumed: number
+          snapshot_value: number
+          watched_vehicle_id: string
+        }
+        Insert: {
+          bb_data?: Json | null
+          checked_at?: string
+          delta_from_previous?: number
+          id?: string
+          mileage_assumed: number
+          snapshot_value: number
+          watched_vehicle_id: string
+        }
+        Update: {
+          bb_data?: Json | null
+          checked_at?: string
+          delta_from_previous?: number
+          id?: string
+          mileage_assumed?: number
+          snapshot_value?: number
+          watched_vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watched_vehicle_history_watched_vehicle_id_fkey"
+            columns: ["watched_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "watched_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watched_vehicles: {
+        Row: {
+          baseline_value: number
+          created_at: string
+          current_value: number
+          customer_name: string | null
+          dealership_id: string
+          delta_since_baseline: number
+          email: string | null
+          id: string
+          is_active: boolean
+          last_checked_at: string | null
+          last_notified_at: string | null
+          mileage_at_save: number
+          monthly_mileage_estimate: number
+          next_check_at: string
+          notify_email: boolean
+          notify_sms: boolean
+          notify_threshold_dollars: number
+          overall_condition: string | null
+          phone: string | null
+          submission_id: string | null
+          token: string
+          updated_at: string
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_trim: string | null
+          vehicle_year: number | null
+          vin: string | null
+        }
+        Insert: {
+          baseline_value?: number
+          created_at?: string
+          current_value?: number
+          customer_name?: string | null
+          dealership_id: string
+          delta_since_baseline?: number
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          last_checked_at?: string | null
+          last_notified_at?: string | null
+          mileage_at_save?: number
+          monthly_mileage_estimate?: number
+          next_check_at?: string
+          notify_email?: boolean
+          notify_sms?: boolean
+          notify_threshold_dollars?: number
+          overall_condition?: string | null
+          phone?: string | null
+          submission_id?: string | null
+          token: string
+          updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_trim?: string | null
+          vehicle_year?: number | null
+          vin?: string | null
+        }
+        Update: {
+          baseline_value?: number
+          created_at?: string
+          current_value?: number
+          customer_name?: string | null
+          dealership_id?: string
+          delta_since_baseline?: number
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          last_checked_at?: string | null
+          last_notified_at?: string | null
+          mileage_at_save?: number
+          monthly_mileage_estimate?: number
+          next_check_at?: string
+          notify_email?: boolean
+          notify_sms?: boolean
+          notify_threshold_dollars?: number
+          overall_condition?: string | null
+          phone?: string | null
+          submission_id?: string | null
+          token?: string
+          updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_trim?: string | null
+          vehicle_year?: number | null
+          vin?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watched_vehicles_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       v_bulk_access_anomalies: {
@@ -6289,6 +6976,7 @@ export type Database = {
         Args: { _channel: string; _dealership_id: string; _location_id: string }
         Returns: boolean
       }
+      cleanup_expired_bb_vin_cache: { Args: never; Returns: undefined }
       cleanup_old_lookup_attempts: { Args: never; Returns: undefined }
       compile_voice_agent_prompt:
         | {
