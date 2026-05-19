@@ -209,6 +209,7 @@ export default function HeroTuner() {
     values,
     lastUpdatedAt,
   );
+  const [open, setOpen] = useState(false);
 
   // local optimistic state so sliders feel snappy
   const [local, setLocal] = useState<HeroTunerValues>(values);
