@@ -346,15 +346,21 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
   }, [settings]);
 
   const { w, gap } = settings[bp];
-  const reservedImageSpace = w + gap;
   const update = (key: "w" | "gap", value: number) =>
     setSettings((s) => ({ ...s, [bp]: { ...s[bp], [key]: value } }));
+
+  // Expose gap as a CSS var so the card half can mirror the spacing and the
+  // visual midpoint between card and image lands at screen center.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--hero-gap", `${gap}px`);
+    return () => { document.documentElement.style.removeProperty("--hero-gap"); };
+  }, [gap]);
 
   return (
     <>
       <div
-        className="flex flex-none items-center justify-center overflow-visible xl:justify-start"
-        style={{ paddingLeft: gap, width: reservedImageSpace, maxWidth: "none" }}
+        className="flex flex-none items-center justify-center overflow-visible xl:flex-1 xl:justify-start xl:pl-[calc(var(--hero-gap,0px)/2)]"
+        style={{ width: w, maxWidth: "none" }}
       >
         <img
           src={src}
@@ -364,6 +370,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
           loading="eager"
         />
       </div>
+
 
       <div className="fixed bottom-4 right-4 z-50">
         {open ? (
