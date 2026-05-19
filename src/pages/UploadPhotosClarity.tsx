@@ -126,6 +126,45 @@ const UploadPhotosClarity = () => {
     };
   }, [token, submission, enabledShots]);
 
+  // Resolve the customer's expected location to compare photo GPS
+  // against. Order: assigned store rooftop -> dealership default
+  // rooftop. ZIP-only customers fall back to no comparison anchor
+  // (badge still grades freshness + software).
+  useEffect(() => {
+    if (!submission) return;
+    let cancelled = false;
+    (async () => {
+      const sub = submission as SubmissionInfo & { store_location_id?: string | null };
+      let query = supabase
+        .from("dealership_locations" as never)
+        .select("center_lat,center_lng,name")
+        .eq("is_active", true)
+        .limit(1);
+      if (sub.store_location_id) {
+        query = supabase
+          .from("dealership_locations" as never)
+          .select("center_lat,center_lng,name")
+          .eq("id", sub.store_location_id)
+          .limit(1);
+      } else if (sub.dealership_id) {
+        query = supabase
+          .from("dealership_locations" as never)
+          .select("center_lat,center_lng,name")
+          .eq("dealership_id", sub.dealership_id)
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true })
+          .limit(1);
+      }
+      const { data } = await query;
+      if (cancelled || !data || data.length === 0) return;
+      const row = (data as unknown as Array<{ center_lat: number | null; center_lng: number | null; name: string | null }>)[0];
+      if (row.center_lat != null && row.center_lng != null) {
+        setExpectedCoords({ lat: row.center_lat, lng: row.center_lng, source: `Rooftop: ${row.name || "store"}` });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [submission]);
+
   const handleTileClick = (shotId: string) => {
     setActiveShot(shotId);
     fileInputRef.current?.click();
