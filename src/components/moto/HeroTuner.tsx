@@ -47,6 +47,7 @@ export const DEFAULTS: HeroTunerValues = {
   offsetY: 0,
   subSize: 16,
   subColor: "#71717a",
+  subGap: 24,
   accentColor: BRAND_YELLOW,
   accentWeight: 600,
   instantColor: "#18181b",
