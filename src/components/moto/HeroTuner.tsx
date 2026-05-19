@@ -137,8 +137,10 @@ export function useHeroTuner(): HeroTunerValues {
 export type VehicleTunerValues = {
   /** Max width in px of the vehicle image container. */
   width: number;
-  /** Vertical offset in px (positive = lower, negative = higher). */
+  /** Space above the car (px). Positive = pushes the car down. */
   offsetY: number;
+  /** Space below the car (px). Positive = pushes content under further down. */
+  offsetBottom: number;
   /** Camera angle for the generated image. */
   angle: "side" | "three_quarter" | "front";
   /** Horizontal flip (mirror so the car faces the other way). */
@@ -148,6 +150,7 @@ export type VehicleTunerValues = {
 export const VEHICLE_DEFAULTS: VehicleTunerValues = {
   width: 448,
   offsetY: 0,
+  offsetBottom: 0,
   angle: "side",
   flip: false,
 };
@@ -162,6 +165,7 @@ function mergeVehicle(remote: unknown): VehicleTunerValues {
   return {
     width: num(r.width, VEHICLE_DEFAULTS.width),
     offsetY: num(r.offsetY, VEHICLE_DEFAULTS.offsetY),
+    offsetBottom: num(r.offsetBottom, VEHICLE_DEFAULTS.offsetBottom),
     angle,
     flip: typeof r.flip === "boolean" ? r.flip : VEHICLE_DEFAULTS.flip,
   };
