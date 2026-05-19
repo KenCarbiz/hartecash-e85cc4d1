@@ -21,6 +21,7 @@ const MotoStepOffer = ({
   onNext: (next: Partial<MotoFlowState>) => void;
 }) => {
   const { tenant } = useTenant();
+  const { config } = useSiteConfig();
   const { toast } = useToast();
   const [computing, setComputing] = useState(true);
   const [low, setLow] = useState<number | null>(state.offer.low);
