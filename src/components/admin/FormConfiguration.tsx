@@ -140,6 +140,7 @@ export default function FormConfiguration() {
   const { toast } = useToast();
   const [config, setConfig] = useState<FormConfigData>(DEFAULTS);
   const [offerFlow, setOfferFlow] = useState<OfferFlowState>(OFFER_FLOW_DEFAULTS);
+  const [boostPhotos, setBoostPhotos] = useState<{ label: string; role: "required" | "bonus" }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -161,12 +162,17 @@ export default function FormConfiguration() {
 
   const fetchConfig = async () => {
     setLoading(true);
-    const [formRes, offerRes] = await Promise.all([
+    const [formRes, offerRes, photoRes] = await Promise.all([
       supabase.from("form_config").select("*").eq("dealership_id", dealershipId).maybeSingle(),
       supabase.from("offer_settings").select(
         "pricing_reveal_mode, show_range_before_final, range_low_source, range_high_mode, range_high_source, range_high_percent, payment_selection_timing"
       ).eq("dealership_id", dealershipId).maybeSingle(),
+      supabase.from("photo_config").select("label, boost_role, sort_order").eq("dealership_id", dealershipId).order("sort_order"),
     ]);
+    const photos = (photoRes.data ?? [])
+      .filter((r) => r.boost_role === "required" || r.boost_role === "bonus")
+      .map((r) => ({ label: r.label as string, role: r.boost_role as "required" | "bonus" }));
+    setBoostPhotos(photos);
     if (formRes.data) {
       setConfig({ ...DEFAULTS, ...formRes.data });
     }
@@ -192,8 +198,12 @@ export default function FormConfiguration() {
     // (offer_settings) so any legacy code still reading the old column
     // keeps working.
     const offerBeforeDetails = offerFlow.pricing_reveal_mode === "price_first";
+    // Sync Step 3.5 min photo count from the Photos tab so the customer
+    // Boost screen always matches what dealers configure in one place.
+    const requiredBoostCount = boostPhotos.filter((p) => p.role === "required").length;
     const payload = {
       ...config,
+      ai_photos_min_required: requiredBoostCount > 0 ? requiredBoostCount : config.ai_photos_min_required,
       offer_before_details: offerBeforeDetails,
       updated_at: new Date().toISOString(),
     };
@@ -384,28 +394,43 @@ export default function FormConfiguration() {
                 {config.step_ai_photos ? "Active" : "Skipped"}
               </Badge>
             </div>
-            {config.step_ai_photos && (
-              <div className="ml-10 flex items-center gap-2 pt-1">
-                <Label className="text-xs text-muted-foreground" htmlFor="ai-photos-min">Min photos required:</Label>
-                <Input
-                  id="ai-photos-min"
-                  type="number"
-                  min={1}
-                  max={8}
-                  value={config.ai_photos_min_required}
-                  onChange={(e) =>
-                    set(
-                      "ai_photos_min_required",
-                      Math.max(1, Math.min(8, Number(e.target.value) || 4)),
-                    )
-                  }
-                  className="w-16 h-7 text-sm"
-                />
-                <span className="text-[11px] text-muted-foreground">
-                  default 4 (front, rear, driver, passenger)
-                </span>
-              </div>
-            )}
+            {config.step_ai_photos && (() => {
+              const required = boostPhotos.filter((p) => p.role === "required");
+              const bonus = boostPhotos.filter((p) => p.role === "bonus");
+              return (
+                <div className="ml-10 pt-1 space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="default" className="text-xs">
+                      {required.length} photo{required.length === 1 ? "" : "s"} required
+                    </Badge>
+                    {bonus.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{bonus.length} optional bonus
+                      </Badge>
+                    )}
+                    <span className="text-[11px] text-muted-foreground">
+                      Wired from <span className="font-medium">Photos tab → In Boost Flow</span>
+                    </span>
+                  </div>
+                  {required.length > 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">Required:</span>{" "}
+                      {required.map((p) => p.label).join(", ")}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-warning">
+                      No photos marked Required in the Boost flow yet — mark some on the Photos tab.
+                    </p>
+                  )}
+                  {bonus.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">Bonus (optional):</span>{" "}
+                      {bonus.map((p) => p.label).join(", ")}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* The old "Offer-First Flow" toggle was removed — the Pricing
