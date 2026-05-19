@@ -389,9 +389,10 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
             />
             <label className="block text-xs font-medium text-zinc-600">
               Gap from card: <span className="font-mono">{gap}px</span>
+              <span className="ml-1 text-zinc-400">(negative = closer)</span>
             </label>
             <input
-              type="range" min={0} max={400} step={4}
+              type="range" min={-400} max={400} step={4}
               value={gap}
               onChange={(e) => update("gap", Number(e.target.value))}
               className="mb-3 w-full"
