@@ -38,6 +38,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useLatestOfferBump } from "@/hooks/useLatestOfferBump";
 import { Button } from "@/components/ui/button";
+import PhotoTrustBadge from "@/components/upload/PhotoTrustBadge";
+import type { PhotoTrustTier } from "@/lib/photoExif";
 
 interface PhotoEntry {
   name: string;
@@ -46,6 +48,13 @@ interface PhotoEntry {
   size: number | null;
   source: "staff" | "customer";
   stale: boolean;
+  // EXIF-based trust verdict from photo_metadata. Null when the
+  // upload path didn't capture EXIF (older customer paths, staff
+  // upload pre-EXIF wiring) — we just don't render the badge in
+  // that case rather than implying "unverified".
+  trustTier: PhotoTrustTier | null;
+  trustReasons: string[] | null;
+  distanceMiles: number | null;
 }
 
 /**
@@ -108,24 +117,56 @@ export default function AppraisalPhotosCard({
         setLoading(false);
         return;
       }
+
+      // Fetch EXIF-derived trust verdicts for these photos. The
+      // savePhotoMetadata helper writes one row per storage_path; we
+      // pull all of this submission's rows in one query and index by
+      // storage_path for cheap lookup during the map below. Failure
+      // here is non-fatal — if photo_metadata is missing or RLS denies
+      // (which after PR #254 means the user is in a different tenant),
+      // we just render no trust badges instead of breaking the gallery.
+      type MetaRow = {
+        storage_path: string;
+        trust_tier: PhotoTrustTier | null;
+        trust_reasons: string[] | null;
+        distance_miles: number | null;
+      };
+      const metaByPath = new Map<string, MetaRow>();
+      if (submissionId) {
+        const { data: metaRows } = await supabase
+          .from("photo_metadata" as never)
+          .select("storage_path, trust_tier, trust_reasons, distance_miles")
+          .eq("submission_id", submissionId);
+        for (const m of (metaRows as MetaRow[] | null) ?? []) {
+          metaByPath.set(m.storage_path, m);
+        }
+      }
+
       const rows: PhotoEntry[] = data
         .filter((f) => f.name && f.name !== ".emptyFolderPlaceholder")
-        .map((f) => ({
-          name: f.name,
-          url: supabase.storage.from("submission-photos")
-            .getPublicUrl(`${token}/${f.name}`).data.publicUrl,
-          created_at: f.created_at ?? null,
-          size: f.metadata && typeof f.metadata.size === "number"
-            ? f.metadata.size
-            : null,
-          source: classifyPhotoSource(f.name),
-          stale: isStalePhoto(f.name),
-        }));
+        .map((f) => {
+          const storagePath = `${token}/${f.name}`;
+          const meta = metaByPath.get(storagePath);
+          return {
+            name: f.name,
+            url: supabase.storage.from("submission-photos")
+              .getPublicUrl(storagePath).data.publicUrl,
+            created_at: f.created_at ?? null,
+            size: f.metadata && typeof f.metadata.size === "number"
+              ? f.metadata.size
+              : null,
+            source: classifyPhotoSource(f.name),
+            stale: isStalePhoto(f.name),
+            trustTier: meta?.trust_tier ?? null,
+            trustReasons: meta?.trust_reasons ?? null,
+            distanceMiles: meta?.distance_miles ?? null,
+          };
+        });
       setPhotos(rows);
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [token]);
+  }, [token, submissionId]);
 
   // AI flags worth surfacing in the collapsed header — anything from
   // the offer-bump line items that suggests condition the customer
@@ -344,6 +385,16 @@ export default function AppraisalPhotosCard({
                     title={p.stale ? "File last modified >24h before upload — may be re-used from an older shoot" : undefined}
                   >
                     {p.stale ? "Stale" : "Staff"}
+                  </span>
+                )}
+                {p.trustTier && (
+                  <span className="absolute top-1 right-1">
+                    <PhotoTrustBadge
+                      tier={p.trustTier}
+                      reasons={p.trustReasons}
+                      distanceMiles={p.distanceMiles}
+                      size="xs"
+                    />
                   </span>
                 )}
               </button>
