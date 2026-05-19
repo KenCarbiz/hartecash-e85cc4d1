@@ -235,6 +235,7 @@ export default function HeroTuner() {
   const { tenant } = useTenant();
   const { config, update, status, realtime, lastUpdatedAt } = useTunerConfig(tenant.dealership_id);
   const values = merge(config.hero);
+  const vehicleValues = mergeVehicle(config.vehicle);
   const { liveStatus, liveCheckedAt, liveError } = useLiveCheck(
     tenant.dealership_id,
     values,
@@ -244,10 +245,15 @@ export default function HeroTuner() {
 
   // local optimistic state so sliders feel snappy
   const [local, setLocal] = useState<HeroTunerValues>(values);
+  const [localVehicle, setLocalVehicle] = useState<VehicleTunerValues>(vehicleValues);
   useEffect(() => {
     setLocal(values);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(values)]);
+  useEffect(() => {
+    setLocalVehicle(vehicleValues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(vehicleValues)]);
 
   const change = (patch: Partial<HeroTunerValues>) => {
     const next = { ...local, ...patch };
@@ -255,9 +261,17 @@ export default function HeroTuner() {
     update("hero", next as unknown as Record<string, unknown>);
   };
 
+  const changeVehicle = (patch: Partial<VehicleTunerValues>) => {
+    const next = { ...localVehicle, ...patch };
+    setLocalVehicle(next);
+    update("vehicle", next as unknown as Record<string, unknown>);
+  };
+
   const reset = () => {
     setLocal(DEFAULTS);
     update("hero", DEFAULTS as unknown as Record<string, unknown>);
+    setLocalVehicle(VEHICLE_DEFAULTS);
+    update("vehicle", VEHICLE_DEFAULTS as unknown as Record<string, unknown>);
   };
 
   return (
