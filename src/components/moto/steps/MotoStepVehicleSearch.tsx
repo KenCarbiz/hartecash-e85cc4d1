@@ -262,7 +262,7 @@ const MotoStepVehicleSearch = ({
         </div>
       </MotoCard>
 
-      <div className="mt-4 rounded-md bg-zinc-50 py-3 text-center text-sm font-semibold text-[hsl(var(--cta-offer))]">
+      <div className="mt-4 mx-auto max-w-md rounded-md bg-[hsl(var(--cta-offer)/0.3)] py-3 text-center text-sm font-semibold text-[color:var(--cta-offer-text)]">
         Get a valuation in less than 30 seconds!
       </div>
     </>
