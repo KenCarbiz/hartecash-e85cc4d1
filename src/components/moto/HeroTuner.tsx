@@ -349,6 +349,23 @@ export default function HeroTuner() {
               value={local.ctaTextColor}
               onChange={(ctaTextColor) => change({ ctaTextColor })}
             />
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Tab thickness</span>
+                <span>{local.tabPadY}px</span>
+              </div>
+              <input
+                type="range"
+                min={4}
+                max={32}
+                step={1}
+                value={local.tabPadY}
+                onChange={(e) => change({ tabPadY: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="text-[10px] text-zinc-400">Vertical padding of VIN / Plate buttons.</div>
+            </label>
+
 
             <button
               type="button"
