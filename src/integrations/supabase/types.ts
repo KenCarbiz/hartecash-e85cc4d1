@@ -722,6 +722,39 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_otp_codes: {
+        Row: {
+          attempts: number
+          challenge_id: string
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          phone_e164: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          challenge_id?: string
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          phone_e164: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          challenge_id?: string
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone_e164?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       customer_signals: {
         Row: {
           created_at: string
@@ -3653,6 +3686,24 @@ export type Database = {
           updated_at?: string
           vdp_screenshot?: string | null
           vdp_url?: string | null
+        }
+        Relationships: []
+      }
+      rate_limit_hits: {
+        Row: {
+          created_at: string
+          id: number
+          key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          key: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          key?: string
         }
         Relationships: []
       }
