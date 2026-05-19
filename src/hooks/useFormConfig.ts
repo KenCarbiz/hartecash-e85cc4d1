@@ -58,6 +58,7 @@ const DEFAULTS: FormConfig = {
   // Photos step is our differentiator vs Carvana — keep on.
   step_ai_photos: true,
   ai_photos_min_required: 4,
+  require_phone_verification: true,
   offer_before_details: false,
   // Offer-math drivers — keep on.
   q_overall_condition: true,
