@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import MotoCard from "../MotoCard";
 import MotoPrimaryButton from "../MotoPrimaryButton";
@@ -9,6 +10,10 @@ import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import MotoFormField from "../MotoFormField";
 import type { MotoFlowState } from "../types";
+import {
+  calculateAndPersistOffer,
+  loadPricingRevealMode,
+} from "../motoSubmission";
 
 const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
@@ -19,6 +24,11 @@ const formatPhone = (raw: string) => {
   return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
 };
 
+const usd = (n: number) =>
+  n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+
+type Phase = "form" | "range" | "verify";
+
 const MotoStepContact = ({
   state,
   onNext,
@@ -27,6 +37,7 @@ const MotoStepContact = ({
   onNext: (next: Partial<MotoFlowState>) => void;
 }) => {
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const { toast } = useToast();
 
   const [firstName, setFirstName] = useState(state.contact.firstName);
@@ -37,11 +48,29 @@ const MotoStepContact = ({
   const [zip, setZip] = useState(state.contact.zip);
   const [trackValue, setTrackValue] = useState(state.trackValue);
 
-  const [phase, setPhase] = useState<"form" | "verify">("form");
+  const [phase, setPhase] = useState<Phase>("form");
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
+
+  // Dealer pricing-reveal mode and computed range for `range_then_price`.
+  const [revealMode, setRevealMode] = useState<
+    "price_first" | "range_then_price" | "contact_first" | null
+  >(null);
+  const [computingRange, setComputingRange] = useState(false);
+  const [rangeLow, setRangeLow] = useState<number | null>(state.offer.low);
+  const [rangeHigh, setRangeHigh] = useState<number | null>(state.offer.high);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadPricingRevealMode(tenant.dealership_id).then((m) => {
+      if (!cancelled) setRevealMode(m);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tenant.dealership_id]);
 
   const formValid =
     firstName.trim() &&
@@ -50,6 +79,59 @@ const MotoStepContact = ({
     phone.replace(/\D/g, "").length === 10 &&
     Number(mileage.replace(/\D/g, "")) > 0 &&
     zip.replace(/\D/g, "").length >= 5;
+
+  const persistContactToState = () => ({
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    email: email.trim(),
+    phone,
+    phoneVerified: false,
+    zip,
+  });
+
+  // For range-mode dealers: compute the estimate + create the submission
+  // BEFORE we send the OTP, so we can render the KBB-style range page.
+  const goToRange = async () => {
+    setComputingRange(true);
+    try {
+      // If we already computed this once, skip the round-trip.
+      if (state.submissionToken && state.offer.low && state.offer.high) {
+        setRangeLow(state.offer.low);
+        setRangeHigh(state.offer.high);
+        setPhase("range");
+        return;
+      }
+      // Build a transient state with the in-progress contact info so
+      // motoSubmission can persist the row with name/email/phone.
+      const transient: MotoFlowState = {
+        ...state,
+        contact: persistContactToState(),
+        mileage: mileage.replace(/\D/g, ""),
+      };
+      const result = await calculateAndPersistOffer(transient, tenant.dealership_id);
+      setRangeLow(result.estimate?.low ?? null);
+      setRangeHigh(result.estimate?.high ?? null);
+      onNext({
+        submissionId: result.submissionId,
+        submissionToken: result.submissionToken,
+        offer: {
+          low: result.estimate?.low ?? null,
+          high: result.estimate?.high ?? null,
+          firm: result.firm,
+          aiBumped: false,
+        },
+      });
+      setPhase("range");
+    } catch (e) {
+      toast({
+        title: "Couldn't calculate your range",
+        description: (e as Error)?.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setComputingRange(false);
+    }
+  };
 
   const sendCode = async () => {
     setSending(true);
@@ -61,11 +143,6 @@ const MotoStepContact = ({
         },
       });
       if (error || data?.error || !data?.challenge_id) {
-        // Surface the actual server-side reason so support can tell
-        // "our Twilio creds are wrong" apart from "customer typed a
-        // bad number". Previously every error rendered the same
-        // "Check the number and try again" message, which made
-        // operator triage impossible.
         const reason = data?.error || (error ? "network" : "unknown");
         const description =
           reason === "rate_limited"  ? "Too many attempts. Please wait an hour and try again." :
@@ -75,8 +152,6 @@ const MotoStepContact = ({
           reason === "internal"      ? "Something went wrong on our end. Please refresh and try again." :
           reason === "network"       ? "Couldn't reach our servers. Check your connection and try again." :
                                        "Couldn't send the code. Please try again.";
-        // Log to console so a power user or support can grep the
-        // server logs by reason. Never include the user's phone.
         console.warn("[MotoStepContact] sendCode failed:", { reason, error_message: error?.message });
         toast({
           title: "Couldn't send code",
@@ -89,6 +164,16 @@ const MotoStepContact = ({
       setPhase("verify");
     } finally {
       setSending(false);
+    }
+  };
+
+  // From the form: range dealers go to the range page first;
+  // everyone else (price_first / contact_first) jumps straight to OTP.
+  const submitForm = async () => {
+    if (revealMode === "range_then_price") {
+      await goToRange();
+    } else {
+      await sendCode();
     }
   };
 
@@ -129,16 +214,82 @@ const MotoStepContact = ({
     }
   };
 
+  // ── Phase: RANGE ──────────────────────────────────────────────
+  // KBB-style range reveal. Dealer has opted into range_then_price.
+  if (phase === "range") {
+    return (
+      <>
+        <MotoVehicleHero bb={state.bbVehicle} color={state.color} mileage={mileage} />
+        <MotoCard>
+          {rangeLow != null && rangeHigh != null ? (
+            <>
+              <p className="text-center text-3xl font-bold text-zinc-900 sm:text-4xl">
+                {usd(rangeLow)} – {usd(rangeHigh)}
+              </p>
+              <p className="mt-1 text-center text-xs text-zinc-500">
+                Here is your trade-in value range
+              </p>
+            </>
+          ) : (
+            <p className="py-6 text-center text-sm text-zinc-600">
+              We need a little more info to price this one.
+            </p>
+          )}
+
+          <div className="my-5 h-px bg-zinc-200" />
+
+          <h3 className="text-center text-base font-semibold text-zinc-900">
+            Ready to Sell or Trade Your Vehicle?
+          </h3>
+          <div className="mt-4">
+            <MotoPrimaryButton
+              className="py-3 opacity-100 hover:opacity-100 active:opacity-100"
+              loading={sending}
+              disabled={sending}
+              onClick={sendCode}
+            >
+              Get Firm Offer
+            </MotoPrimaryButton>
+          </div>
+          <p className="mt-3 text-center text-[11px] leading-relaxed text-zinc-500">
+            We'll send a one-time code to <span className="font-semibold">{phone}</span> to
+            verify your number before revealing your firm offer.{" "}
+            <button
+              type="button"
+              onClick={() => setPhase("form")}
+              className="font-medium text-[hsl(var(--cta-offer))] underline-offset-2 hover:underline"
+            >
+              Wrong number?
+            </button>
+          </p>
+        </MotoCard>
+      </>
+    );
+  }
+
+  // ── Phase: VERIFY ─────────────────────────────────────────────
+  // For range dealers we keep the range card visible above the code
+  // entry — matches the user's screenshot.
   if (phase === "verify") {
     return (
       <>
         <MotoVehicleHero bb={state.bbVehicle} color={state.color} mileage={mileage} />
+        {revealMode === "range_then_price" && rangeLow != null && rangeHigh != null && (
+          <MotoCard className="mb-4">
+            <p className="text-center text-2xl font-bold text-zinc-900 sm:text-3xl">
+              {usd(rangeLow)} – {usd(rangeHigh)}
+            </p>
+            <p className="mt-1 text-center text-xs text-zinc-500">
+              Here is your trade-in value range
+            </p>
+          </MotoCard>
+        )}
         <MotoCard title="Phone Verification">
           <p className="mb-3 text-sm text-zinc-700">
             Code sent to <span className="font-semibold">{phone}</span>.{" "}
             <button
               type="button"
-              onClick={() => setPhase("form")}
+              onClick={() => setPhase(revealMode === "range_then_price" ? "range" : "form")}
               className="font-medium text-[hsl(var(--cta-offer))] underline-offset-2 hover:underline"
             >
               Wrong number?
@@ -179,6 +330,11 @@ const MotoStepContact = ({
       </>
     );
   }
+
+  // ── Phase: FORM ───────────────────────────────────────────────
+  const ctaLabel =
+    revealMode === "range_then_price" ? "See My Value Range" : "Verify Phone & See Offer";
+  const ctaLoading = sending || computingRange;
 
   return (
     <>
@@ -229,16 +385,16 @@ const MotoStepContact = ({
           <div className="hidden sm:block">
             <MotoPrimaryButton
               className="py-2 opacity-100 hover:opacity-100 active:opacity-100"
-              disabled={!formValid || sending}
-              loading={sending}
-              onClick={sendCode}
+              disabled={!formValid || ctaLoading}
+              loading={ctaLoading}
+              onClick={submitForm}
             >
-              Verify Phone &amp; See Offer
+              {ctaLabel}
             </MotoPrimaryButton>
           </div>
           <p className="text-[11px] leading-relaxed text-zinc-500">
-            By tapping Verify you agree to receive a one-time SMS verification code at the number
-            above. Standard message and data rates may apply. See our{" "}
+            By tapping {ctaLabel} you agree to receive a one-time SMS verification code at the
+            number above. Standard message and data rates may apply. See our{" "}
             <a href="/privacy" className="font-medium text-[hsl(var(--cta-offer))] underline-offset-2 hover:underline">
               Privacy Policy
             </a>{" "}
@@ -249,11 +405,11 @@ const MotoStepContact = ({
       <MotoStickyFooter className="sm:hidden">
         <MotoPrimaryButton
           className="py-2 opacity-100 hover:opacity-100 active:opacity-100"
-          disabled={!formValid || sending}
-          loading={sending}
-          onClick={sendCode}
+          disabled={!formValid || ctaLoading}
+          loading={ctaLoading}
+          onClick={submitForm}
         >
-          Verify Phone &amp; See Offer
+          {ctaLabel}
         </MotoPrimaryButton>
       </MotoStickyFooter>
     </>
