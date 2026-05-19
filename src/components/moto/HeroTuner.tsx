@@ -220,6 +220,25 @@ export default function HeroTuner() {
               onChange={(color) => change({ color })}
             />
 
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Vertical offset</span>
+                <span>{local.offsetY}px</span>
+              </div>
+              <input
+                type="range"
+                min={-200}
+                max={200}
+                step={1}
+                value={local.offsetY}
+                onChange={(e) => change({ offsetY: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="text-[10px] text-zinc-400">Negative = higher above the card.</div>
+            </label>
+
+
+
             <hr className="border-zinc-200" />
             <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
               Accent words ("Get an" / "Vehicle Valuation")
