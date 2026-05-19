@@ -137,8 +137,10 @@ export function useHeroTuner(): HeroTunerValues {
 export type VehicleTunerValues = {
   /** Max width in px of the vehicle image container. */
   width: number;
-  /** Vertical offset in px (positive = lower, negative = higher). */
+  /** Space above the car (px). Positive = pushes the car down. */
   offsetY: number;
+  /** Space below the car (px). Positive = pushes content under further down. */
+  offsetBottom: number;
   /** Camera angle for the generated image. */
   angle: "side" | "three_quarter" | "front";
   /** Horizontal flip (mirror so the car faces the other way). */
@@ -148,6 +150,7 @@ export type VehicleTunerValues = {
 export const VEHICLE_DEFAULTS: VehicleTunerValues = {
   width: 448,
   offsetY: 0,
+  offsetBottom: 0,
   angle: "side",
   flip: false,
 };
@@ -162,6 +165,7 @@ function mergeVehicle(remote: unknown): VehicleTunerValues {
   return {
     width: num(r.width, VEHICLE_DEFAULTS.width),
     offsetY: num(r.offsetY, VEHICLE_DEFAULTS.offsetY),
+    offsetBottom: num(r.offsetBottom, VEHICLE_DEFAULTS.offsetBottom),
     angle,
     flip: typeof r.flip === "boolean" ? r.flip : VEHICLE_DEFAULTS.flip,
   };
@@ -566,7 +570,7 @@ export default function HeroTuner() {
               <input
                 type="range"
                 min={160}
-                max={720}
+                max={1600}
                 step={4}
                 value={localVehicle.width}
                 onChange={(e) => changeVehicle({ width: Number(e.target.value) })}
@@ -575,19 +579,35 @@ export default function HeroTuner() {
             </label>
             <label className="block">
               <div className="flex justify-between text-zinc-600">
-                <span>Vertical offset</span>
+                <span>Space above car</span>
                 <span>{localVehicle.offsetY}px</span>
               </div>
               <input
                 type="range"
-                min={-200}
-                max={200}
+                min={-400}
+                max={400}
                 step={1}
                 value={localVehicle.offsetY}
                 onChange={(e) => changeVehicle({ offsetY: Number(e.target.value) })}
                 className="w-full"
               />
-              <div className="text-[10px] text-zinc-400">Positive = lower, negative = higher.</div>
+              <div className="text-[10px] text-zinc-400">Positive = pushes car down, negative = pulls car up.</div>
+            </label>
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Space below car</span>
+                <span>{localVehicle.offsetBottom}px</span>
+              </div>
+              <input
+                type="range"
+                min={-400}
+                max={400}
+                step={1}
+                value={localVehicle.offsetBottom}
+                onChange={(e) => changeVehicle({ offsetBottom: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="text-[10px] text-zinc-400">Positive = pushes content below down, negative = pulls it up.</div>
             </label>
             <label className="block">
               <span className="text-zinc-600">Camera angle</span>
