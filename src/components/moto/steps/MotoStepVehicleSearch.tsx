@@ -179,7 +179,7 @@ const MotoStepVehicleSearch = ({
             Get an instant valuation &amp; then add more info to get a firm offer.
           </p>
 
-          <div className="mt-6 flex w-full flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
+          <div className="mt-6 flex w-full flex-col items-center justify-center gap-8 lg:flex-row lg:items-center lg:gap-10 xl:gap-14">
             <div className="w-full max-w-md flex-shrink-0">
               <MotoCard className="p-6">
             <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
