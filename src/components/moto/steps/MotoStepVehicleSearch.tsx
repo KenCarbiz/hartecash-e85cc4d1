@@ -270,14 +270,15 @@ const MotoStepVehicleSearch = ({
           </div>
         </div>
 
-        <div className="w-full lg:flex-1 lg:min-w-0 flex items-center justify-center">
+        <div className="w-full lg:flex-1 lg:min-w-0 flex items-center justify-center overflow-visible">
           <img
             src={tenantHeroVehicle}
             alt="Featured vehicle"
-            className="w-full h-auto object-contain scale-[1.6] lg:scale-[2] origin-center"
+            className="w-full h-auto object-contain scale-[3] lg:scale-[4] origin-center"
             loading="lazy"
           />
         </div>
+
 
       </div>
     </>
