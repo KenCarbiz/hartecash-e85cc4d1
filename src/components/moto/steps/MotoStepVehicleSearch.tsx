@@ -10,6 +10,7 @@ import type { BBVehicle } from "@/components/sell-form/types";
 import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "../ymmData";
 import { cn } from "@/lib/utils";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
+import HeroTuner, { useHeroTuner } from "../HeroTuner";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
@@ -49,6 +50,8 @@ const MotoStepVehicleSearch = ({
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
+  const tuner = useHeroTuner();
+
 
   const [tab, setTab] = useState<Exclude<LookupMode, "ymm">>(
     state.lookupMode === "plate" ? "plate" : "vin",
@@ -175,11 +178,26 @@ const MotoStepVehicleSearch = ({
             {/* Left column: heading + card stay locked-aligned to the
                 same left edge regardless of image width/gap. */}
             <div className="w-full max-w-md flex-shrink-0">
-              <h1 className="mt-1 whitespace-nowrap text-3xl font-light leading-[1.05] tracking-tight text-zinc-900 lg:text-4xl">
-                <span className="text-[hsl(var(--cta-offer))]">Get an</span> instant{" "}
-                <span className="text-[hsl(var(--cta-offer))]">Vehicle Valuation</span>
+              <h1
+                className="mt-1 whitespace-nowrap leading-[1.05] tracking-tight"
+                style={{
+                  fontSize: `${tuner.size}px`,
+                  fontWeight: tuner.weight,
+                  color: tuner.color,
+                  fontFamily: tuner.font,
+                }}
+              >
+                <span style={{ color: "hsl(var(--cta-offer))" }}>Get an</span> instant{" "}
+                <span style={{ color: "hsl(var(--cta-offer))" }}>Vehicle Valuation</span>
               </h1>
-              <p className="mt-3 whitespace-nowrap text-base text-zinc-500">
+              <p
+                className="mt-3 whitespace-nowrap"
+                style={{
+                  fontSize: `${tuner.subSize}px`,
+                  color: tuner.subColor,
+                  fontFamily: tuner.font,
+                }}
+              >
                 Get an instant valuation &amp; then add more info to get a firm offer.
               </p>
               <MotoCard className="mt-6 p-6">
@@ -419,6 +437,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
           </button>
         )}
       </div>
+      <HeroTuner />
     </>
   );
 };
