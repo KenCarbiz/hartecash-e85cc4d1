@@ -273,7 +273,7 @@ const MotoStepVehicleSearch = ({
         <div className="w-full max-w-xl flex-shrink">
           <img
             src={tenantHeroVehicle}
-            alt="2026 Infiniti QX60"
+            alt="Featured vehicle"
             className="w-full h-auto object-contain"
             loading="lazy"
           />
