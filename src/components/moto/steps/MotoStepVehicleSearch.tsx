@@ -188,8 +188,15 @@ const MotoStepVehicleSearch = ({
                   fontFamily: tuner.font,
                 }}
               >
-                <span style={{ color: "hsl(var(--cta-offer))" }}>Get an</span> instant{" "}
-                <span style={{ color: "hsl(var(--cta-offer))" }}>Vehicle Valuation</span>
+                <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
+                  Get an
+                </span>{" "}
+                <span style={{ color: tuner.instantColor, fontWeight: tuner.instantWeight }}>
+                  instant
+                </span>{" "}
+                <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
+                  Vehicle Valuation
+                </span>
               </h1>
               <p
                 className="mt-3 whitespace-nowrap"
