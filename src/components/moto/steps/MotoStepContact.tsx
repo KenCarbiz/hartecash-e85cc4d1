@@ -203,7 +203,6 @@ const MotoStepContact = ({
             value={phone}
             onChange={(e) => setPhone(formatPhone(e.target.value))}
             filled={!!phone}
-            placeholder="555-555-5555"
           />
           <div className="grid grid-cols-2 gap-3">
             <MotoFormField
