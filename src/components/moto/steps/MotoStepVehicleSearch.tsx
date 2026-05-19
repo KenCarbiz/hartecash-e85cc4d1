@@ -312,9 +312,9 @@ const TUNER_DEFAULTS: Record<BP, { w: number; gap: number }> = {
   base: { w: 420, gap: 0 },
   sm: { w: 520, gap: 0 },
   md: { w: 620, gap: 0 },
-  lg: { w: 640, gap: 24 },
-  xl: { w: 640, gap: 32 },
-  "2xl": { w: 760, gap: 48 },
+  lg: { w: 680, gap: 0 },
+  xl: { w: 780, gap: 0 },
+  "2xl": { w: 880, gap: 0 },
 };
 const TUNER_STORAGE_KEY = "heroVehicleTuner.v1";
 
