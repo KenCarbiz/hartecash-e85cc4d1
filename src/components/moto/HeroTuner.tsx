@@ -8,6 +8,8 @@ export type HeroTunerValues = {
   weight: number;
   color: string;
   font: string;
+  // vertical offset of the headline block (px). Negative = higher above the card.
+  offsetY: number;
   // subline
   subSize: number;
   subColor: string;
@@ -40,6 +42,7 @@ export const DEFAULTS: HeroTunerValues = {
   weight: 300,
   color: "#18181b",
   font: FONT_OPTIONS[0].value,
+  offsetY: 0,
   subSize: 16,
   subColor: "#71717a",
   accentColor: BRAND_YELLOW,
@@ -216,6 +219,25 @@ export default function HeroTuner() {
               value={local.color}
               onChange={(color) => change({ color })}
             />
+
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Vertical offset</span>
+                <span>{local.offsetY}px</span>
+              </div>
+              <input
+                type="range"
+                min={-200}
+                max={200}
+                step={1}
+                value={local.offsetY}
+                onChange={(e) => change({ offsetY: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="text-[10px] text-zinc-400">Negative = higher above the card.</div>
+            </label>
+
+
 
             <hr className="border-zinc-200" />
             <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
