@@ -155,17 +155,17 @@ const MotoStepVehicleSearch = ({
       </p>
 
       <MotoCard className="mt-6">
-        <div className="mb-5 grid grid-cols-2 rounded-full bg-zinc-100 p-1 text-sm font-semibold">
+        <div className="mb-5 grid grid-cols-2 gap-3 text-sm font-semibold">
           {TABS.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
               className={cn(
-                "rounded-full py-2.5 transition",
+                "rounded-lg py-3 border transition",
                 tab === t.id
-                  ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)] shadow-sm"
-                  : "text-zinc-600 hover:text-zinc-800",
+                  ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)] border-transparent shadow-sm"
+                  : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50",
               )}
             >
               {t.label}
@@ -251,9 +251,9 @@ const MotoStepVehicleSearch = ({
           </div>
         )}
 
-        <div className="mt-5">
+        <div className="mt-5 flex justify-center">
           <MotoPrimaryButton
-            className="rounded-full"
+            className="w-auto px-10 py-2.5 rounded-lg text-sm"
             onClick={submit}
             disabled={!canSubmit}
             loading={loading}
