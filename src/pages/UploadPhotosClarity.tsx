@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { usePhotoConfig } from "@/hooks/usePhotoConfig";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { parsePhotoExif, savePhotoMetadata, type PhotoExifResult } from "@/lib/photoExif";
+import PhotoTrustBadge from "@/components/upload/PhotoTrustBadge";
 
 /**
  * Clarity-tier photo upload page — Apple-minimal companion to the
