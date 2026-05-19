@@ -35,7 +35,7 @@ const SiteHeader = () => {
 
   return (
     <header className="bg-card/95 backdrop-blur-md sticky top-0 z-50 shadow-[0_1px_3px_0_hsl(var(--foreground)/0.08),0_1px_2px_-1px_hsl(var(--foreground)/0.08)] border-b border-border/50">
-      <div className="max-w-6xl mx-auto px-5 py-2">
+      <div className="max-w-6xl mx-auto px-5 py-1">
         <div className="flex items-center justify-between">
           {/* Logo cluster */}
           <Link to="/" className={`flex ${isStacked ? "flex-col" : "flex-row items-center"} gap-2 group`}>
@@ -43,13 +43,13 @@ const SiteHeader = () => {
               <img
                 src={corporateUrl!}
                 alt="Corporate"
-                className="h-[40px] md:h-[48px] w-auto object-contain"
+                className="h-[32px] md:h-[38px] w-auto object-contain"
               />
             )}
             <img
               src={logoSrc}
               alt={dealerName}
-              className="h-[72px] md:h-[84px] w-auto transition-transform duration-300 group-hover:scale-[1.02]"
+              className="h-[54px] md:h-[62px] w-auto transition-transform duration-300 group-hover:scale-[1.02]"
               width={189}
               height={67}
               fetchPriority="high"
