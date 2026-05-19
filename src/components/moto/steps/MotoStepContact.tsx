@@ -226,6 +226,15 @@ const MotoStepContact = ({
             <Switch checked={trackValue} onCheckedChange={setTrackValue} />
             <span className="text-sm text-zinc-700">Track my vehicle value monthly via email</span>
           </label>
+          <div className="hidden sm:block">
+            <MotoPrimaryButton
+              disabled={!formValid || sending}
+              loading={sending}
+              onClick={sendCode}
+            >
+              Verify Phone &amp; See Offer
+            </MotoPrimaryButton>
+          </div>
           <p className="text-[11px] leading-relaxed text-zinc-500">
             By tapping Verify you agree to receive a one-time SMS verification code at the number
             above. Standard message and data rates may apply. See our{" "}
@@ -236,7 +245,7 @@ const MotoStepContact = ({
           </p>
         </div>
       </MotoCard>
-      <MotoStickyFooter>
+      <MotoStickyFooter className="sm:hidden">
         <MotoPrimaryButton
           disabled={!formValid || sending}
           loading={sending}
