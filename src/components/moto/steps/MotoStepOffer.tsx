@@ -191,25 +191,12 @@ const MotoStepOffer = ({
           {firm ? (
             <div className="space-y-2">
               <MotoPrimaryButton onClick={accept}>Accept &amp; Schedule Inspection</MotoPrimaryButton>
-              {state.submissionToken && (
-                <SaveOfferButton
-                  token={state.submissionToken}
-                  vehicleStr={[state.bbVehicle?.year, state.bbVehicle?.make, state.bbVehicle?.model]
-                    .filter(Boolean)
-                    .join(" ")}
-                  customerName={`${state.contact.firstName} ${state.contact.lastName}`.trim()}
-                  customerEmail={state.contact.email}
-                  customerPhone={state.contact.phone}
-                  guaranteeDays={Number(config.price_guarantee_days) || 8}
-                  dealershipName={config.dealership_name}
-                />
-              )}
               <button
                 type="button"
-                onClick={decline}
-                className="w-full rounded-md border border-zinc-300 bg-white py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
+                onClick={() => setView("boost")}
+                className="w-full rounded-xl border border-primary/20 bg-white py-3 text-sm font-semibold text-primary hover:bg-primary/5"
               >
-                Think it should be higher? Try AI Photo Appraisal
+                Save My Offer
               </button>
             </div>
           ) : (
