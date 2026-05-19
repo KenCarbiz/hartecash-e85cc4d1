@@ -372,7 +372,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
       | Record<BP, { w: number; gap: number }>
       | ((s: Record<BP, { w: number; gap: number }>) => Record<BP, { w: number; gap: number }>),
   ) => {
-    const next = typeof updater === "function" ? (updater as Function)(settings) : updater;
+    const next = typeof updater === "function" ? updater(settings) : updater;
     update("vehicle", next as unknown as Record<string, unknown>);
   };
   const [open, setOpen] = useState(false);
