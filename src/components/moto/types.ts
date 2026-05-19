@@ -13,7 +13,7 @@ export type MotoStepId =
   | "queued";
 
 export type LookupMode = "vin" | "plate" | "ymm";
-export type Condition = "excellent" | "good" | "fair" | "poor";
+export type Condition = "excellent" | "very_good" | "good" | "fair" | "poor";
 export type TradeOrSell = "trade" | "sell";
 export type Ownership = "own" | "finance" | "lease";
 

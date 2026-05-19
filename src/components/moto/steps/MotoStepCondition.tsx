@@ -5,10 +5,10 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const OPTIONS: { id: Condition; label: string; blurb: string }[] = [
-  { id: "excellent", label: "Excellent", blurb: "Like new, no visible flaws, full service history." },
-  { id: "good", label: "Good", blurb: "Minor wear, clean inside, runs and drives well." },
-  { id: "fair", label: "Fair", blurb: "Visible scratches or interior wear, needs minor work." },
-  { id: "poor", label: "Poor", blurb: "Mechanical or cosmetic issues that need fixing." },
+  { id: "excellent", label: "Excellent", blurb: "(2% of cars KBB values) - Looks new and is in excellent mechanical condition." },
+  { id: "very_good", label: "Very Good", blurb: "(28% of cars KBB values) - Has minor cosmetic defects and is in good mechanical condition." },
+  { id: "good", label: "Good", blurb: "(50% of cars KBB values) - Has repairable cosmetic defects and mechanical problems." },
+  { id: "fair", label: "Fair", blurb: "(20% of cars KBB values) - Requires some mechanical repairs." },
 ];
 
 /**
