@@ -14,6 +14,7 @@ import {
   calculateAndPersistOffer,
   loadPricingRevealMode,
 } from "../motoSubmission";
+import { useFormConfig } from "@/hooks/useFormConfig";
 
 const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
@@ -38,7 +39,9 @@ const MotoStepContact = ({
 }) => {
   const { config } = useSiteConfig();
   const { tenant } = useTenant();
+  const { formConfig } = useFormConfig();
   const { toast } = useToast();
+  const requireVerify = formConfig.require_phone_verification !== false;
 
   const [firstName, setFirstName] = useState(state.contact.firstName);
   const [lastName, setLastName] = useState(state.contact.lastName);
@@ -167,13 +170,35 @@ const MotoStepContact = ({
     }
   };
 
+  // Advance straight to the offer step, skipping OTP entirely.
+  // Used when the dealer has turned off "Require phone verification".
+  const advanceWithoutVerify = () => {
+    onNext({
+      contact: {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        phone,
+        phoneVerified: false,
+        zip,
+      },
+      mileage: mileage.replace(/\D/g, ""),
+      trackValue,
+      step: "offer",
+    });
+  };
+
   // From the form: range dealers go to the range page first;
-  // everyone else (price_first / contact_first) jumps straight to OTP.
+  // everyone else (price_first / contact_first) jumps straight to OTP
+  // — unless the dealer has disabled phone verification, in which
+  // case we skip OTP entirely and reveal the firm offer.
   const submitForm = async () => {
     if (revealMode === "range_then_price") {
       await goToRange();
-    } else {
+    } else if (requireVerify) {
       await sendCode();
+    } else {
+      advanceWithoutVerify();
     }
   };
 
@@ -246,14 +271,18 @@ const MotoStepContact = ({
               className="py-3 opacity-100 hover:opacity-100 active:opacity-100"
               loading={sending}
               disabled={sending}
-              onClick={sendCode}
+              onClick={requireVerify ? sendCode : advanceWithoutVerify}
             >
               Get Firm Offer
             </MotoPrimaryButton>
           </div>
           <p className="mt-3 text-center text-[11px] leading-relaxed text-zinc-500">
-            We'll send a one-time code to <span className="font-semibold">{phone}</span> to
-            verify your number before revealing your firm offer.{" "}
+            {requireVerify ? (
+              <>We'll send a one-time code to <span className="font-semibold">{phone}</span> to
+              verify your number before revealing your firm offer.{" "}</>
+            ) : (
+              <>Your firm offer will appear on the next screen.{" "}</>
+            )}
             <button
               type="button"
               onClick={() => setPhase("form")}

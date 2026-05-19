@@ -56,6 +56,7 @@ interface FormConfigData {
   step_condition_history: boolean;
   step_ai_photos: boolean;
   ai_photos_min_required: number;
+  require_phone_verification: boolean;
   offer_before_details: boolean;
   q_overall_condition: boolean;
   q_exterior_damage: boolean;
@@ -83,6 +84,7 @@ const DEFAULTS: FormConfigData = {
   step_condition_history: true,
   step_ai_photos: true,
   ai_photos_min_required: 4,
+  require_phone_verification: true,
   offer_before_details: false,
   q_overall_condition: true,
   q_exterior_damage: true,
@@ -435,6 +437,27 @@ export default function FormConfiguration() {
               </div>
             </div>
             <Badge variant="outline" className="text-xs">Required</Badge>
+          </div>
+
+          {/* Phone verification gate — when on, customer must enter an
+              SMS code before the firm offer is revealed. When off, the
+              firm offer appears immediately after they submit contact info. */}
+          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-background border">
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={config.require_phone_verification}
+                onCheckedChange={v => set("require_phone_verification", v)}
+              />
+              <div>
+                <p className="text-sm font-medium">Require SMS phone verification</p>
+                <p className="text-xs text-muted-foreground">
+                  Customer must enter a one-time code before the firm offer is revealed. Turn off to skip OTP and show the offer immediately.
+                </p>
+              </div>
+            </div>
+            <Badge variant={config.require_phone_verification ? "default" : "secondary"} className="text-xs shrink-0">
+              {config.require_phone_verification ? "Required" : "Skipped"}
+            </Badge>
           </div>
         </CollapsibleContent>
       </Collapsible>

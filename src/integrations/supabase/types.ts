@@ -2011,6 +2011,7 @@ export type Database = {
           q_tech_issues: boolean
           q_tires_replaced: boolean
           q_windshield_damage: boolean
+          require_phone_verification: boolean
           step_ai_photos: boolean
           step_condition_history: boolean
           step_vehicle_build: boolean
@@ -2040,6 +2041,7 @@ export type Database = {
           q_tech_issues?: boolean
           q_tires_replaced?: boolean
           q_windshield_damage?: boolean
+          require_phone_verification?: boolean
           step_ai_photos?: boolean
           step_condition_history?: boolean
           step_vehicle_build?: boolean
@@ -2069,6 +2071,7 @@ export type Database = {
           q_tech_issues?: boolean
           q_tires_replaced?: boolean
           q_windshield_damage?: boolean
+          require_phone_verification?: boolean
           step_ai_photos?: boolean
           step_condition_history?: boolean
           step_vehicle_build?: boolean
