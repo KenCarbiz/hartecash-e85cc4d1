@@ -228,6 +228,7 @@ const MotoStepContact = ({
           </label>
           <div className="hidden sm:block">
             <MotoPrimaryButton
+              className="py-2.5"
               disabled={!formValid || sending}
               loading={sending}
               onClick={sendCode}
@@ -247,6 +248,7 @@ const MotoStepContact = ({
       </MotoCard>
       <MotoStickyFooter className="sm:hidden">
         <MotoPrimaryButton
+          className="py-2.5"
           disabled={!formValid || sending}
           loading={sending}
           onClick={sendCode}
