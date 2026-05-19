@@ -1,0 +1,117 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * Single source of truth for the hero / vehicle tuner settings.
+ * Stored in `site_config.hero_tuner_config` (jsonb) per dealership, so
+ * tuning changes broadcast to every visitor of the published site.
+ *
+ * Falls back to localStorage when offline / unauthenticated so the dev
+ * tuner still feels live.
+ */
+export type TunerConfig = {
+  hero?: Record<string, unknown>;
+  vehicle?: Record<string, unknown>;
+  [k: string]: unknown;
+};
+
+const LS_KEY = "moto-tuner-config-v1";
+
+export function useTunerConfig(dealershipId: string | undefined | null) {
+  const [config, setConfig] = useState<TunerConfig>(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      return raw ? (JSON.parse(raw) as TunerConfig) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [loaded, setLoaded] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestRef = useRef<TunerConfig>(config);
+  latestRef.current = config;
+
+  // initial load + realtime subscription
+  useEffect(() => {
+    if (!dealershipId) return;
+    let cancelled = false;
+
+    (async () => {
+      const { data } = await supabase
+        .from("site_config")
+        .select("hero_tuner_config")
+        .eq("dealership_id", dealershipId)
+        .maybeSingle();
+      if (cancelled) return;
+      const remote = (data?.hero_tuner_config ?? {}) as TunerConfig;
+      // remote wins over local cache so all visitors see the same thing
+      setConfig(remote);
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(remote));
+      } catch {}
+      setLoaded(true);
+    })();
+
+    const channel = supabase
+      .channel(`site_config:${dealershipId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "site_config",
+          filter: `dealership_id=eq.${dealershipId}`,
+        },
+        (payload) => {
+          const next = (payload.new as { hero_tuner_config?: TunerConfig })
+            ?.hero_tuner_config;
+          if (next) {
+            setConfig(next);
+            try {
+              localStorage.setItem(LS_KEY, JSON.stringify(next));
+            } catch {}
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [dealershipId]);
+
+  const persist = useCallback(
+    (next: TunerConfig) => {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(next));
+      } catch {}
+      if (!dealershipId) return;
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(async () => {
+        const { error } = await supabase
+          .from("site_config")
+          .update({ hero_tuner_config: next as never })
+          .eq("dealership_id", dealershipId);
+        if (error) {
+          console.warn("[tuner] remote save failed (kept locally):", error.message);
+        }
+      }, 400);
+    },
+    [dealershipId],
+  );
+
+  const update = useCallback(
+    (section: "hero" | "vehicle", value: Record<string, unknown>) => {
+      const next: TunerConfig = {
+        ...latestRef.current,
+        [section]: value,
+      };
+      setConfig(next);
+      persist(next);
+    },
+    [persist],
+  );
+
+  return { config, loaded, update };
+}
