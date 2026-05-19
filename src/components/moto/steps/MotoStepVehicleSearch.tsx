@@ -21,11 +21,12 @@ const TABS: { id: Exclude<LookupMode, "ymm">; label: string }[] = [
 ];
 
 /**
- * Responsive width (in px) for the hero vehicle image at each Tailwind breakpoint.
- * Adjust these values to tune the car's size across screen sizes.
+ * Responsive widths for the hero vehicle image at each Tailwind breakpoint.
+ * NOTE: Tailwind's JIT scans source literally — class strings must stay
+ * static. If you change a width, update both the comment and the class.
  */
 const HERO_VEHICLE_WIDTHS = {
-  base: 320, // < 640px (mobile)
+  base: 320, // < 640px  (mobile)
   sm: 480, //   ≥ 640px
   md: 640, //   ≥ 768px
   lg: 760, //   ≥ 1024px
@@ -33,14 +34,9 @@ const HERO_VEHICLE_WIDTHS = {
   "2xl": 1040, // ≥ 1536px
 } as const;
 
-const HERO_VEHICLE_WIDTH_CLASSES = [
-  `w-[${HERO_VEHICLE_WIDTHS.base}px]`,
-  `sm:w-[${HERO_VEHICLE_WIDTHS.sm}px]`,
-  `md:w-[${HERO_VEHICLE_WIDTHS.md}px]`,
-  `lg:w-[${HERO_VEHICLE_WIDTHS.lg}px]`,
-  `xl:w-[${HERO_VEHICLE_WIDTHS.xl}px]`,
-  `2xl:w-[${HERO_VEHICLE_WIDTHS["2xl"]}px]`,
-].join(" ");
+const HERO_VEHICLE_WIDTH_CLASSES =
+  "w-[320px] sm:w-[480px] md:w-[640px] lg:w-[760px] xl:w-[900px] 2xl:w-[1040px]";
+
 
 
 const MotoStepVehicleSearch = ({
