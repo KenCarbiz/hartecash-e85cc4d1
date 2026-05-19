@@ -20,6 +20,29 @@ const TABS: { id: Exclude<LookupMode, "ymm">; label: string }[] = [
   { id: "plate", label: "License Plate" },
 ];
 
+/**
+ * Responsive width (in px) for the hero vehicle image at each Tailwind breakpoint.
+ * Adjust these values to tune the car's size across screen sizes.
+ */
+const HERO_VEHICLE_WIDTHS = {
+  base: 320, // < 640px (mobile)
+  sm: 480, //   ≥ 640px
+  md: 640, //   ≥ 768px
+  lg: 760, //   ≥ 1024px
+  xl: 900, //   ≥ 1280px
+  "2xl": 1040, // ≥ 1536px
+} as const;
+
+const HERO_VEHICLE_WIDTH_CLASSES = [
+  `w-[${HERO_VEHICLE_WIDTHS.base}px]`,
+  `sm:w-[${HERO_VEHICLE_WIDTHS.sm}px]`,
+  `md:w-[${HERO_VEHICLE_WIDTHS.md}px]`,
+  `lg:w-[${HERO_VEHICLE_WIDTHS.lg}px]`,
+  `xl:w-[${HERO_VEHICLE_WIDTHS.xl}px]`,
+  `2xl:w-[${HERO_VEHICLE_WIDTHS["2xl"]}px]`,
+].join(" ");
+
+
 const MotoStepVehicleSearch = ({
   state,
   onResolved,
