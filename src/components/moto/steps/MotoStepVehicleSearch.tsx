@@ -148,7 +148,7 @@ const MotoStepVehicleSearch = ({
   return (
     <>
       <h1 className="mt-1 text-4xl font-extrabold leading-[1.05] tracking-tight text-zinc-900">
-        Get an Instant{" "}
+        <span className="text-[hsl(var(--cta-offer))]">Get an</span> instant{" "}
         <span className="text-[hsl(var(--cta-offer))]">Vehicle Valuation</span>
       </h1>
       <p className="mt-3 text-base text-zinc-500">
