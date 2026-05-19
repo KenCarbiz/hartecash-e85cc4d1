@@ -28,6 +28,7 @@ const MotoStepOffer = ({
   const [low, setLow] = useState<number | null>(state.offer.low);
   const [high, setHigh] = useState<number | null>(state.offer.high);
   const [firm, setFirm] = useState<number | null>(state.offer.firm);
+  const [view, setView] = useState<"offer" | "boost">("offer");
 
   useEffect(() => {
     let cancelled = false;
