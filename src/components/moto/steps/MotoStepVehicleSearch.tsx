@@ -177,6 +177,7 @@ const MotoStepVehicleSearch = ({
           <div className="space-y-4">
             <MotoOutlinedSelect
               label="Vehicle Year"
+              placeholder="Vehicle Year"
               value={year}
               onChange={(e) => {
                 setYear(e.target.value);
