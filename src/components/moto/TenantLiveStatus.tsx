@@ -51,22 +51,24 @@ export default function TenantLiveStatus({
       .from("site_config")
       .select("dealership_id, updated_at, hero_tuner_config");
 
-    const cfgMap = new Map<string, { updated_at: string | null; cfg: any }>();
-    (configs ?? []).forEach((c: any) =>
+    const cfgMap = new Map<string, { updated_at: string | null; cfg: Record<string, unknown> }>();
+    (configs ?? []).forEach((c) =>
       cfgMap.set(c.dealership_id, { updated_at: c.updated_at, cfg: c.hero_tuner_config }),
     );
 
-    const merged: Row[] = (tenants ?? []).map((t: any) => {
+    const merged: Row[] = (tenants ?? []).map((t) => {
       const c = cfgMap.get(t.dealership_id);
       const cfg = c?.cfg ?? {};
+      const hero = cfg.hero && typeof cfg.hero === "object" ? cfg.hero as Record<string, unknown> : {};
+      const vehicle = cfg.vehicle && typeof cfg.vehicle === "object" ? cfg.vehicle as Record<string, unknown> : {};
       return {
         dealership_id: t.dealership_id,
         display_name: t.display_name,
         slug: t.slug,
         custom_domain: t.custom_domain,
         updated_at: c?.updated_at ?? null,
-        hero_size: cfg?.hero?.size ?? null,
-        vehicle_2xl: formatVehicle2xl(cfg?.vehicle?.["2xl"]),
+        hero_size: typeof hero.size === "number" ? hero.size : null,
+        vehicle_2xl: formatVehicle2xl(vehicle["2xl"]),
       };
     });
 
