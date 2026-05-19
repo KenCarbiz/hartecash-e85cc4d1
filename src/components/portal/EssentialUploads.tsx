@@ -52,6 +52,7 @@ const ICON_BY_DOC: Record<string, typeof Camera> = {
 const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: EssentialUploadsProps) => {
   const { customerAllDocs } = useDocumentConfig(dealershipId || "default", loanStatus);
   const [slotStates, setSlotStates] = useState<Record<string, SlotState>>({});
+  const [ocrStates, setOcrStates] = useState<Record<string, { status: "queued" | "running" | "completed" | "failed"; error?: string | null }>>({});
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
