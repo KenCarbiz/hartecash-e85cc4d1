@@ -325,6 +325,7 @@ const MotoStepVehicleSearch = ({
               </MotoPrimaryButton>
             </div>
               </MotoCard>
+              </div>
 
               <div
                 className="mt-4 rounded-md py-3 text-center text-sm font-semibold"
