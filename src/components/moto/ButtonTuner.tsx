@@ -25,20 +25,20 @@ export type ButtonTunerValues = {
 };
 
 export const BUTTON_DEFAULTS: ButtonTunerValues = {
-  tabActiveBg: "#0c5ce8",
-  tabActiveText: "#ffffff",
+  tabActiveBg: "#fafac9",
+  tabActiveText: "#3f3f46",
   tabInactiveText: "#3f3f46",
   tabRadius: 6,
   tabFontSize: 14,
   tabFontWeight: 600,
 
-  nextBg: "#f4f4f5",
+  nextBg: "#fafac9",
   nextText: "#3f3f46",
   nextRadius: 9999,
   nextFontSize: 14,
   nextFontWeight: 600,
 
-  badgeBg: "#f4f4f5",
+  badgeBg: "#fafac9",
   badgeText: "#3f3f46",
   badgeRadius: 6,
   badgeFontSize: 14,
