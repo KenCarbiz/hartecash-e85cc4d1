@@ -204,23 +204,33 @@ const MotoStepVehicleSearch = ({
                 Get an instant valuation &amp; then add more info to get a firm offer.
               </p>
               <MotoCard className="mt-6 p-6">
-            <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
-              {TABS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTab(t.id)}
-                  className={cn(
-                    "rounded-md py-[9px] px-3 transition",
-                    tab === t.id
-                      ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)] shadow-sm"
-                      : "text-zinc-700 hover:text-zinc-900",
-                  )}
-                >
-                  {t.label}
-                </button>
-              ))}
+            <div
+              className="mb-5 grid grid-cols-2 gap-2 bg-zinc-100 p-1"
+              style={{ borderRadius: btn.tabRadius + 4 }}
+            >
+              {TABS.map((t) => {
+                const active = tab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTab(t.id)}
+                    className="py-[9px] px-3 transition"
+                    style={{
+                      borderRadius: btn.tabRadius,
+                      fontSize: `${btn.tabFontSize}px`,
+                      fontWeight: btn.tabFontWeight,
+                      backgroundColor: active ? btn.tabActiveBg : "transparent",
+                      color: active ? btn.tabActiveText : btn.tabInactiveText,
+                      boxShadow: active ? "0 1px 2px rgba(0,0,0,0.05)" : "none",
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
             </div>
+
 
 
             {tab === "vin" && (
