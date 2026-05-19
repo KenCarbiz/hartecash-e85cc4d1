@@ -24,6 +24,8 @@ export type HeroTunerValues = {
   // CTA color powering active tab + "valuation in 30 seconds" pill
   ctaColor: string;
   ctaTextColor: string;
+  // Vertical thickness (padding-y, px) of the VIN/Plate tab buttons
+  tabPadY: number;
 };
 
 const FONT_OPTIONS = [
