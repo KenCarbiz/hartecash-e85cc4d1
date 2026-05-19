@@ -13,6 +13,8 @@ export type HeroTunerValues = {
   // subline
   subSize: number;
   subColor: string;
+  // gap (px) between subline and the top of the card below it
+  subGap: number;
   // accent words ("Get an" + "Vehicle Valuation")
   accentColor: string;
   accentWeight: number;
