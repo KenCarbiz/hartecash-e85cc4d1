@@ -174,8 +174,9 @@ const MotoStepVehicleSearch = ({
         Get an instant valuation &amp; then add more info to get a firm offer.
       </p>
 
-      <div className="mt-6 mx-auto flex w-full max-w-[1400px] flex-col items-center gap-8 xl:flex-row xl:items-center xl:justify-start xl:gap-12 2xl:gap-16">
-        <div className="w-full max-w-md flex-shrink-0">
+      <div className="mt-6 mx-auto flex w-full flex-col items-center gap-8 xl:flex-row xl:items-center xl:justify-center xl:gap-0">
+        <div className="w-full max-w-md flex-shrink-0 xl:flex-1 xl:max-w-none xl:flex xl:justify-end xl:pr-[calc(var(--hero-gap,0px)/2)]">
+         <div className="w-full xl:max-w-md">
           <MotoCard className="p-6">
             <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
               {TABS.map((t) => (
@@ -289,7 +290,9 @@ const MotoStepVehicleSearch = ({
           <div className="mt-4 rounded-md bg-zinc-100 py-3 text-center text-sm font-semibold text-zinc-700">
             Get a valuation in less than 30 seconds!
           </div>
+         </div>
         </div>
+
 
         <HeroVehicleTuner src={tenantHeroVehicle} />
       </div>
@@ -343,15 +346,21 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
   }, [settings]);
 
   const { w, gap } = settings[bp];
-  const reservedImageSpace = w + gap;
   const update = (key: "w" | "gap", value: number) =>
     setSettings((s) => ({ ...s, [bp]: { ...s[bp], [key]: value } }));
+
+  // Expose gap as a CSS var so the card half can mirror the spacing and the
+  // visual midpoint between card and image lands at screen center.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--hero-gap", `${gap}px`);
+    return () => { document.documentElement.style.removeProperty("--hero-gap"); };
+  }, [gap]);
 
   return (
     <>
       <div
-        className="flex flex-none items-center justify-center overflow-visible xl:justify-start"
-        style={{ paddingLeft: gap, width: reservedImageSpace, maxWidth: "none" }}
+        className="flex flex-none items-center justify-center overflow-visible xl:flex-1 xl:justify-start xl:pl-[calc(var(--hero-gap,0px)/2)]"
+        style={{ width: w, maxWidth: "none" }}
       >
         <img
           src={src}
@@ -361,6 +370,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
           loading="eager"
         />
       </div>
+
 
       <div className="fixed bottom-4 right-4 z-50">
         {open ? (
