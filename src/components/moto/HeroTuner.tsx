@@ -8,6 +8,8 @@ export type HeroTunerValues = {
   weight: number;
   color: string;
   font: string;
+  // vertical offset of the headline block (px). Negative = higher above the card.
+  offsetY: number;
   // subline
   subSize: number;
   subColor: string;
