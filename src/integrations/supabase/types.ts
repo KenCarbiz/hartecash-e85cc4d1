@@ -117,6 +117,39 @@ export type Database = {
           },
         ]
       }
+      analytics_events: {
+        Row: {
+          created_at: string
+          dealership_id: string | null
+          event_name: string
+          id: string
+          page_url: string | null
+          properties: Json
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string | null
+          event_name: string
+          id?: string
+          page_url?: string | null
+          properties?: Json
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string | null
+          event_name?: string
+          id?: string
+          page_url?: string | null
+          properties?: Json
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           confirmed_at: string | null
@@ -1346,6 +1379,8 @@ export type Database = {
           address: string | null
           all_brands: boolean
           business_hours: Json | null
+          center_lat: number | null
+          center_lng: number | null
           center_zip: string | null
           city: string
           corporate_logo_dark_url: string | null
@@ -1415,6 +1450,8 @@ export type Database = {
           address?: string | null
           all_brands?: boolean
           business_hours?: Json | null
+          center_lat?: number | null
+          center_lng?: number | null
           center_zip?: string | null
           city: string
           corporate_logo_dark_url?: string | null
@@ -1484,6 +1521,8 @@ export type Database = {
           address?: string | null
           all_brands?: boolean
           business_hours?: Json | null
+          center_lat?: number | null
+          center_lng?: number | null
           center_zip?: string | null
           city?: string
           corporate_logo_dark_url?: string | null
