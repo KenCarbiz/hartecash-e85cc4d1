@@ -1,4 +1,4 @@
-import { forwardRef, type InputHTMLAttributes } from "react";
+import { forwardRef, useId, useState, type InputHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 type Props = InputHTMLAttributes<HTMLInputElement> & {
@@ -10,20 +10,34 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 /**
- * Floating-label input matching the MotoAcquire look (light yellow
- * fill when the field is prefilled, otherwise plain border).
+ * Floating-label input: label sits inside the box as placeholder,
+ * and floats up to sit on the top border (notched outline style)
+ * when focused or when the field has a value.
  */
 const MotoFormField = forwardRef<HTMLInputElement, Props>(
-  ({ label, hint, error, filled, className, id, ...rest }, ref) => {
-    const inputId = id || `f-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  ({ label, hint, error, filled, className, id, value, onFocus, onBlur, ...rest }, ref) => {
+    const reactId = useId();
+    const inputId = id || `f-${reactId}`;
+    const [focused, setFocused] = useState(false);
+    const hasValue = value !== undefined && value !== null && String(value).length > 0;
+    const floated = focused || hasValue;
+
     return (
-      <label htmlFor={inputId} className="block">
-        <span className="mb-1 block text-xs font-medium text-zinc-600">{label}</span>
+      <div className="relative">
         <input
           ref={ref}
           id={inputId}
+          value={value}
+          onFocus={(e) => {
+            setFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
           className={cn(
-            "w-full rounded-md border px-3 py-3 text-base outline-none transition",
+            "peer w-full rounded-md border px-3 pt-4 pb-2 text-base outline-none transition",
             filled
               ? "border-zinc-300 bg-[#fafac9]"
               : "border-zinc-300 bg-white",
@@ -33,13 +47,26 @@ const MotoFormField = forwardRef<HTMLInputElement, Props>(
           )}
           {...rest}
         />
+        <label
+          htmlFor={inputId}
+          className={cn(
+            "pointer-events-none absolute left-2 px-1 text-zinc-500 transition-all",
+            floated
+              ? "top-0 -translate-y-1/2 bg-white text-xs font-medium text-zinc-600"
+              : "top-1/2 -translate-y-1/2 text-base",
+            focused && "text-[hsl(var(--cta-offer))]",
+            error && "text-red-600",
+          )}
+        >
+          {label}
+        </label>
         {hint && !error ? (
           <span className="mt-1 block text-xs text-zinc-500">{hint}</span>
         ) : null}
         {error ? (
           <span className="mt-1 block text-xs text-red-600">{error}</span>
         ) : null}
-      </label>
+      </div>
     );
   },
 );
