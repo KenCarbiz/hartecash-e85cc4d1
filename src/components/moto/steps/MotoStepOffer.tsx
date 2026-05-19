@@ -124,6 +124,19 @@ const MotoStepOffer = ({
           {firm ? (
             <div className="space-y-2">
               <MotoPrimaryButton onClick={accept}>Accept &amp; Schedule Inspection</MotoPrimaryButton>
+              {state.submissionToken && (
+                <SaveOfferButton
+                  token={state.submissionToken}
+                  vehicleStr={[state.bbVehicle?.year, state.bbVehicle?.make, state.bbVehicle?.model]
+                    .filter(Boolean)
+                    .join(" ")}
+                  customerName={`${state.contact.firstName} ${state.contact.lastName}`.trim()}
+                  customerEmail={state.contact.email}
+                  customerPhone={state.contact.phone}
+                  guaranteeDays={Number(config.price_guarantee_days) || 8}
+                  dealershipName={config.dealership_name}
+                />
+              )}
               <button
                 type="button"
                 onClick={decline}
