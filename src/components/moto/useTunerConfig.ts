@@ -16,6 +16,7 @@ export type TunerConfig = {
 };
 
 const LS_KEY = "moto-tuner-config-v1";
+const LOCAL_EVENT = "moto-tuner-config:change";
 
 export function useTunerConfig(dealershipId: string | undefined | null) {
   const [config, setConfig] = useState<TunerConfig>(() => {
@@ -31,6 +32,18 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
   const latestRef = useRef<TunerConfig>(config);
   latestRef.current = config;
 
+  // Listen for in-tab updates from other useTunerConfig() instances so
+  // every consumer (tuner panel + the h1 it controls) stays in sync
+  // immediately, without waiting for the Supabase realtime round-trip.
+  useEffect(() => {
+    const onLocal = (e: Event) => {
+      const detail = (e as CustomEvent<TunerConfig>).detail;
+      if (detail) setConfig(detail);
+    };
+    window.addEventListener(LOCAL_EVENT, onLocal);
+    return () => window.removeEventListener(LOCAL_EVENT, onLocal);
+  }, []);
+
   // initial load + realtime subscription
   useEffect(() => {
     if (!dealershipId) return;
@@ -44,7 +57,6 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
         .maybeSingle();
       if (cancelled) return;
       const remote = (data?.hero_tuner_config ?? {}) as TunerConfig;
-      // remote wins over local cache so all visitors see the same thing
       setConfig(remote);
       try {
         localStorage.setItem(LS_KEY, JSON.stringify(remote));
@@ -108,6 +120,8 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
         [section]: value,
       };
       setConfig(next);
+      // notify every other hook instance in this tab immediately
+      window.dispatchEvent(new CustomEvent(LOCAL_EVENT, { detail: next }));
       persist(next);
     },
     [persist],
@@ -115,3 +129,4 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
 
   return { config, loaded, update };
 }
+
