@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useEmbedMode } from "@/hooks/useEmbedMode";
 import MotoDisclosureBar from "./MotoDisclosureBar";
+import HeroTuner from "./HeroTuner";
 
 /**
  * The standalone microsite wrapper. The site-wide SiteHeader supplies
