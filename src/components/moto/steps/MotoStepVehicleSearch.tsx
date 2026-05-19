@@ -343,20 +343,21 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
   }, [settings]);
 
   const { w, gap } = settings[bp];
+  const reservedImageSpace = w + gap;
   const update = (key: "w" | "gap", value: number) =>
     setSettings((s) => ({ ...s, [bp]: { ...s[bp], [key]: value } }));
 
   return (
     <>
       <div
-        className="flex flex-1 items-center justify-center xl:justify-start"
-        style={{ paddingLeft: gap }}
+        className="flex flex-none items-center justify-center overflow-visible xl:justify-start"
+        style={{ paddingLeft: gap, width: reservedImageSpace, maxWidth: "none" }}
       >
         <img
           src={src}
           alt="Featured vehicle"
-          className="h-auto object-contain"
-          style={{ width: w, maxWidth: "100%" }}
+          className="h-auto max-w-none object-contain"
+          style={{ width: w, minWidth: w }}
           loading="eager"
         />
       </div>
@@ -374,7 +375,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
               Image width: <span className="font-mono">{w}px</span>
             </label>
             <input
-              type="range" min={120} max={1200} step={10}
+              type="range" min={120} max={1800} step={10}
               value={w}
               onChange={(e) => update("w", Number(e.target.value))}
               className="mb-3 w-full"
