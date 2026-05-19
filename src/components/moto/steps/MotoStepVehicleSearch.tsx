@@ -175,11 +175,11 @@ const MotoStepVehicleSearch = ({
             {/* Left column: heading + card stay locked-aligned to the
                 same left edge regardless of image width/gap. */}
             <div className="w-full max-w-md flex-shrink-0">
-              <h1 className="mt-1 text-4xl font-extrabold leading-[1.05] tracking-tight text-zinc-900">
+              <h1 className="mt-1 whitespace-nowrap text-4xl font-extrabold leading-[1.05] tracking-tight text-zinc-900">
                 <span className="text-[hsl(var(--cta-offer))]">Get an</span> instant{" "}
                 <span className="text-[hsl(var(--cta-offer))]">Vehicle Valuation</span>
               </h1>
-              <p className="mt-3 text-base text-zinc-500">
+              <p className="mt-3 whitespace-nowrap text-base text-zinc-500">
                 Get an instant valuation &amp; then add more info to get a firm offer.
               </p>
               <MotoCard className="mt-6 p-6">
