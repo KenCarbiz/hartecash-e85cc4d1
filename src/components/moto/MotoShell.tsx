@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useEmbedMode } from "@/hooks/useEmbedMode";
+import { useIsPlatformAdmin } from "@/hooks/useIsPlatformAdmin";
 import MotoDisclosureBar from "./MotoDisclosureBar";
 import HeroTuner from "./HeroTuner";
 
@@ -12,6 +13,7 @@ import HeroTuner from "./HeroTuner";
  */
 const MotoShell = ({ children }: { children: ReactNode }) => {
   const embed = useEmbedMode();
+  const { isPlatformAdmin } = useIsPlatformAdmin();
   return (
     <div className="min-h-screen bg-white text-zinc-900">
       {/* Bottom padding reserves room for the fixed MotoStickyFooter
@@ -19,9 +21,10 @@ const MotoShell = ({ children }: { children: ReactNode }) => {
           top of the disclosure bar or the Track-Value card. */}
       <main className="mx-auto max-w-screen-sm px-4 pb-[120px] pt-[112px]">{children}</main>
       {!embed && <MotoDisclosureBar />}
-      <HeroTuner />
+      {isPlatformAdmin && <HeroTuner />}
     </div>
   );
 };
 
 export default MotoShell;
+
