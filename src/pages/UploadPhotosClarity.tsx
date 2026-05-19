@@ -65,6 +65,12 @@ const UploadPhotosClarity = () => {
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
   const [activeShot, setActiveShot] = useState<string | null>(null);
+  // EXIF / GPS verification result per shot_id and per extra-index.
+  // Drives the customer-facing trust pill on each tile so they see
+  // whether the photo they uploaded carries verifiable metadata.
+  const [shotExif, setShotExif] = useState<Record<string, PhotoExifResult>>({});
+  const [extraExif, setExtraExif] = useState<Record<number, PhotoExifResult>>({});
+  const [expectedCoords, setExpectedCoords] = useState<{ lat: number | null; lng: number | null; source?: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const extraInputRef = useRef<HTMLInputElement>(null);
 
