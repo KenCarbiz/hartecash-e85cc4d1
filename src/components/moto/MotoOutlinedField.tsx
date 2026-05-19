@@ -1,5 +1,12 @@
 import { forwardRef, type InputHTMLAttributes, type SelectHTMLAttributes, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import {
+  Select as RSelect,
+  SelectContent as RSelectContent,
+  SelectItem as RSelectItem,
+  SelectTrigger as RSelectTrigger,
+  SelectValue as RSelectValue,
+} from "@/components/ui/select";
 
 /**
  * Material-style outlined field with a floating label that punches
