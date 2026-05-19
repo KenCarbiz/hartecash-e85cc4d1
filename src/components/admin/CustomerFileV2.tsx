@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import CadenceTimeline from "./CadenceTimeline";
 import AppraisalPhotosCard from "./AppraisalPhotosCard";
+import StaffFileUpload from "./StaffFileUpload";
 import DesirabilityPill from "./DesirabilityPill";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
 import { ALL_STATUS_OPTIONS, getStatusLabel } from "@/lib/adminConstants";
@@ -1335,6 +1336,11 @@ function VehicleTab({
   const navigate = useNavigate();
   const [dlOpen, setDlOpen] = useState(false);
   const [dlSide, setDlSide] = useState<"front" | "back">("front");
+  // Bumping this on staff upload forces AppraisalPhotosCard to remount
+  // and re-list from storage. The card otherwise only refetches on
+  // token change, so a fresh staff upload wouldn't surface until the
+  // tab was navigated away and back.
+  const [photoRefreshKey, setPhotoRefreshKey] = useState(0);
 
   // Stash the submission id so AdminDashboard's reopen-on-return
   // effect can restore the slide-out when the user clicks back from
@@ -1387,9 +1393,35 @@ function VehicleTab({
           tab — see the photo-count badge in the header strip if
           presence still matters at a glance). */}
       <AppraisalPhotosCard
+        key={photoRefreshKey}
         submissionId={sub.id ?? null}
         token={sub.token ?? null}
       />
+
+      {/* Staff upload — lets the appraiser/manager add their own
+          photos against this submission. Files written with the
+          staff- prefix so the AppraisalPhotosCard above can
+          visually distinguish them from customer-flow uploads.
+          Files older than 24h at upload time get the staff-stale-
+          prefix and an amber "Stale" pill on the gallery (PR #238).
+          Hidden until we have a token (the storage key is
+          {token}/staff-...). */}
+      {sub.token ? (
+        <DealCard
+          title="Add Photos (staff)"
+          right={
+            <span className="text-[10.5px] text-slate-400 italic">
+              Saved to this customer's gallery
+            </span>
+          }
+        >
+          <StaffFileUpload
+            token={sub.token}
+            bucket="submission-photos"
+            onUploadComplete={() => setPhotoRefreshKey((k) => k + 1)}
+          />
+        </DealCard>
+      ) : null}
 
       {/* Driver's License — verified-on-file badge + click to expand inline */}
       <DealCard
