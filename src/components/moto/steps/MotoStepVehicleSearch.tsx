@@ -410,7 +410,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
             <input
               type="range" min={120} max={1800} step={10}
               value={w}
-              onChange={(e) => update("w", Number(e.target.value))}
+              onChange={(e) => updateBp("w", Number(e.target.value))}
               className="mb-3 w-full"
             />
             <label className="block text-xs font-medium text-zinc-600">
@@ -420,7 +420,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
             <input
               type="range" min={-400} max={400} step={4}
               value={gap}
-              onChange={(e) => update("gap", Number(e.target.value))}
+              onChange={(e) => updateBp("gap", Number(e.target.value))}
               className="mb-3 w-full"
             />
             <button
