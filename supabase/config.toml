@@ -41,6 +41,16 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # Function validates request via submission token + origin.
   [functions.bb-lookup]
     verify_jwt = false
+  # Customer-facing: anonymous OTP send for the Moto-style /sell flow.
+  # No JWT (customer has no auth session yet); the function itself
+  # rate-limits per phone (5/hr) and per IP (20/hr) to prevent abuse.
+  [functions.send-customer-otp]
+    verify_jwt = false
+  # Customer-facing: anonymous OTP verify for the Moto-style /sell flow.
+  # No JWT (same reason); verify pins on the challenge_id surrogate +
+  # the user-entered code, with attempt-count throttling in-table.
+  [functions.verify-customer-otp]
+    verify_jwt = false
   # Customer-facing: public ScheduleVisit form invokes this.
   # Function validates the appointment/submission token.
   [functions.notify-appointment]
