@@ -204,7 +204,11 @@ export default function HeroTuner() {
   const { tenant } = useTenant();
   const { config, update, status, realtime, lastUpdatedAt } = useTunerConfig(tenant.dealership_id);
   const values = merge(config.hero);
-  const [open, setOpen] = useState(false);
+  const { liveStatus, liveCheckedAt, liveError } = useLiveCheck(
+    tenant.dealership_id,
+    values,
+    lastUpdatedAt,
+  );
 
   // local optimistic state so sliders feel snappy
   const [local, setLocal] = useState<HeroTunerValues>(values);
