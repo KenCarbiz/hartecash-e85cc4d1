@@ -74,7 +74,72 @@ const MotoStepOffer = ({
   }, []);
 
   const accept = () => onNext({ step: "schedule" });
-  const decline = () => onNext({ declined: true, step: "photos" });
+  const goBoost = () => onNext({ declined: true, step: "photos" });
+
+  // Boost upsell view — shown when user taps "Save My Offer"
+  if (view === "boost" && firm) {
+    return (
+      <>
+        <MotoVehicleHero bb={state.bbVehicle} color={state.color} mileage={state.mileage} />
+        <MotoCard>
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+              <Sparkles className="h-3.5 w-3.5" />
+              Boost Your Offer
+            </div>
+          </div>
+          <h2 className="mt-3 text-center text-2xl font-bold text-zinc-900">
+            Want a boost to your offer?
+          </h2>
+          <p className="mt-2 text-center text-sm text-zinc-600">
+            Upload a few quick photos and let our AI inspect your vehicle.
+          </p>
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+            <div className="flex items-center justify-center gap-2 text-emerald-700">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-xs font-semibold uppercase tracking-wide">Average AI Boost</span>
+            </div>
+            <p className="mt-1 text-2xl font-bold text-emerald-700">$275 – $2,500</p>
+            <p className="mt-1 text-[11px] text-emerald-700/80">
+              in additional value found by our AI inspector
+            </p>
+          </div>
+          <p className="mt-4 text-center text-xs text-zinc-500">
+            Current firm offer: <span className="font-semibold text-zinc-700">{usd(firm)}</span>
+          </p>
+        </MotoCard>
+        <MotoStickyFooter>
+          <div className="space-y-2">
+            <MotoPrimaryButton onClick={goBoost}>
+              <Camera className="mr-2 inline h-4 w-4" />
+              Boost My Offer with AI
+            </MotoPrimaryButton>
+            {state.submissionToken && (
+              <SaveOfferButton
+                token={state.submissionToken}
+                vehicleStr={[state.bbVehicle?.year, state.bbVehicle?.make, state.bbVehicle?.model]
+                  .filter(Boolean)
+                  .join(" ")}
+                customerName={`${state.contact.firstName} ${state.contact.lastName}`.trim()}
+                customerEmail={state.contact.email}
+                customerPhone={state.contact.phone}
+                guaranteeDays={Number(config.price_guarantee_days) || 8}
+                dealershipName={config.dealership_name}
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => setView("offer")}
+              className="w-full text-xs text-zinc-500 hover:text-zinc-700"
+            >
+              Back to my offer
+            </button>
+          </div>
+        </MotoStickyFooter>
+      </>
+    );
+  }
+
 
   return (
     <>
