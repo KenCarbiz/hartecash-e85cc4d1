@@ -570,7 +570,7 @@ export default function HeroTuner() {
               <input
                 type="range"
                 min={160}
-                max={720}
+                max={1600}
                 step={4}
                 value={localVehicle.width}
                 onChange={(e) => changeVehicle({ width: Number(e.target.value) })}
@@ -579,19 +579,35 @@ export default function HeroTuner() {
             </label>
             <label className="block">
               <div className="flex justify-between text-zinc-600">
-                <span>Vertical offset</span>
+                <span>Space above car</span>
                 <span>{localVehicle.offsetY}px</span>
               </div>
               <input
                 type="range"
-                min={-200}
-                max={200}
+                min={-400}
+                max={400}
                 step={1}
                 value={localVehicle.offsetY}
                 onChange={(e) => changeVehicle({ offsetY: Number(e.target.value) })}
                 className="w-full"
               />
-              <div className="text-[10px] text-zinc-400">Positive = lower, negative = higher.</div>
+              <div className="text-[10px] text-zinc-400">Positive = pushes car down, negative = pulls car up.</div>
+            </label>
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Space below car</span>
+                <span>{localVehicle.offsetBottom}px</span>
+              </div>
+              <input
+                type="range"
+                min={-400}
+                max={400}
+                step={1}
+                value={localVehicle.offsetBottom}
+                onChange={(e) => changeVehicle({ offsetBottom: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="text-[10px] text-zinc-400">Positive = pushes content below down, negative = pulls it up.</div>
             </label>
             <label className="block">
               <span className="text-zinc-600">Camera angle</span>
