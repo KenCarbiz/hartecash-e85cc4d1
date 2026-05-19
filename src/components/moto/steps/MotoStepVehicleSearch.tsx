@@ -174,7 +174,7 @@ const MotoStepVehicleSearch = ({
         Get an instant valuation &amp; then add more info to get a firm offer.
       </p>
 
-      <div className="mt-6 mx-auto flex w-full max-w-[1400px] flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-start lg:gap-14 xl:gap-16">
+      <div className="mt-6 mx-auto flex w-full max-w-[1400px] flex-col items-center gap-8 xl:flex-row xl:items-center xl:justify-start xl:gap-12 2xl:gap-16">
         <div className="w-full max-w-md flex-shrink-0">
           <MotoCard className="p-6">
             <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
@@ -291,11 +291,11 @@ const MotoStepVehicleSearch = ({
           </div>
         </div>
 
-        <div className="w-full lg:w-[520px] xl:w-[620px] 2xl:w-[720px] flex-none flex items-center justify-start overflow-hidden lg:pl-0">
+        <div className="flex w-full max-w-[430px] flex-none items-center justify-center overflow-hidden xl:w-[430px] xl:justify-start 2xl:w-[520px] 2xl:max-w-[520px]">
           <img
             src={tenantHeroVehicle}
             alt="Featured vehicle"
-            className="h-auto w-[320px] max-w-full object-contain sm:w-[480px] md:w-[640px] lg:w-[520px] xl:w-[620px] 2xl:w-[720px]"
+            className="h-auto w-full object-contain"
             loading="eager"
           />
         </div>
