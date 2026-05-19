@@ -19,6 +19,7 @@ const LS_KEY = "moto-tuner-config-v1";
 const LOCAL_EVENT = "moto-tuner-config:change";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
+export type RealtimeStatus = "connecting" | "live" | "closed" | "error";
 
 export function useTunerConfig(dealershipId: string | undefined | null) {
   const [config, setConfig] = useState<TunerConfig>(() => {
@@ -31,6 +32,8 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
   });
   const [loaded, setLoaded] = useState(false);
   const [status, setStatus] = useState<SaveStatus>("idle");
+  const [realtime, setRealtime] = useState<RealtimeStatus>("connecting");
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestRef = useRef<TunerConfig>(config);
@@ -64,6 +67,7 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
       setLoaded(true);
     })();
 
+    setRealtime("connecting");
     const channel = supabase
       .channel(`site_config:${dealershipId}`)
       .on(
@@ -79,16 +83,22 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
             ?.hero_tuner_config;
           if (next) {
             setConfig(next);
+            setLastUpdatedAt(Date.now());
             try {
               localStorage.setItem(LS_KEY, JSON.stringify(next));
             } catch {}
           }
         },
       )
-      .subscribe();
+      .subscribe((s) => {
+        if (s === "SUBSCRIBED") setRealtime("live");
+        else if (s === "CHANNEL_ERROR" || s === "TIMED_OUT") setRealtime("error");
+        else if (s === "CLOSED") setRealtime("closed");
+      });
 
     return () => {
       cancelled = true;
+      setRealtime("closed");
       supabase.removeChannel(channel);
     };
   }, [dealershipId]);
@@ -112,6 +122,7 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
           setStatus("error");
         } else {
           setStatus("saved");
+          setLastUpdatedAt(Date.now());
           savedTimer.current = setTimeout(() => setStatus("idle"), 1500);
         }
       }, 400);
@@ -132,7 +143,7 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
     [persist],
   );
 
-  return { config, loaded, update, status };
+  return { config, loaded, update, status, realtime, lastUpdatedAt };
 }
 
 

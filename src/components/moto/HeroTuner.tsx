@@ -140,7 +140,7 @@ function WeightRow({
 
 export default function HeroTuner() {
   const { tenant } = useTenant();
-  const { config, update, status } = useTunerConfig(tenant.dealership_id);
+  const { config, update, status, realtime, lastUpdatedAt } = useTunerConfig(tenant.dealership_id);
   const values = merge(config.hero);
   const [open, setOpen] = useState(false);
 
@@ -166,29 +166,62 @@ export default function HeroTuner() {
     <div className="fixed bottom-4 right-20 z-[9999] font-sans text-xs">
       {open ? (
         <div className="max-h-[80vh] w-80 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="font-semibold text-zinc-900">
-              Hero Tuner{" "}
-              <span
-                className={
-                  status === "error"
-                    ? "text-red-500"
-                    : status === "saving"
-                      ? "text-amber-500"
-                      : status === "saved"
-                        ? "text-emerald-600"
-                        : "text-zinc-400"
-                }
-              >
-                {status === "saving"
-                  ? "(saving…)"
-                  : status === "saved"
-                    ? "(saved ✓ live)"
-                    : status === "error"
-                      ? "(save failed)"
-                      : "(synced)"}
+          <div className="mb-3 flex items-start justify-between gap-2">
+            <div className="flex flex-col">
+              <span className="font-semibold text-zinc-900">
+                Hero Tuner{" "}
+                <span
+                  className={
+                    status === "error"
+                      ? "text-red-500"
+                      : status === "saving"
+                        ? "text-amber-500"
+                        : status === "saved"
+                          ? "text-emerald-600"
+                          : "text-zinc-400"
+                  }
+                >
+                  {status === "saving"
+                    ? "(saving…)"
+                    : status === "saved"
+                      ? "(saved ✓ live)"
+                      : status === "error"
+                        ? "(save failed)"
+                        : "(synced)"}
+                </span>
               </span>
-            </span>
+              <span className="mt-0.5 flex items-center gap-1.5 text-[10px] text-zinc-500">
+                <span
+                  className={
+                    "inline-block h-1.5 w-1.5 rounded-full " +
+                    (realtime === "live"
+                      ? "bg-emerald-500 animate-pulse"
+                      : realtime === "connecting"
+                        ? "bg-amber-400"
+                        : realtime === "error"
+                          ? "bg-red-500"
+                          : "bg-zinc-400")
+                  }
+                />
+                <span>
+                  realtime:{" "}
+                  <span className="font-medium text-zinc-700">{realtime}</span>
+                </span>
+                <span className="text-zinc-300">·</span>
+                <span>
+                  updated:{" "}
+                  <span className="font-medium text-zinc-700">
+                    {lastUpdatedAt
+                      ? new Date(lastUpdatedAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })
+                      : "—"}
+                  </span>
+                </span>
+              </span>
+            </div>
             <button
               type="button"
               onClick={() => setOpen(false)}
