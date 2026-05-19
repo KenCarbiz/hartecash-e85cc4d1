@@ -14,6 +14,7 @@ import {
   calculateAndPersistOffer,
   loadPricingRevealMode,
 } from "../motoSubmission";
+import { useFormConfig } from "@/hooks/useFormConfig";
 
 const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
