@@ -467,6 +467,7 @@ const UploadPhotosClarity = () => {
             {requiredShots.map((shot) => {
               const state = shotState[shot.shot_id];
               const filled = state?.file || state?.uploaded;
+              const exif = shotExif[shot.shot_id];
               return (
                 <button
                   key={shot.shot_id}
