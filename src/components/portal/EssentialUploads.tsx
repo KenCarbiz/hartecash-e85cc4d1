@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera, ScrollText, CreditCard, Check, Loader2, ArrowRight, FileText, Smartphone } from "lucide-react";
+import { Camera, ScrollText, CreditCard, Check, Loader2, ArrowRight, FileText, Smartphone, Sparkles, CircleAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,6 +52,7 @@ const ICON_BY_DOC: Record<string, typeof Camera> = {
 const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: EssentialUploadsProps) => {
   const { customerAllDocs } = useDocumentConfig(dealershipId || "default", loanStatus);
   const [slotStates, setSlotStates] = useState<Record<string, SlotState>>({});
+  const [ocrStates, setOcrStates] = useState<Record<string, { status: "queued" | "running" | "completed" | "failed"; error?: string | null }>>({});
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
@@ -80,6 +81,49 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
     })();
     return () => { cancelled = true; };
   }, [token, customerAllDocs]);
+
+  // Live OCR status: subscribe to ocr_jobs for this submission so the
+  // tile flips queued -> running -> completed/failed as the edge
+  // function progresses. Also seed from the latest job per doc on
+  // mount so a returning customer sees the last result.
+  useEffect(() => {
+    if (!submissionId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("ocr_jobs" as never)
+        .select("doc_id,status,error_message,created_at")
+        .eq("submission_id", submissionId)
+        .order("created_at", { ascending: false });
+      if (cancelled || !data) return;
+      const latest: Record<string, { status: "queued" | "running" | "completed" | "failed"; error?: string | null }> = {};
+      for (const row of data as unknown as Array<{ doc_id: string; status: string; error_message: string | null }>) {
+        if (!latest[row.doc_id]) {
+          latest[row.doc_id] = { status: row.status as never, error: row.error_message };
+        }
+      }
+      setOcrStates((prev) => ({ ...latest, ...prev }));
+    })();
+
+    const channel = supabase
+      .channel(`ocr-jobs-${submissionId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "ocr_jobs", filter: `submission_id=eq.${submissionId}` },
+        (payload) => {
+          const row = (payload.new || payload.old) as { doc_id?: string; status?: string; error_message?: string | null } | null;
+          if (!row?.doc_id || !row.status) return;
+          setOcrStates((prev) => ({
+            ...prev,
+            [row.doc_id!]: { status: row.status as never, error: row.error_message ?? null },
+          }));
+        },
+      )
+      .subscribe();
+
+    return () => { cancelled = true; supabase.removeChannel(channel); };
+  }, [submissionId]);
+
 
   const triggerForSlot = (docId: string) => {
     setActiveSlot(docId);
@@ -127,20 +171,62 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
       // OCR auto-fill — fired here when the customer uploaded directly.
       // Mirrors StaffFileUpload.tsx so dealer + customer paths share
       // the same hook into parse-drivers-license / parse-title-vin.
+      // Status is tracked in ocr_jobs so the tile shows live progress.
       if (doc.ocr_pipeline) {
+        let jobId: string | null = null;
         try {
+          setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "queued" } }));
+          const { data: jobRow } = await supabase
+            .from("ocr_jobs" as never)
+            .insert({
+              submission_id: submissionId,
+              submission_token: token,
+              dealership_id: dealershipId || null,
+              doc_id: doc.doc_id,
+              pipeline: doc.ocr_pipeline,
+              storage_bucket: bucket,
+              storage_path: path,
+              status: "queued",
+            } as never)
+            .select("id")
+            .single();
+          jobId = (jobRow as { id?: string } | null)?.id ?? null;
+
           const { data: signedData } = await supabase.storage
             .from(bucket)
             .createSignedUrl(path, 300);
+
+          if (jobId) {
+            await supabase.from("ocr_jobs" as never).update({ status: "running" } as never).eq("id", jobId);
+          }
+          setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "running" } }));
+
           if (signedData?.signedUrl) {
-            await supabase.functions.invoke(doc.ocr_pipeline, {
+            const { error: fnErr } = await supabase.functions.invoke(doc.ocr_pipeline, {
               body: { imageUrl: signedData.signedUrl, submissionToken: token },
             });
+            if (fnErr) throw fnErr;
+          } else {
+            throw new Error("Could not sign upload for OCR");
           }
+
+          if (jobId) {
+            await supabase.from("ocr_jobs" as never).update({ status: "completed" } as never).eq("id", jobId);
+          }
+          setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "completed" } }));
         } catch (ocrErr) {
+          const msg = ocrErr instanceof Error ? ocrErr.message : "OCR failed";
           console.warn(`OCR auto-fill skipped (${doc.ocr_pipeline}):`, ocrErr);
+          if (jobId) {
+            await supabase
+              .from("ocr_jobs" as never)
+              .update({ status: "failed", error_message: msg } as never)
+              .eq("id", jobId);
+          }
+          setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "failed", error: msg } }));
         }
       }
+
 
       setSlotStates((prev) => ({ ...prev, [doc.doc_id]: "done" }));
     } catch (e) {
@@ -187,6 +273,16 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
           const Icon = ICON_BY_DOC[doc.doc_id] || FileText;
           const isActive = activeSlot === doc.doc_id;
           const isRequired = doc.role === "required";
+          const ocr = ocrStates[doc.doc_id];
+          const ocrBadge = doc.ocr_pipeline && ocr
+            ? ocr.status === "queued"
+              ? { label: "AI queued",   cls: "bg-muted text-muted-foreground border-border",            icon: <Sparkles className="w-2.5 h-2.5" /> }
+              : ocr.status === "running"
+              ? { label: "AI scanning", cls: "bg-primary/10 text-primary border-primary/30 animate-pulse", icon: <Loader2 className="w-2.5 h-2.5 animate-spin" /> }
+              : ocr.status === "completed"
+              ? { label: "AI verified", cls: "bg-success/10 text-success border-success/30",            icon: <Check    className="w-2.5 h-2.5" /> }
+              : { label: "AI failed",   cls: "bg-destructive/10 text-destructive border-destructive/30", icon: <CircleAlert className="w-2.5 h-2.5" /> }
+            : null;
           return (
             <button
               key={doc.doc_id}
@@ -231,6 +327,15 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
                 <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
                   {state === "done" ? "Uploaded" : doc.description}
                 </p>
+                {ocrBadge && (
+                  <span
+                    title={ocr?.error || ocrBadge.label}
+                    className={`mt-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${ocrBadge.cls}`}
+                  >
+                    {ocrBadge.icon}
+                    {ocrBadge.label}
+                  </span>
+                )}
               </div>
             </button>
           );
