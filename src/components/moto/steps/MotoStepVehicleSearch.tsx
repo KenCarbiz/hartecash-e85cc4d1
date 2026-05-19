@@ -300,7 +300,7 @@ const MotoStepVehicleSearch = ({
 
             <div className="mt-8">
               <MotoPrimaryButton
-                className="w-full py-2 rounded-full text-sm transition-colors"
+                className={`w-full py-2 rounded-full text-sm transition-colors ${canSubmit ? "" : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"}`}
                 style={canSubmit ? { background: tuner.ctaColor, color: tuner.ctaTextColor } : undefined}
                 onClick={submit}
                 disabled={!canSubmit}
