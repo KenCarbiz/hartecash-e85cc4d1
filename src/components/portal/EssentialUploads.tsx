@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera, ScrollText, CreditCard, Check, Loader2, ArrowRight, FileText, Smartphone } from "lucide-react";
+import { Camera, ScrollText, CreditCard, Check, Loader2, ArrowRight, FileText, Smartphone, Sparkles, CircleAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
