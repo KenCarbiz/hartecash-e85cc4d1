@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 /**
  * regrade-golden-set — Golden-100 regression run.
  *

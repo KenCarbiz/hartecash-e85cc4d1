@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 // ─────────────────────────────────────────────────────────────────────────
 //  billing-activate-rooftop — activate a single rooftop under a dealer
 //  group's master MSA. Creates a Stripe Subscription with a 30-day

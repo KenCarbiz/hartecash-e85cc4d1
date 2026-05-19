@@ -100,6 +100,7 @@ const SKIP = new Set([
   "ClassicTemplate.tsx",
   "CarouselTemplate.tsx",
   "CircularTemplate.tsx",
+  "MotoTemplate.tsx", // instant-offer form IS the page — intentionally hero-less
 ]);
 
 const templateFiles = readdirSync(TEMPLATES_DIR)

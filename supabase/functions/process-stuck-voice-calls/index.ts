@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 /**
  * process-stuck-voice-calls — cron-invoked retry handler for the
  * voice pipeline.

@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 // ─────────────────────────────────────────────────────────────────────────
 //  data-egress-export — the dealer's own data, on demand, in CSV.
 //

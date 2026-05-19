@@ -96,6 +96,25 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # Function validates the unsubscribe token in the request body.
   [functions.handle-unsubscribe]
     verify_jwt = false
+  # External webhook: Stripe POSTs subscription lifecycle events here
+  # (customer.subscription.created/updated/deleted, invoice.payment_*).
+  # Cannot require JWT — Stripe has no Supabase auth. Function
+  # validates via the stripe-signature header against
+  # STRIPE_WEBHOOK_SECRET. See docs/billing-stripe-setup.md.
+  [functions.billing-stripe-webhook]
+    verify_jwt = false
+  # External webhook: Twilio Message Status callbacks. Cannot require
+  # JWT — Twilio POSTs as application/x-www-form-urlencoded with no
+  # Supabase auth. Function validates MessageSid against
+  # notification_log.provider_message_id and accepts only known SIDs.
+  [functions.twilio-status-webhook]
+    verify_jwt = false
+  # Customer-facing: anonymous /obd-scan page lets a customer upload
+  # an OBD-II scan from their phone-paired reader for value bump
+  # estimation. Function authenticates via the supabase anon key and
+  # validates submission token in body.
+  [functions.receive-obd-scan]
+    verify_jwt = false
   # Admin/cron: trusted caller required.
   [functions.process-email-queue]
     verify_jwt = true

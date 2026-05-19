@@ -24,6 +24,7 @@ const TEMPLATE_EXEMPTIONS = new Set<string>([
   "ClassicTemplate.tsx", // delegates to <HeroOffset /> which reads config
   "CarouselTemplate.tsx", // photo-rotator hero, headline is image-based
   "CircularTemplate.tsx", // brand mark hero, no copy
+  "MotoTemplate.tsx", // instant-offer form IS the page — intentionally hero-less
 ]);
 
 const read = (p: string) => readFileSync(p, "utf8");

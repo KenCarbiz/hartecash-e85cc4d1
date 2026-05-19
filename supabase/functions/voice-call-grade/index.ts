@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 /**
  * voice-call-grade — LLM-as-judge over the 10-dimension rubric.
  *

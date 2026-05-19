@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 /**
  * purge-customer-storage — cron-invoked customer-data purge worker.
  *
