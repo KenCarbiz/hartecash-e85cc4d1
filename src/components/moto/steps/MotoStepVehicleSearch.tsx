@@ -274,7 +274,7 @@ const MotoStepVehicleSearch = ({
             )}
 
 
-            <div className="mt-5">
+            <div className="mt-8">
               <MotoPrimaryButton
                 className="w-full py-2 rounded-full text-sm bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
                 onClick={submit}
