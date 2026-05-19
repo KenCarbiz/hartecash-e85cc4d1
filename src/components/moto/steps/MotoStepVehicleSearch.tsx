@@ -50,6 +50,8 @@ const MotoStepVehicleSearch = ({
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
+  const tuner = useHeroTuner();
+
 
   const [tab, setTab] = useState<Exclude<LookupMode, "ymm">>(
     state.lookupMode === "plate" ? "plate" : "vin",
