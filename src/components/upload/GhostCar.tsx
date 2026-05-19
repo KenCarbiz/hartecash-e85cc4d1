@@ -10,7 +10,7 @@ const ALL_SHOTS = [
   { id: "rear",             label: "Rear",                   desc: "Center rear bumper, capture full width",                    orientation: "landscape" },
   { id: "driver_rocker",    label: "Driver Rocker Panel",    desc: "Crouch low — shoot along underside between wheels",         orientation: "landscape" },
   { id: "pass_rocker",      label: "Passenger Rocker Panel", desc: "Crouch low — shoot along underside between wheels",         orientation: "landscape" },
-  { id: "wheel",            label: "Wheel / Tire",           desc: "Fill the frame with one wheel — check tread depth",        orientation: "any" },
+  { id: "wheel",            label: "Tire Tread",             desc: "Fill the frame with one tire — show the tread surface",    orientation: "any" },
   { id: "windshield",       label: "Windshield",             desc: "Stand at front corner — capture full glass, look for chips",orientation: "landscape" },
   { id: "hood",             label: "Engine Bay",             desc: "Open hood — capture full engine compartment",               orientation: "landscape" },
   { id: "trunk",            label: "Trunk / Cargo Area",     desc: "Open trunk/liftgate — shoot straight in from behind",      orientation: "landscape" },
