@@ -313,7 +313,14 @@ const MotoStepVehicleSearch = ({
 
             <div className="mt-8">
               <MotoPrimaryButton
-                className="w-full py-2 rounded-full text-sm bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                className="w-full py-2"
+                style={{
+                  borderRadius: btn.nextRadius,
+                  backgroundColor: btn.nextBg,
+                  color: btn.nextText,
+                  fontSize: `${btn.nextFontSize}px`,
+                  fontWeight: btn.nextFontWeight,
+                }}
                 onClick={submit}
                 disabled={!canSubmit}
                 loading={loading}
@@ -323,7 +330,16 @@ const MotoStepVehicleSearch = ({
             </div>
               </MotoCard>
 
-              <div className="mt-4 rounded-md bg-zinc-100 py-3 text-center text-sm font-semibold text-zinc-700">
+              <div
+                className="mt-4 py-3 text-center"
+                style={{
+                  borderRadius: btn.badgeRadius,
+                  backgroundColor: btn.badgeBg,
+                  color: btn.badgeText,
+                  fontSize: `${btn.badgeFontSize}px`,
+                  fontWeight: btn.badgeFontWeight,
+                }}
+              >
                 Get a valuation in less than 30 seconds!
               </div>
             </div>
