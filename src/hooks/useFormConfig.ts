@@ -10,6 +10,10 @@ export interface FormConfig {
   // available inside the step itself.
   step_ai_photos: boolean;
   ai_photos_min_required: number;
+  // When true, customer must verify their phone via SMS code before
+  // their firm offer is revealed. When false, the offer is revealed
+  // immediately after they enter their contact info.
+  require_phone_verification: boolean;
   offer_before_details: boolean;
   q_overall_condition: boolean;
   q_exterior_damage: boolean;
