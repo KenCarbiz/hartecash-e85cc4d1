@@ -291,7 +291,7 @@ const MotoStepVehicleSearch = ({
           </div>
         </div>
 
-        <div className="w-full lg:flex-1 lg:min-w-0 flex items-center justify-start overflow-hidden lg:pl-0">
+        <div className="w-full lg:w-[520px] xl:w-[620px] 2xl:w-[720px] flex-none flex items-center justify-start overflow-hidden lg:pl-0">
           <img
             src={tenantHeroVehicle}
             alt="Featured vehicle"
