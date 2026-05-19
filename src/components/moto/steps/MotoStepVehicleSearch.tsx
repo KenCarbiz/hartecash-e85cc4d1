@@ -274,10 +274,11 @@ const MotoStepVehicleSearch = ({
           <img
             src={tenantHeroVehicle}
             alt="Featured vehicle"
-            className="w-full h-auto object-contain scale-[3] lg:scale-[4] origin-center"
+            className="h-auto object-contain mx-auto w-[320px] sm:w-[480px] md:w-[640px] lg:w-[760px] xl:w-[900px] 2xl:w-[1040px]"
             loading="lazy"
           />
         </div>
+
 
 
       </div>
