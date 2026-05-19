@@ -131,7 +131,7 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
   );
 
   const update = useCallback(
-    (section: "hero" | "vehicle", value: Record<string, unknown>) => {
+    (section: "hero" | "vehicle" | "heroVehicle", value: Record<string, unknown>) => {
       const next: TunerConfig = {
         ...latestRef.current,
         [section]: value,
@@ -142,6 +142,7 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
     },
     [persist],
   );
+
 
   return { config, loaded, update, status, realtime, lastUpdatedAt };
 }
