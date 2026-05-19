@@ -155,7 +155,7 @@ const MotoStepVehicleSearch = ({
         Get an instant valuation &amp; then add more info to get a firm offer.
       </p>
 
-      <div className="mt-6 mx-auto flex w-full max-w-6xl flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-center">
+      <div className="mt-6 mx-auto flex w-full max-w-[1600px] flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-center">
         <div className="w-full max-w-md flex-shrink-0">
           <MotoCard className="p-6">
             <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1.5 text-base font-semibold">
@@ -270,14 +270,15 @@ const MotoStepVehicleSearch = ({
           </div>
         </div>
 
-        <div className="w-full lg:flex-1 lg:min-w-0">
+        <div className="w-full lg:flex-1 lg:min-w-0 flex items-center justify-center">
           <img
             src={tenantHeroVehicle}
             alt="Featured vehicle"
-            className="w-full h-auto object-contain"
+            className="w-full h-auto object-contain scale-[1.6] lg:scale-[2] origin-center"
             loading="lazy"
           />
         </div>
+
       </div>
     </>
   );
