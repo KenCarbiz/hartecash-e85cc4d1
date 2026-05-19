@@ -299,7 +299,7 @@ const DocumentConfiguration = () => {
                             : "bg-background text-muted-foreground hover:bg-muted/40"
                         }`}
                       >
-                        Dealer only
+                        Staff only (admin portal)
                       </button>
                     </div>
                   </div>
