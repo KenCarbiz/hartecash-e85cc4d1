@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 // RETIRED — superseded by `boost-evaluate`, which performs the
 // server-side AI verification of uploaded photos before applying any
 // bump. The old endpoint accepted a client-supplied `bump_amount`

@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 // ─────────────────────────────────────────────────────────────────────────
 //  billing-list-invoices — list the caller's recent Stripe invoices
 //  for inline display on the /plan page.

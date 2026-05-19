@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 // ─────────────────────────────────────────────────────────────────────────
 //  billing-replay-event — platform-admin tool to replay a stripe_events
 //  row through the webhook handler.

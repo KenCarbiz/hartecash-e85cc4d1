@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {

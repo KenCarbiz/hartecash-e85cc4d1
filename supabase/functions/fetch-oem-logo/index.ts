@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',

@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 // launch-voice-call-openai
 //
 // Companion to launch-voice-call (which currently routes every call

@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 // Admin-initiated staff invite. Sends a Supabase Auth invite email
 // (rendered via auth-email-hook) and pre-assigns the requested role +
 // location so the invitee skips the pending-approval step.

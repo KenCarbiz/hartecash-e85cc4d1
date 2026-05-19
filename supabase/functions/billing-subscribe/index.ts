@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 // ─────────────────────────────────────────────────────────────────────────
 //  billing-subscribe — high-level Checkout entry point for the picker.
 //

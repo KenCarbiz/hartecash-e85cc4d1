@@ -1,3 +1,4 @@
+// @jwt-required — admin/cron only; default verify_jwt=true is correct.
 // push-to-vauto
 // ----------------------------------------------------------------------------
 // Cox Automotive / vAuto inventory push integration (skeleton).
