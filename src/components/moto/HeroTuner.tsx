@@ -295,6 +295,23 @@ export default function HeroTuner() {
               value={local.subColor}
               onChange={(subColor) => change({ subColor })}
             />
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Gap to card</span>
+                <span>{local.subGap}px</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={200}
+                step={1}
+                value={local.subGap}
+                onChange={(e) => change({ subGap: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="text-[10px] text-zinc-400">Space between subline and the box.</div>
+            </label>
+
 
             <hr className="border-zinc-200" />
             <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
