@@ -288,7 +288,7 @@ const DocumentConfiguration = () => {
                             : "bg-background text-muted-foreground hover:bg-muted/40"
                         }`}
                       >
-                        Customer + Dealer
+                        Customer &amp; Staff can upload
                       </button>
                       <button
                         type="button"
