@@ -55,6 +55,47 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # Function validates the appointment/submission token.
   [functions.notify-appointment]
     verify_jwt = false
+  # Customer-facing: customer uploads driver's-license front for OCR
+  # auto-fill of name/address. Called from UploadDocs.tsx (token-scoped
+  # anonymous page) and StaffFileUpload.tsx (staff path also works).
+  # Function validates request via the storage-signed image URL.
+  [functions.parse-drivers-license]
+    verify_jwt = false
+  # Customer-facing: customer uploads title for VIN extraction.
+  # Called from UploadDocs.tsx (token-scoped). Same auth model as
+  # parse-drivers-license — image URL is the implicit gate.
+  [functions.parse-title-vin]
+    verify_jwt = false
+  # Customer-facing: photo-shot guidance during the sell-form capture
+  # flow (front/back/side/etc — confirms the shot matches the slot).
+  # Called from CaptureWithOverlay.tsx. Function validates via
+  # submission token in the request body.
+  [functions.verify-shot-photo]
+    verify_jwt = false
+  # Customer-facing: Moto-flow appointment booking after OTP verify.
+  # Called from MotoStepSchedule.tsx. Function validates the submission
+  # row and writes the appointment.
+  [functions.book-appointment]
+    verify_jwt = false
+  # Customer-facing: offer-boost evaluation during the Moto-flow photos
+  # step and the BoostOfferClarity page. Called anonymously by the
+  # customer to recompute the offer with their uploaded condition data.
+  [functions.boost-evaluate]
+    verify_jwt = false
+  # Customer-facing (also admin-callable): generates the stock photo
+  # for the customer's vehicle on the offer page. Called from
+  # VehicleImage.tsx during the sell flow (anonymous) and from
+  # VehicleImageInventory.tsx in admin (with JWT). Function works in
+  # both modes.
+  [functions.generate-vehicle-image]
+    verify_jwt = false
+  # Customer-facing: TCPA/CAN-SPAM unsubscribe link handler. Called
+  # from /unsubscribe and the customer portal preferences page when
+  # a customer opts out. MUST be anonymous — the customer is
+  # unsubscribing precisely because they don't want to log in.
+  # Function validates the unsubscribe token in the request body.
+  [functions.handle-unsubscribe]
+    verify_jwt = false
   # Admin/cron: trusted caller required.
   [functions.process-email-queue]
     verify_jwt = true
