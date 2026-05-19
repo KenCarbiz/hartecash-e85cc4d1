@@ -178,7 +178,7 @@ const MotoStepVehicleSearch = ({
           <div className="flex w-full flex-col items-center justify-center gap-8 lg:flex-row lg:items-center lg:gap-10 xl:gap-14">
             {/* Left column: heading + card stay locked-aligned to the
                 same left edge regardless of image width/gap. */}
-            <div className="w-full max-w-md flex-shrink-0">
+            <div className="w-full max-w-lg flex-shrink-0">
               <h1
                 className="whitespace-nowrap leading-[1.05] tracking-tight"
                 style={{
