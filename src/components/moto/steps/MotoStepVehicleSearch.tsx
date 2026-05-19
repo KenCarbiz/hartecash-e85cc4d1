@@ -188,8 +188,15 @@ const MotoStepVehicleSearch = ({
                   fontFamily: tuner.font,
                 }}
               >
-                <span style={{ color: "hsl(var(--cta-offer))" }}>Get an</span> instant{" "}
-                <span style={{ color: "hsl(var(--cta-offer))" }}>Vehicle Valuation</span>
+                <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
+                  Get an
+                </span>{" "}
+                <span style={{ color: tuner.instantColor, fontWeight: tuner.instantWeight }}>
+                  instant
+                </span>{" "}
+                <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
+                  Vehicle Valuation
+                </span>
               </h1>
               <p
                 className="mt-3 whitespace-nowrap"
@@ -203,21 +210,27 @@ const MotoStepVehicleSearch = ({
               </p>
               <MotoCard className="mt-6 p-6">
             <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
-              {TABS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTab(t.id)}
-                  className={cn(
-                    "rounded-md py-[9px] px-3 transition",
-                    tab === t.id
-                      ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)] shadow-sm"
-                      : "text-zinc-700 hover:text-zinc-900",
-                  )}
-                >
-                  {t.label}
-                </button>
-              ))}
+              {TABS.map((t) => {
+                const active = tab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTab(t.id)}
+                    className={cn(
+                      "rounded-md py-[9px] px-3 transition",
+                      active ? "shadow-sm" : "text-zinc-700 hover:text-zinc-900",
+                    )}
+                    style={
+                      active
+                        ? { background: tuner.ctaColor, color: tuner.ctaTextColor }
+                        : undefined
+                    }
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
             </div>
 
 
@@ -311,7 +324,10 @@ const MotoStepVehicleSearch = ({
             </div>
               </MotoCard>
 
-              <div className="mt-4 rounded-md bg-zinc-100 py-3 text-center text-sm font-semibold text-zinc-700">
+              <div
+                className="mt-4 rounded-md py-3 text-center text-sm font-semibold"
+                style={{ background: tuner.ctaColor, color: tuner.ctaTextColor }}
+              >
                 Get a valuation in less than 30 seconds!
               </div>
             </div>
