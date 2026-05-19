@@ -126,6 +126,7 @@ const DocumentConfiguration = () => {
             description: row.description,
             role: row.role,
             conditional_on: row.conditional_on,
+            ocr_pipeline: row.ocr_pipeline,
             customer_visible: row.customer_visible,
             staff_only: row.staff_only,
             sort_order: row.sort_order,
