@@ -162,12 +162,17 @@ export default function FormConfiguration() {
 
   const fetchConfig = async () => {
     setLoading(true);
-    const [formRes, offerRes] = await Promise.all([
+    const [formRes, offerRes, photoRes] = await Promise.all([
       supabase.from("form_config").select("*").eq("dealership_id", dealershipId).maybeSingle(),
       supabase.from("offer_settings").select(
         "pricing_reveal_mode, show_range_before_final, range_low_source, range_high_mode, range_high_source, range_high_percent, payment_selection_timing"
       ).eq("dealership_id", dealershipId).maybeSingle(),
+      supabase.from("photo_config").select("label, boost_role, sort_order").eq("dealership_id", dealershipId).order("sort_order"),
     ]);
+    const photos = (photoRes.data ?? [])
+      .filter((r) => r.boost_role === "required" || r.boost_role === "bonus")
+      .map((r) => ({ label: r.label as string, role: r.boost_role as "required" | "bonus" }));
+    setBoostPhotos(photos);
     if (formRes.data) {
       setConfig({ ...DEFAULTS, ...formRes.data });
     }
