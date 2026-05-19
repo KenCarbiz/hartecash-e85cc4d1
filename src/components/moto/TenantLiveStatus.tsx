@@ -18,10 +18,19 @@ type Row = {
   custom_domain: string | null;
   updated_at: string | null;
   hero_size: number | null;
-  vehicle_2xl: number | null;
+  vehicle_2xl: string | null;
 };
 
 type PingStatus = "idle" | "checking" | "ok" | "fail";
+
+const formatVehicle2xl = (value: unknown): string | null => {
+  if (typeof value === "number" && Number.isFinite(value)) return `${value}px`;
+  if (!value || typeof value !== "object") return null;
+  const row = value as { w?: unknown; gap?: unknown };
+  const width = typeof row.w === "number" && Number.isFinite(row.w) ? `${row.w}px` : null;
+  const gap = typeof row.gap === "number" && Number.isFinite(row.gap) ? `gap ${row.gap}px` : null;
+  return [width, gap].filter(Boolean).join(" · ") || null;
+};
 
 export default function TenantLiveStatus({
   activeDealershipId,
@@ -57,7 +66,7 @@ export default function TenantLiveStatus({
         custom_domain: t.custom_domain,
         updated_at: c?.updated_at ?? null,
         hero_size: cfg?.hero?.size ?? null,
-        vehicle_2xl: cfg?.vehicle?.["2xl"] ?? null,
+        vehicle_2xl: formatVehicle2xl(cfg?.vehicle?.["2xl"]),
       };
     });
 
