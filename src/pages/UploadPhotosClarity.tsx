@@ -256,6 +256,7 @@ const UploadPhotosClarity = () => {
     setUploading(true);
     setError("");
     try {
+      const uploadedPaths: Array<{ path: string; shotId: string | null; exif: PhotoExifResult | null }> = [];
       for (const [shotId, val] of Object.entries(shotState)) {
         if (!val.file) continue;
         const ext = val.file.name.split(".").pop();
@@ -264,14 +265,33 @@ const UploadPhotosClarity = () => {
           .from("submission-photos")
           .upload(path, val.file, { contentType: val.file.type, upsert: false });
         if (uploadErr) throw uploadErr;
+        uploadedPaths.push({ path, shotId, exif: shotExif[shotId] || null });
       }
-      for (const file of extraFiles) {
+      for (let i = 0; i < extraFiles.length; i++) {
+        const file = extraFiles[i];
         const ext = file.name.split(".").pop();
         const path = `${token}/extra-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error: uploadErr } = await supabase.storage
           .from("submission-photos")
           .upload(path, file, { contentType: file.type });
         if (uploadErr) throw uploadErr;
+        uploadedPaths.push({ path, shotId: null, exif: extraExif[i] || null });
+      }
+
+      // Persist EXIF/GPS verification to photo_metadata for staff
+      // fraud auditing. Fire-and-forget — never block upload completion.
+      if (submission?.id) {
+        for (const item of uploadedPaths) {
+          if (!item.exif) continue;
+          savePhotoMetadata({
+            submissionId: submission.id,
+            submissionToken: token || null,
+            storagePath: item.path,
+            photoCategory: item.shotId,
+            expected: expectedCoords,
+            exif: item.exif,
+          });
+        }
       }
 
       const { data: allFiles } = await supabase.storage
