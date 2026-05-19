@@ -327,6 +327,15 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
                 <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
                   {state === "done" ? "Uploaded" : doc.description}
                 </p>
+                {ocrBadge && (
+                  <span
+                    title={ocr?.error || ocrBadge.label}
+                    className={`mt-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${ocrBadge.cls}`}
+                  >
+                    {ocrBadge.icon}
+                    {ocrBadge.label}
+                  </span>
+                )}
               </div>
             </button>
           );
