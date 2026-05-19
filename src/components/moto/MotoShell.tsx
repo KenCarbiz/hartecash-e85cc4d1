@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useEmbedMode } from "@/hooks/useEmbedMode";
 import MotoDisclosureBar from "./MotoDisclosureBar";
+import HeroTuner from "./HeroTuner";
 
 /**
  * The standalone microsite wrapper. The site-wide SiteHeader supplies
@@ -18,6 +19,7 @@ const MotoShell = ({ children }: { children: ReactNode }) => {
           top of the disclosure bar or the Track-Value card. */}
       <main className="mx-auto max-w-screen-sm px-4 pb-[120px] pt-[112px]">{children}</main>
       {!embed && <MotoDisclosureBar />}
+      <HeroTuner />
     </div>
   );
 };
