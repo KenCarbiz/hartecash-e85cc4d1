@@ -275,15 +275,16 @@ export default function HeroTuner() {
   const changeVehicle = (patch: Partial<VehicleTunerValues>) => {
     const next = { ...localVehicle, ...patch };
     setLocalVehicle(next);
-    update("vehicle", next as unknown as Record<string, unknown>);
+    update("heroVehicle", next as unknown as Record<string, unknown>);
   };
 
   const reset = () => {
     setLocal(DEFAULTS);
     update("hero", DEFAULTS as unknown as Record<string, unknown>);
     setLocalVehicle(VEHICLE_DEFAULTS);
-    update("vehicle", VEHICLE_DEFAULTS as unknown as Record<string, unknown>);
+    update("heroVehicle", VEHICLE_DEFAULTS as unknown as Record<string, unknown>);
   };
+
 
   return (
     <div className="fixed bottom-4 right-20 z-[9999] font-sans text-xs">
