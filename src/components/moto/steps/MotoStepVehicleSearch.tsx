@@ -356,18 +356,23 @@ const useCurrentBreakpoint = (): BP => {
 
 const HeroVehicleTuner = ({ src }: { src: string }) => {
   const bp = useCurrentBreakpoint();
-  const [settings, setSettings] = useState<Record<BP, { w: number; gap: number }>>(() => {
-    try {
-      const raw = localStorage.getItem(TUNER_STORAGE_KEY);
-      if (raw) return { ...TUNER_DEFAULTS, ...JSON.parse(raw) };
-    } catch {}
-    return TUNER_DEFAULTS;
-  });
+  const { tenant } = useTenant();
+  const { config, update } = useTunerConfig(tenant.dealership_id);
+  const remote = (config.vehicle ?? {}) as Partial<Record<BP, { w: number; gap: number }>>;
+  const settings: Record<BP, { w: number; gap: number }> = {
+    ...TUNER_DEFAULTS,
+    ...remote,
+  };
+  const setSettings = (
+    updater:
+      | Record<BP, { w: number; gap: number }>
+      | ((s: Record<BP, { w: number; gap: number }>) => Record<BP, { w: number; gap: number }>),
+  ) => {
+    const next = typeof updater === "function" ? (updater as Function)(settings) : updater;
+    update("vehicle", next as unknown as Record<string, unknown>);
+  };
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    try { localStorage.setItem(TUNER_STORAGE_KEY, JSON.stringify(settings)); } catch {}
-  }, [settings]);
 
   const { w, gap } = settings[bp];
   const reservedImageSpace = w + gap;
