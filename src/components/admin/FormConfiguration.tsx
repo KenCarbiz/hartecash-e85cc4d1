@@ -561,18 +561,13 @@ export default function FormConfiguration() {
           {([
             {
               v: "price_first",
-              title: "Offer Before Contact",
+              title: "Firm Offer Before Contact Information",
               desc: "Show the exact cash offer on-screen first. Contact info is collected afterward.",
             },
             {
               v: "range_then_price",
-              title: "Range, Then Final Offer",
-              desc: "Show an estimated range based on Black Book, collect contact info, then reveal the exact offer.",
-            },
-            {
-              v: "contact_first",
-              title: "Offer After Contact",
-              desc: "Customer provides contact info first; no number is shown until then.",
+              title: "Range Offer Before Contact, Firm Offer After Contact Information",
+              desc: "Show an estimated range based on Black Book, collect contact info, then reveal the exact firm offer.",
             },
           ] as { v: PricingRevealMode; title: string; desc: string }[]).map((o) => {
             const active = offerFlow.pricing_reveal_mode === o.v;
@@ -601,8 +596,14 @@ export default function FormConfiguration() {
           })}
         </div>
 
-        {/* Secondary toggle: show range even when reveal mode is price_first or contact_first */}
-        {offerFlow.pricing_reveal_mode !== "range_then_price" && (
+        {/* Secondary toggle: show range while the customer is going
+            through the long condition prompts. Only meaningful when the
+            dealer has selected a long list of condition questions
+            (3+) — otherwise the prompts are over too fast for a range
+            preview to be useful. */}
+        {offerFlow.pricing_reveal_mode !== "range_then_price" &&
+          config.step_condition_history &&
+          enabledCount(CONDITION_QUESTIONS) >= 3 && (
           <div className="flex items-start gap-3 mt-4 p-3 rounded-lg bg-muted/40 border border-border">
             <Switch
               checked={offerFlow.show_range_before_final}
@@ -610,14 +611,33 @@ export default function FormConfiguration() {
             />
             <div>
               <div className="font-semibold text-sm">
-                Also show a range while the customer waits
+                Show a range during the condition questions
               </div>
               <div className="text-xs text-muted-foreground mt-0.5">
-                Displays the Black Book range as a preview before the final number is ready.
+                Displays the Black Book range as a preview while the customer answers your long-form condition prompts.
               </div>
             </div>
           </div>
         )}
+
+        {/* Phone verification gate — surfaced here so the dealer can
+            decide right alongside the pricing reveal whether the
+            customer must enter an SMS code immediately before the
+            firm offer is shown. Mirrors the toggle in Step Builder. */}
+        <div className="flex items-start gap-3 mt-3 p-3 rounded-lg bg-muted/40 border border-border">
+          <Switch
+            checked={config.require_phone_verification}
+            onCheckedChange={(v) => set("require_phone_verification", v)}
+          />
+          <div>
+            <div className="font-semibold text-sm">
+              Verify phone with SMS code before firm offer
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              Customer enters a one-time code right before the firm offer is displayed. Turn off to reveal the offer immediately after contact info.
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ── Range config ── */}
