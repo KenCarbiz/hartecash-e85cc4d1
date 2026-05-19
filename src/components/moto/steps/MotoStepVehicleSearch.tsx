@@ -184,7 +184,7 @@ const MotoStepVehicleSearch = ({
                   type="button"
                   onClick={() => setTab(t.id)}
                   className={cn(
-                    "rounded-md py-2 px-3 transition",
+                    "rounded-md py-[9px] px-3 transition",
                     tab === t.id
                       ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)] shadow-sm"
                       : "text-zinc-700 hover:text-zinc-900",
