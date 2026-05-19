@@ -18,6 +18,8 @@ export type TunerConfig = {
 const LS_KEY = "moto-tuner-config-v1";
 const LOCAL_EVENT = "moto-tuner-config:change";
 
+export type SaveStatus = "idle" | "saving" | "saved" | "error";
+
 export function useTunerConfig(dealershipId: string | undefined | null) {
   const [config, setConfig] = useState<TunerConfig>(() => {
     try {
@@ -28,13 +30,12 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
     }
   });
   const [loaded, setLoaded] = useState(false);
+  const [status, setStatus] = useState<SaveStatus>("idle");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestRef = useRef<TunerConfig>(config);
   latestRef.current = config;
 
-  // Listen for in-tab updates from other useTunerConfig() instances so
-  // every consumer (tuner panel + the h1 it controls) stays in sync
-  // immediately, without waiting for the Supabase realtime round-trip.
   useEffect(() => {
     const onLocal = (e: Event) => {
       const detail = (e as CustomEvent<TunerConfig>).detail;
@@ -44,7 +45,6 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
     return () => window.removeEventListener(LOCAL_EVENT, onLocal);
   }, []);
 
-  // initial load + realtime subscription
   useEffect(() => {
     if (!dealershipId) return;
     let cancelled = false;
@@ -99,7 +99,9 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
         localStorage.setItem(LS_KEY, JSON.stringify(next));
       } catch {}
       if (!dealershipId) return;
+      setStatus("saving");
       if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (savedTimer.current) clearTimeout(savedTimer.current);
       saveTimer.current = setTimeout(async () => {
         const { error } = await supabase
           .from("site_config")
@@ -107,6 +109,10 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
           .eq("dealership_id", dealershipId);
         if (error) {
           console.warn("[tuner] remote save failed (kept locally):", error.message);
+          setStatus("error");
+        } else {
+          setStatus("saved");
+          savedTimer.current = setTimeout(() => setStatus("idle"), 1500);
         }
       }, 400);
     },
@@ -120,13 +126,13 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
         [section]: value,
       };
       setConfig(next);
-      // notify every other hook instance in this tab immediately
       window.dispatchEvent(new CustomEvent(LOCAL_EVENT, { detail: next }));
       persist(next);
     },
     [persist],
   );
 
-  return { config, loaded, update };
+  return { config, loaded, update, status };
 }
+
 

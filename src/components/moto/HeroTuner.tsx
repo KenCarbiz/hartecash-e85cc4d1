@@ -137,7 +137,7 @@ function WeightRow({
 
 export default function HeroTuner() {
   const { tenant } = useTenant();
-  const { config, update } = useTunerConfig(tenant.dealership_id);
+  const { config, update, status } = useTunerConfig(tenant.dealership_id);
   const values = merge(config.hero);
   const [open, setOpen] = useState(false);
 
@@ -165,7 +165,26 @@ export default function HeroTuner() {
         <div className="max-h-[80vh] w-80 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
           <div className="mb-3 flex items-center justify-between">
             <span className="font-semibold text-zinc-900">
-              Hero Tuner <span className="text-zinc-400">(synced)</span>
+              Hero Tuner{" "}
+              <span
+                className={
+                  status === "error"
+                    ? "text-red-500"
+                    : status === "saving"
+                      ? "text-amber-500"
+                      : status === "saved"
+                        ? "text-emerald-600"
+                        : "text-zinc-400"
+                }
+              >
+                {status === "saving"
+                  ? "(saving…)"
+                  : status === "saved"
+                    ? "(saved ✓ live)"
+                    : status === "error"
+                      ? "(save failed)"
+                      : "(synced)"}
+              </span>
             </span>
             <button
               type="button"
