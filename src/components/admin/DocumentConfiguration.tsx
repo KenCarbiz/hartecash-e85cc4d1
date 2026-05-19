@@ -278,27 +278,30 @@ const DocumentConfiguration = () => {
                   </div>
 
                   <div className="flex flex-col gap-1.5 self-start text-xs">
-                    <label className="inline-flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={doc.customer_visible}
-                        onChange={(e) => updateRow(idx, { customer_visible: e.target.checked })}
-                        className="w-3.5 h-3.5 rounded border-border accent-primary"
-                      />
-                      <span className="text-muted-foreground">Customer-visible</span>
-                    </label>
-                    <label className="inline-flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={doc.staff_only}
-                        onChange={(e) => updateRow(idx, {
-                          staff_only: e.target.checked,
-                          customer_visible: e.target.checked ? false : doc.customer_visible,
-                        })}
-                        className="w-3.5 h-3.5 rounded border-border accent-primary"
-                      />
-                      <span className="text-muted-foreground">Staff-only</span>
-                    </label>
+                    <div className="inline-flex rounded-md border border-border overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => updateRow(idx, { customer_visible: true, staff_only: false })}
+                        className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                          !doc.staff_only
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-background text-muted-foreground hover:bg-muted/40"
+                        }`}
+                      >
+                        Customer + Dealer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateRow(idx, { customer_visible: false, staff_only: true })}
+                        className={`px-2.5 py-1 text-xs font-medium border-l border-border transition-colors ${
+                          doc.staff_only
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-background text-muted-foreground hover:bg-muted/40"
+                        }`}
+                      >
+                        Dealer only
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
