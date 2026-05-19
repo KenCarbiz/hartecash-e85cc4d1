@@ -198,8 +198,12 @@ export default function FormConfiguration() {
     // (offer_settings) so any legacy code still reading the old column
     // keeps working.
     const offerBeforeDetails = offerFlow.pricing_reveal_mode === "price_first";
+    // Sync Step 3.5 min photo count from the Photos tab so the customer
+    // Boost screen always matches what dealers configure in one place.
+    const requiredBoostCount = boostPhotos.filter((p) => p.role === "required").length;
     const payload = {
       ...config,
+      ai_photos_min_required: requiredBoostCount > 0 ? requiredBoostCount : config.ai_photos_min_required,
       offer_before_details: offerBeforeDetails,
       updated_at: new Date().toISOString(),
     };
