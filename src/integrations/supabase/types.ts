@@ -2836,6 +2836,62 @@ export type Database = {
         }
         Relationships: []
       }
+      ocr_jobs: {
+        Row: {
+          created_at: string
+          dealership_id: string | null
+          doc_id: string
+          error_message: string | null
+          id: string
+          pipeline: string
+          result: Json | null
+          status: string
+          storage_bucket: string | null
+          storage_path: string | null
+          submission_id: string
+          submission_token: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string | null
+          doc_id: string
+          error_message?: string | null
+          id?: string
+          pipeline: string
+          result?: Json | null
+          status?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          submission_id: string
+          submission_token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string | null
+          doc_id?: string
+          error_message?: string | null
+          id?: string
+          pipeline?: string
+          result?: Json | null
+          status?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          submission_id?: string
+          submission_token?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocr_jobs_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offer_approval_requests: {
         Row: {
           acv_breach: number | null
