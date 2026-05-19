@@ -180,12 +180,13 @@ const MotoStepVehicleSearch = ({
                 same left edge regardless of image width/gap. */}
             <div className="w-full max-w-md flex-shrink-0">
               <h1
-                className="mt-1 whitespace-nowrap leading-[1.05] tracking-tight"
+                className="whitespace-nowrap leading-[1.05] tracking-tight"
                 style={{
                   fontSize: `${tuner.size}px`,
                   fontWeight: tuner.weight,
                   color: tuner.color,
                   fontFamily: tuner.font,
+                  marginTop: `${4 + tuner.offsetY}px`,
                 }}
               >
                 <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
