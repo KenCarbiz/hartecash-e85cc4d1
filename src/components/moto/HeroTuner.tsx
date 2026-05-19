@@ -3,12 +3,23 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useTunerConfig } from "./useTunerConfig";
 
 export type HeroTunerValues = {
-  size: number; // px
-  weight: number; // 100-900
-  color: string; // hex
-  subSize: number; // px
-  subColor: string; // hex
-  font: string; // css font-family value
+  // headline base
+  size: number;
+  weight: number;
+  color: string;
+  font: string;
+  // subline
+  subSize: number;
+  subColor: string;
+  // accent words ("Get an" + "Vehicle Valuation")
+  accentColor: string;
+  accentWeight: number;
+  // middle action word ("instant")
+  instantColor: string;
+  instantWeight: number;
+  // CTA color powering active tab + "valuation in 30 seconds" pill
+  ctaColor: string;
+  ctaTextColor: string;
 };
 
 const FONT_OPTIONS = [
@@ -20,13 +31,23 @@ const FONT_OPTIONS = [
   { label: "Mono", value: '"JetBrains Mono", ui-monospace, monospace' },
 ];
 
-const DEFAULTS: HeroTunerValues = {
+// Default "yellow" matching the current --cta-offer brand color.
+const BRAND_YELLOW = "#facc15";
+const BRAND_YELLOW_INK = "#1f2937";
+
+export const DEFAULTS: HeroTunerValues = {
   size: 36,
   weight: 300,
   color: "#18181b",
+  font: FONT_OPTIONS[0].value,
   subSize: 16,
   subColor: "#71717a",
-  font: FONT_OPTIONS[0].value,
+  accentColor: BRAND_YELLOW,
+  accentWeight: 600,
+  instantColor: "#18181b",
+  instantWeight: 300,
+  ctaColor: BRAND_YELLOW,
+  ctaTextColor: BRAND_YELLOW_INK,
 };
 
 function merge(remote: unknown): HeroTunerValues {
@@ -38,6 +59,74 @@ export function useHeroTuner(): HeroTunerValues {
   const { tenant } = useTenant();
   const { config } = useTunerConfig(tenant.dealership_id);
   return merge(config.hero);
+}
+
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
+  const safe = HEX_RE.test(value) ? value : "#000000";
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-zinc-600">{label}</span>
+      <div className="flex items-center gap-1">
+        <input
+          type="color"
+          value={safe}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-7 w-9 cursor-pointer rounded border border-zinc-300"
+        />
+        <input
+          type="text"
+          value={draft}
+          onChange={(e) => {
+            const v = e.target.value;
+            setDraft(v);
+            if (HEX_RE.test(v)) onChange(v);
+          }}
+          spellCheck={false}
+          className="w-20 rounded border border-zinc-300 px-1.5 py-1 font-mono text-[11px] uppercase"
+        />
+      </div>
+    </div>
+  );
+}
+
+function WeightRow({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (n: number) => void;
+}) {
+  return (
+    <label className="block">
+      <div className="flex justify-between text-zinc-600">
+        <span>{label}</span>
+        <span>{value}</span>
+      </div>
+      <input
+        type="range"
+        min={100}
+        max={900}
+        step={100}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full"
+      />
+    </label>
+  );
 }
 
 export default function HeroTuner() {
@@ -67,7 +156,7 @@ export default function HeroTuner() {
   return (
     <div className="fixed bottom-4 right-20 z-[9999] font-sans text-xs">
       {open ? (
-        <div className="w-72 rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
+        <div className="max-h-[80vh] w-80 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
           <div className="mb-3 flex items-center justify-between">
             <span className="font-semibold text-zinc-900">
               Hero Tuner <span className="text-zinc-400">(synced)</span>
@@ -82,9 +171,13 @@ export default function HeroTuner() {
           </div>
 
           <div className="space-y-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Headline
+            </div>
+
             <label className="block">
               <div className="flex justify-between text-zinc-600">
-                <span>Headline size</span>
+                <span>Size</span>
                 <span>{local.size}px</span>
               </div>
               <input
@@ -97,21 +190,11 @@ export default function HeroTuner() {
               />
             </label>
 
-            <label className="block">
-              <div className="flex justify-between text-zinc-600">
-                <span>Headline weight</span>
-                <span>{local.weight}</span>
-              </div>
-              <input
-                type="range"
-                min={100}
-                max={900}
-                step={100}
-                value={local.weight}
-                onChange={(e) => change({ weight: Number(e.target.value) })}
-                className="w-full"
-              />
-            </label>
+            <WeightRow
+              label="Base weight"
+              value={local.weight}
+              onChange={(weight) => change({ weight })}
+            />
 
             <label className="block">
               <span className="text-zinc-600">Font</span>
@@ -128,21 +211,49 @@ export default function HeroTuner() {
               </select>
             </label>
 
-            <label className="flex items-center justify-between">
-              <span className="text-zinc-600">Headline color</span>
-              <input
-                type="color"
-                value={local.color}
-                onChange={(e) => change({ color: e.target.value })}
-                className="h-7 w-12 cursor-pointer rounded border border-zinc-300"
-              />
-            </label>
+            <ColorField
+              label="Base color"
+              value={local.color}
+              onChange={(color) => change({ color })}
+            />
 
             <hr className="border-zinc-200" />
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Accent words ("Get an" / "Vehicle Valuation")
+            </div>
+            <ColorField
+              label="Accent color"
+              value={local.accentColor}
+              onChange={(accentColor) => change({ accentColor })}
+            />
+            <WeightRow
+              label="Accent weight"
+              value={local.accentWeight}
+              onChange={(accentWeight) => change({ accentWeight })}
+            />
 
+            <hr className="border-zinc-200" />
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Action word ("instant")
+            </div>
+            <ColorField
+              label="Instant color"
+              value={local.instantColor}
+              onChange={(instantColor) => change({ instantColor })}
+            />
+            <WeightRow
+              label="Instant weight"
+              value={local.instantWeight}
+              onChange={(instantWeight) => change({ instantWeight })}
+            />
+
+            <hr className="border-zinc-200" />
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Subline
+            </div>
             <label className="block">
               <div className="flex justify-between text-zinc-600">
-                <span>Subline size</span>
+                <span>Size</span>
                 <span>{local.subSize}px</span>
               </div>
               <input
@@ -154,16 +265,26 @@ export default function HeroTuner() {
                 className="w-full"
               />
             </label>
+            <ColorField
+              label="Subline color"
+              value={local.subColor}
+              onChange={(subColor) => change({ subColor })}
+            />
 
-            <label className="flex items-center justify-between">
-              <span className="text-zinc-600">Subline color</span>
-              <input
-                type="color"
-                value={local.subColor}
-                onChange={(e) => change({ subColor: e.target.value })}
-                className="h-7 w-12 cursor-pointer rounded border border-zinc-300"
-              />
-            </label>
+            <hr className="border-zinc-200" />
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              CTA color (tabs + valuation pill)
+            </div>
+            <ColorField
+              label="Background"
+              value={local.ctaColor}
+              onChange={(ctaColor) => change({ ctaColor })}
+            />
+            <ColorField
+              label="Text"
+              value={local.ctaTextColor}
+              onChange={(ctaTextColor) => change({ ctaTextColor })}
+            />
 
             <button
               type="button"
