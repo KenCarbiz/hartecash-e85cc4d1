@@ -23,7 +23,9 @@ const MotoStepCondition = ({
   state: MotoFlowState;
   onNext: (next: Partial<MotoFlowState>) => void;
 }) => {
-  const [picked, setPicked] = useState<Condition | null>(state.condition);
+  // Pre-select "Good" — that's what ~50% of cars are, so defaulting it
+  // saves customers a tap. They can still pick a different option to override.
+  const [picked, setPicked] = useState<Condition | null>(state.condition ?? "good");
 
   const choose = (id: Condition) => {
     setPicked(id);
