@@ -359,6 +359,7 @@ const useCurrentBreakpoint = (): BP => {
 
 const HeroVehicleTuner = ({ src }: { src: string }) => {
   const bp = useCurrentBreakpoint();
+  const { isPlatformAdmin } = useIsPlatformAdmin();
   const { tenant } = useTenant();
   const { config, update, status, realtime, lastUpdatedAt } = useTunerConfig(tenant.dealership_id);
   const remote = (config.vehicle ?? {}) as Partial<Record<BP, { w: number; gap: number }>>;
