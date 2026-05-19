@@ -257,7 +257,7 @@ const MotoStepVehicleSearch = ({
             )}
 
             {tab === "plate" && (
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 <MotoOutlinedInput
                   label="License Plate*"
                   value={plate}
@@ -272,6 +272,7 @@ const MotoStepVehicleSearch = ({
                 />
               </div>
             )}
+
 
             <div className="mt-5">
               <MotoPrimaryButton
