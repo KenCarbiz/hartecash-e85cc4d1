@@ -177,6 +177,7 @@ const MotoStepVehicleSearch = ({
           <div className="space-y-4">
             <MotoOutlinedSelect
               label="Vehicle Year"
+              placeholder="Vehicle Year"
               value={year}
               onChange={(e) => {
                 setYear(e.target.value);
@@ -227,7 +228,7 @@ const MotoStepVehicleSearch = ({
               onChange={(e) => setVin(e.target.value.toUpperCase())}
               maxLength={17}
               autoComplete="off"
-              placeholder="17-character VIN"
+              placeholder="VIN"
             />
           </div>
         )}
