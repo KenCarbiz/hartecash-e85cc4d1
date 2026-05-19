@@ -140,6 +140,7 @@ export default function FormConfiguration() {
   const { toast } = useToast();
   const [config, setConfig] = useState<FormConfigData>(DEFAULTS);
   const [offerFlow, setOfferFlow] = useState<OfferFlowState>(OFFER_FLOW_DEFAULTS);
+  const [boostPhotos, setBoostPhotos] = useState<{ label: string; role: "required" | "bonus" }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
