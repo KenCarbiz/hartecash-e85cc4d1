@@ -251,9 +251,9 @@ const MotoStepVehicleSearch = ({
           </div>
         )}
 
-        <div className="mt-5">
+        <div className="mt-5 flex justify-center">
           <MotoPrimaryButton
-            className="rounded-full"
+            className="w-auto px-10 py-2.5 rounded-lg text-sm"
             onClick={submit}
             disabled={!canSubmit}
             loading={loading}
