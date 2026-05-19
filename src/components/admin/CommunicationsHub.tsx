@@ -16,6 +16,7 @@ const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
 const VoiceComplianceLog = React.lazy(() => import("./VoiceComplianceLog"));
 const StaffActivityLog = React.lazy(() => import("./StaffActivityLog"));
 const TenantViewLog = React.lazy(() => import("./TenantViewLog"));
+const SmsOptOutsPanel = React.lazy(() => import("./SmsOptOutsPanel"));
 
 interface CommunicationsHubProps {
   /**
@@ -140,7 +141,10 @@ const CommunicationsHub = ({
 
         <TabsContent value="compliance" className="pt-4 space-y-6">
           <React.Suspense fallback={<AdminLoadingSkeleton />}>
-            <PrivacyPosturePanel />
+            <SmsOptOutsPanel />
+            <div className="border-t border-border pt-6">
+              <PrivacyPosturePanel />
+            </div>
             <div className="border-t border-border pt-6">
               <ConsentLog />
             </div>

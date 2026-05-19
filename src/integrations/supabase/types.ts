@@ -7410,6 +7410,19 @@ export type Database = {
         Returns: undefined
       }
       set_my_manager_pin: { Args: { _pin: string }; Returns: undefined }
+      sms_opt_out_audit: { Args: never; Returns: Json }
+      sms_opt_out_missed_alerts: {
+        Args: { p_days?: number }
+        Returns: {
+          body: string
+          dealership_id: string
+          from_phone: string
+          inbound_id: string
+          received_at: string
+          submission_id: string
+          to_phone: string
+        }[]
+      }
       submit_call_feedback:
         | {
             Args: { _comment?: string; _score: number; _token: string }
