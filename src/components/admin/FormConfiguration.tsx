@@ -84,6 +84,7 @@ const DEFAULTS: FormConfigData = {
   step_condition_history: true,
   step_ai_photos: true,
   ai_photos_min_required: 4,
+  require_phone_verification: true,
   offer_before_details: false,
   q_overall_condition: true,
   q_exterior_damage: true,
