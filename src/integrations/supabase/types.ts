@@ -3016,6 +3016,7 @@ export type Database = {
           range_high_percent: number | null
           range_high_source: string | null
           range_low_source: string
+          range_spread_pct: number | null
           recon_cost: number
           regional_adjustment_pct: number
           retail_profit_basis: string
@@ -3062,6 +3063,7 @@ export type Database = {
           range_high_percent?: number | null
           range_high_source?: string | null
           range_low_source?: string
+          range_spread_pct?: number | null
           recon_cost?: number
           regional_adjustment_pct?: number
           retail_profit_basis?: string
@@ -3108,6 +3110,7 @@ export type Database = {
           range_high_percent?: number | null
           range_high_source?: string | null
           range_low_source?: string
+          range_spread_pct?: number | null
           recon_cost?: number
           regional_adjustment_pct?: number
           retail_profit_basis?: string
