@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Save, FileText, GripVertical, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Save, FileText, GripVertical, Loader2, Sparkles } from "lucide-react";
 
 type DocumentRole = "off" | "optional" | "required" | "conditional";
 
