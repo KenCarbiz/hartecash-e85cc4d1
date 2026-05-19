@@ -205,22 +205,24 @@ const MotoStepContact = ({
             filled={!!phone}
             placeholder="555-555-5555"
           />
-          <MotoFormField
-            label="Estimated Miles*"
-            inputMode="numeric"
-            value={mileage}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, "");
-              setMileage(digits ? Number(digits).toLocaleString() : "");
-            }}
-          />
-          <MotoFormField
-            label="Zip Code"
-            inputMode="numeric"
-            value={zip}
-            onChange={(e) => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
-            maxLength={5}
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <MotoFormField
+              label="Estimated Miles*"
+              inputMode="numeric"
+              value={mileage}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, "");
+                setMileage(digits ? Number(digits).toLocaleString() : "");
+              }}
+            />
+            <MotoFormField
+              label="Zip Code"
+              inputMode="numeric"
+              value={zip}
+              onChange={(e) => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
+              maxLength={5}
+            />
+          </div>
           <label className="flex items-center gap-3 rounded-lg bg-[hsl(var(--cta-offer)/0.06)] px-3 py-2.5">
             <Switch checked={trackValue} onCheckedChange={setTrackValue} />
             <span className="text-sm text-zinc-700">Track my vehicle value monthly via email</span>
