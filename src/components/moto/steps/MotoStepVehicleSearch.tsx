@@ -9,7 +9,7 @@ import type { LookupMode, MotoFlowState } from "../types";
 import type { BBVehicle } from "@/components/sell-form/types";
 import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "../ymmData";
 import { cn } from "@/lib/utils";
-import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.png";
+import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
@@ -273,7 +273,7 @@ const MotoStepVehicleSearch = ({
         <div className="w-full max-w-xl flex-shrink">
           <img
             src={tenantHeroVehicle}
-            alt="2026 Infiniti QX60"
+            alt="Featured vehicle"
             className="w-full h-auto object-contain"
             loading="lazy"
           />
