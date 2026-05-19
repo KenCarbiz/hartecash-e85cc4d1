@@ -228,7 +228,7 @@ const MotoStepContact = ({
           </label>
           <div className="hidden sm:block">
             <MotoPrimaryButton
-              className="py-2.5"
+              className="py-2 opacity-100 hover:opacity-100 active:opacity-100"
               disabled={!formValid || sending}
               loading={sending}
               onClick={sendCode}
@@ -248,7 +248,7 @@ const MotoStepContact = ({
       </MotoCard>
       <MotoStickyFooter className="sm:hidden">
         <MotoPrimaryButton
-          className="py-2.5"
+          className="py-2 opacity-100 hover:opacity-100 active:opacity-100"
           disabled={!formValid || sending}
           loading={sending}
           onClick={sendCode}
