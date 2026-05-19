@@ -20,6 +20,25 @@ const TABS: { id: Exclude<LookupMode, "ymm">; label: string }[] = [
   { id: "plate", label: "License Plate" },
 ];
 
+/**
+ * Responsive widths for the hero vehicle image at each Tailwind breakpoint.
+ * NOTE: Tailwind's JIT scans source literally — class strings must stay
+ * static. If you change a width, update both the comment and the class.
+ */
+const HERO_VEHICLE_WIDTHS = {
+  base: 320, // < 640px  (mobile)
+  sm: 480, //   ≥ 640px
+  md: 640, //   ≥ 768px
+  lg: 760, //   ≥ 1024px
+  xl: 900, //   ≥ 1280px
+  "2xl": 1040, // ≥ 1536px
+} as const;
+
+const HERO_VEHICLE_WIDTH_CLASSES =
+  "w-[320px] sm:w-[480px] md:w-[640px] lg:w-[760px] xl:w-[900px] 2xl:w-[1040px]";
+
+
+
 const MotoStepVehicleSearch = ({
   state,
   onResolved,
@@ -275,7 +294,7 @@ const MotoStepVehicleSearch = ({
           <img
             src={tenantHeroVehicle}
             alt="Featured vehicle"
-            className="h-auto object-contain mx-auto w-[320px] sm:w-[480px] md:w-[640px] lg:w-[760px] xl:w-[900px] 2xl:w-[1040px]"
+            className={cn("h-auto object-contain mx-auto", HERO_VEHICLE_WIDTH_CLASSES)}
             loading="lazy"
           />
         </div>
