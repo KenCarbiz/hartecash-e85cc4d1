@@ -270,7 +270,7 @@ const MotoStepVehicleSearch = ({
           </div>
         </div>
 
-        <div className="w-full lg:flex-1 lg:min-w-0 flex items-center justify-center overflow-visible">
+        <div className="w-full lg:flex-1 lg:min-w-0 flex items-center justify-center overflow-visible lg:pl-12 xl:pl-20">
           <img
             src={tenantHeroVehicle}
             alt="Featured vehicle"
@@ -278,6 +278,7 @@ const MotoStepVehicleSearch = ({
             loading="lazy"
           />
         </div>
+
 
 
 
