@@ -82,6 +82,49 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
     return () => { cancelled = true; };
   }, [token, customerAllDocs]);
 
+  // Live OCR status: subscribe to ocr_jobs for this submission so the
+  // tile flips queued -> running -> completed/failed as the edge
+  // function progresses. Also seed from the latest job per doc on
+  // mount so a returning customer sees the last result.
+  useEffect(() => {
+    if (!submissionId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("ocr_jobs" as never)
+        .select("doc_id,status,error_message,created_at")
+        .eq("submission_id", submissionId)
+        .order("created_at", { ascending: false });
+      if (cancelled || !data) return;
+      const latest: Record<string, { status: "queued" | "running" | "completed" | "failed"; error?: string | null }> = {};
+      for (const row of data as unknown as Array<{ doc_id: string; status: string; error_message: string | null }>) {
+        if (!latest[row.doc_id]) {
+          latest[row.doc_id] = { status: row.status as never, error: row.error_message };
+        }
+      }
+      setOcrStates((prev) => ({ ...latest, ...prev }));
+    })();
+
+    const channel = supabase
+      .channel(`ocr-jobs-${submissionId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "ocr_jobs", filter: `submission_id=eq.${submissionId}` },
+        (payload) => {
+          const row = (payload.new || payload.old) as { doc_id?: string; status?: string; error_message?: string | null } | null;
+          if (!row?.doc_id || !row.status) return;
+          setOcrStates((prev) => ({
+            ...prev,
+            [row.doc_id!]: { status: row.status as never, error: row.error_message ?? null },
+          }));
+        },
+      )
+      .subscribe();
+
+    return () => { cancelled = true; supabase.removeChannel(channel); };
+  }, [submissionId]);
+
+
   const triggerForSlot = (docId: string) => {
     setActiveSlot(docId);
     setTimeout(() => inputRefs.current[docId]?.click(), 50);
