@@ -6187,6 +6187,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_set_customer_timezone: {
+        Args: { _submission_id: string; _timezone: string }
+        Returns: string
+      }
       apply_boost_bump: {
         Args: {
           _bump_amount: number
@@ -6490,7 +6494,7 @@ export type Database = {
         }[]
       }
       mark_call_golden: {
-        Args: { _call_id: string; _pinned?: boolean }
+        Args: { _call_id: string; _pinned: boolean }
         Returns: Json
       }
       mark_docs_uploaded: { Args: { _token: string }; Returns: undefined }
@@ -6544,7 +6548,9 @@ export type Database = {
           status: string
         }[]
       }
-      prune_processed_webhook_calls: { Args: never; Returns: undefined }
+      prune_processed_webhook_calls:
+        | { Args: never; Returns: undefined }
+        | { Args: { _retention_days?: number }; Returns: number }
       purge_customer_data: { Args: { _token: string }; Returns: Json }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
