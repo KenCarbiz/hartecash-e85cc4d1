@@ -565,6 +565,11 @@ export default function FormConfiguration() {
               desc: "Show the exact cash offer on-screen first. Contact info is collected afterward.",
             },
             {
+              v: "contact_first",
+              title: "Firm Offer After Customer Contact Information",
+              desc: "Collect contact info first, then reveal the exact firm offer on the next screen.",
+            },
+            {
               v: "range_then_price",
               title: "Range Offer Before Contact, Firm Offer After Contact Information",
               desc: "Show an estimated range based on Black Book, collect contact info, then reveal the exact firm offer.",
