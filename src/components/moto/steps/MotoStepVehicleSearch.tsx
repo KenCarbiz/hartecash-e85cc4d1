@@ -174,7 +174,7 @@ const MotoStepVehicleSearch = ({
                   Get an
                 </span>{" "}
                 <span style={{ color: tuner.instantColor, fontWeight: tuner.instantWeight }}>
-                  instant
+                  Instant
                 </span>{" "}
                 <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
                   Vehicle Valuation
