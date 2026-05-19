@@ -39,7 +39,9 @@ const MotoStepContact = ({
 }) => {
   const { config } = useSiteConfig();
   const { tenant } = useTenant();
+  const { formConfig } = useFormConfig();
   const { toast } = useToast();
+  const requireVerify = formConfig.require_phone_verification !== false;
 
   const [firstName, setFirstName] = useState(state.contact.firstName);
   const [lastName, setLastName] = useState(state.contact.lastName);
