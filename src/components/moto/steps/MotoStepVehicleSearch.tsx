@@ -252,7 +252,7 @@ const MotoStepVehicleSearch = ({
 
         <div className="mt-5">
           <MotoPrimaryButton
-            className="w-full py-2 rounded-full text-sm"
+            className="w-full py-2 rounded-full text-sm bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
             onClick={submit}
             disabled={!canSubmit}
             loading={loading}
@@ -262,7 +262,7 @@ const MotoStepVehicleSearch = ({
         </div>
       </MotoCard>
 
-      <div className="mt-4 mx-auto max-w-md rounded-md bg-[hsl(var(--cta-offer)/0.3)] py-3 text-center text-sm font-semibold text-[color:var(--cta-offer-text)]">
+      <div className="mt-4 mx-auto max-w-md rounded-md bg-zinc-100 py-3 text-center text-sm font-semibold text-zinc-700">
         Get a valuation in less than 30 seconds!
       </div>
     </>
