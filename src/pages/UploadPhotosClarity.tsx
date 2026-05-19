@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { usePhotoConfig } from "@/hooks/usePhotoConfig";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { parsePhotoExif, savePhotoMetadata, type PhotoExifResult } from "@/lib/photoExif";
+import PhotoTrustBadge from "@/components/upload/PhotoTrustBadge";
 
 /**
  * Clarity-tier photo upload page — Apple-minimal companion to the
@@ -63,6 +65,12 @@ const UploadPhotosClarity = () => {
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
   const [activeShot, setActiveShot] = useState<string | null>(null);
+  // EXIF / GPS verification result per shot_id and per extra-index.
+  // Drives the customer-facing trust pill on each tile so they see
+  // whether the photo they uploaded carries verifiable metadata.
+  const [shotExif, setShotExif] = useState<Record<string, PhotoExifResult>>({});
+  const [extraExif, setExtraExif] = useState<Record<number, PhotoExifResult>>({});
+  const [expectedCoords, setExpectedCoords] = useState<{ lat: number | null; lng: number | null; source?: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const extraInputRef = useRef<HTMLInputElement>(null);
 
@@ -118,6 +126,45 @@ const UploadPhotosClarity = () => {
     };
   }, [token, submission, enabledShots]);
 
+  // Resolve the customer's expected location to compare photo GPS
+  // against. Order: assigned store rooftop -> dealership default
+  // rooftop. ZIP-only customers fall back to no comparison anchor
+  // (badge still grades freshness + software).
+  useEffect(() => {
+    if (!submission) return;
+    let cancelled = false;
+    (async () => {
+      const sub = submission as SubmissionInfo & { store_location_id?: string | null };
+      let query = supabase
+        .from("dealership_locations" as never)
+        .select("center_lat,center_lng,name")
+        .eq("is_active", true)
+        .limit(1);
+      if (sub.store_location_id) {
+        query = supabase
+          .from("dealership_locations" as never)
+          .select("center_lat,center_lng,name")
+          .eq("id", sub.store_location_id)
+          .limit(1);
+      } else if (sub.dealership_id) {
+        query = supabase
+          .from("dealership_locations" as never)
+          .select("center_lat,center_lng,name")
+          .eq("dealership_id", sub.dealership_id)
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true })
+          .limit(1);
+      }
+      const { data } = await query;
+      if (cancelled || !data || data.length === 0) return;
+      const row = (data as unknown as Array<{ center_lat: number | null; center_lng: number | null; name: string | null }>)[0];
+      if (row.center_lat != null && row.center_lng != null) {
+        setExpectedCoords({ lat: row.center_lat, lng: row.center_lng, source: `Rooftop: ${row.name || "store"}` });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [submission]);
+
   const handleTileClick = (shotId: string) => {
     setActiveShot(shotId);
     fileInputRef.current?.click();
@@ -135,17 +182,28 @@ const UploadPhotosClarity = () => {
       return;
     }
     setError("");
+    const shotId = activeShot;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setShotState((prev) => ({ ...prev, [activeShot]: { file, preview: ev.target?.result as string } }));
+      setShotState((prev) => ({ ...prev, [shotId]: { file, preview: ev.target?.result as string } }));
     };
     reader.readAsDataURL(file);
+    // Parse EXIF immediately so the trust pill renders as soon as
+    // the preview does — before the actual upload runs.
+    parsePhotoExif(file, expectedCoords).then((exif) => {
+      setShotExif((prev) => ({ ...prev, [shotId]: exif }));
+    }).catch(() => {});
     setActiveShot(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const removeShot = (shotId: string) => {
     setShotState((prev) => {
+      const next = { ...prev };
+      delete next[shotId];
+      return next;
+    });
+    setShotExif((prev) => {
       const next = { ...prev };
       delete next[shotId];
       return next;
@@ -162,17 +220,30 @@ const UploadPhotosClarity = () => {
       }
       return true;
     });
+    const baseIdx = extraFiles.length;
     setExtraFiles((prev) => [...prev, ...added]);
-    added.forEach((f) => {
+    added.forEach((f, i) => {
       const reader = new FileReader();
       reader.onload = (e) => setExtraPreviews((prev) => [...prev, e.target?.result as string]);
       reader.readAsDataURL(f);
+      parsePhotoExif(f, expectedCoords).then((exif) => {
+        setExtraExif((prev) => ({ ...prev, [baseIdx + i]: exif }));
+      }).catch(() => {});
     });
   };
 
   const removeExtra = (i: number) => {
     setExtraFiles((prev) => prev.filter((_, idx) => idx !== i));
     setExtraPreviews((prev) => prev.filter((_, idx) => idx !== i));
+    setExtraExif((prev) => {
+      const next: Record<number, PhotoExifResult> = {};
+      Object.entries(prev).forEach(([k, v]) => {
+        const idx = Number(k);
+        if (idx < i) next[idx] = v;
+        else if (idx > i) next[idx - 1] = v;
+      });
+      return next;
+    });
   };
 
   const requiredComplete = requiredShots.every(
@@ -185,6 +256,7 @@ const UploadPhotosClarity = () => {
     setUploading(true);
     setError("");
     try {
+      const uploadedPaths: Array<{ path: string; shotId: string | null; exif: PhotoExifResult | null }> = [];
       for (const [shotId, val] of Object.entries(shotState)) {
         if (!val.file) continue;
         const ext = val.file.name.split(".").pop();
@@ -193,14 +265,33 @@ const UploadPhotosClarity = () => {
           .from("submission-photos")
           .upload(path, val.file, { contentType: val.file.type, upsert: false });
         if (uploadErr) throw uploadErr;
+        uploadedPaths.push({ path, shotId, exif: shotExif[shotId] || null });
       }
-      for (const file of extraFiles) {
+      for (let i = 0; i < extraFiles.length; i++) {
+        const file = extraFiles[i];
         const ext = file.name.split(".").pop();
         const path = `${token}/extra-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error: uploadErr } = await supabase.storage
           .from("submission-photos")
           .upload(path, file, { contentType: file.type });
         if (uploadErr) throw uploadErr;
+        uploadedPaths.push({ path, shotId: null, exif: extraExif[i] || null });
+      }
+
+      // Persist EXIF/GPS verification to photo_metadata for staff
+      // fraud auditing. Fire-and-forget — never block upload completion.
+      if (submission?.id) {
+        for (const item of uploadedPaths) {
+          if (!item.exif) continue;
+          savePhotoMetadata({
+            submissionId: submission.id,
+            submissionToken: token || null,
+            storagePath: item.path,
+            photoCategory: item.shotId,
+            expected: expectedCoords,
+            exif: item.exif,
+          });
+        }
       }
 
       const { data: allFiles } = await supabase.storage
@@ -376,6 +467,7 @@ const UploadPhotosClarity = () => {
             {requiredShots.map((shot) => {
               const state = shotState[shot.shot_id];
               const filled = state?.file || state?.uploaded;
+              const exif = shotExif[shot.shot_id];
               return (
                 <button
                   key={shot.shot_id}
@@ -416,6 +508,11 @@ const UploadPhotosClarity = () => {
                   <span className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent text-white text-[11px] font-semibold tracking-tight">
                     {filled ? "Tap to retake" : shot.label}
                   </span>
+                  {state?.file && exif && (
+                    <span className="absolute top-2 left-10">
+                      <PhotoTrustBadge tier={exif.trust_tier} reasons={exif.trust_reasons} distanceMiles={exif.distance_miles} />
+                    </span>
+                  )}
                 </button>
               );
             })}

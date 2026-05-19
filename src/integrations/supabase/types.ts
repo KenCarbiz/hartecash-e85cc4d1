@@ -3417,6 +3417,92 @@ export type Database = {
         }
         Relationships: []
       }
+      photo_metadata: {
+        Row: {
+          camera_make: string | null
+          camera_model: string | null
+          created_at: string
+          distance_miles: number | null
+          expected_lat: number | null
+          expected_lng: number | null
+          expected_source: string | null
+          freshness_hours: number | null
+          gps_lat: number | null
+          gps_lng: number | null
+          has_exif: boolean
+          has_gps: boolean
+          id: string
+          photo_category: string | null
+          software: string | null
+          storage_bucket: string
+          storage_path: string
+          submission_id: string
+          submission_token: string | null
+          taken_at: string | null
+          trust_reasons: Json
+          trust_tier: string
+          updated_at: string
+        }
+        Insert: {
+          camera_make?: string | null
+          camera_model?: string | null
+          created_at?: string
+          distance_miles?: number | null
+          expected_lat?: number | null
+          expected_lng?: number | null
+          expected_source?: string | null
+          freshness_hours?: number | null
+          gps_lat?: number | null
+          gps_lng?: number | null
+          has_exif?: boolean
+          has_gps?: boolean
+          id?: string
+          photo_category?: string | null
+          software?: string | null
+          storage_bucket?: string
+          storage_path: string
+          submission_id: string
+          submission_token?: string | null
+          taken_at?: string | null
+          trust_reasons?: Json
+          trust_tier?: string
+          updated_at?: string
+        }
+        Update: {
+          camera_make?: string | null
+          camera_model?: string | null
+          created_at?: string
+          distance_miles?: number | null
+          expected_lat?: number | null
+          expected_lng?: number | null
+          expected_source?: string | null
+          freshness_hours?: number | null
+          gps_lat?: number | null
+          gps_lng?: number | null
+          has_exif?: boolean
+          has_gps?: boolean
+          id?: string
+          photo_category?: string | null
+          software?: string | null
+          storage_bucket?: string
+          storage_path?: string
+          submission_id?: string
+          submission_token?: string | null
+          taken_at?: string | null
+          trust_reasons?: Json
+          trust_tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_metadata_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pii_retention_config: {
         Row: {
           customer_memory_retention_days: number
