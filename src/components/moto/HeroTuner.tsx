@@ -56,6 +56,7 @@ export const DEFAULTS: HeroTunerValues = {
   instantWeight: 300,
   ctaColor: BRAND_YELLOW,
   ctaTextColor: BRAND_YELLOW_INK,
+  tabPadY: 9,
 };
 
 function merge(remote: unknown): HeroTunerValues {
