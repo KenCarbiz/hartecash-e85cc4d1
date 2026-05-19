@@ -175,7 +175,8 @@ const MotoStepVehicleSearch = ({
       </p>
 
       <div className="mt-6 mx-auto flex w-full flex-col items-center gap-8 xl:flex-row xl:items-center xl:justify-center xl:gap-0">
-        <div className="w-full max-w-md flex-shrink-0 xl:flex-1 xl:flex xl:justify-end xl:max-w-none xl:[&>*]:w-full xl:[&>*]:max-w-md xl:pr-[calc(var(--hero-gap,0px)/2)]">
+        <div className="w-full max-w-md flex-shrink-0 xl:flex-1 xl:max-w-none xl:flex xl:justify-end xl:pr-[calc(var(--hero-gap,0px)/2)]">
+         <div className="w-full xl:max-w-md">
           <MotoCard className="p-6">
             <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
               {TABS.map((t) => (
