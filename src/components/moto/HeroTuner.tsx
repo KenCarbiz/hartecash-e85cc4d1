@@ -1,6 +1,68 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useTunerConfig } from "./useTunerConfig";
+
+type LiveStatus = "idle" | "checking" | "ok" | "fail";
+const LIVE_HOST = "hartecash.com";
+
+function useLiveCheck(
+  dealershipId: string | undefined | null,
+  expectedHero: HeroTunerValues,
+  lastUpdatedAt: number | null,
+) {
+  const [liveStatus, setLiveStatus] = useState<LiveStatus>("idle");
+  const [liveCheckedAt, setLiveCheckedAt] = useState<number | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const seen = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!dealershipId || !lastUpdatedAt) return;
+    if (seen.current === lastUpdatedAt) return;
+    seen.current = lastUpdatedAt;
+    let cancelled = false;
+    setLiveStatus("checking");
+    setLiveError(null);
+
+    (async () => {
+      try {
+        // 1. Round-trip the DB to confirm the save persisted.
+        const { data, error } = await supabase
+          .from("site_config")
+          .select("hero_tuner_config")
+          .eq("dealership_id", dealershipId)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error) throw new Error(error.message);
+        const remoteHero = (data?.hero_tuner_config as { hero?: unknown })?.hero;
+        const remoteSize = (remoteHero as { size?: number } | undefined)?.size;
+        if (remoteSize !== expectedHero.size) {
+          throw new Error(`DB hero.size=${remoteSize} ≠ local=${expectedHero.size}`);
+        }
+        // 2. Ping the public site (opaque — confirms reachability only).
+        await fetch(`https://${LIVE_HOST}/?_tuner=${lastUpdatedAt}`, {
+          method: "HEAD",
+          mode: "no-cors",
+          cache: "no-store",
+        });
+        if (cancelled) return;
+        setLiveStatus("ok");
+        setLiveCheckedAt(Date.now());
+      } catch (e) {
+        if (cancelled) return;
+        setLiveStatus("fail");
+        setLiveError(e instanceof Error ? e.message : String(e));
+        setLiveCheckedAt(Date.now());
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dealershipId, lastUpdatedAt, expectedHero.size]);
+
+  return { liveStatus, liveCheckedAt, liveError };
+}
 
 export type HeroTunerValues = {
   // headline base
