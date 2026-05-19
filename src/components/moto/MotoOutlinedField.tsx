@@ -1,5 +1,12 @@
 import { forwardRef, type InputHTMLAttributes, type SelectHTMLAttributes, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import {
+  Select as RSelect,
+  SelectContent as RSelectContent,
+  SelectItem as RSelectItem,
+  SelectTrigger as RSelectTrigger,
+  SelectValue as RSelectValue,
+} from "@/components/ui/select";
 
 /**
  * Material-style outlined field with a floating label that punches
@@ -64,32 +71,53 @@ type SelectProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, "children"> & B
   placeholder?: string;
 };
 export const MotoOutlinedSelect = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, active, options, error, className, placeholder, id, value, ...rest }, ref) => {
+  ({ label, active, options, error, className, placeholder, id, value, onChange, disabled, name }, _ref) => {
     const inputId = id || `s-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-    const isActive = active ?? !!value;
+    const v = (value ?? "") as string;
+    const isActive = active ?? !!v;
+    const selected = options.find((o) => o.value === v);
+    const handleChange = (next: string) => {
+      onChange?.({
+        target: { value: next, name: name ?? "" },
+        currentTarget: { value: next, name: name ?? "" },
+      } as unknown as React.ChangeEvent<HTMLSelectElement>);
+    };
     return (
       <div className={className}>
-        <div className={wrapperClasses(!!active, error)}>
-          <label htmlFor={inputId} className={labelClasses(isActive)}>
-            {label}
-          </label>
-          <select
-            ref={ref}
+        <RSelect value={v} onValueChange={handleChange} disabled={disabled}>
+          <RSelectTrigger
             id={inputId}
-            value={value}
             className={cn(
-              "w-full appearance-none bg-transparent px-3 py-3.5 pr-8 text-base outline-none",
-              value ? "text-zinc-900" : "text-zinc-400",
+              "h-auto w-full justify-between rounded-md border bg-white px-3 py-3.5 pr-8 text-base text-zinc-900 hover:border-zinc-400 focus:ring-0 focus:ring-offset-0",
+              isActive && !error
+                ? "border-[hsl(var(--cta-offer))] ring-1 ring-[hsl(var(--cta-offer))]"
+                : "border-zinc-300",
+              error && "!border-red-500 !ring-red-300",
             )}
-            {...rest}
           >
-            <option value="">{placeholder ?? ""}</option>
+            <label htmlFor={inputId} className={labelClasses(isActive)}>
+              {label}
+            </label>
+            <RSelectValue placeholder={placeholder ?? ""}>
+              <span className={selected ? "text-zinc-900" : "text-zinc-400"}>
+                {selected?.label ?? placeholder ?? ""}
+              </span>
+            </RSelectValue>
+          </RSelectTrigger>
+          <RSelectContent
+            position="popper"
+            side="bottom"
+            align="start"
+            avoidCollisions={false}
+            className="max-h-72 w-[var(--radix-select-trigger-width)] bg-white"
+          >
             {options.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <RSelectItem key={o.value} value={o.value} className="text-base">
+                {o.label}
+              </RSelectItem>
             ))}
-          </select>
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-zinc-500">▾</span>
-        </div>
+          </RSelectContent>
+        </RSelect>
         {error ? <p className="mt-1 text-xs text-red-600">{error}</p> : null}
       </div>
     );
