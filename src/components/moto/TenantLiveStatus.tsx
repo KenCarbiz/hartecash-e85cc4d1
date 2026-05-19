@@ -51,14 +51,14 @@ export default function TenantLiveStatus({
       .from("site_config")
       .select("dealership_id, updated_at, hero_tuner_config");
 
-    const cfgMap = new Map<string, { updated_at: string | null; cfg: Record<string, unknown> }>();
+    const cfgMap = new Map<string, { updated_at: string | null; cfg: unknown }>();
     (configs ?? []).forEach((c) =>
       cfgMap.set(c.dealership_id, { updated_at: c.updated_at, cfg: c.hero_tuner_config }),
     );
 
     const merged: Row[] = (tenants ?? []).map((t) => {
       const c = cfgMap.get(t.dealership_id);
-      const cfg = c?.cfg ?? {};
+      const cfg = c?.cfg && typeof c.cfg === "object" ? c.cfg as Record<string, unknown> : {};
       const hero = cfg.hero && typeof cfg.hero === "object" ? cfg.hero as Record<string, unknown> : {};
       const vehicle = cfg.vehicle && typeof cfg.vehicle === "object" ? cfg.vehicle as Record<string, unknown> : {};
       return {
