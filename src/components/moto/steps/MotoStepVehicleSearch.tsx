@@ -220,14 +220,16 @@ const MotoStepVehicleSearch = ({
                     type="button"
                     onClick={() => setTab(t.id)}
                     className={cn(
-                      "rounded-md py-[9px] px-3 transition",
+                      "rounded-md px-3 transition",
                       active ? "shadow-sm" : "text-zinc-700 hover:text-zinc-900",
                     )}
-                    style={
-                      active
+                    style={{
+                      paddingTop: `${tuner.tabPadY}px`,
+                      paddingBottom: `${tuner.tabPadY}px`,
+                      ...(active
                         ? { background: tuner.ctaColor, color: tuner.ctaTextColor }
-                        : undefined
-                    }
+                        : {}),
+                    }}
                   >
                     {t.label}
                   </button>
