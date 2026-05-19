@@ -10,7 +10,7 @@ import type { BBVehicle } from "@/components/sell-form/types";
 import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "../ymmData";
 import { cn } from "@/lib/utils";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
-import HeroTuner, { useHeroTuner } from "../HeroTuner";
+import { useHeroTuner } from "../HeroTuner";
 import { useTunerConfig } from "../useTunerConfig";
 
 const US_STATES = [
