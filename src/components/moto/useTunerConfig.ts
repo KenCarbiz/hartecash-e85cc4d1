@@ -103,10 +103,10 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
       if (saveTimer.current) clearTimeout(saveTimer.current);
       if (savedTimer.current) clearTimeout(savedTimer.current);
       saveTimer.current = setTimeout(async () => {
-        const { error } = await supabase
-          .from("site_config")
-          .update({ hero_tuner_config: next as never })
-          .eq("dealership_id", dealershipId);
+        const { error } = await supabase.rpc("set_hero_tuner_config", {
+          p_dealership_id: dealershipId,
+          p_config: next as never,
+        });
         if (error) {
           console.warn("[tuner] remote save failed (kept locally):", error.message);
           setStatus("error");
