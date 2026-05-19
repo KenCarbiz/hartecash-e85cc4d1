@@ -170,13 +170,35 @@ const MotoStepContact = ({
     }
   };
 
+  // Advance straight to the offer step, skipping OTP entirely.
+  // Used when the dealer has turned off "Require phone verification".
+  const advanceWithoutVerify = () => {
+    onNext({
+      contact: {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        phone,
+        phoneVerified: false,
+        zip,
+      },
+      mileage: mileage.replace(/\D/g, ""),
+      trackValue,
+      step: "offer",
+    });
+  };
+
   // From the form: range dealers go to the range page first;
-  // everyone else (price_first / contact_first) jumps straight to OTP.
+  // everyone else (price_first / contact_first) jumps straight to OTP
+  // — unless the dealer has disabled phone verification, in which
+  // case we skip OTP entirely and reveal the firm offer.
   const submitForm = async () => {
     if (revealMode === "range_then_price") {
       await goToRange();
-    } else {
+    } else if (requireVerify) {
       await sendCode();
+    } else {
+      advanceWithoutVerify();
     }
   };
 
