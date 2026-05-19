@@ -358,7 +358,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
     <>
       <div
         className="flex flex-none items-center justify-center overflow-visible xl:justify-start"
-        style={{ paddingLeft: gap, width: reservedImageSpace, maxWidth: "none" }}
+        style={{ marginLeft: gap, width: w, maxWidth: "none" }}
       >
         <img
           src={src}
