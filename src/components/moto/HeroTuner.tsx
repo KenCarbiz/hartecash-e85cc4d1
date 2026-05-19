@@ -497,6 +497,8 @@ export default function HeroTuner() {
               <div className="text-[10px] text-zinc-400">Vertical padding of VIN / Plate buttons.</div>
             </label>
 
+            <hr className="border-zinc-200" />
+            <TenantLiveStatus activeDealershipId={tenant.dealership_id} />
 
             <button
               type="button"
