@@ -16,6 +16,7 @@ const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
 const VoiceComplianceLog = React.lazy(() => import("./VoiceComplianceLog"));
 const StaffActivityLog = React.lazy(() => import("./StaffActivityLog"));
 const TenantViewLog = React.lazy(() => import("./TenantViewLog"));
+const SmsOptOutsPanel = React.lazy(() => import("./SmsOptOutsPanel"));
 
 interface CommunicationsHubProps {
   /**
