@@ -15,7 +15,7 @@ const ALL_SHOTS = [
   { id: "hood",             label: "Engine Bay",             desc: "Open hood — capture full engine compartment",               orientation: "landscape" },
   { id: "trunk",            label: "Trunk / Cargo Area",     desc: "Open trunk/liftgate — shoot straight in from behind",      orientation: "landscape" },
   { id: "driver_door",      label: "Driver Door Interior",   desc: "Open door — shoot across front seat from outside",         orientation: "any" },
-  { id: "dashboard",        label: "Dashboard & Odometer",   desc: "Capture full dash — odometer reading must be visible",     orientation: "landscape" },
+  { id: "dashboard",        label: "Odometer (engine on)",   desc: "Start the car — odometer reading must be clearly visible", orientation: "landscape" },
   { id: "undercarriage",    label: "Wheel Well",             desc: "Crouch at corner — capture wheel well for rust",           orientation: "any" },
 ];
 
