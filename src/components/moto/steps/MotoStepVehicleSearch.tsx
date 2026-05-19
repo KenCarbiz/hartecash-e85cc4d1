@@ -171,17 +171,18 @@ const MotoStepVehicleSearch = ({
           gets all remaining width on the right. */}
       <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen px-6 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
-          <h1 className="mt-1 text-4xl font-extrabold leading-[1.05] tracking-tight text-zinc-900">
-            <span className="text-[hsl(var(--cta-offer))]">Get an</span> instant{" "}
-            <span className="text-[hsl(var(--cta-offer))]">Vehicle Valuation</span>
-          </h1>
-          <p className="mt-3 text-base text-zinc-500">
-            Get an instant valuation &amp; then add more info to get a firm offer.
-          </p>
-
-          <div className="mt-6 flex w-full flex-col items-center justify-center gap-8 lg:flex-row lg:items-center lg:gap-10 xl:gap-14">
+          <div className="flex w-full flex-col items-center justify-center gap-8 lg:flex-row lg:items-center lg:gap-10 xl:gap-14">
+            {/* Left column: heading + card stay locked-aligned to the
+                same left edge regardless of image width/gap. */}
             <div className="w-full max-w-md flex-shrink-0">
-              <MotoCard className="p-6">
+              <h1 className="mt-1 text-4xl font-extrabold leading-[1.05] tracking-tight text-zinc-900">
+                <span className="text-[hsl(var(--cta-offer))]">Get an</span> instant{" "}
+                <span className="text-[hsl(var(--cta-offer))]">Vehicle Valuation</span>
+              </h1>
+              <p className="mt-3 text-base text-zinc-500">
+                Get an instant valuation &amp; then add more info to get a firm offer.
+              </p>
+              <MotoCard className="mt-6 p-6">
             <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
               {TABS.map((t) => (
                 <button
