@@ -295,8 +295,12 @@ const MotoStepVehicleSearch = ({
           <img
             src={tenantHeroVehicle}
             alt="Featured vehicle"
-            className={cn("h-auto w-full object-contain mx-auto", HERO_VEHICLE_WIDTH_CLASSES)}
-            style={{ maxWidth: "100%" }}
+            className="h-auto object-contain mx-auto"
+            style={{
+              width: "100%",
+              maxWidth: "min(820px, 60vw)",
+              minWidth: "320px",
+            }}
             loading="eager"
           />
         </div>
