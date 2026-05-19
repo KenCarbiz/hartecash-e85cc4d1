@@ -158,14 +158,14 @@ const MotoStepVehicleSearch = ({
       <div className="mt-6 mx-auto flex w-full max-w-6xl flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-center">
         <div className="w-full max-w-md flex-shrink-0">
           <MotoCard className="p-6">
-            <div className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
+            <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1.5 text-base font-semibold">
               {TABS.map((t) => (
                 <button
                   key={t.id}
                   type="button"
                   onClick={() => setTab(t.id)}
                   className={cn(
-                    "rounded-md py-3.5 transition",
+                    "rounded-md py-4 px-4 transition",
                     tab === t.id
                       ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)] shadow-sm"
                       : "text-zinc-700 hover:text-zinc-900",
