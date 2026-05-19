@@ -7402,6 +7402,10 @@ export type Database = {
             }
             Returns: Json
           }
+      set_hero_tuner_config: {
+        Args: { p_config: Json; p_dealership_id: string }
+        Returns: undefined
+      }
       set_my_call_availability: {
         Args: {
           p_dnd: boolean
