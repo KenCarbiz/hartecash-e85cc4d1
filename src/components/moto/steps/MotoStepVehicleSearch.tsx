@@ -228,7 +228,7 @@ const MotoStepVehicleSearch = ({
               onChange={(e) => setVin(e.target.value.toUpperCase())}
               maxLength={17}
               autoComplete="off"
-              placeholder="17-character VIN"
+              placeholder="VIN"
             />
           </div>
         )}
