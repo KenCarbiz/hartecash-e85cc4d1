@@ -182,17 +182,28 @@ const UploadPhotosClarity = () => {
       return;
     }
     setError("");
+    const shotId = activeShot;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setShotState((prev) => ({ ...prev, [activeShot]: { file, preview: ev.target?.result as string } }));
+      setShotState((prev) => ({ ...prev, [shotId]: { file, preview: ev.target?.result as string } }));
     };
     reader.readAsDataURL(file);
+    // Parse EXIF immediately so the trust pill renders as soon as
+    // the preview does — before the actual upload runs.
+    parsePhotoExif(file, expectedCoords).then((exif) => {
+      setShotExif((prev) => ({ ...prev, [shotId]: exif }));
+    }).catch(() => {});
     setActiveShot(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const removeShot = (shotId: string) => {
     setShotState((prev) => {
+      const next = { ...prev };
+      delete next[shotId];
+      return next;
+    });
+    setShotExif((prev) => {
       const next = { ...prev };
       delete next[shotId];
       return next;
@@ -209,17 +220,30 @@ const UploadPhotosClarity = () => {
       }
       return true;
     });
+    const baseIdx = extraFiles.length;
     setExtraFiles((prev) => [...prev, ...added]);
-    added.forEach((f) => {
+    added.forEach((f, i) => {
       const reader = new FileReader();
       reader.onload = (e) => setExtraPreviews((prev) => [...prev, e.target?.result as string]);
       reader.readAsDataURL(f);
+      parsePhotoExif(f, expectedCoords).then((exif) => {
+        setExtraExif((prev) => ({ ...prev, [baseIdx + i]: exif }));
+      }).catch(() => {});
     });
   };
 
   const removeExtra = (i: number) => {
     setExtraFiles((prev) => prev.filter((_, idx) => idx !== i));
     setExtraPreviews((prev) => prev.filter((_, idx) => idx !== i));
+    setExtraExif((prev) => {
+      const next: Record<number, PhotoExifResult> = {};
+      Object.entries(prev).forEach(([k, v]) => {
+        const idx = Number(k);
+        if (idx < i) next[idx] = v;
+        else if (idx > i) next[idx - 1] = v;
+      });
+      return next;
+    });
   };
 
   const requiredComplete = requiredShots.every(
