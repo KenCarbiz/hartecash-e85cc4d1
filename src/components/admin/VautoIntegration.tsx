@@ -152,9 +152,16 @@ const VautoIntegration = () => {
       });
     }
 
+    // Filter by submissions.dealership_id via the embedded join below.
+    // Without this, the query relied on RLS — but the original April
+    // policy was USING (true), so a tenant would see every dealer's
+    // vAuto pushes. Tightening RLS in the migration only works if the
+    // client query also passes through submission-by-tenant; otherwise
+    // the gallery just shows empty. (PR #254 ships both.)
     const { data: logData } = await (supabase as any)
       .from("vauto_push_log")
-      .select("id, submission_id, pushed_at, push_status, vauto_vehicle_id, error_message, retry_count, submissions(year, make, model, vin)")
+      .select("id, submission_id, pushed_at, push_status, vauto_vehicle_id, error_message, retry_count, submissions!inner(year, make, model, vin, dealership_id)")
+      .eq("submissions.dealership_id", dealershipId)
       .order("pushed_at", { ascending: false })
       .limit(25);
 
