@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTunerConfig } from "./useTunerConfig";
+import TenantLiveStatus from "./TenantLiveStatus";
 
 type LiveStatus = "idle" | "checking" | "ok" | "fail";
 const LIVE_HOST = "hartecash.com";
