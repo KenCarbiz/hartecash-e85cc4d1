@@ -543,6 +543,63 @@ export default function HeroTuner() {
             </label>
 
             <hr className="border-zinc-200" />
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Vehicle image
+            </div>
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Size (width)</span>
+                <span>{localVehicle.width}px</span>
+              </div>
+              <input
+                type="range"
+                min={160}
+                max={720}
+                step={4}
+                value={localVehicle.width}
+                onChange={(e) => changeVehicle({ width: Number(e.target.value) })}
+                className="w-full"
+              />
+            </label>
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Vertical offset</span>
+                <span>{localVehicle.offsetY}px</span>
+              </div>
+              <input
+                type="range"
+                min={-200}
+                max={200}
+                step={1}
+                value={localVehicle.offsetY}
+                onChange={(e) => changeVehicle({ offsetY: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="text-[10px] text-zinc-400">Positive = lower, negative = higher.</div>
+            </label>
+            <label className="block">
+              <span className="text-zinc-600">Camera angle</span>
+              <select
+                value={localVehicle.angle}
+                onChange={(e) => changeVehicle({ angle: e.target.value as VehicleTunerValues["angle"] })}
+                className="mt-1 w-full rounded border border-zinc-300 px-2 py-1"
+              >
+                <option value="side">Side profile</option>
+                <option value="three_quarter">3/4 front</option>
+                <option value="front">Front</option>
+              </select>
+            </label>
+            <label className="flex items-center justify-between gap-2">
+              <span className="text-zinc-600">Face the other way (mirror)</span>
+              <input
+                type="checkbox"
+                checked={localVehicle.flip}
+                onChange={(e) => changeVehicle({ flip: e.target.checked })}
+              />
+            </label>
+
+            <hr className="border-zinc-200" />
+
             <TenantLiveStatus activeDealershipId={tenant.dealership_id} />
 
             <button
