@@ -141,7 +141,10 @@ const CommunicationsHub = ({
 
         <TabsContent value="compliance" className="pt-4 space-y-6">
           <React.Suspense fallback={<AdminLoadingSkeleton />}>
-            <PrivacyPosturePanel />
+            <SmsOptOutsPanel />
+            <div className="border-t border-border pt-6">
+              <PrivacyPosturePanel />
+            </div>
             <div className="border-t border-border pt-6">
               <ConsentLog />
             </div>
