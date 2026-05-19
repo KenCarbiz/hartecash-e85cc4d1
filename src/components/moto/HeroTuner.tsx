@@ -137,7 +137,7 @@ function WeightRow({
 
 export default function HeroTuner() {
   const { tenant } = useTenant();
-  const { config, update } = useTunerConfig(tenant.dealership_id);
+  const { config, update, status } = useTunerConfig(tenant.dealership_id);
   const values = merge(config.hero);
   const [open, setOpen] = useState(false);
 
