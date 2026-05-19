@@ -270,7 +270,7 @@ const MotoStepVehicleSearch = ({
           </div>
         </div>
 
-        <div className="w-full max-w-xl flex-shrink">
+        <div className="w-full lg:flex-1 lg:min-w-0">
           <img
             src={tenantHeroVehicle}
             alt="Featured vehicle"
