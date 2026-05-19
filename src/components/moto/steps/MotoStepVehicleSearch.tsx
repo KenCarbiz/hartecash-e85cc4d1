@@ -154,7 +154,7 @@ const MotoStepVehicleSearch = ({
         Get an instant valuation &amp; then add more info to get a firm offer.
       </p>
 
-      <MotoCard className="mt-6 mx-auto max-w-md">
+      <MotoCard className="mt-6 mx-auto max-w-lg p-8">
         <div className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
           {TABS.map((t) => (
             <button
