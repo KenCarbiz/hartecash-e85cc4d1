@@ -288,6 +288,37 @@ export default function HeroTuner() {
                   </span>
                 </span>
               </span>
+              <span
+                title={liveError ?? `Verifies ${LIVE_HOST} after each save`}
+                className={
+                  "mt-1 inline-flex w-fit items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium " +
+                  (liveStatus === "ok"
+                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                    : liveStatus === "checking"
+                      ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                      : liveStatus === "fail"
+                        ? "bg-red-50 text-red-700 ring-1 ring-red-200"
+                        : "bg-zinc-50 text-zinc-500 ring-1 ring-zinc-200")
+                }
+              >
+                {liveStatus === "ok"
+                  ? `✓ Live on ${LIVE_HOST}`
+                  : liveStatus === "checking"
+                    ? `… verifying ${LIVE_HOST}`
+                    : liveStatus === "fail"
+                      ? `✗ Live check failed`
+                      : `· awaiting first save`}
+                {liveCheckedAt && liveStatus !== "checking" ? (
+                  <span className="opacity-60">
+                    {" "}
+                    ({new Date(liveCheckedAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })})
+                  </span>
+                ) : null}
+              </span>
             </div>
             <button
               type="button"
