@@ -189,7 +189,7 @@ const AboutPage = () => {
         </section>
 
         {/* ── Stats Bar ── */}
-        <section className="bg-card border-b border-border py-8 px-5" aria-label="Key statistics">
+        <section id="about-content" className="bg-card border-b border-border py-8 px-5" aria-label="Key statistics">
           <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center">
             <div>
               <p className="text-xl sm:text-2xl md:text-3xl font-extrabold text-primary">
