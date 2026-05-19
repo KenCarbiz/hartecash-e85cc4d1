@@ -142,20 +142,42 @@ const SiteHeader = () => {
                 <div className="absolute right-0 top-full mt-2 w-60 bg-card/95 backdrop-blur-xl rounded-xl shadow-[0_20px_60px_-15px_hsl(var(--foreground)/0.15)] border border-border/60 py-1.5 z-50 animate-scale-in">
                   {[
                     { to: "/trade", icon: ArrowLeftRight, label: "Trade-In" },
-                    { to: "/about", icon: Info, label: "About Us" },
+                    { to: "/about", icon: Info, label: "About Us", scrollOnCurrent: true },
                     { to: "/my-submission", icon: FileText, label: "View My Offer" },
                     { to: "/schedule", icon: CalendarCheck, label: "Schedule a Visit" },
-                  ].map((item) => (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-card-foreground hover:bg-primary/5 hover:text-primary transition-all duration-150 mx-1.5 rounded-lg"
-                      onClick={() => setOpen(false)}
-                    >
-                      <item.icon className="w-4 h-4 text-primary/70" />
-                      {item.label}
-                    </Link>
-                  ))}
+                  ].map((item) => {
+                    const onCurrentPage = location.pathname === item.to;
+                    if (item.scrollOnCurrent && onCurrentPage) {
+                      return (
+                        <a
+                          key={item.to}
+                          href="#about-content"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setOpen(false);
+                            setTimeout(() => {
+                              document.getElementById("about-content")?.scrollIntoView({ behavior: "smooth" });
+                            }, 50);
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-card-foreground hover:bg-primary/5 hover:text-primary transition-all duration-150 mx-1.5 rounded-lg"
+                        >
+                          <item.icon className="w-4 h-4 text-primary/70" />
+                          {item.label}
+                        </a>
+                      );
+                    }
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-card-foreground hover:bg-primary/5 hover:text-primary transition-all duration-150 mx-1.5 rounded-lg"
+                        onClick={() => setOpen(false)}
+                      >
+                        <item.icon className="w-4 h-4 text-primary/70" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
