@@ -1883,10 +1883,12 @@ export type Database = {
           dealership_id: string | null
           id: string
           message: string
+          page_url: string | null
           severity: string
           source: string
           stack: string | null
           submission_id: string | null
+          user_agent: string | null
           user_id: string | null
         }
         Insert: {
@@ -1896,10 +1898,12 @@ export type Database = {
           dealership_id?: string | null
           id?: string
           message: string
+          page_url?: string | null
           severity?: string
           source: string
           stack?: string | null
           submission_id?: string | null
+          user_agent?: string | null
           user_id?: string | null
         }
         Update: {
@@ -1909,10 +1913,12 @@ export type Database = {
           dealership_id?: string | null
           id?: string
           message?: string
+          page_url?: string | null
           severity?: string
           source?: string
           stack?: string | null
           submission_id?: string | null
+          user_agent?: string | null
           user_id?: string | null
         }
         Relationships: []

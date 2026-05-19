@@ -28,7 +28,6 @@ export function captureException(error: Error, context?: Record<string, any>): v
   } catch { /* noop */ }
 
   // Persist to Supabase error_log (fire-and-forget).
-  // Schema: { source, severity, message, stack, context }. Extra fields go in context.
   try {
     supabase
       .from("error_log" as any)
@@ -37,12 +36,9 @@ export function captureException(error: Error, context?: Record<string, any>): v
         severity: "error",
         message: error.message,
         stack: error.stack ?? null,
-        context: {
-          ...(context ?? {}),
-          page_url: window.location.href,
-          user_agent: navigator.userAgent,
-          timestamp: new Date().toISOString(),
-        },
+        context: context ?? {},
+        page_url: window.location.href,
+        user_agent: navigator.userAgent,
       } as any)
       .then(() => {});
   } catch { /* noop */ }
