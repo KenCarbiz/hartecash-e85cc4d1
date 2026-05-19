@@ -154,14 +154,25 @@ export const VEHICLE_DEFAULTS: VehicleTunerValues = {
 
 function mergeVehicle(remote: unknown): VehicleTunerValues {
   if (!remote || typeof remote !== "object") return VEHICLE_DEFAULTS;
-  return { ...VEHICLE_DEFAULTS, ...(remote as Partial<VehicleTunerValues>) };
+  const r = remote as Record<string, unknown>;
+  const num = (v: unknown, d: number) => (typeof v === "number" && Number.isFinite(v) ? v : d);
+  const angle = r.angle === "side" || r.angle === "three_quarter" || r.angle === "front"
+    ? (r.angle as VehicleTunerValues["angle"])
+    : VEHICLE_DEFAULTS.angle;
+  return {
+    width: num(r.width, VEHICLE_DEFAULTS.width),
+    offsetY: num(r.offsetY, VEHICLE_DEFAULTS.offsetY),
+    angle,
+    flip: typeof r.flip === "boolean" ? r.flip : VEHICLE_DEFAULTS.flip,
+  };
 }
 
 export function useVehicleTuner(): VehicleTunerValues {
   const { tenant } = useTenant();
   const { config } = useTunerConfig(tenant.dealership_id);
-  return mergeVehicle(config.vehicle);
+  return mergeVehicle((config as Record<string, unknown>).heroVehicle);
 }
+
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
