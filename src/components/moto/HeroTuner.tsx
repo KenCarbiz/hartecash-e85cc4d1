@@ -133,6 +133,36 @@ export function useHeroTuner(): HeroTunerValues {
   return merge(config.hero);
 }
 
+// ---------- Vehicle tuner ----------
+export type VehicleTunerValues = {
+  /** Max width in px of the vehicle image container. */
+  width: number;
+  /** Vertical offset in px (positive = lower, negative = higher). */
+  offsetY: number;
+  /** Camera angle for the generated image. */
+  angle: "side" | "three_quarter" | "front";
+  /** Horizontal flip (mirror so the car faces the other way). */
+  flip: boolean;
+};
+
+export const VEHICLE_DEFAULTS: VehicleTunerValues = {
+  width: 448,
+  offsetY: 0,
+  angle: "side",
+  flip: false,
+};
+
+function mergeVehicle(remote: unknown): VehicleTunerValues {
+  if (!remote || typeof remote !== "object") return VEHICLE_DEFAULTS;
+  return { ...VEHICLE_DEFAULTS, ...(remote as Partial<VehicleTunerValues>) };
+}
+
+export function useVehicleTuner(): VehicleTunerValues {
+  const { tenant } = useTenant();
+  const { config } = useTunerConfig(tenant.dealership_id);
+  return mergeVehicle(config.vehicle);
+}
+
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
 function ColorField({
@@ -205,6 +235,7 @@ export default function HeroTuner() {
   const { tenant } = useTenant();
   const { config, update, status, realtime, lastUpdatedAt } = useTunerConfig(tenant.dealership_id);
   const values = merge(config.hero);
+  const vehicleValues = mergeVehicle(config.vehicle);
   const { liveStatus, liveCheckedAt, liveError } = useLiveCheck(
     tenant.dealership_id,
     values,
@@ -214,10 +245,15 @@ export default function HeroTuner() {
 
   // local optimistic state so sliders feel snappy
   const [local, setLocal] = useState<HeroTunerValues>(values);
+  const [localVehicle, setLocalVehicle] = useState<VehicleTunerValues>(vehicleValues);
   useEffect(() => {
     setLocal(values);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(values)]);
+  useEffect(() => {
+    setLocalVehicle(vehicleValues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(vehicleValues)]);
 
   const change = (patch: Partial<HeroTunerValues>) => {
     const next = { ...local, ...patch };
@@ -225,9 +261,17 @@ export default function HeroTuner() {
     update("hero", next as unknown as Record<string, unknown>);
   };
 
+  const changeVehicle = (patch: Partial<VehicleTunerValues>) => {
+    const next = { ...localVehicle, ...patch };
+    setLocalVehicle(next);
+    update("vehicle", next as unknown as Record<string, unknown>);
+  };
+
   const reset = () => {
     setLocal(DEFAULTS);
     update("hero", DEFAULTS as unknown as Record<string, unknown>);
+    setLocalVehicle(VEHICLE_DEFAULTS);
+    update("vehicle", VEHICLE_DEFAULTS as unknown as Record<string, unknown>);
   };
 
   return (
@@ -499,6 +543,63 @@ export default function HeroTuner() {
             </label>
 
             <hr className="border-zinc-200" />
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Vehicle image
+            </div>
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Size (width)</span>
+                <span>{localVehicle.width}px</span>
+              </div>
+              <input
+                type="range"
+                min={160}
+                max={720}
+                step={4}
+                value={localVehicle.width}
+                onChange={(e) => changeVehicle({ width: Number(e.target.value) })}
+                className="w-full"
+              />
+            </label>
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Vertical offset</span>
+                <span>{localVehicle.offsetY}px</span>
+              </div>
+              <input
+                type="range"
+                min={-200}
+                max={200}
+                step={1}
+                value={localVehicle.offsetY}
+                onChange={(e) => changeVehicle({ offsetY: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="text-[10px] text-zinc-400">Positive = lower, negative = higher.</div>
+            </label>
+            <label className="block">
+              <span className="text-zinc-600">Camera angle</span>
+              <select
+                value={localVehicle.angle}
+                onChange={(e) => changeVehicle({ angle: e.target.value as VehicleTunerValues["angle"] })}
+                className="mt-1 w-full rounded border border-zinc-300 px-2 py-1"
+              >
+                <option value="side">Side profile</option>
+                <option value="three_quarter">3/4 front</option>
+                <option value="front">Front</option>
+              </select>
+            </label>
+            <label className="flex items-center justify-between gap-2">
+              <span className="text-zinc-600">Face the other way (mirror)</span>
+              <input
+                type="checkbox"
+                checked={localVehicle.flip}
+                onChange={(e) => changeVehicle({ flip: e.target.checked })}
+              />
+            </label>
+
+            <hr className="border-zinc-200" />
+
             <TenantLiveStatus activeDealershipId={tenant.dealership_id} />
 
             <button
