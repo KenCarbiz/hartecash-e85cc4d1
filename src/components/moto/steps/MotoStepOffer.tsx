@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Sparkles, Camera, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/contexts/TenantContext";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
