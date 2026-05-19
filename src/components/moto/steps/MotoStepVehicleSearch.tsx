@@ -22,25 +22,6 @@ const TABS: { id: Exclude<LookupMode, "ymm">; label: string }[] = [
   { id: "plate", label: "License Plate" },
 ];
 
-/**
- * Responsive widths for the hero vehicle image at each Tailwind breakpoint.
- * NOTE: Tailwind's JIT scans source literally — class strings must stay
- * static. If you change a width, update both the comment and the class.
- */
-const HERO_VEHICLE_WIDTHS = {
-  base: 320, // < 640px  (mobile)
-  sm: 480, //   ≥ 640px
-  md: 640, //   ≥ 768px
-  lg: 720, //   ≥ 1024px
-  xl: 820, //   ≥ 1280px
-  "2xl": 960, // ≥ 1536px
-} as const;
-
-const HERO_VEHICLE_WIDTH_CLASSES =
-  "w-[320px] sm:w-[480px] md:w-[640px] lg:w-[720px] xl:w-[820px] 2xl:w-[960px]";
-
-
-
 const MotoStepVehicleSearch = ({
   state,
   onResolved,
@@ -378,7 +359,7 @@ const useCurrentBreakpoint = (): BP => {
 const HeroVehicleTuner = ({ src }: { src: string }) => {
   const bp = useCurrentBreakpoint();
   const { tenant } = useTenant();
-  const { config, update } = useTunerConfig(tenant.dealership_id);
+  const { config, update, status, realtime, lastUpdatedAt } = useTunerConfig(tenant.dealership_id);
   const remote = (config.vehicle ?? {}) as Partial<Record<BP, { w: number; gap: number }>>;
   const settings: Record<BP, { w: number; gap: number }> = {
     ...TUNER_DEFAULTS,
@@ -396,9 +377,28 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
 
 
   const { w, gap } = settings[bp];
-  const reservedImageSpace = w + gap;
   const updateBp = (key: "w" | "gap", value: number) =>
-    setSettings((s) => ({ ...s, [bp]: { ...s[bp], [key]: value } }));
+    setSettings((s) => {
+      if (key === "w") {
+        const currentWidth = s[bp]?.w || value;
+        const ratio = currentWidth > 0 ? value / currentWidth : 1;
+        return BP_ORDER.reduce((next, breakpoint) => {
+          const existing = s[breakpoint] ?? TUNER_DEFAULTS[breakpoint];
+          const scaledWidth = breakpoint === bp ? value : Math.round((existing.w * ratio) / 10) * 10;
+          next[breakpoint] = {
+            ...existing,
+            w: Math.min(1800, Math.max(120, scaledWidth)),
+          };
+          return next;
+        }, {} as Record<BP, { w: number; gap: number }>);
+      }
+
+      return BP_ORDER.reduce((next, breakpoint) => {
+        const existing = s[breakpoint] ?? TUNER_DEFAULTS[breakpoint];
+        next[breakpoint] = { ...existing, gap: value };
+        return next;
+      }, {} as Record<BP, { w: number; gap: number }>);
+    });
 
 
   return (
@@ -420,8 +420,34 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
         {open ? (
           <div className="w-72 rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
-              <div className="text-xs font-semibold uppercase tracking-wider text-zinc-700">
-                Vehicle Tuner · <span className="text-[hsl(var(--cta-offer))]">{bp}</span>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-zinc-700">
+                  Vehicle Tuner · <span className="text-[hsl(var(--cta-offer))]">{bp}</span>
+                </div>
+                <div className="mt-1 flex items-center gap-1.5 text-[10px] text-zinc-500">
+                  <span
+                    className={cn(
+                      "inline-block h-1.5 w-1.5 rounded-full",
+                      realtime === "live" && "animate-pulse bg-emerald-500",
+                      realtime === "connecting" && "bg-amber-400",
+                      realtime === "error" && "bg-red-500",
+                      realtime === "closed" && "bg-zinc-400",
+                    )}
+                  />
+                  <span>{realtime}</span>
+                  <span className="text-zinc-300">·</span>
+                  <span>{status}</span>
+                  <span className="text-zinc-300">·</span>
+                  <span>
+                    {lastUpdatedAt
+                      ? new Date(lastUpdatedAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })
+                      : "—"}
+                  </span>
+                </div>
               </div>
               <button type="button" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-zinc-700">×</button>
             </div>
@@ -452,7 +478,7 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
               Reset {bp}
             </button>
             <div className="mt-2 text-[10px] leading-snug text-zinc-400">
-              Adjusts only the current breakpoint. Saved to localStorage.
+              Saves to the live site and keeps desktop sizes in sync.
             </div>
           </div>
         ) : (
