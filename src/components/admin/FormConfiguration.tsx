@@ -56,6 +56,7 @@ interface FormConfigData {
   step_condition_history: boolean;
   step_ai_photos: boolean;
   ai_photos_min_required: number;
+  require_phone_verification: boolean;
   offer_before_details: boolean;
   q_overall_condition: boolean;
   q_exterior_damage: boolean;
