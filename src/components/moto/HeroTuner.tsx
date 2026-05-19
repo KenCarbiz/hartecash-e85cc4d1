@@ -246,7 +246,7 @@ export default function HeroTuner() {
   const { tenant } = useTenant();
   const { config, update, status, realtime, lastUpdatedAt } = useTunerConfig(tenant.dealership_id);
   const values = merge(config.hero);
-  const vehicleValues = mergeVehicle(config.vehicle);
+  const vehicleValues = mergeVehicle((config as Record<string, unknown>).heroVehicle);
   const { liveStatus, liveCheckedAt, liveError } = useLiveCheck(
     tenant.dealership_id,
     values,
