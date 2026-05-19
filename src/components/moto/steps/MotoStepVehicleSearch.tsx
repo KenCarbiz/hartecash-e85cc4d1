@@ -209,7 +209,7 @@ const MotoStepVehicleSearch = ({
               >
                 Get an instant valuation &amp; then add more info to get a firm offer.
               </p>
-              <MotoCard className="mt-6 p-6">
+              <MotoCard className="p-6" style={{ marginTop: `${tuner.subGap}px` }}>
             <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
               {TABS.map((t) => {
                 const active = tab === t.id;
