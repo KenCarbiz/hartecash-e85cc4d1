@@ -418,81 +418,83 @@ const HeroVehicleTuner = ({ src }: { src: string }) => {
         />
       </div>
 
-      {isPlatformAdmin && <div className="fixed bottom-4 right-4 z-50">
-        {open ? (
-          <div className="w-72 rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-zinc-700">
-                  Vehicle Tuner · <span className="text-[hsl(var(--cta-offer))]">{bp}</span>
+      {isPlatformAdmin ? (
+        <div className="fixed bottom-4 right-4 z-50">
+          {open ? (
+            <div className="w-72 rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-700">
+                    Vehicle Tuner · <span className="text-[hsl(var(--cta-offer))]">{bp}</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5 text-[10px] text-zinc-500">
+                    <span
+                      className={cn(
+                        "inline-block h-1.5 w-1.5 rounded-full",
+                        realtime === "live" && "animate-pulse bg-emerald-500",
+                        realtime === "connecting" && "bg-amber-400",
+                        realtime === "error" && "bg-red-500",
+                        realtime === "closed" && "bg-zinc-400",
+                      )}
+                    />
+                    <span>{realtime}</span>
+                    <span className="text-zinc-300">·</span>
+                    <span>{status}</span>
+                    <span className="text-zinc-300">·</span>
+                    <span>
+                      {lastUpdatedAt
+                        ? new Date(lastUpdatedAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          })
+                        : "—"}
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-1 flex items-center gap-1.5 text-[10px] text-zinc-500">
-                  <span
-                    className={cn(
-                      "inline-block h-1.5 w-1.5 rounded-full",
-                      realtime === "live" && "animate-pulse bg-emerald-500",
-                      realtime === "connecting" && "bg-amber-400",
-                      realtime === "error" && "bg-red-500",
-                      realtime === "closed" && "bg-zinc-400",
-                    )}
-                  />
-                  <span>{realtime}</span>
-                  <span className="text-zinc-300">·</span>
-                  <span>{status}</span>
-                  <span className="text-zinc-300">·</span>
-                  <span>
-                    {lastUpdatedAt
-                      ? new Date(lastUpdatedAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })
-                      : "—"}
-                  </span>
-                </div>
+                <button type="button" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-zinc-700">×</button>
               </div>
-              <button type="button" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-zinc-700">×</button>
+              <label className="block text-xs font-medium text-zinc-600">
+                Image width: <span className="font-mono">{w}px</span>
+              </label>
+              <input
+                type="range" min={120} max={1800} step={10}
+                value={w}
+                onChange={(e) => updateBp("w", Number(e.target.value))}
+                className="mb-3 w-full"
+              />
+              <label className="block text-xs font-medium text-zinc-600">
+                Gap from card: <span className="font-mono">{gap}px</span>
+                <span className="ml-1 text-zinc-400">(negative = closer)</span>
+              </label>
+              <input
+                type="range" min={-400} max={400} step={4}
+                value={gap}
+                onChange={(e) => updateBp("gap", Number(e.target.value))}
+                className="mb-3 w-full"
+              />
+              <button
+                type="button"
+                onClick={() => setSettings((s) => ({ ...s, [bp]: TUNER_DEFAULTS[bp] }))}
+                className="w-full rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+              >
+                Reset {bp}
+              </button>
+              <div className="mt-2 text-[10px] leading-snug text-zinc-400">
+                Saves to the live site and keeps desktop sizes in sync.
+              </div>
             </div>
-            <label className="block text-xs font-medium text-zinc-600">
-              Image width: <span className="font-mono">{w}px</span>
-            </label>
-            <input
-              type="range" min={120} max={1800} step={10}
-              value={w}
-              onChange={(e) => updateBp("w", Number(e.target.value))}
-              className="mb-3 w-full"
-            />
-            <label className="block text-xs font-medium text-zinc-600">
-              Gap from card: <span className="font-mono">{gap}px</span>
-              <span className="ml-1 text-zinc-400">(negative = closer)</span>
-            </label>
-            <input
-              type="range" min={-400} max={400} step={4}
-              value={gap}
-              onChange={(e) => updateBp("gap", Number(e.target.value))}
-              className="mb-3 w-full"
-            />
+          ) : (
             <button
               type="button"
-              onClick={() => setSettings((s) => ({ ...s, [bp]: TUNER_DEFAULTS[bp] }))}
-              className="w-full rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+              onClick={() => setOpen(true)}
+              className="rounded-full bg-zinc-900 px-3 py-2 text-xs font-semibold text-white shadow-lg hover:bg-zinc-800"
             >
-              Reset {bp}
+              🚗 Tune ({bp})
             </button>
-            <div className="mt-2 text-[10px] leading-snug text-zinc-400">
-              Saves to the live site and keeps desktop sizes in sync.
-            </div>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="rounded-full bg-zinc-900 px-3 py-2 text-xs font-semibold text-white shadow-lg hover:bg-zinc-800"
-          >
-            🚗 Tune ({bp})
-          </button>
-        )}
-      </div>}
+          )}
+        </div>
+      ) : null}
     </>
   );
 };
