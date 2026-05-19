@@ -30,7 +30,7 @@ const MotoVehicleHero = ({
   const milesNum = Number((mileage || "").replace(/[^\d]/g, ""));
 
   return (
-    <div className="mb-4 text-center" style={{ marginTop: tuner.offsetY }}>
+    <div className="mb-4 text-center" style={{ marginTop: tuner.offsetY, marginBottom: tuner.offsetBottom }}>
       <div
         className="mx-auto aspect-[16/9] w-full"
         style={{
