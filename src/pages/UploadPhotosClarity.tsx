@@ -508,6 +508,11 @@ const UploadPhotosClarity = () => {
                   <span className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent text-white text-[11px] font-semibold tracking-tight">
                     {filled ? "Tap to retake" : shot.label}
                   </span>
+                  {state?.file && exif && (
+                    <span className="absolute top-2 left-10">
+                      <PhotoTrustBadge tier={exif.trust_tier} reasons={exif.trust_reasons} distanceMiles={exif.distance_miles} />
+                    </span>
+                  )}
                 </button>
               );
             })}
