@@ -166,6 +166,10 @@ const MiniTrend = () => {
           <stop offset="100%" stopColor="#16A34A" stopOpacity="0" />
         </linearGradient>
       </defs>
+      {[0.33, 0.66].map((t) => (
+        <line key={t} x1={pad} x2={w - pad} y1={pad + (h - pad * 2) * t} y2={pad + (h - pad * 2) * t}
+          stroke="#CBD5E1" strokeDasharray="2 4" strokeOpacity="0.5" strokeWidth="0.75" />
+      ))}
       <path d={area} fill="url(#miniFill)" />
       <path d={d} fill="none" stroke="#16A34A" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
       {pts.map((v, i) => (
