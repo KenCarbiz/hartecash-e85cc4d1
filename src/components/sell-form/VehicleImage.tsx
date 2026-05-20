@@ -31,10 +31,57 @@ interface Props {
 const preloadImage = (url: string): Promise<string> =>
   new Promise((resolve, reject) => {
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = () => resolve(url);
     img.onerror = reject;
     img.src = url;
   });
+
+// Client-side white-keying: source image must come back on a solid
+// near-white studio background (the generate-vehicle-image edge fn
+// already enforces this). We draw it to a canvas and turn every
+// near-white pixel into alpha=0 so the vehicle floats on whatever the
+// parent background is. Returns null on CORS / decode failure.
+async function keyOutWhite(url: string): Promise<string | null> {
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.crossOrigin = "anonymous";
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = url;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0);
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const px = data.data;
+    // Threshold: pixels brighter than ~245 in every channel and with
+    // low saturation get keyed out. The fade band (235-245) gets a
+    // partial alpha so vehicle edges don't fringe hard.
+    for (let i = 0; i < px.length; i += 4) {
+      const r = px[i], g = px[i + 1], b = px[i + 2];
+      const min = Math.min(r, g, b);
+      const max = Math.max(r, g, b);
+      const sat = max - min;
+      if (sat > 18) continue; // colored pixel, keep
+      if (min >= 245) {
+        px[i + 3] = 0;
+      } else if (min >= 232) {
+        // soft edge taper
+        px[i + 3] = Math.round(((245 - min) / 13) * 255);
+      }
+    }
+    ctx.putImageData(data, 0, 0);
+    return canvas.toDataURL("image/png");
+  } catch {
+    return null;
+  }
+}
+
 
 const VehicleImage = ({ year, make, model, style, selectedColor, compact = false, uvc, hideColorLabel = false, imageAngle: imageAngleProp, fill = false, transparent = false }: Props) => {
   const { config } = useSiteConfig();
