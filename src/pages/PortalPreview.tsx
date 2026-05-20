@@ -439,9 +439,20 @@ const PortalPreview = () => {
               </div>
             </div>
 
+            {/* Deal status */}
+            <div className="mt-3 flex items-center justify-between rounded-xl border border-[#BBF0D0] bg-[#E8F8EE] px-3 py-2">
+              <span className="text-[11px] uppercase tracking-[0.14em] font-semibold text-[#0F7A3E]">Deal Status</span>
+              <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#0F7A3E]">
+                <span className="w-4 h-4 rounded-full bg-[#16A34A] grid place-items-center">
+                  <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                </span>
+                Ready to Move Forward
+              </span>
+            </div>
+
             <button
               onClick={() => setShowOffer(true)}
-              className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-95 transition shadow-[0_8px_20px_-8px_rgba(79,70,229,0.55)]"
+              className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-95 transition shadow-[0_8px_20px_-8px_rgba(79,70,229,0.55)]"
             >
               View Firm Offer <ArrowRight className="w-4 h-4" />
             </button>
