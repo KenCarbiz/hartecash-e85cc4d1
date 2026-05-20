@@ -125,45 +125,50 @@ const TRUST_POINTS = [
 // Inner plot area: x ∈ [40, 560], y ∈ [40, 240].
 // Y-axis maps $19K..$25K → 240..40 (200px tall, 6 dollar units).
 //
-// Data points were hand-tuned for the rise → dip → recovery shape
-// the product owner provided in the reference screenshot: low start,
-// climb through Mar 15 to a small local peak (~$21.3K) around Mar
-// 22, a visible V-shaped dip to ~$20.5K at Mar 29, then a strong
-// steady recovery to the all-time high at May 10. Quadratic-bezier
-// control points add organic curvature between data nodes without
-// being volatile.
+// 22 hand-tuned data points reproduce the reference screenshot's
+// jagged-yet-readable trend: bumpy climb from Mar 1 to a small local
+// peak near Mar 22, V-shape dip to ~$20.2K right around Mar 29, then
+// a bumpy recovery to the all-time high at May 10. Each consecutive
+// pair varies by ~$0.1-0.5K so the line reads as real market noise
+// instead of a smoothed marketing curve.
+//
+// Path is built with straight-line segments (L commands) instead of
+// quadratic curves — with this point density, bezier smoothing was
+// flattening the bumps the reference shows. Stroke-linejoin "round"
+// softens the angles enough that they don't read as graphics-paper
+// sharp.
 const yFor = (k: number) => 240 - ((k - 19) * 200) / 6;
 
 const POINTS: { x: number; k: number }[] = [
-  { x: 40, k: 19.7 },   // Mar 1 — low start
-  { x: 92, k: 20.3 },   // climbing
-  { x: 144, k: 21.0 },  // Mar 15
-  { x: 196, k: 21.3 },  // local peak before the dip
-  { x: 248, k: 20.5 },  // Mar 29 — the DIP
-  { x: 300, k: 20.8 },  // recovery begins
-  { x: 352, k: 21.8 },  // Apr 12 — back above pre-dip levels
-  { x: 404, k: 22.5 },
-  { x: 456, k: 23.4 },  // Apr 26
-  { x: 508, k: 24.2 },
-  { x: 560, k: 25.0 },  // May 10 — final highlighted marker
+  { x: 40,  k: 19.70 },  // Mar 1 — start
+  { x: 65,  k: 19.85 },
+  { x: 90,  k: 19.75 },  // small early dip
+  { x: 115, k: 20.05 },
+  { x: 140, k: 20.30 },  // Mar 15
+  { x: 165, k: 20.45 },
+  { x: 190, k: 20.30 },  // small wobble down
+  { x: 215, k: 20.75 },
+  { x: 240, k: 20.55 },  // descent into the dip starts
+  { x: 265, k: 20.20 },  // Mar 29 — bottom of the V
+  { x: 290, k: 20.55 },  // recovery begins
+  { x: 315, k: 20.85 },
+  { x: 340, k: 21.10 },
+  { x: 365, k: 21.00 },  // small wobble during recovery
+  { x: 390, k: 21.40 },
+  { x: 415, k: 21.65 },  // ~Apr 19
+  { x: 440, k: 22.00 },
+  { x: 465, k: 22.25 },
+  { x: 490, k: 22.75 },
+  { x: 515, k: 23.35 },
+  { x: 540, k: 24.10 },
+  { x: 560, k: 25.00 },  // May 10 — final highlighted marker
 ];
 
-// Smooth path via quadratic curves between data points. Each segment
-// uses the midpoint of (prev, curr) as the curve target with the
-// prev point as the control — keeps the line organic without
-// veering off the data values.
 function buildChartPath() {
   let d = `M ${POINTS[0].x} ${yFor(POINTS[0].k).toFixed(1)}`;
   for (let i = 1; i < POINTS.length; i++) {
-    const prev = POINTS[i - 1];
-    const cur = POINTS[i];
-    const mx = (prev.x + cur.x) / 2;
-    const my = (yFor(prev.k) + yFor(cur.k)) / 2;
-    d += ` Q ${prev.x} ${yFor(prev.k).toFixed(1)} ${mx} ${my.toFixed(1)}`;
+    d += ` L ${POINTS[i].x} ${yFor(POINTS[i].k).toFixed(1)}`;
   }
-  // Close to the final data point with a straight last segment so
-  // the highlighted marker lands precisely on the data value.
-  d += ` L ${POINTS[POINTS.length - 1].x} ${yFor(POINTS[POINTS.length - 1].k).toFixed(1)}`;
   return d;
 }
 
@@ -343,7 +348,7 @@ const ValueTrackerCard = () => {
                     viewBox="0 0 600 280"
                     className="w-full h-auto"
                     role="img"
-                    aria-label="Vehicle value trend from $19.7K on March 1, dipping to $20.5K on March 29, then recovering steadily to $25K by May 10."
+                    aria-label="Vehicle value trend from $19.7K on March 1, climbing with daily fluctuations to a small peak near March 22, dipping to $20.2K on March 29, then recovering with continued bumps to $25K by May 10."
                   >
                     {/* Dashed horizontal grid lines */}
                     {Y_TICKS.map(({ k }) => (
