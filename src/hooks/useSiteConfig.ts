@@ -274,15 +274,18 @@ export interface SiteConfig {
    *    2 → pulse + soft toast (Day 5–6)
    *    3 → pulse + toast + Day 7 auto-open (full machine) */
   embed_escalation_max_tier: 0 | 1 | 2 | 3;
-  /** Homepage Value Tracker card vehicle source.
-   *    'oem'     — auto-pick a flagship from the dealership name (default)
-   *    'popular' — system-chosen mainstream vehicle (Toyota RAV4)
-   *    'custom'  — use tracker_vehicle_year/make/model/style below */
-  tracker_vehicle_mode: "oem" | "popular" | "custom";
-  tracker_vehicle_year: number | null;
-  tracker_vehicle_make: string | null;
-  tracker_vehicle_model: string | null;
-  tracker_vehicle_style: string | null;
+  /** Per-tenant overrides for the homepage Value Tracker OEM→flagship
+   *  vehicle map. Keys are lowercase brand substrings (matched against
+   *  tenant.display_name); values are partial FlagshipEntry objects.
+   *  Empty object = use built-in defaults. Managed in Branding →
+   *  Tracker Vehicles. */
+  tracker_oem_flagships: Record<string, {
+    year?: string;
+    make?: string;
+    model?: string;
+    style?: string;
+    specs?: string;
+  }>;
 }
 
 const DEFAULTS: SiteConfig = {
@@ -396,11 +399,7 @@ const DEFAULTS: SiteConfig = {
   tcpa_disclosure_version: 1,
   embed_escalation_enabled: true,
   embed_escalation_max_tier: 3,
-  tracker_vehicle_mode: "oem",
-  tracker_vehicle_year: null,
-  tracker_vehicle_make: null,
-  tracker_vehicle_model: null,
-  tracker_vehicle_style: null,
+  tracker_oem_flagships: {},
 };
 
 /**

@@ -5,6 +5,7 @@ import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
 const AppearanceSettings = React.lazy(() => import("./AppearanceSettings"));
 const LandingFlowConfig = React.lazy(() => import("./LandingFlowConfig"));
+const TrackerVehicleMapping = React.lazy(() => import("./TrackerVehicleMapping"));
 
 interface BrandingHubProps {
   /** Deep-link tab. Maps from legacy section keys:
@@ -12,7 +13,7 @@ interface BrandingHubProps {
    *  "appearance"   → appearance
    *  "landing-flow" → landing
    *  "branding"     → identity (default) */
-  initialTab?: "identity" | "appearance" | "landing";
+  initialTab?: "identity" | "appearance" | "landing" | "tracker";
   userRole?: string;
   canManageAccess?: boolean;
   /** Forwarded to SiteConfiguration so the auto-scroll on a specific
@@ -56,6 +57,7 @@ const BrandingHub = ({
           <TabsTrigger value="identity">Identity</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="landing">Landing</TabsTrigger>
+          <TabsTrigger value="tracker">Tracker Vehicles</TabsTrigger>
         </TabsList>
 
         <TabsContent value="identity" className="pt-4">
@@ -73,6 +75,12 @@ const BrandingHub = ({
         <TabsContent value="landing" className="pt-4">
           <React.Suspense fallback={<AdminLoadingSkeleton />}>
             <LandingFlowConfig />
+          </React.Suspense>
+        </TabsContent>
+
+        <TabsContent value="tracker" className="pt-4">
+          <React.Suspense fallback={<AdminLoadingSkeleton />}>
+            <TrackerVehicleMapping />
           </React.Suspense>
         </TabsContent>
       </Tabs>

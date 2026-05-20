@@ -4539,6 +4539,7 @@ export type Database = {
           top_bar_style: string | null
           top_bar_text: string | null
           track_abandoned_leads: boolean
+          tracker_oem_flagships: Json
           tracker_vehicle_make: string | null
           tracker_vehicle_mode: string
           tracker_vehicle_model: string | null
@@ -4661,6 +4662,7 @@ export type Database = {
           top_bar_style?: string | null
           top_bar_text?: string | null
           track_abandoned_leads?: boolean
+          tracker_oem_flagships?: Json
           tracker_vehicle_make?: string | null
           tracker_vehicle_mode?: string
           tracker_vehicle_model?: string | null
@@ -4783,6 +4785,7 @@ export type Database = {
           top_bar_style?: string | null
           top_bar_text?: string | null
           track_abandoned_leads?: boolean
+          tracker_oem_flagships?: Json
           tracker_vehicle_make?: string | null
           tracker_vehicle_mode?: string
           tracker_vehicle_model?: string | null
