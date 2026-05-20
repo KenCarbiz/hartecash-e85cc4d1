@@ -53,11 +53,14 @@ const NAV = [
 
 const Sidebar = () => (
   <aside className="hidden lg:flex flex-col w-[220px] shrink-0 bg-white border-r border-[#E6EAF0] py-6 px-3">
-    <div className="px-3 mb-8">
-      <div className="text-[15px] font-black tracking-tight text-[#06194A]">
-        Harte<span className="text-[#4F46E5]"> Auto</span>
+    <div className="px-3 mb-8 flex items-center gap-2.5">
+      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center text-white font-black text-[13px] shadow-[0_4px_10px_-3px_rgba(79,70,229,0.5)]">
+        H
       </div>
-      <div className="text-[10px] uppercase tracking-[0.18em] text-[#53627A]">Group</div>
+      <div className="leading-tight">
+        <div className="text-[14px] font-extrabold tracking-tight text-[#06194A]">Harte Auto</div>
+        <div className="text-[9px] uppercase tracking-[0.22em] text-[#8893A8] font-semibold">Group</div>
+      </div>
     </div>
     <nav className="flex-1 flex flex-col gap-1">
       {NAV.map(({ key, label, Icon, active }) => (
