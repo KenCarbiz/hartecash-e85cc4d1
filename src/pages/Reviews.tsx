@@ -29,7 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import SEO from "@/components/SEO";
 import BrandStructuredData from "@/components/BrandStructuredData";
-import NAPFooter from "@/components/NAPFooter";
+import BrandFooter from "@/components/BrandFooter";
 
 interface Testimonial {
   id: string;
@@ -225,7 +225,7 @@ const Reviews = () => {
         </section>
       ) : null}
 
-      <NAPFooter />
+      <BrandFooter />
     </main>
   );
 };

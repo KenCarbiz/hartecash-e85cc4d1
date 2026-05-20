@@ -2,7 +2,6 @@ import SellFlow from "@/pages/SellFlow";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { MotoBelowFold, DefaultBelowFold } from "../sharedSections";
 import BrandStructuredData from "@/components/BrandStructuredData";
-import NAPFooter from "@/components/NAPFooter";
 import StickyOfferCTA from "@/components/moto-sections/StickyOfferCTA";
 
 /**
@@ -61,10 +60,10 @@ const MotoTemplate = () => {
         <DefaultBelowFold />
       </div>
 
-      {/* NAP footer-line. Demoted from the mid-scroll position so it
-          doesn't break the flow but still feeds local-pack ranking
-          (NAP discovery + JSON-LD address are still present). */}
-      <NAPFooter />
+      {/* Footer is owned by Index.tsx — it picks BrandFooter for the
+          Moto template (minimal one-row national-brand footer) and
+          SiteFooter for everything else. Mounting one here would
+          double-render. */}
 
       {/* Sticky desktop pill — a second-look visitor scrolling back
           up through the page is never more than one click from the
