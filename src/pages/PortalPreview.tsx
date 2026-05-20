@@ -375,7 +375,7 @@ const PortalPreview = () => {
                   </button>
                 </div>
               </div>
-              <div className="relative h-[240px] md:h-[280px] flex items-center justify-center overflow-hidden">
+              <div className="relative h-[200px] md:h-[230px] flex items-center justify-center overflow-hidden">
                 {/* Soft pale blue/purple halo glow */}
                 <div className="absolute inset-0 grid place-items-center pointer-events-none">
                   <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
@@ -390,15 +390,15 @@ const PortalPreview = () => {
                   width={1024}
                   height={1024}
                   loading="lazy"
-                  className="relative z-10 max-h-full w-auto object-contain scale-[1.15] drop-shadow-[0_24px_20px_rgba(15,23,42,0.22)]"
+                  className="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)]"
                 />
                 {/* Ground shadow ellipse */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[70%] h-[16px] rounded-[50%] bg-black/25 blur-md z-0" />
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-[68%] h-[14px] rounded-[50%] bg-black/25 blur-md z-0" />
               </div>
             </div>
 
-            {/* Estimated value range + full-width trend chart */}
-            <div className="mt-4 pt-4 border-t border-[#EEF0F4] flex items-end gap-5">
+            {/* Estimated value range + full-width trend chart — shaded panel */}
+            <div className="mt-3 rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] via-[#F2FBF6] to-[#F0FAF4] px-4 py-3 flex items-end gap-5">
               <div className="flex flex-col gap-1.5 shrink-0">
                 <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#53627A]">Estimated Value Range</span>
                 <span className="text-[26px] font-extrabold leading-none text-[#06194A] whitespace-nowrap tracking-tight">
