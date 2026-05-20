@@ -307,7 +307,7 @@ const Modal = ({
 
 /* ── Page ─────────────────────────────────────────────────────────── */
 const TUNER_KEY = "portalPreviewVehicleTuner_v1";
-const TUNER_DEFAULTS = { scale: 1.15, x: 0, y: 0 };
+const TUNER_DEFAULTS = { scale: 1.0, x: 0, y: 0 };
 
 const PortalPreview = () => {
   const [copied, setCopied] = useState(false);
