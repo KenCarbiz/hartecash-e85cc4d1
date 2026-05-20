@@ -180,7 +180,7 @@ const MarketChart = () => {
   const d = pts.map((v, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(v)}`).join(" ");
   const area = `${d} L${x(pts.length - 1)},${h - padY} L${x(0)},${h - padY} Z`;
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[170px]">
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[110px]">
       <defs>
         <linearGradient id="mktFill" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#16A34A" stopOpacity="0.28" />
