@@ -152,8 +152,6 @@ const ValueTrackerCard = () => {
       mergeFlagships(config.tracker_oem_flagships),
     );
   }
-  const finalPoint = POINTS[POINTS.length - 1];
-  const finalY = yFor(finalPoint.k);
 
   return (
     <section
