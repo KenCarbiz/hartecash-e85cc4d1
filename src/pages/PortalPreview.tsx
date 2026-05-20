@@ -4,6 +4,7 @@ import {
   Search, Bell, ChevronDown, ChevronLeft, ChevronRight, Copy, Check,
   TrendingUp, Clock, Shield, ShieldCheck, Truck, Handshake,
   Upload, MessageSquare, LineChart as LineIcon, X, ArrowRight,
+  Sliders, RotateCcw,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 
@@ -303,12 +304,27 @@ const Modal = ({
 };
 
 /* ── Page ─────────────────────────────────────────────────────────── */
+const TUNER_KEY = "portalPreviewVehicleTuner_v1";
+const TUNER_DEFAULTS = { scale: 1.15, x: 0, y: 0 };
+
 const PortalPreview = () => {
   const [copied, setCopied] = useState(false);
   const [showConv, setShowConv] = useState(false);
   const [showDocs, setShowDocs] = useState(false);
   const [showOffer, setShowOffer] = useState(false);
+  const [showTuner, setShowTuner] = useState(false);
+  const [tuner, setTuner] = useState(TUNER_DEFAULTS);
   const offerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(TUNER_KEY);
+      if (raw) setTuner({ ...TUNER_DEFAULTS, ...JSON.parse(raw) });
+    } catch { /* noop */ }
+  }, []);
+  useEffect(() => {
+    try { localStorage.setItem(TUNER_KEY, JSON.stringify(tuner)); } catch { /* noop */ }
+  }, [tuner]);
 
   const copyVin = async () => {
     try {
@@ -368,7 +384,16 @@ const PortalPreview = () => {
                   </button>
                 </div>
               </div>
-              <div className="relative h-[200px] md:h-[220px] flex items-center justify-center">
+              <div className="relative h-[200px] md:h-[240px] flex items-center justify-center overflow-hidden">
+                {/* Tuner toggle */}
+                <button
+                  onClick={() => setShowTuner((v) => !v)}
+                  className="absolute top-1 right-1 z-30 inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[#E6EAF0] bg-white/90 backdrop-blur text-[10px] font-medium text-[#53627A] hover:bg-white shadow-sm"
+                  aria-label="Tune vehicle position"
+                >
+                  <Sliders className="w-3 h-3" /> Tune
+                </button>
+
                 {/* Soft halo */}
                 <div className="absolute inset-0 grid place-items-center pointer-events-none">
                   <div className="w-[78%] h-[78%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(199,210,254,0.55)_0%,_rgba(224,231,255,0.25)_55%,_transparent_75%)]" />
@@ -380,10 +405,56 @@ const PortalPreview = () => {
                   width={1024}
                   height={1024}
                   loading="lazy"
-                  className="relative z-10 max-h-full w-auto object-contain drop-shadow-[0_22px_18px_rgba(15,23,42,0.18)]"
+                  style={{
+                    transform: `translate(${tuner.x}%, ${tuner.y}%) scale(${tuner.scale})`,
+                    transformOrigin: "center center",
+                  }}
+                  className="relative z-10 max-h-full w-auto object-contain drop-shadow-[0_22px_18px_rgba(15,23,42,0.18)] transition-transform"
                 />
                 {/* Ground shadow ellipse */}
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-[70%] h-[14px] rounded-[50%] bg-black/25 blur-md z-0" />
+                <div
+                  style={{ transform: `translateX(calc(-50% + ${tuner.x * 0.6}%)) scaleX(${tuner.scale})` }}
+                  className="absolute bottom-3 left-1/2 w-[70%] h-[14px] rounded-[50%] bg-black/25 blur-md z-0"
+                />
+
+                {/* Tuner panel */}
+                {showTuner && (
+                  <div className="absolute top-10 right-1 z-30 w-[230px] rounded-xl border border-[#E6EAF0] bg-white shadow-lg p-3 text-[#06194A]">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-[#53627A]">Vehicle Tuner</span>
+                      <button onClick={() => setShowTuner(false)} aria-label="Close tuner" className="text-[#53627A] hover:text-[#06194A]">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {[
+                      { key: "scale" as const, label: "Size", min: 0.5, max: 2, step: 0.01, fmtVal: (v: number) => `${Math.round(v * 100)}%` },
+                      { key: "x" as const, label: "Left / Right", min: -40, max: 40, step: 1, fmtVal: (v: number) => `${v}%` },
+                      { key: "y" as const, label: "Up / Down", min: -40, max: 40, step: 1, fmtVal: (v: number) => `${v}%` },
+                    ].map(({ key, label, min, max, step, fmtVal }) => (
+                      <div key={key} className="mb-2">
+                        <div className="flex items-center justify-between text-[10px] text-[#53627A] mb-0.5">
+                          <span>{label}</span>
+                          <span className="font-mono">{fmtVal(tuner[key])}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={min}
+                          max={max}
+                          step={step}
+                          value={tuner[key]}
+                          onChange={(e) => setTuner((t) => ({ ...t, [key]: parseFloat(e.target.value) }))}
+                          className="w-full accent-[#4F46E5]"
+                        />
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setTuner(TUNER_DEFAULTS)}
+                      className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[#4F46E5] hover:underline"
+                    >
+                      <RotateCcw className="w-3 h-3" /> Reset
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
