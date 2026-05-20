@@ -214,14 +214,17 @@ const ValueTrackerCard = () => {
                     via background-image if a per-tenant or
                     vehicle-specific shot is wanted. */}
                 <div
-                  className="w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center shrink-0"
+                  className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden"
                   style={{ background: "hsl(220 14% 96%)" }}
                   aria-hidden
                 >
-                  <Car
-                    className="w-7 h-7 lg:w-8 lg:h-8"
-                    strokeWidth={1.5}
-                    style={{ color: "hsl(220 13% 50%)" }}
+                  <img
+                    src={vehicleImage}
+                    alt=""
+                    loading="lazy"
+                    width={1024}
+                    height={1024}
+                    className="w-full h-full object-contain"
                   />
                 </div>
                 <div className="flex-1 min-w-0">
