@@ -542,13 +542,13 @@ const PortalPreview = () => {
               ].map(({ title, desc, Icon, tint, onClick }, i) => (
                 <li key={title}>
                   <button onClick={onClick}
-                    className={`group w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F4F6FA] transition text-left ${i === 0 ? "" : "mt-0"}`}>
-                    <div className={`w-10 h-10 rounded-full grid place-items-center shrink-0 ${TINTS[tint]} ring-1 ring-inset ring-black/[0.02]`}>
-                      <Icon className="w-4 h-4" />
+                    className="group w-full flex items-center gap-3.5 px-2.5 py-3 rounded-xl hover:bg-[#F4F6FA] hover:shadow-[inset_0_0_0_1px_rgba(79,70,229,0.08)] transition text-left">
+                    <div className={`w-10 h-10 rounded-full grid place-items-center shrink-0 ${TINTS[tint]} ring-1 ring-inset ring-black/[0.02] group-hover:scale-[1.04] transition-transform`}>
+                      <Icon className="w-[18px] h-[18px]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-semibold text-[#06194A] leading-tight">{title}</div>
-                      <div className="text-[11px] text-[#53627A] truncate mt-0.5">{desc}</div>
+                      <div className="text-[13.5px] font-semibold text-[#0B1F4A] leading-tight">{title}</div>
+                      <div className="text-[11.5px] text-[#53627A] truncate mt-0.5">{desc}</div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition" />
                   </button>
