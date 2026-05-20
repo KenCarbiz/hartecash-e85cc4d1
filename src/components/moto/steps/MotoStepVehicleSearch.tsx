@@ -155,16 +155,20 @@ const MotoStepVehicleSearch = ({
       {/* Break out of MotoShell's max-w-screen-sm so the hero can fill
           the viewport. Card stays max-w-md on the left, vehicle image
           gets all remaining width on the right. */}
-      <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen px-6 lg:px-12">
+      <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-x-clip px-6 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
           <div className="flex w-full flex-col items-center justify-center gap-8 lg:flex-row lg:items-center lg:gap-10 xl:gap-14">
             {/* Left column: heading + card stay locked-aligned to the
                 same left edge regardless of image width/gap. */}
             <div className="w-full max-w-lg flex-shrink-0">
               <h1
-                className="whitespace-nowrap leading-[1.05] tracking-tight"
+                className="leading-[1.05] tracking-tight lg:whitespace-nowrap"
                 style={{
-                  fontSize: `${tuner.size}px`,
+                  // On <lg viewports (mobile/iPad) the headline stacks above the
+                  // form at full viewport width. Clamp font-size so the line
+                  // never exceeds the viewport — fall back to the tuner size at
+                  // lg+ where the horizontal layout gives it room to breathe.
+                  fontSize: `min(${tuner.size}px, 7.2vw)`,
                   fontWeight: tuner.weight,
                   color: tuner.color,
                   fontFamily: tuner.font,
@@ -182,9 +186,9 @@ const MotoStepVehicleSearch = ({
                 </span>
               </h1>
               <p
-                className="mt-3 whitespace-nowrap"
+                className="mt-3 lg:whitespace-nowrap"
                 style={{
-                  fontSize: `${tuner.subSize}px`,
+                  fontSize: `min(${tuner.subSize}px, 3.4vw)`,
                   color: tuner.subColor,
                   fontFamily: tuner.font,
                 }}
