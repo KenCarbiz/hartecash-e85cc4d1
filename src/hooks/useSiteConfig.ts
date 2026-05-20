@@ -399,6 +399,7 @@ const DEFAULTS: SiteConfig = {
   tcpa_disclosure_version: 1,
   embed_escalation_enabled: true,
   embed_escalation_max_tier: 3,
+  tracker_oem_flagships: {},
 };
 
 /**
