@@ -292,16 +292,16 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
       )}
 
       <AnimatePresence mode="wait">
-        {imageUrl && (
+        {imageUrl && (!transparent || transparentUrl) && (
           <motion.div
-            key={imageUrl}
+            key={transparent ? transparentUrl! : imageUrl}
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
             className="absolute inset-0 flex items-center justify-center p-2"
           >
             <img
-              src={imageUrl}
+              src={transparent ? transparentUrl! : imageUrl}
               alt={`${year} ${make} ${model}${selectedColor ? ` in ${selectedColor}` : ""}`}
               className="max-w-full max-h-full object-contain"
             />
