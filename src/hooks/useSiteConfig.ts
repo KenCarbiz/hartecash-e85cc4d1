@@ -286,6 +286,16 @@ export interface SiteConfig {
     style?: string;
     specs?: string;
   }>;
+  /** Per-tenant Value Tracker vehicle override mode.
+   *    "oem"     — auto-pick by dealership name via tracker_oem_flagships
+   *    "popular" — show a single popular fallback vehicle (Toyota RAV4)
+   *    "custom"  — show the explicit vehicle defined below */
+  tracker_vehicle_mode: "oem" | "popular" | "custom";
+  tracker_vehicle_year: number | null;
+  tracker_vehicle_make: string | null;
+  tracker_vehicle_model: string | null;
+  tracker_vehicle_style: string | null;
+  tracker_vehicle_specs: string | null;
 }
 
 const DEFAULTS: SiteConfig = {
