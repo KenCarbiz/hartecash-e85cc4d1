@@ -117,6 +117,23 @@ const TestimonialsLean = () => {
             </article>
           ))}
         </div>
+
+        {/* Inline CTA so customers landing on this section from the
+            top nav can jump straight back to the offer flow without
+            a route change. */}
+        <div className="mt-12 flex justify-center">
+          <Link
+            to="/#top"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Get My Offer
+            <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
+          </Link>
+        </div>
       </div>
     </section>
   );
