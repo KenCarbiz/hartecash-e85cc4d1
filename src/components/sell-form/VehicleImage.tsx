@@ -302,10 +302,10 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
         {imageUrl && (!transparent || transparentUrl) && (
           <motion.div
             key={transparent ? transparentUrl! : imageUrl}
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 1, scale: 1 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-            className="absolute inset-0 flex items-center justify-center p-2"
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="absolute inset-1 flex items-center justify-center p-1"
           >
             <img
               src={transparent ? transparentUrl! : imageUrl}
@@ -315,6 +315,30 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Transparent keying failed — show a generic vehicle icon */}
+      {transparent && transparentFailed && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+          <div
+            className="rounded-full flex items-center justify-center"
+            style={{
+              width: compact ? "2.25rem" : "3rem",
+              height: compact ? "2.25rem" : "3rem",
+              background: "hsl(220 14% 96%)",
+            }}
+          >
+            <Car
+              className="text-muted-foreground/50"
+              style={{
+                width: compact ? "1.25rem" : "1.5rem",
+                height: compact ? "1.25rem" : "1.5rem",
+              }}
+              strokeWidth={1.5}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground/60">Vehicle image</p>
+        </div>
+      )}
 
       {/* Color label chip */}
       {!hideColorLabel && (
