@@ -6,92 +6,63 @@ import NAPFooter from "@/components/NAPFooter";
 
 /**
  * "Instant Offer" landing template — the MotoAcquire-style 8-step
- * appraisal flow PLUS responsive SEO/marketing chrome below.
+ * appraisal flow PLUS a calibrated below-fold marketing chrome.
  *
- * Layout:
- *   ┌──────────────────────────────────────────┐
- *   │ <SellFlow />        (mobile + desktop)   │
- *   │   the 8-step instant-offer form          │
- *   ├──────────────────────────────────────────┤
- *   │ Desktop (md+):  <FullBelowFold />        │
- *   │   all sections inline, max content       │
- *   │                                          │
- *   │ Mobile (<md):   <DefaultBelowFold />     │
- *   │   trust + comparison + how-it-works      │
- *   │   visible; value-props/testimonials/FAQ  │
- *   │   collapse behind a "Learn more" accordion│
- *   ├──────────────────────────────────────────┤
- *   │ <NAPFooter />                            │
- *   │   semantic <address> for local SEO       │
- *   └──────────────────────────────────────────┘
+ * Design intent (third iteration, per the three-agent benchmark vs
+ * sellyourcar.online — MotoAcquire's own consumer site):
  *
- * Why mobile shows the chrome (collapsed):
- *   The previous version used `hidden md:block` claiming bots render
- *   at desktop widths. WRONG — Googlebot Smartphone has been the
- *   primary crawler since 2020 (mobile-first indexing). Hiding
- *   content with display:none means Google still INDEXES it but
- *   DISCOUNTS its ranking weight. Content inside a closed accordion
- *   in the DOM is fully indexed AND fully weighted — same SEO payload
- *   as desktop, near-zero mobile UX cost. DefaultBelowFold uses the
- *   existing LearnMoreFold accordion in sharedSections.tsx.
+ *   "Negative space as authority" is the national-brand tell. We
+ *   pulled the page back from a six-section marketing wall to four
+ *   tight sections that match MotoAcquire's calmer cadence:
+ *     HowItWorks → ValueTracker → FAQ → CTA
+ *   No testimonials grid (moves to /reviews subpage in a follow-up
+ *   PR), no comparison table, no stat strip, no NAP block in the
+ *   main scroll. The page reads as one continuous surface with
+ *   hairline dividers instead of alternating bg tones.
  *
- * SEO additions vs. the prior pass:
- *   * Page-level H1 (sr-only — the form's own headlines are the
- *     visual hero; an H1 added here gives crawlers the
- *     "Sell Your Car ... | {Dealer}" signal without competing with
- *     the form visually).
- *   * Semantic <main> landmark for accessibility + SEO.
- *   * BrandStructuredData emits AutoDealer + FAQPage + WebSite
- *     JSON-LD, all driven by site_config so each tenant gets a
- *     distinct graph.
- *   * NAPFooter is a real <address> element with crawlable
- *     name/address/phone — required for local-pack ranking.
+ * Mobile: keep DefaultBelowFold's LearnMoreFold accordion so the
+ * extra SEO content is indexed but compressed visually. Closed-
+ * accordion content in the DOM is fully indexed AND fully weighted
+ * by Google.
  *
- * Per-tenant correctness:
- *   Every section reads from useSiteConfig. A different dealer
- *   selecting landing_template=moto gets their own:
- *     dealership_name → comparison + ValueProps headers, NAP, JSON-LD
- *     stats_cars_purchased + established_year → TrustBadges, JSON-LD
- *     stats_rating → TrustBadges, AggregateRating in JSON-LD
- *     pickup_offered → HowItWorks step 3 + FAQ + comparison rows
- *     price_guarantee_days → comparison + ValueProps + FAQ
- *     address, phone, email, business_hours → NAP block + JSON-LD
+ * NAP block moves to a footer-line slot below the closing CTA so
+ * local-pack ranking signals are preserved without breaking the
+ * mid-page flow. Hidden when the dealer hasn't filled in NAP fields.
+ *
+ * Per-tenant correctness: every section reads from useSiteConfig.
+ * BrandStructuredData passes faqVariant="moto" so the JSON-LD
+ * FAQPage matches the visible 5-question FAQLean (Google's "must
+ * match" rule for FAQ rich-result eligibility).
  */
 const MotoTemplate = () => {
   const { config } = useSiteConfig();
   const dealerName = (config.dealership_name || "").trim();
-  // H1 leverages the dealer's name when configured; falls back to
-  // generic intent-keyword copy for new tenants who haven't
-  // completed onboarding yet.
   const h1 = dealerName && dealerName !== "Our Dealership"
     ? `Sell Your Car — Instant Cash Offer from ${dealerName}`
     : "Sell Your Car — Instant Cash Offer";
 
   return (
     <main>
-      {/* Per-page H1. Hidden visually (the form's own headlines are
-          the visual hero), but present in the DOM so crawlers and
-          screen readers see one clear primary heading. */}
       <h1 className="sr-only">{h1}</h1>
 
-      <BrandStructuredData />
+      <BrandStructuredData faqVariant="moto" />
 
       <SellFlow />
 
-      {/* Desktop chrome: the lean, flat Moto-aesthetic ordering. */}
+      {/* Desktop chrome: 4 sections, MotoAcquire-style minimal. */}
       <div className="hidden md:block bg-background">
         <MotoBelowFold />
       </div>
 
-      {/* Mobile chrome: trust + comparison + how-it-works visible,
-          everything else collapsed behind LearnMoreFold. Same DOM
-          content as desktop, just compressed. (Uses the standard
-          DefaultBelowFold for now — mobile lean variants are a
-          follow-up pass per direction.) */}
+      {/* Mobile chrome: existing LearnMoreFold accordion pattern.
+          Mobile lean variants are a follow-up pass. */}
       <div className="md:hidden bg-background">
         <DefaultBelowFold />
       </div>
 
+      {/* NAP footer-line. Demoted from the mid-scroll position so it
+          doesn't break the flow but still feeds local-pack ranking
+          (NAP discovery + JSON-LD address are still present). */}
       <NAPFooter />
     </main>
   );
