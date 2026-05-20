@@ -519,23 +519,23 @@ const PortalPreview = () => {
           {/* Quick Actions */}
           <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
             <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Quick Actions</div>
-            <ul className="space-y-1">
+            <ul className="divide-y divide-[#EEF0F4]">
               {[
                 { title: "Upload Documents", desc: "Upload and manage documents safely.", Icon: Upload, tint: "green" as const, onClick: () => setShowDocs(true) },
-                { title: "Message Dealer", desc: "Chat securely with your dealer and get answers.", Icon: MessageSquare, tint: "orange" as const, onClick: () => setShowConv(true) },
+                { title: "Message Dealer", desc: "Chat securely with your dealer.", Icon: MessageSquare, tint: "orange" as const, onClick: () => setShowConv(true) },
                 { title: "Track Offer", desc: "Monitor your offer status and next steps.", Icon: BarChart3, tint: "indigo" as const, onClick: () => setShowOffer(true) },
-              ].map(({ title, desc, Icon, tint, onClick }) => (
+              ].map(({ title, desc, Icon, tint, onClick }, i) => (
                 <li key={title}>
                   <button onClick={onClick}
-                    className="w-full flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-[#F4F6FA] transition text-left">
-                    <div className={`w-8 h-8 rounded-full grid place-items-center shrink-0 ${TINTS[tint]}`}>
-                      <Icon className="w-3.5 h-3.5" />
+                    className={`group w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F4F6FA] transition text-left ${i === 0 ? "" : "mt-0"}`}>
+                    <div className={`w-10 h-10 rounded-full grid place-items-center shrink-0 ${TINTS[tint]} ring-1 ring-inset ring-black/[0.02]`}>
+                      <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-semibold text-[#06194A] leading-tight">{title}</div>
-                      <div className="text-[11px] text-[#53627A] truncate">{desc}</div>
+                      <div className="text-[11px] text-[#53627A] truncate mt-0.5">{desc}</div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-[#53627A]" />
+                    <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition" />
                   </button>
                 </li>
               ))}
