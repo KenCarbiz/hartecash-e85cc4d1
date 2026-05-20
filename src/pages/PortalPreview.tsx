@@ -166,6 +166,10 @@ const MiniTrend = () => {
           <stop offset="100%" stopColor="#16A34A" stopOpacity="0" />
         </linearGradient>
       </defs>
+      {[0.33, 0.66].map((t) => (
+        <line key={t} x1={pad} x2={w - pad} y1={pad + (h - pad * 2) * t} y2={pad + (h - pad * 2) * t}
+          stroke="#CBD5E1" strokeDasharray="2 4" strokeOpacity="0.5" strokeWidth="0.75" />
+      ))}
       <path d={area} fill="url(#miniFill)" />
       <path d={d} fill="none" stroke="#16A34A" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
       {pts.map((v, i) => (
@@ -375,7 +379,7 @@ const PortalPreview = () => {
                   </button>
                 </div>
               </div>
-              <div className="relative h-[240px] md:h-[280px] flex items-center justify-center overflow-hidden">
+              <div className="relative h-[200px] md:h-[230px] flex items-center justify-center overflow-hidden">
                 {/* Soft pale blue/purple halo glow */}
                 <div className="absolute inset-0 grid place-items-center pointer-events-none">
                   <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
@@ -390,15 +394,15 @@ const PortalPreview = () => {
                   width={1024}
                   height={1024}
                   loading="lazy"
-                  className="relative z-10 max-h-full w-auto object-contain scale-[1.15] drop-shadow-[0_24px_20px_rgba(15,23,42,0.22)]"
+                  className="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)]"
                 />
                 {/* Ground shadow ellipse */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[70%] h-[16px] rounded-[50%] bg-black/25 blur-md z-0" />
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-[68%] h-[14px] rounded-[50%] bg-black/25 blur-md z-0" />
               </div>
             </div>
 
-            {/* Estimated value range + full-width trend chart */}
-            <div className="mt-4 pt-4 border-t border-[#EEF0F4] flex items-end gap-5">
+            {/* Estimated value range + full-width trend chart — shaded panel */}
+            <div className="mt-3 rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] via-[#F2FBF6] to-[#F0FAF4] px-4 py-3 flex items-end gap-5">
               <div className="flex flex-col gap-1.5 shrink-0">
                 <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#53627A]">Estimated Value Range</span>
                 <span className="text-[26px] font-extrabold leading-none text-[#06194A] whitespace-nowrap tracking-tight">
@@ -435,9 +439,20 @@ const PortalPreview = () => {
               </div>
             </div>
 
+            {/* Deal status */}
+            <div className="mt-3 flex items-center justify-between rounded-xl border border-[#BBF0D0] bg-[#E8F8EE] px-3 py-2">
+              <span className="text-[11px] uppercase tracking-[0.14em] font-semibold text-[#0F7A3E]">Deal Status</span>
+              <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#0F7A3E]">
+                <span className="w-4 h-4 rounded-full bg-[#16A34A] grid place-items-center">
+                  <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                </span>
+                Ready to Move Forward
+              </span>
+            </div>
+
             <button
               onClick={() => setShowOffer(true)}
-              className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-95 transition shadow-[0_8px_20px_-8px_rgba(79,70,229,0.55)]"
+              className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-95 transition shadow-[0_8px_20px_-8px_rgba(79,70,229,0.55)]"
             >
               View Firm Offer <ArrowRight className="w-4 h-4" />
             </button>
@@ -461,7 +476,7 @@ const PortalPreview = () => {
                 <div className="text-[11px] text-[#53627A]">Last update: {MOCK.lastUpdate}</div>
               </div>
             </div>
-            <div className="mt-2 rounded-xl bg-[#F4F6FA] p-2.5 text-[12px] text-[#06194A] leading-snug">
+            <div className="mt-2 rounded-xl bg-[#F4F6FA] p-2.5 text-[12.5px] text-[#0B1F4A] leading-snug font-medium">
               {MOCK.dealerMessage}
             </div>
             <button onClick={() => setShowConv(true)}
@@ -476,8 +491,8 @@ const PortalPreview = () => {
             <ul className="space-y-2">
               {MOCK.docs.map((d) => (
                 <li key={d.name} className="flex items-center justify-between text-sm">
-                  <span className="text-[#06194A]">{d.name}</span>
-                  <span className="inline-flex items-center gap-1.5 text-[12px] text-[#16A34A] font-medium">
+                  <span className="text-[#0B1F4A] font-medium">{d.name}</span>
+                  <span className="inline-flex items-center gap-1.5 text-[12px] text-[#0F7A3E] font-semibold">
                     Uploaded <span className="w-4 h-4 rounded-full bg-[#16A34A] grid place-items-center"><Check className="w-2.5 h-2.5 text-white" strokeWidth={3} /></span>
                   </span>
                 </li>
@@ -502,14 +517,14 @@ const PortalPreview = () => {
                 <div className="w-7 h-7 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><TrendingUp className="w-3.5 h-3.5" /></div>
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-[#53627A]">Market Trend</div>
-                  <div className="text-xs font-bold">Strong</div>
+                  <div className="text-[13px] font-bold text-[#0B1F4A]">Strong</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><LineIcon className="w-3.5 h-3.5" /></div>
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-[#53627A]">Market Demand</div>
-                  <div className="text-xs font-bold">High</div>
+                  <div className="text-[13px] font-bold text-[#0B1F4A]">High</div>
                 </div>
               </div>
             </div>
@@ -524,16 +539,16 @@ const PortalPreview = () => {
                 { title: "Upload Documents", desc: "Upload and manage documents safely.", Icon: Upload, tint: "green" as const, onClick: () => setShowDocs(true) },
                 { title: "Message Dealer", desc: "Chat securely with your dealer.", Icon: MessageSquare, tint: "orange" as const, onClick: () => setShowConv(true) },
                 { title: "Track Offer", desc: "Monitor your offer status and next steps.", Icon: BarChart3, tint: "indigo" as const, onClick: () => setShowOffer(true) },
-              ].map(({ title, desc, Icon, tint, onClick }, i) => (
+              ].map(({ title, desc, Icon, tint, onClick }) => (
                 <li key={title}>
                   <button onClick={onClick}
-                    className={`group w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F4F6FA] transition text-left ${i === 0 ? "" : "mt-0"}`}>
-                    <div className={`w-10 h-10 rounded-full grid place-items-center shrink-0 ${TINTS[tint]} ring-1 ring-inset ring-black/[0.02]`}>
-                      <Icon className="w-4 h-4" />
+                    className="group w-full flex items-center gap-3.5 px-2.5 py-3 rounded-xl hover:bg-[#F4F6FA] hover:shadow-[inset_0_0_0_1px_rgba(79,70,229,0.08)] transition text-left">
+                    <div className={`w-10 h-10 rounded-full grid place-items-center shrink-0 ${TINTS[tint]} ring-1 ring-inset ring-black/[0.02] group-hover:scale-[1.04] transition-transform`}>
+                      <Icon className="w-[18px] h-[18px]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-semibold text-[#06194A] leading-tight">{title}</div>
-                      <div className="text-[11px] text-[#53627A] truncate mt-0.5">{desc}</div>
+                      <div className="text-[13.5px] font-semibold text-[#0B1F4A] leading-tight">{title}</div>
+                      <div className="text-[11.5px] text-[#53627A] truncate mt-0.5">{desc}</div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition" />
                   </button>
