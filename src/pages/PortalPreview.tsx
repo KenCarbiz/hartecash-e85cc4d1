@@ -6,6 +6,7 @@ import {
   Upload, MessageSquare, LineChart as LineIcon, ArrowRight, X,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
+import harteLogo from "@/assets/harte-logo.png";
 
 /* ──────────────────────────────────────────────────────────────────
    Premium customer portal dashboard (preview / mock).
