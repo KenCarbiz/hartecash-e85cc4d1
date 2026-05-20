@@ -391,19 +391,13 @@ const PortalPreview = () => {
                   </button>
                 </div>
               </div>
-              <div className="relative h-[220px] md:h-[260px] flex items-center justify-center overflow-hidden">
-                {/* Tuner toggle */}
-                <button
-                  onClick={() => setShowTuner((v) => !v)}
-                  className="absolute top-1 right-1 z-30 inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[#E6EAF0] bg-white/90 backdrop-blur text-[10px] font-medium text-[#53627A] hover:bg-white shadow-sm"
-                  aria-label="Tune vehicle position"
-                >
-                  <Sliders className="w-3 h-3" /> Tune
-                </button>
-
-                {/* Soft halo */}
+              <div className="relative h-[240px] md:h-[280px] flex items-center justify-center overflow-hidden">
+                {/* Soft pale blue/purple halo glow */}
                 <div className="absolute inset-0 grid place-items-center pointer-events-none">
-                  <div className="w-[78%] h-[78%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(199,210,254,0.55)_0%,_rgba(224,231,255,0.25)_55%,_transparent_75%)]" />
+                  <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
+                </div>
+                <div className="absolute inset-0 grid place-items-center pointer-events-none">
+                  <div className="w-[62%] h-[62%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(199,210,254,0.55)_0%,_transparent_70%)]" />
                 </div>
                 {/* Vehicle photo */}
                 <img
@@ -412,70 +406,24 @@ const PortalPreview = () => {
                   width={1024}
                   height={1024}
                   loading="lazy"
-                  style={{
-                    transform: `translate(${tuner.x}%, ${tuner.y}%) scale(${tuner.scale})`,
-                    transformOrigin: "center center",
-                  }}
-                  className="relative z-10 max-h-full w-auto object-contain drop-shadow-[0_22px_18px_rgba(15,23,42,0.18)] transition-transform"
+                  className="relative z-10 max-h-full w-auto object-contain scale-[1.15] drop-shadow-[0_24px_20px_rgba(15,23,42,0.22)]"
                 />
                 {/* Ground shadow ellipse */}
-                <div
-                  style={{ transform: `translateX(calc(-50% + ${tuner.x * 0.6}%)) scaleX(${tuner.scale})` }}
-                  className="absolute bottom-3 left-1/2 w-[70%] h-[14px] rounded-[50%] bg-black/25 blur-md z-0"
-                />
-
-                {/* Tuner panel */}
-                {showTuner && (
-                  <div className="absolute top-10 right-1 z-30 w-[230px] rounded-xl border border-[#E6EAF0] bg-white shadow-lg p-3 text-[#06194A]">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[11px] font-semibold uppercase tracking-wide text-[#53627A]">Vehicle Tuner</span>
-                      <button onClick={() => setShowTuner(false)} aria-label="Close tuner" className="text-[#53627A] hover:text-[#06194A]">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    {[
-                      { key: "scale" as const, label: "Size", min: 0.5, max: 2, step: 0.01, fmtVal: (v: number) => `${Math.round(v * 100)}%` },
-                      { key: "x" as const, label: "Left / Right", min: -40, max: 40, step: 1, fmtVal: (v: number) => `${v}%` },
-                      { key: "y" as const, label: "Up / Down", min: -40, max: 40, step: 1, fmtVal: (v: number) => `${v}%` },
-                    ].map(({ key, label, min, max, step, fmtVal }) => (
-                      <div key={key} className="mb-2">
-                        <div className="flex items-center justify-between text-[10px] text-[#53627A] mb-0.5">
-                          <span>{label}</span>
-                          <span className="font-mono">{fmtVal(tuner[key])}</span>
-                        </div>
-                        <input
-                          type="range"
-                          min={min}
-                          max={max}
-                          step={step}
-                          value={tuner[key]}
-                          onChange={(e) => setTuner((t) => ({ ...t, [key]: parseFloat(e.target.value) }))}
-                          className="w-full accent-[#4F46E5]"
-                        />
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => setTuner(TUNER_DEFAULTS)}
-                      className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[#4F46E5] hover:underline"
-                    >
-                      <RotateCcw className="w-3 h-3" /> Reset
-                    </button>
-                  </div>
-                )}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[70%] h-[16px] rounded-[50%] bg-black/25 blur-md z-0" />
               </div>
             </div>
 
             {/* Estimated value range + full-width trend chart */}
-            <div className="mt-3 pt-3 border-t border-[#EEF0F4] flex items-end gap-4">
-              <div className="flex flex-col gap-1 shrink-0">
-                <span className="text-[11px] text-[#53627A]">Estimated Value Range</span>
-                <span className="text-[22px] font-bold leading-tight text-[#06194A] whitespace-nowrap">
-                  {fmt(MOCK.range.low)} – {fmt(MOCK.range.high)}
+            <div className="mt-4 pt-4 border-t border-[#EEF0F4] flex items-end gap-5">
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#53627A]">Estimated Value Range</span>
+                <span className="text-[26px] font-extrabold leading-none text-[#06194A] whitespace-nowrap tracking-tight">
+                  {fmt(MOCK.range.low)} <span className="text-[#94A3B8] font-bold">–</span> {fmt(MOCK.range.high)}
                 </span>
-                <MarketPill demand={MOCK.marketDemand} />
+                <div className="mt-1"><MarketPill demand={MOCK.marketDemand} /></div>
               </div>
               <div className="flex-1 min-w-0 self-stretch flex items-end">
-                <div className="w-full opacity-95"><MiniTrend /></div>
+                <div className="w-full"><MiniTrend /></div>
               </div>
             </div>
           </div>
