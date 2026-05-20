@@ -85,78 +85,44 @@ const TRUST_POINTS = [
 // this point density, quadratic-bezier smoothing flattened the
 // bumps. stroke-linejoin="round" softens the angles enough they
 // don't read as graphics-paper sharp.
-const yFor = (k: number) => 240 - ((k - 19) * 200) / 6;
 
-// Re-traced from reference: jagged climb, sharp dip ~Mar 29, then a
-// strong jagged incline to $25K May 10. More zigzag noise (~$0.2-0.4K)
-// between landmarks so the line reads as real, noisy market data.
-const POINTS: { x: number; k: number }[] = [
-  { x: 40,  k: 19.65 },  // Mar 1 start
-  { x: 55,  k: 19.78 },
-  { x: 70,  k: 19.62 },  // small jitter down
-  { x: 85,  k: 19.92 },
-  { x: 100, k: 19.80 },
-  { x: 115, k: 20.15 },
-  { x: 130, k: 20.05 },
-  { x: 145, k: 20.35 },  // Mar 15 climbing
-  { x: 160, k: 20.55 },
-  { x: 175, k: 20.40 },  // wobble
-  { x: 190, k: 20.75 },
-  { x: 205, k: 20.60 },
-  { x: 220, k: 20.45 },  // starting the descent
-  { x: 235, k: 20.20 },
-  { x: 250, k: 19.95 },
-  { x: 265, k: 19.75 },  // Mar 29 bottom of V
-  { x: 280, k: 19.95 },  // recovery starts
-  { x: 295, k: 20.25 },
-  { x: 310, k: 20.55 },
-  { x: 325, k: 20.45 },  // jitter
-  { x: 340, k: 20.85 },
-  { x: 355, k: 21.20 },
-  { x: 370, k: 21.05 },  // small dip
-  { x: 385, k: 21.55 },
-  { x: 400, k: 21.85 },
-  { x: 415, k: 21.70 },  // jitter
-  { x: 430, k: 22.15 },
-  { x: 445, k: 22.50 },
-  { x: 460, k: 22.40 },
-  { x: 475, k: 22.85 },  // Apr 27
-  { x: 490, k: 23.20 },
-  { x: 505, k: 23.55 },
-  { x: 520, k: 23.45 },  // jitter
-  { x: 535, k: 24.05 },
-  { x: 550, k: 24.55 },
-  { x: 560, k: 25.00 },  // May 10 final marker
-];
-
-function buildChartPath() {
-  let d = `M ${POINTS[0].x} ${yFor(POINTS[0].k).toFixed(1)}`;
-  for (let i = 1; i < POINTS.length; i++) {
-    d += ` L ${POINTS[i].x} ${yFor(POINTS[i].k).toFixed(1)}`;
-  }
-  return d;
-}
-
-const CHART_LINE_PATH = buildChartPath();
-const CHART_FILL_PATH = `${CHART_LINE_PATH} L 560 240 L 40 240 Z`;
-
-// Y-axis ticks (labels on the right edge of the chart area).
+// Y-axis ticks for the 520×260 chart (plot y: 12..185 → $25K..$19K).
 const Y_TICKS = [
-  { k: 25, label: "$25K" },
-  { k: 23, label: "$23K" },
-  { k: 21, label: "$21K" },
-  { k: 19, label: "$19K" },
+  { y: 12,    label: "$25K" },
+  { y: 69.7,  label: "$23K" },
+  { y: 127.3, label: "$21K" },
+  { y: 185,   label: "$19K" },
 ];
 
-// X-axis label positions (6 labels evenly spaced).
+// X-axis labels evenly spaced across the 35..485 plot.
 const X_LABELS = [
-  { x: 40, label: "MAR 1" },
-  { x: 144, label: "MAR 15" },
-  { x: 248, label: "MAR 29" },
-  { x: 352, label: "APR 12" },
-  { x: 456, label: "APR 26" },
-  { x: 560, label: "MAY 10" },
+  { x: 35,  label: "MAR 1" },
+  { x: 125, label: "MAR 15" },
+  { x: 215, label: "MAR 29" },
+  { x: 305, label: "APR 12" },
+  { x: 395, label: "APR 26" },
+  { x: 485, label: "MAY 10" },
 ];
+
+// Hand-authored SVG path for the trend line — steady rise, a dip
+// around MAR 29, then a strong recovery to a higher finish.
+const CHART_LINE_PATH = [
+  "M35 185",
+  "C50 165, 65 155, 82 150",
+  "C96 145, 105 132, 118 130",
+  "C130 128, 136 112, 150 111",
+  "C165 110, 174 96, 190 94",
+  "C205 92, 215 103, 228 102",
+  "C242 101, 252 120, 265 143",
+  "C278 130, 288 112, 305 101",
+  "C320 92, 330 82, 344 78",
+  "C358 74, 365 58, 382 55",
+  "C398 52, 408 38, 425 39",
+  "C440 40, 448 34, 460 26",
+  "C472 19, 480 15, 485 12",
+].join(" ");
+const CHART_FILL_PATH = `${CHART_LINE_PATH} L 485 210 L 35 210 Z`;
+const FINAL_POINT = { x: 485, y: 12 };
 
 // Popular fallback used when admin chooses "popular" mode and the
 // dealership isn't tied to a single OEM brand.
@@ -186,8 +152,6 @@ const ValueTrackerCard = () => {
       mergeFlagships(config.tracker_oem_flagships),
     );
   }
-  const finalPoint = POINTS[POINTS.length - 1];
-  const finalY = yFor(finalPoint.k);
 
   return (
     <section
@@ -336,19 +300,26 @@ const ValueTrackerCard = () => {
                 {/* Chart */}
                 <div className="min-w-0">
                   <svg
-                    viewBox="0 0 600 280"
+                    viewBox="0 0 520 260"
                     className="w-full h-auto"
                     role="img"
-                    aria-label="Vehicle value trend from $19.5K on March 1, climbing with daily fluctuations to a $21K peak around March 22, dipping to $20K at the end of March, then recovering through April to $25K by May 10."
+                    aria-label="Vehicle value trend from $19K on March 1, rising steadily with a dip around March 29, then a strong recovery to $25K by May 10."
                   >
+                    <defs>
+                      <linearGradient id="value-tracker-fill" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.28" />
+                        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+
                     {/* Dashed horizontal grid lines */}
-                    {Y_TICKS.map(({ k }) => (
+                    {Y_TICKS.map(({ y }) => (
                       <line
-                        key={k}
-                        x1="40"
-                        y1={yFor(k)}
-                        x2="560"
-                        y2={yFor(k)}
+                        key={y}
+                        x1="35"
+                        y1={y}
+                        x2="485"
+                        y2={y}
                         stroke="hsl(220 13% 91%)"
                         strokeWidth="1"
                         strokeDasharray="4 4"
@@ -356,45 +327,47 @@ const ValueTrackerCard = () => {
                     ))}
 
                     {/* Area fill under the line */}
-                    <path
-                      d={CHART_FILL_PATH}
-                      fill="hsl(var(--primary))"
-                      fillOpacity="0.06"
-                    />
+                    <path d={CHART_FILL_PATH} fill="url(#value-tracker-fill)" />
 
-                    {/* Trend line */}
+                    {/* Trend line — navy */}
                     <path
                       d={CHART_LINE_PATH}
                       fill="none"
-                      stroke="hsl(var(--primary))"
+                      stroke="#1e3a8a"
                       strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
 
-                    {/* Highlight ring + marker on the final data point */}
+                    {/* Highlight glow + marker on the final point */}
                     <circle
-                      cx={finalPoint.x}
-                      cy={finalY}
+                      cx={FINAL_POINT.x}
+                      cy={FINAL_POINT.y}
                       r="14"
-                      fill="hsl(var(--primary))"
-                      fillOpacity="0.12"
+                      fill="#86efac"
+                      fillOpacity="0.45"
                     />
                     <circle
-                      cx={finalPoint.x}
-                      cy={finalY}
+                      cx={FINAL_POINT.x}
+                      cy={FINAL_POINT.y}
                       r="7"
                       fill="white"
-                      stroke="hsl(var(--primary))"
+                      stroke="#1e3a8a"
                       strokeWidth="3"
+                    />
+                    <circle
+                      cx={FINAL_POINT.x}
+                      cy={FINAL_POINT.y}
+                      r="3"
+                      fill="#1e3a8a"
                     />
 
                     {/* Y-axis labels (right side) */}
-                    {Y_TICKS.map(({ k, label }) => (
+                    {Y_TICKS.map(({ y, label }) => (
                       <text
-                        key={k}
-                        x="595"
-                        y={yFor(k) + 4}
+                        key={label}
+                        x="515"
+                        y={y + 4}
                         textAnchor="end"
                         fontSize="11"
                         fontWeight="500"
@@ -409,7 +382,7 @@ const ValueTrackerCard = () => {
                       <text
                         key={label}
                         x={x}
-                        y="270"
+                        y="250"
                         textAnchor={
                           i === 0 ? "start" : i === X_LABELS.length - 1 ? "end" : "middle"
                         }
