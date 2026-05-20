@@ -388,17 +388,15 @@ const PortalPreview = () => {
             </div>
 
             {/* Compact estimated value range strip (~25-33% of card row) */}
-            <div className="mt-4 pt-3 border-t border-[#EEF0F4] flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-baseline gap-2">
+            <div className="mt-3 pt-3 border-t border-[#EEF0F4] flex items-end justify-between gap-3">
+              <div className="flex flex-col gap-1">
                 <span className="text-[11px] text-[#53627A]">Estimated Value Range</span>
-                <span className="text-[15px] font-bold leading-tight text-[#06194A]">
+                <span className="text-[22px] font-bold leading-tight text-[#06194A]">
                   {fmt(MOCK.range.low)} – {fmt(MOCK.range.high)}
                 </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2 py-0.5 rounded-full">
-                  <TrendingUp className="w-3 h-3" /> Strong Market
-                </span>
+                <MarketPill demand={MOCK.marketDemand} />
               </div>
-              <div className="w-[200px] max-w-full opacity-90"><MiniTrend /></div>
+              <div className="w-[140px] max-w-full opacity-90"><MiniTrend /></div>
             </div>
           </div>
 
