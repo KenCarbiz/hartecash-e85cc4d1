@@ -524,7 +524,7 @@ const PortalPreview = () => {
                 <div className="w-7 h-7 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><LineIcon className="w-3.5 h-3.5" /></div>
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-[#53627A]">Market Demand</div>
-                  <div className="text-xs font-bold">High</div>
+                  <div className="text-[13px] font-bold text-[#0B1F4A]">High</div>
                 </div>
               </div>
             </div>
