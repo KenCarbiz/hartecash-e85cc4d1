@@ -560,6 +560,7 @@ const PortalPreview = () => {
             </ul>
           </div>
         </div>
+        </div>
       </div>
 
       {/* Conversation modal */}
