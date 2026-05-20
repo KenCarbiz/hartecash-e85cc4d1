@@ -76,7 +76,7 @@ serve(async (req) => {
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
   try {
-    const { year, make, model, style, color, uvc, angle } = await req.json();
+    const { year, make, model, style, color, uvc, angle, studio_only } = await req.json();
 
     if (!year || !make || !model) {
       return new Response(JSON.stringify({ error: "year, make, and model are required" }), {
@@ -86,7 +86,12 @@ serve(async (req) => {
 
     const colorSlug = (color || "white").toLowerCase().replace(/[^a-z0-9]/g, "_");
     const angleSlug = angle === "side" ? "side" : "3q";
-    const cacheKey = `${year}-${make}-${model}${style ? `-${style}` : ""}-${colorSlug}-${angleSlug}`.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
+    // studio_only forces AI-generated white-background renders only
+    // (skips Wikipedia + Black Book photos that may have real-world
+    // backgrounds). Cache key is suffixed so it doesn't collide with
+    // the standard pipeline.
+    const studioSuffix = studio_only ? "-studio" : "";
+    const cacheKey = `${year}-${make}-${model}${style ? `-${style}` : ""}-${colorSlug}-${angleSlug}${studioSuffix}`.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
     const storagePath = `vehicle-images/${cacheKey}.png`;
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
