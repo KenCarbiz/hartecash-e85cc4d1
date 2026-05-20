@@ -126,7 +126,7 @@ serve(async (req) => {
     // Y/M/M, serve it immediately so the customer never waits on AI.
     // The frontend's separate per-color cache key still triggers a
     // re-fetch later if/when the color matches.
-    const { data: anyColorRow } = await supabase
+    const { data: anyColorRow } = studio_only ? { data: null } : await supabase
       .from("vehicle_image_cache")
       .select("storage_path, exterior_color")
       .eq("vehicle_year", String(year))
