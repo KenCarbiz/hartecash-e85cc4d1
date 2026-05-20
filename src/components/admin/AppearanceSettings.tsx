@@ -1116,9 +1116,30 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
         <div className="text-[11px] text-muted-foreground">
           Tenant: <span className="font-mono">{(config as { dealership_id?: string }).dealership_id || "default"}</span>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? "Saving…" : "Save changes"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={async () => {
+              // Drop the in-memory overlay and refetch canonical
+              // persisted values, then reset the local draft from them.
+              await queryClient.invalidateQueries({ queryKey: ["site_config"] });
+              if (selectedLocationId == null) {
+                setDraft(fromConfigDefaults());
+              } else {
+                // Re-trigger the per-location loader by bouncing selection.
+                const id = selectedLocationId;
+                setSelectedLocationId(null);
+                setTimeout(() => setSelectedLocationId(id), 0);
+              }
+            }}
+            disabled={saving}
+          >
+            Discard changes
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+        </div>
       </div>
     </div>
   );
