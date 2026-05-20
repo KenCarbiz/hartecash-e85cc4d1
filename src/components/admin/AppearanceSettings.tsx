@@ -117,6 +117,11 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
   // On unmount we invalidate so the cache returns to the persisted
   // values. Save also invalidates so a successful save snaps to
   // canonical state.
+  // Overlay the current draft onto the React Query cache so every
+  // consumer of useSiteConfig repaints live as the admin edits.
+  // No cleanup here — invalidating on every draft change causes a
+  // refetch race that flashes the new theme then reverts to the
+  // persisted one.
   useEffect(() => {
     const queryKey = [
       "site_config",
@@ -128,13 +133,15 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
       ...(prev || {}),
       ...draft,
     }));
+  }, [draft, tenant?.dealership_id, tenant?.location_id, queryClient]);
 
+  // Only on unmount: drop the unsaved overlay so leaving the page
+  // without saving reverts to the canonical persisted values.
+  useEffect(() => {
     return () => {
-      // Discard any unsaved overlay so the next mount reads canonical
-      // persisted values from the DB.
       void queryClient.invalidateQueries({ queryKey: ["site_config"] });
     };
-  }, [draft, tenant?.dealership_id, tenant?.location_id, queryClient]);
+  }, [queryClient]);
 
   // Load locations for the tenant once, so the selector can list them.
   useEffect(() => {
