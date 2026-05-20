@@ -2,21 +2,26 @@
 // benchmark vs sellyourcar.online (MotoAcquire's own consumer site).
 //
 // Visual rules:
-//   * Soft-gray FILLED circle (~64px) with a semantic Lucide icon —
-//     NOT outlined numerals. The icon implies the step's meaning
-//     so the heading can be a verb instead of a label.
+//   * Each step uses an uploaded illustration asset (soft-gray
+//     circular tile + navy icon, baked into the PNG itself). The
+//     wrapper div used to provide its own circle bg; now the image
+//     carries both, so we render an <img> directly without an
+//     enclosing tile.
 //   * Uppercase "STEP 1 / STEP 2 / STEP 3" eyebrow above each
 //     heading at 11px tracking-[0.12em].
 //   * Per-step inline CTA link (`text-primary underline-offset-4
 //     hover:underline`) anchoring back to #sell-car-form so each
 //     step is its own micro-conversion ramp — not inert copy.
-//   * No section eyebrow ("SIMPLE PROCESS"), no radial-dot bg,
-//     no connector line, no hover-glow.
 //
 // Per-tenant: pickup_offered still flips step 3 between "we pick up"
 // and "drop off" — same as the original.
-import { DollarSign, LineChart, ShieldCheck } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+
+const STEP_ICONS = {
+  valuation: "/brand/autocurb/how-it-works-step-1-valuation.png",
+  trackValue: "/brand/autocurb/how-it-works-step-2-track-value.png",
+  getPaid: "/brand/autocurb/how-it-works-step-3-get-paid.png",
+} as const;
 
 const scrollToForm = () => {
   const form = document.getElementById("sell-car-form");
@@ -33,19 +38,22 @@ const HowItWorksLean = () => {
 
   const steps = [
     {
-      Icon: DollarSign,
+      iconSrc: STEP_ICONS.valuation,
+      iconAlt: "Dollar sign icon — instant valuation",
       title: "Get an instant valuation",
       desc: "Enter your license plate or VIN and basic details. Takes less than 2 minutes.",
       cta: "Get started",
     },
     {
-      Icon: LineChart,
+      iconSrc: STEP_ICONS.trackValue,
+      iconAlt: "Rising line chart icon — track your vehicle's value",
       title: "Track your vehicle's value",
       desc: "Not ready to sell? Our free tracking tool monitors your car's value so you know the right moment.",
       cta: "Track my value",
     },
     {
-      Icon: ShieldCheck,
+      iconSrc: STEP_ICONS.getPaid,
+      iconAlt: "Shield with dollar icon — secure payment",
       title: pickupOffered ? "Get paid & we pick up" : "Drop off & get paid",
       desc: pickupOffered
         ? "Accept your offer, get paid on the spot, and we'll pick up your car for free."
@@ -70,12 +78,15 @@ const HowItWorksLean = () => {
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
         {steps.map((step, i) => (
           <div key={i} className="text-center">
-            <div
-              className="mx-auto mb-6 w-16 h-16 rounded-full flex items-center justify-center"
-              style={{ background: "hsl(220 14% 96%)" }}
-            >
-              <step.Icon className="w-7 h-7" strokeWidth={1.5} style={{ color: "hsl(220 13% 35%)" }} />
-            </div>
+            <img
+              src={step.iconSrc}
+              alt={step.iconAlt}
+              className="mx-auto mb-6 w-20 h-20 object-contain"
+              width={80}
+              height={80}
+              loading="lazy"
+              decoding="async"
+            />
             <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-muted-foreground mb-2">
               Step {i + 1}
             </p>
@@ -100,3 +111,4 @@ const HowItWorksLean = () => {
 };
 
 export default HowItWorksLean;
+
