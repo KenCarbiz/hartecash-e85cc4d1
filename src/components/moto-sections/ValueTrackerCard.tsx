@@ -189,6 +189,8 @@ const X_LABELS = [
 ];
 
 const ValueTrackerCard = () => {
+  const { tenant } = useTenant();
+  const flagship = resolveFlagship(tenant?.display_name);
   const finalPoint = POINTS[POINTS.length - 1];
   const finalY = yFor(finalPoint.k);
 
