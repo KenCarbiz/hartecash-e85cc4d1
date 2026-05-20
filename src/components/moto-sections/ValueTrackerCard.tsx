@@ -204,7 +204,30 @@ const X_LABELS = [
 
 const ValueTrackerCard = () => {
   const { tenant } = useTenant();
-  const flagship = resolveFlagship(tenant?.display_name);
+  const { config } = useSiteConfig();
+
+  // Resolve the displayed vehicle based on the dealer-chosen mode.
+  // 'custom' wins if all four YMM fields are filled, otherwise we
+  // fall back to the mode default so a half-filled custom config
+  // never renders a broken card.
+  let flagship = resolveFlagship(tenant?.display_name);
+  if (config.tracker_vehicle_mode === "popular") {
+    flagship = POPULAR_FLAGSHIP;
+  } else if (
+    config.tracker_vehicle_mode === "custom" &&
+    config.tracker_vehicle_year &&
+    config.tracker_vehicle_make &&
+    config.tracker_vehicle_model
+  ) {
+    flagship = {
+      year: String(config.tracker_vehicle_year),
+      make: config.tracker_vehicle_make,
+      model: config.tracker_vehicle_model,
+      style: config.tracker_vehicle_style || "",
+      specs: `${config.tracker_vehicle_year} ${config.tracker_vehicle_make} ${config.tracker_vehicle_model}`,
+    };
+  }
+
   const finalPoint = POINTS[POINTS.length - 1];
   const finalY = yFor(finalPoint.k);
 
