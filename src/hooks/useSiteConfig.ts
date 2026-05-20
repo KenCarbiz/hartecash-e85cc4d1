@@ -396,6 +396,11 @@ const DEFAULTS: SiteConfig = {
   tcpa_disclosure_version: 1,
   embed_escalation_enabled: true,
   embed_escalation_max_tier: 3,
+  tracker_vehicle_mode: "oem",
+  tracker_vehicle_year: null,
+  tracker_vehicle_make: null,
+  tracker_vehicle_model: null,
+  tracker_vehicle_style: null,
 };
 
 /**
