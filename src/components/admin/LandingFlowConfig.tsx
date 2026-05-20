@@ -1246,6 +1246,10 @@ const LandingFlowConfig = () => {
         </details>
       </section>
 
+      <TrackerVehicleSection />
+
+
+
       <div className="sticky bottom-4 flex justify-end">
         <Button
           onClick={handleSave}
