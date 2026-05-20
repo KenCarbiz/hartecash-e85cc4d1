@@ -202,6 +202,23 @@ const MarketChart = () => {
   );
 };
 
+/* ── Market indicator pill ─────────────────────────────────────────── */
+const MARKET_PILL_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  "High":    { label: "Strong Market", color: "text-[#16A34A]", bg: "bg-[#E8F8EE]" },
+  "Medium":  { label: "Soft Market",   color: "text-[#D97706]", bg: "bg-[#FEF3E2]" },
+  "Low":     { label: "Weak Market",   color: "text-[#DC2626]", bg: "bg-[#FEE2E2]" },
+  "Minimal": { label: "Little Market", color: "text-[#DC2626]", bg: "bg-[#FEE2E2]" },
+  "Poor":    { label: "Poor Market",   color: "text-[#DC2626]", bg: "bg-[#FEE2E2]" },
+};
+const MarketPill = ({ demand }: { demand: string }) => {
+  const cfg = MARKET_PILL_CONFIG[demand] ?? MARKET_PILL_CONFIG["Low"];
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${cfg.color} ${cfg.bg} px-2.5 py-1 rounded-full w-fit`}>
+      <TrendingUp className="w-3 h-3" /> {cfg.label}
+    </span>
+  );
+};
+
 /* ── Vehicle illustration (SVG SUV w/ shadow) ─────────────────────── */
 const VehicleSVG = () => (
   <svg viewBox="0 0 360 220" className="w-full h-full" aria-label="Vehicle preview">
