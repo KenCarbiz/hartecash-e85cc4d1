@@ -10,6 +10,12 @@ const FAQ = lazy(() => import("@/components/FAQ"));
 const CTABanner = lazy(() => import("@/components/CTABanner"));
 const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
 
+// Moto-aesthetic lean variants — see src/components/moto-sections/.
+const TrustBadgesLean = lazy(() => import("@/components/moto-sections/TrustBadgesLean"));
+const HowItWorksLean = lazy(() => import("@/components/moto-sections/HowItWorksLean"));
+const TestimonialsLean = lazy(() => import("@/components/moto-sections/TestimonialsLean"));
+const CTABannerLean = lazy(() => import("@/components/moto-sections/CTABannerLean"));
+
 class SectionErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
     super(props);
@@ -55,6 +61,15 @@ export const TestimonialsSection = () => <Lazy><Testimonials /></Lazy>;
 export const FAQSection = () => <Lazy><FAQ /></Lazy>;
 export const CTABannerSection = () => <Lazy withSkeleton={false}><CTABanner /></Lazy>;
 export const ReferralBannerSection = () => <Lazy withSkeleton={false}><ReferralBanner /></Lazy>;
+
+// Moto-aesthetic section wrappers — same site_config wiring as the
+// standard sections above, but visually flattened to match the Moto
+// form's clean Apple-minimal language. Only consumed by MotoTemplate
+// via MotoBelowFold; other templates keep the standard set.
+export const TrustBadgesLeanSection = () => <Lazy><TrustBadgesLean /></Lazy>;
+export const HowItWorksLeanSection = () => <Lazy><HowItWorksLean /></Lazy>;
+export const TestimonialsLeanSection = () => <Lazy><TestimonialsLean /></Lazy>;
+export const CTABannerLeanSection = () => <Lazy withSkeleton={false}><CTABannerLean /></Lazy>;
 
 /**
  * "Learn more" accordion. Wraps sections that historically padded the
@@ -150,5 +165,42 @@ export const FullBelowFold = () => (
     <FAQSection />
     <ReferralBannerSection />
     <CTABannerSection />
+  </>
+);
+
+/**
+ * Moto-template marketing chrome.
+ *
+ * Per the three-agent design review (PR #260 follow-up):
+ *
+ *   * KEEP (refactored): TrustBadgesLean, HowItWorksLean,
+ *     TestimonialsLean, CTABannerLean. Same data, flat visuals.
+ *   * KEEP as-is: CompetitorComparisonSection (already on-brand;
+ *     just drops its outer shadow), FAQSection (collapsed by default
+ *     and gold for FAQPage schema).
+ *   * TOSS from Moto chrome: ValueProps (duplicates the Comparison
+ *     table content), ReferralBanner (wrong audience — hasn't sold
+ *     yet, nothing to refer).
+ *
+ * Order chosen for the desktop visual flow:
+ *   1. TrustBadges     numeric reassurance immediately after the form
+ *   2. Comparison      "Why {Dealer} Wins" — primary conversion wedge
+ *   3. HowItWorks      three-step process explainer
+ *   4. Testimonials    static grid of social proof
+ *   5. FAQ             long-tail SEO + objection handling
+ *   6. CTABanner       finisher with scroll-back-to-form
+ *
+ * Each lean section has its own `border-t border-border/60` so the
+ * page reads as one continuous surface with hairline dividers
+ * instead of alternating bg tones.
+ */
+export const MotoBelowFold = () => (
+  <>
+    <TrustBadgesLeanSection />
+    <CompetitorComparisonSection />
+    <HowItWorksLeanSection />
+    <TestimonialsLeanSection />
+    <FAQSection />
+    <CTABannerLeanSection />
   </>
 );

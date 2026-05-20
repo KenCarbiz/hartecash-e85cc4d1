@@ -1,6 +1,6 @@
 import SellFlow from "@/pages/SellFlow";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { FullBelowFold, DefaultBelowFold } from "../sharedSections";
+import { MotoBelowFold, DefaultBelowFold } from "../sharedSections";
 import BrandStructuredData from "@/components/BrandStructuredData";
 import NAPFooter from "@/components/NAPFooter";
 
@@ -78,14 +78,16 @@ const MotoTemplate = () => {
 
       <SellFlow />
 
-      {/* Desktop chrome: full inline marketing content. */}
+      {/* Desktop chrome: the lean, flat Moto-aesthetic ordering. */}
       <div className="hidden md:block bg-background">
-        <FullBelowFold />
+        <MotoBelowFold />
       </div>
 
       {/* Mobile chrome: trust + comparison + how-it-works visible,
           everything else collapsed behind LearnMoreFold. Same DOM
-          content as desktop, just compressed. */}
+          content as desktop, just compressed. (Uses the standard
+          DefaultBelowFold for now — mobile lean variants are a
+          follow-up pass per direction.) */}
       <div className="md:hidden bg-background">
         <DefaultBelowFold />
       </div>
