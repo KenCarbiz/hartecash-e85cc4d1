@@ -136,13 +136,13 @@ const TINTS: Record<MetricProps["tint"], string> = {
   orange: "bg-[#FEF3E2] text-[#F59E0B]",
 };
 const Metric = ({ label, value, sub, Icon, tint }: MetricProps) => (
-  <div className="flex items-center gap-3.5 px-5 py-4">
-    <div className={`w-12 h-12 rounded-full grid place-items-center shrink-0 ${TINTS[tint]}`}>
+  <div className="flex items-center gap-4 px-5 py-[18px]">
+    <div className={`w-12 h-12 rounded-2xl grid place-items-center shrink-0 ring-1 ring-inset ring-black/[0.03] shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${TINTS[tint]}`}>
       <Icon className="w-[22px] h-[22px]" />
     </div>
     <div className="min-w-0">
-      <div className="text-[11px] uppercase tracking-[0.14em] text-[#53627A] font-semibold">{label}</div>
-      <div className="text-[17px] font-bold text-[#06194A] leading-tight truncate mt-0.5">{value}</div>
+      <div className="text-[10.5px] uppercase tracking-[0.16em] text-[#53627A] font-semibold">{label}</div>
+      <div className="text-[19px] font-extrabold text-[#06194A] leading-tight truncate mt-1 tracking-tight">{value}</div>
       {sub && <div className="text-[12px] text-[#53627A] mt-1">{sub}</div>}
     </div>
   </div>
