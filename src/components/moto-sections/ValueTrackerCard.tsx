@@ -32,7 +32,64 @@ import {
   ArrowRight,
   ArrowUp,
 } from "lucide-react";
-import vehicleImage from "@/assets/value-tracker-vehicle.png";
+import { useTenant } from "@/contexts/TenantContext";
+import VehicleImage from "@/components/sell-form/VehicleImage";
+
+// Map of OEM brand → flagship vehicle to feature in the value
+// tracker mockup. Keys are lowercased substrings searched inside
+// tenant.display_name (e.g. "Harte Infiniti" → infiniti). The
+// model is chosen as the brand's highest-volume / most recognizable
+// nameplate so a customer landing on, say, a Ford dealer's site
+// sees a Ford in the tracker card — not a generic Explorer.
+const OEM_FLAGSHIPS: Record<string, { year: string; make: string; model: string; style: string; specs: string }> = {
+  ford:        { year: "2022", make: "Ford",        model: "Explorer",  style: "XLT",      specs: "4D SUV · 2.3L EcoBoost · 38,450 mi" },
+  chevrolet:   { year: "2022", make: "Chevrolet",   model: "Silverado", style: "LT",       specs: "Crew Cab · 5.3L V8 · 36,200 mi" },
+  chevy:       { year: "2022", make: "Chevrolet",   model: "Silverado", style: "LT",       specs: "Crew Cab · 5.3L V8 · 36,200 mi" },
+  gmc:         { year: "2022", make: "GMC",         model: "Sierra",    style: "SLT",      specs: "Crew Cab · 5.3L V8 · 34,100 mi" },
+  buick:       { year: "2022", make: "Buick",       model: "Enclave",   style: "Premium",  specs: "4D SUV · 3.6L V6 · 32,800 mi" },
+  cadillac:    { year: "2022", make: "Cadillac",    model: "Escalade",  style: "Premium",  specs: "4D SUV · 6.2L V8 · 28,900 mi" },
+  ram:         { year: "2022", make: "Ram",         model: "1500",      style: "Big Horn", specs: "Crew Cab · 5.7L HEMI · 39,200 mi" },
+  dodge:       { year: "2022", make: "Dodge",       model: "Charger",   style: "GT",       specs: "Sedan · 3.6L V6 · 31,400 mi" },
+  jeep:        { year: "2022", make: "Jeep",        model: "Grand Cherokee", style: "Limited", specs: "4D SUV · 3.6L V6 · 34,700 mi" },
+  chrysler:    { year: "2022", make: "Chrysler",    model: "Pacifica",  style: "Touring L", specs: "Minivan · 3.6L V6 · 33,500 mi" },
+  toyota:      { year: "2022", make: "Toyota",      model: "RAV4",      style: "XLE",      specs: "4D SUV · 2.5L · 36,100 mi" },
+  lexus:       { year: "2022", make: "Lexus",       model: "RX 350",    style: "Premium",  specs: "4D SUV · 3.5L V6 · 29,800 mi" },
+  honda:       { year: "2022", make: "Honda",       model: "CR-V",      style: "EX-L",     specs: "4D SUV · 1.5L Turbo · 37,400 mi" },
+  acura:       { year: "2022", make: "Acura",       model: "MDX",       style: "Technology", specs: "4D SUV · 3.5L V6 · 30,200 mi" },
+  nissan:      { year: "2022", make: "Nissan",      model: "Rogue",     style: "SV",       specs: "4D SUV · 2.5L · 38,900 mi" },
+  infiniti:    { year: "2022", make: "Infiniti",    model: "QX60",      style: "Luxe",     specs: "4D SUV · 3.5L V6 · 31,600 mi" },
+  hyundai:     { year: "2022", make: "Hyundai",     model: "Tucson",    style: "SEL",      specs: "4D SUV · 2.5L · 35,800 mi" },
+  kia:         { year: "2022", make: "Kia",         model: "Telluride", style: "EX",       specs: "4D SUV · 3.8L V6 · 32,400 mi" },
+  genesis:     { year: "2022", make: "Genesis",     model: "GV80",      style: "3.5T",     specs: "4D SUV · 3.5L Twin-Turbo · 28,100 mi" },
+  subaru:      { year: "2022", make: "Subaru",      model: "Outback",   style: "Premium",  specs: "Wagon · 2.5L · 36,700 mi" },
+  mazda:       { year: "2022", make: "Mazda",       model: "CX-5",      style: "Touring",  specs: "4D SUV · 2.5L · 34,500 mi" },
+  volkswagen:  { year: "2022", make: "Volkswagen",  model: "Atlas",     style: "SE",       specs: "4D SUV · 3.6L V6 · 35,200 mi" },
+  vw:          { year: "2022", make: "Volkswagen",  model: "Atlas",     style: "SE",       specs: "4D SUV · 3.6L V6 · 35,200 mi" },
+  audi:        { year: "2022", make: "Audi",        model: "Q5",        style: "Premium",  specs: "4D SUV · 2.0L Turbo · 29,400 mi" },
+  bmw:         { year: "2022", make: "BMW",         model: "X5",        style: "xDrive40i", specs: "4D SUV · 3.0L Turbo · 30,900 mi" },
+  mercedes:    { year: "2022", make: "Mercedes-Benz", model: "GLE 350", style: "4MATIC",   specs: "4D SUV · 2.0L Turbo · 28,700 mi" },
+  porsche:     { year: "2022", make: "Porsche",     model: "Macan",     style: "Base",     specs: "4D SUV · 2.0L Turbo · 26,500 mi" },
+  volvo:       { year: "2022", make: "Volvo",       model: "XC60",      style: "Momentum", specs: "4D SUV · 2.0L Turbo · 30,300 mi" },
+  mini:        { year: "2022", make: "MINI",        model: "Cooper",    style: "S",        specs: "Hatchback · 2.0L Turbo · 27,800 mi" },
+  mitsubishi:  { year: "2022", make: "Mitsubishi",  model: "Outlander", style: "SEL",      specs: "4D SUV · 2.5L · 33,900 mi" },
+  tesla:       { year: "2022", make: "Tesla",       model: "Model Y",   style: "Long Range", specs: "4D SUV · Dual Motor · 28,400 mi" },
+  lincoln:     { year: "2022", make: "Lincoln",     model: "Nautilus",  style: "Reserve",  specs: "4D SUV · 2.0L Turbo · 29,600 mi" },
+};
+
+const DEFAULT_FLAGSHIP = OEM_FLAGSHIPS.ford;
+
+function resolveFlagship(displayName: string | undefined) {
+  if (!displayName) return DEFAULT_FLAGSHIP;
+  const name = displayName.toLowerCase();
+  // Sort keys longest-first so "chevrolet" wins over "chevy" if both
+  // appear, and "mercedes-benz" wouldn't be mis-shadowed by a shorter
+  // partial match.
+  const keys = Object.keys(OEM_FLAGSHIPS).sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    if (name.includes(key)) return OEM_FLAGSHIPS[key];
+  }
+  return DEFAULT_FLAGSHIP;
+}
 
 const scrollToForm = () => {
   const form = document.getElementById("sell-car-form");
@@ -132,6 +189,8 @@ const X_LABELS = [
 ];
 
 const ValueTrackerCard = () => {
+  const { tenant } = useTenant();
+  const flagship = resolveFlagship(tenant?.display_name);
   const finalPoint = POINTS[POINTS.length - 1];
   const finalY = yFor(finalPoint.k);
 
@@ -211,32 +270,34 @@ const ValueTrackerCard = () => {
             <div className="bg-white rounded-3xl border border-border/60 shadow-[0_12px_40px_-16px_rgb(15_23_42_/_0.12)] p-6 lg:p-8">
               {/* Top row: thumbnail + title + tracking badge */}
               <div className="flex items-start gap-4 mb-8">
-                {/* Vehicle thumbnail placeholder — Lucide Car on soft-gray
-                    rounded square. Editable later with a real image
-                    via background-image if a per-tenant or
-                    vehicle-specific shot is wanted. */}
+                {/* Vehicle thumbnail — dynamically resolves to the
+                    dealership's OEM flagship via VehicleImage's
+                    Black Book → Wikipedia → AI cascade. The image
+                    sits in a soft-gray rounded square so the white
+                    PNG bg disappears into the frame. */}
                 <div
                   className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden"
                   style={{ background: "hsl(220 14% 96%)" }}
                   aria-hidden
                 >
-                  <img
-                    src={vehicleImage}
-                    alt=""
-                    loading="lazy"
-                    width={1024}
-                    height={1024}
-                    className="w-full h-full object-contain"
+                  <VehicleImage
+                    year={flagship.year}
+                    make={flagship.make}
+                    model={flagship.model}
+                    style={flagship.style}
+                    selectedColor="Silver"
+                    hideColorLabel
+                    fill
                   />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="min-w-0">
                       <h3 className="text-lg lg:text-xl font-bold text-foreground tracking-tight truncate">
-                        2022 Ford Explorer XLT
+                        {flagship.year} {flagship.make} {flagship.model} {flagship.style}
                       </h3>
                       <p className="text-[13px] text-foreground/60 mt-1">
-                        4D SUV · 2.3L EcoBoost · 38,450 mi
+                        {flagship.specs}
                       </p>
                     </div>
                     <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 shrink-0">
