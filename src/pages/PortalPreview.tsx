@@ -6,6 +6,7 @@ import {
   Upload, MessageSquare, LineChart as LineIcon, ArrowRight, X,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
+import harteLogo from "@/assets/harte-logo.png";
 
 /* ──────────────────────────────────────────────────────────────────
    Premium customer portal dashboard (preview / mock).
@@ -52,13 +53,13 @@ const NAV = [
 
 const Sidebar = () => (
   <aside className="hidden lg:flex flex-col w-[220px] shrink-0 bg-white border-r border-[#E6EAF0] py-6 px-3">
-    <div className="px-3 mb-8 flex items-center gap-2.5">
-      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center text-white font-black text-[13px] shadow-[0_4px_10px_-3px_rgba(79,70,229,0.5)]">
-        H
+    <div className="px-2 mb-8 flex items-center gap-3">
+      <div className="w-11 h-11 rounded-xl bg-white border border-[#E6EAF0] shadow-[0_2px_6px_-2px_rgba(15,23,42,0.08)] grid place-items-center overflow-hidden p-1.5">
+        <img src={harteLogo} alt="Harte Auto Group" className="w-full h-full object-contain" />
       </div>
       <div className="leading-tight">
         <div className="text-[14px] font-extrabold tracking-tight text-[#06194A]">Harte Auto</div>
-        <div className="text-[9px] uppercase tracking-[0.22em] text-[#8893A8] font-semibold">Group</div>
+        <div className="text-[9px] uppercase tracking-[0.24em] text-[#8893A8] font-semibold mt-0.5">Group</div>
       </div>
     </div>
     <nav className="flex-1 flex flex-col gap-1">
@@ -135,13 +136,13 @@ const TINTS: Record<MetricProps["tint"], string> = {
   orange: "bg-[#FEF3E2] text-[#F59E0B]",
 };
 const Metric = ({ label, value, sub, Icon, tint }: MetricProps) => (
-  <div className="flex items-center gap-3.5 px-5 py-4">
-    <div className={`w-12 h-12 rounded-full grid place-items-center shrink-0 ${TINTS[tint]}`}>
+  <div className="flex items-center gap-4 px-5 py-[18px]">
+    <div className={`w-12 h-12 rounded-2xl grid place-items-center shrink-0 ring-1 ring-inset ring-black/[0.03] shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${TINTS[tint]}`}>
       <Icon className="w-[22px] h-[22px]" />
     </div>
     <div className="min-w-0">
-      <div className="text-[11px] uppercase tracking-[0.14em] text-[#53627A] font-semibold">{label}</div>
-      <div className="text-[17px] font-bold text-[#06194A] leading-tight truncate mt-0.5">{value}</div>
+      <div className="text-[10.5px] uppercase tracking-[0.16em] text-[#53627A] font-semibold">{label}</div>
+      <div className="text-[19px] font-extrabold text-[#06194A] leading-tight truncate mt-1 tracking-tight">{value}</div>
       {sub && <div className="text-[12px] text-[#53627A] mt-1">{sub}</div>}
     </div>
   </div>
@@ -352,11 +353,11 @@ const PortalPreview = () => {
         {/* MAIN ROW */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Vehicle card */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-6">
-            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] gap-4 items-start">
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] gap-4 items-center">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Your Vehicle</div>
-                <h2 className="text-[22px] font-bold leading-tight">
+                <h2 className="text-[22px] font-bold leading-tight tracking-tight">
                   {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
                 </h2>
                 <p className="text-sm text-[#53627A] mt-1">
@@ -370,16 +371,16 @@ const PortalPreview = () => {
                   </button>
                   {copied && <span className="text-[10px] text-[#16A34A] font-medium">Copied</span>}
                 </div>
-                <div className="flex items-center gap-2 mt-5">
-                  <button aria-label="Previous" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA]">
+                <div className="flex items-center gap-2 mt-4">
+                  <button aria-label="Previous" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA] transition">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <button aria-label="Next" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA]">
+                  <button aria-label="Next" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA] transition">
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
-              <div className="relative h-[200px] md:h-[230px] flex items-center justify-center overflow-hidden">
+              <div className="relative h-[180px] md:h-[210px] flex items-center justify-center overflow-hidden">
                 {/* Soft pale blue/purple halo glow */}
                 <div className="absolute inset-0 grid place-items-center pointer-events-none">
                   <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
@@ -394,10 +395,10 @@ const PortalPreview = () => {
                   width={1024}
                   height={1024}
                   loading="lazy"
-                  className="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)]"
+                  className="relative z-10 max-h-full w-auto object-contain scale-[1.28] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)]"
                 />
                 {/* Ground shadow ellipse */}
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-[68%] h-[14px] rounded-[50%] bg-black/25 blur-md z-0" />
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[68%] h-[12px] rounded-[50%] bg-black/25 blur-md z-0" />
               </div>
             </div>
 
@@ -476,12 +477,13 @@ const PortalPreview = () => {
                 <div className="text-[11px] text-[#53627A]">Last update: {MOCK.lastUpdate}</div>
               </div>
             </div>
-            <div className="mt-2 rounded-xl bg-[#F4F6FA] p-2.5 text-[12.5px] text-[#0B1F4A] leading-snug font-medium">
+            <div className="mt-2 rounded-xl bg-[#F4F6FA] border border-[#EAEDF3] p-2.5 text-[12.5px] text-[#0B1F4A] leading-snug font-medium">
               {MOCK.dealerMessage}
             </div>
             <button onClick={() => setShowConv(true)}
-              className="mt-2 w-full text-sm font-semibold text-[#4F46E5] bg-[#EEF0FF] hover:bg-[#E2E5FF] rounded-xl py-2 transition">
-              View Conversation
+              className="group mt-2 w-full inline-flex items-center justify-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-95 rounded-xl py-2.5 transition shadow-[0_8px_20px_-10px_rgba(79,70,229,0.6)]">
+              <MessageCircle className="w-4 h-4" /> View Conversation
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
             </button>
           </div>
 
@@ -542,13 +544,13 @@ const PortalPreview = () => {
               ].map(({ title, desc, Icon, tint, onClick }) => (
                 <li key={title}>
                   <button onClick={onClick}
-                    className="group w-full flex items-center gap-3.5 px-2.5 py-3 rounded-xl hover:bg-[#F4F6FA] hover:shadow-[inset_0_0_0_1px_rgba(79,70,229,0.08)] transition text-left">
-                    <div className={`w-10 h-10 rounded-full grid place-items-center shrink-0 ${TINTS[tint]} ring-1 ring-inset ring-black/[0.02] group-hover:scale-[1.04] transition-transform`}>
+                    className="group w-full flex items-center gap-3.5 px-3 py-3.5 rounded-xl hover:bg-[#F7F8FB] hover:shadow-[inset_0_0_0_1px_rgba(79,70,229,0.1)] active:bg-[#EEF0FF] transition text-left">
+                    <div className={`w-10 h-10 rounded-2xl grid place-items-center shrink-0 ${TINTS[tint]} ring-1 ring-inset ring-black/[0.03] group-hover:scale-[1.06] transition-transform`}>
                       <Icon className="w-[18px] h-[18px]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13.5px] font-semibold text-[#0B1F4A] leading-tight">{title}</div>
-                      <div className="text-[11.5px] text-[#53627A] truncate mt-0.5">{desc}</div>
+                      <div className="text-[13.5px] font-semibold text-[#06194A] leading-tight group-hover:text-[#4F46E5] transition-colors">{title}</div>
+                      <div className="text-[11.5px] text-[#53627A] truncate mt-1">{desc}</div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition" />
                   </button>
