@@ -240,7 +240,107 @@ const TrackerVehicleMapping = () => {
         </div>
       </div>
 
-      {/* Add new key */}
+      {/* ─────────── This dealership's tracker vehicle ─────────── */}
+      <div className="rounded-lg border p-4 bg-card space-y-4">
+        <div>
+          <h4 className="text-sm font-semibold text-card-foreground">
+            This dealership's Tracker vehicle
+          </h4>
+          <p className="text-xs text-muted-foreground mt-1">
+            Force a specific vehicle for <span className="font-medium">{tenant?.display_name || "this dealership"}</span>{" "}
+            regardless of the OEM mapping below.
+          </p>
+        </div>
+
+        <RadioGroup
+          value={tenantOv.tracker_vehicle_mode}
+          onValueChange={(v) =>
+            setTenantOv((p) => ({ ...p, tracker_vehicle_mode: v as Mode }))
+          }
+          className="grid sm:grid-cols-3 gap-2"
+        >
+          {[
+            { v: "oem",     label: "Match by OEM",     desc: "Auto-pick from the mapping below using the dealership name." },
+            { v: "popular", label: "Popular fallback", desc: "Show a single broadly-recognized vehicle (Toyota RAV4)." },
+            { v: "custom",  label: "Pick my own",      desc: "Use the year / make / model entered below." },
+          ].map((opt) => (
+            <label
+              key={opt.v}
+              className={`flex gap-2 rounded-md border p-3 cursor-pointer text-sm ${
+                tenantOv.tracker_vehicle_mode === opt.v
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:bg-muted/40"
+              }`}
+            >
+              <RadioGroupItem value={opt.v} className="mt-0.5" />
+              <div>
+                <div className="font-medium">{opt.label}</div>
+                <div className="text-xs text-muted-foreground">{opt.desc}</div>
+              </div>
+            </label>
+          ))}
+        </RadioGroup>
+
+        {tenantOv.tracker_vehicle_mode === "custom" && (
+          <div className="grid sm:grid-cols-5 gap-3">
+            <div>
+              <Label className="text-xs">Year</Label>
+              <Input
+                type="number"
+                value={tenantOv.tracker_vehicle_year ?? ""}
+                onChange={(e) =>
+                  setTenantOv((p) => ({
+                    ...p,
+                    tracker_vehicle_year: e.target.value ? Number(e.target.value) : null,
+                  }))
+                }
+                placeholder="2022"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Make</Label>
+              <Input
+                value={tenantOv.tracker_vehicle_make ?? ""}
+                onChange={(e) =>
+                  setTenantOv((p) => ({ ...p, tracker_vehicle_make: e.target.value || null }))
+                }
+                placeholder="Ford"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Model</Label>
+              <Input
+                value={tenantOv.tracker_vehicle_model ?? ""}
+                onChange={(e) =>
+                  setTenantOv((p) => ({ ...p, tracker_vehicle_model: e.target.value || null }))
+                }
+                placeholder="Explorer"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Trim / Style</Label>
+              <Input
+                value={tenantOv.tracker_vehicle_style ?? ""}
+                onChange={(e) =>
+                  setTenantOv((p) => ({ ...p, tracker_vehicle_style: e.target.value || null }))
+                }
+                placeholder="XLT"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Specs line</Label>
+              <Input
+                value={tenantOv.tracker_vehicle_specs ?? ""}
+                onChange={(e) =>
+                  setTenantOv((p) => ({ ...p, tracker_vehicle_specs: e.target.value || null }))
+                }
+                placeholder="4D SUV · 2.3L · 38k mi"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="flex items-end gap-2 p-3 rounded-lg border bg-muted/30">
         <div className="flex-1">
           <Label className="text-xs">Add brand key</Label>
