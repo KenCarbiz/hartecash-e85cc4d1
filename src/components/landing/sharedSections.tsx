@@ -208,8 +208,6 @@ export const MotoMobileBelowFold = () => (
         chart degrades gracefully — no horizontal scroll, no heavy
         image bytes. */}
     <ValueTrackerCardSection />
-    <FAQLeanSection />
-    <FindOfferLeanSection />
   </>
 );
 
@@ -252,7 +250,6 @@ export const MotoBelowFold = () => (
     <ValueTrackerCardSection />
     <TestimonialsLeanSection />
     <FAQLeanSection />
-    <FindOfferLeanSection />
     {/* Closing CTA is now part of BrandFooter (mounted by Index.tsx)
         — folded in to eliminate the tonal seam between the prior
         standalone CTABannerLean section and the footer block. */}
