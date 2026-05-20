@@ -353,11 +353,11 @@ const PortalPreview = () => {
         {/* MAIN ROW */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Vehicle card */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-6">
-            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] gap-4 items-start">
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] gap-4 items-center">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Your Vehicle</div>
-                <h2 className="text-[22px] font-bold leading-tight">
+                <h2 className="text-[22px] font-bold leading-tight tracking-tight">
                   {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
                 </h2>
                 <p className="text-sm text-[#53627A] mt-1">
@@ -371,16 +371,16 @@ const PortalPreview = () => {
                   </button>
                   {copied && <span className="text-[10px] text-[#16A34A] font-medium">Copied</span>}
                 </div>
-                <div className="flex items-center gap-2 mt-5">
-                  <button aria-label="Previous" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA]">
+                <div className="flex items-center gap-2 mt-4">
+                  <button aria-label="Previous" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA] transition">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <button aria-label="Next" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA]">
+                  <button aria-label="Next" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA] transition">
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
-              <div className="relative h-[200px] md:h-[230px] flex items-center justify-center overflow-hidden">
+              <div className="relative h-[180px] md:h-[210px] flex items-center justify-center overflow-hidden">
                 {/* Soft pale blue/purple halo glow */}
                 <div className="absolute inset-0 grid place-items-center pointer-events-none">
                   <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
@@ -395,10 +395,10 @@ const PortalPreview = () => {
                   width={1024}
                   height={1024}
                   loading="lazy"
-                  className="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)]"
+                  className="relative z-10 max-h-full w-auto object-contain scale-[1.28] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)]"
                 />
                 {/* Ground shadow ellipse */}
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-[68%] h-[14px] rounded-[50%] bg-black/25 blur-md z-0" />
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[68%] h-[12px] rounded-[50%] bg-black/25 blur-md z-0" />
               </div>
             </div>
 
