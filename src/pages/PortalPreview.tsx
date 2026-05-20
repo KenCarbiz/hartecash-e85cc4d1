@@ -539,7 +539,7 @@ const PortalPreview = () => {
                 { title: "Upload Documents", desc: "Upload and manage documents safely.", Icon: Upload, tint: "green" as const, onClick: () => setShowDocs(true) },
                 { title: "Message Dealer", desc: "Chat securely with your dealer.", Icon: MessageSquare, tint: "orange" as const, onClick: () => setShowConv(true) },
                 { title: "Track Offer", desc: "Monitor your offer status and next steps.", Icon: BarChart3, tint: "indigo" as const, onClick: () => setShowOffer(true) },
-              ].map(({ title, desc, Icon, tint, onClick }, i) => (
+              ].map(({ title, desc, Icon, tint, onClick }) => (
                 <li key={title}>
                   <button onClick={onClick}
                     className="group w-full flex items-center gap-3.5 px-2.5 py-3 rounded-xl hover:bg-[#F4F6FA] hover:shadow-[inset_0_0_0_1px_rgba(79,70,229,0.08)] transition text-left">
