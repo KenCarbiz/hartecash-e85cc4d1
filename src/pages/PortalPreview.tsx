@@ -147,24 +147,26 @@ const Metric = ({ label, value, sub, Icon, tint }: MetricProps) => (
 
 /* ── SVG line charts ─────────────────────────────────────────────── */
 const MiniTrend = () => {
-  // gentle rising curve
   const pts = [10, 18, 14, 22, 26, 24, 32, 36, 34, 42, 46, 52];
-  const w = 520, h = 90, pad = 4;
+  const w = 520, h = 64, pad = 4;
   const max = Math.max(...pts), min = Math.min(...pts);
   const x = (i: number) => pad + (i * (w - pad * 2)) / (pts.length - 1);
   const y = (v: number) => h - pad - ((v - min) / (max - min)) * (h - pad * 2);
   const d = pts.map((v, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(v)}`).join(" ");
   const area = `${d} L${x(pts.length - 1)},${h} L${x(0)},${h} Z`;
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[90px]" preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[64px]" preserveAspectRatio="none">
       <defs>
         <linearGradient id="miniFill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#16A34A" stopOpacity="0.25" />
+          <stop offset="0%" stopColor="#16A34A" stopOpacity="0.22" />
           <stop offset="100%" stopColor="#16A34A" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={area} fill="url(#miniFill)" />
-      <path d={d} fill="none" stroke="#16A34A" strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
+      <path d={d} fill="none" stroke="#16A34A" strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" />
+      {pts.map((v, i) => (
+        <circle key={i} cx={x(i)} cy={y(v)} r="2" fill="#16A34A" />
+      ))}
       <circle cx={x(pts.length - 1)} cy={y(pts[pts.length - 1])} r="3.5" fill="#16A34A" />
     </svg>
   );
@@ -305,7 +307,7 @@ const Modal = ({
 
 /* ── Page ─────────────────────────────────────────────────────────── */
 const TUNER_KEY = "portalPreviewVehicleTuner_v1";
-const TUNER_DEFAULTS = { scale: 1.15, x: 0, y: 0 };
+const TUNER_DEFAULTS = { scale: 1.0, x: 0, y: 0 };
 
 const PortalPreview = () => {
   const [copied, setCopied] = useState(false);
