@@ -197,7 +197,7 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
     // inside a Clarity card with its own aspect ratio). No internal
     // aspect-ratio so the parent wins and the car never letterboxes.
     <div
-      className={`relative w-full overflow-hidden bg-white ${
+      className={`relative w-full overflow-hidden ${transparent ? "bg-transparent" : "bg-white"} ${
         fill ? "h-full" : compact ? "mb-2" : "mb-4"
       }`}
       style={fill ? undefined : { aspectRatio: compact ? "16/7" : "4/3" }}
