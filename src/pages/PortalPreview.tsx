@@ -304,12 +304,27 @@ const Modal = ({
 };
 
 /* ── Page ─────────────────────────────────────────────────────────── */
+const TUNER_KEY = "portalPreviewVehicleTuner_v1";
+const TUNER_DEFAULTS = { scale: 1.15, x: 0, y: 0 };
+
 const PortalPreview = () => {
   const [copied, setCopied] = useState(false);
   const [showConv, setShowConv] = useState(false);
   const [showDocs, setShowDocs] = useState(false);
   const [showOffer, setShowOffer] = useState(false);
+  const [showTuner, setShowTuner] = useState(false);
+  const [tuner, setTuner] = useState(TUNER_DEFAULTS);
   const offerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(TUNER_KEY);
+      if (raw) setTuner({ ...TUNER_DEFAULTS, ...JSON.parse(raw) });
+    } catch { /* noop */ }
+  }, []);
+  useEffect(() => {
+    try { localStorage.setItem(TUNER_KEY, JSON.stringify(tuner)); } catch { /* noop */ }
+  }, [tuner]);
 
   const copyVin = async () => {
     try {
