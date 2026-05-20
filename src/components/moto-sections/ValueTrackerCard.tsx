@@ -266,6 +266,7 @@ const ValueTrackerCard = () => {
                     selectedColor="Silver"
                     hideColorLabel
                     fill
+                    transparent
                   />
                 </div>
                 <div className="flex-1 min-w-0">

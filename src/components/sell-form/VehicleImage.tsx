@@ -20,26 +20,100 @@ interface Props {
    *  already shaping the slot — otherwise the inner 4/3 fights
    *  with the outer 16/9 and the car renders letterboxed. */
   fill?: boolean;
+  /** When true, render on a transparent background (no white fill).
+   *  Use only when the surrounding card already provides the
+   *  background and the vehicle PNG is known to come back with a
+   *  cleanly-keyed alpha channel. */
+  transparent?: boolean;
 }
 
 // Preload an image and resolve when ready
 const preloadImage = (url: string): Promise<string> =>
   new Promise((resolve, reject) => {
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = () => resolve(url);
     img.onerror = reject;
     img.src = url;
   });
 
-const VehicleImage = ({ year, make, model, style, selectedColor, compact = false, uvc, hideColorLabel = false, imageAngle: imageAngleProp, fill = false }: Props) => {
+// Client-side white-keying: source image must come back on a solid
+// near-white studio background (the generate-vehicle-image edge fn
+// already enforces this). We draw it to a canvas and turn every
+// near-white pixel into alpha=0 so the vehicle floats on whatever the
+// parent background is. Returns null on CORS / decode failure.
+async function keyOutWhite(url: string): Promise<string | null> {
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.crossOrigin = "anonymous";
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = url;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0);
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const px = data.data;
+    // Threshold: pixels brighter than ~245 in every channel and with
+    // low saturation get keyed out. The fade band (235-245) gets a
+    // partial alpha so vehicle edges don't fringe hard.
+    for (let i = 0; i < px.length; i += 4) {
+      const r = px[i], g = px[i + 1], b = px[i + 2];
+      const min = Math.min(r, g, b);
+      const max = Math.max(r, g, b);
+      const sat = max - min;
+      if (sat > 18) continue; // colored pixel, keep
+      if (min >= 245) {
+        px[i + 3] = 0;
+      } else if (min >= 232) {
+        // soft edge taper
+        px[i + 3] = Math.round(((245 - min) / 13) * 255);
+      }
+    }
+    ctx.putImageData(data, 0, 0);
+    return canvas.toDataURL("image/png");
+  } catch {
+    return null;
+  }
+}
+
+
+const VehicleImage = ({ year, make, model, style, selectedColor, compact = false, uvc, hideColorLabel = false, imageAngle: imageAngleProp, fill = false, transparent = false }: Props) => {
   const { config } = useSiteConfig();
   const imageAngle = imageAngleProp || config.vehicle_image_angle || "three_quarter";
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [transparentUrl, setTransparentUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const currentColorRef = useRef<string>("");
   const prefetchedRef = useRef<Set<string>>(new Set());
+
+  // When transparent mode is requested, run a white-key pass after
+  // the source image loads and cache the resulting transparent PNG
+  // in localStorage so we don't re-process on every mount.
+  useEffect(() => {
+    if (!transparent || !imageUrl) {
+      setTransparentUrl(null);
+      return;
+    }
+    const tKey = `vehicle-img-transparent-${imageUrl.slice(0, 80)}`;
+    const cached = localStorage.getItem(tKey);
+    if (cached) { setTransparentUrl(cached); return; }
+    let cancelled = false;
+    keyOutWhite(imageUrl).then((url) => {
+      if (cancelled || !url) return;
+      try { localStorage.setItem(tKey, url); } catch { /* quota */ }
+      setTransparentUrl(url);
+    });
+    return () => { cancelled = true; };
+  }, [transparent, imageUrl]);
+
 
   const buildCacheKey = useCallback((color: string) => {
     const colorKey = (color || "white").toLowerCase().replace(/\s+/g, "_");
@@ -192,7 +266,7 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
     // inside a Clarity card with its own aspect ratio). No internal
     // aspect-ratio so the parent wins and the car never letterboxes.
     <div
-      className={`relative w-full overflow-hidden bg-white ${
+      className={`relative w-full overflow-hidden ${transparent ? "bg-transparent" : "bg-white"} ${
         fill ? "h-full" : compact ? "mb-2" : "mb-4"
       }`}
       style={fill ? undefined : { aspectRatio: compact ? "16/7" : "4/3" }}
@@ -218,16 +292,16 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
       )}
 
       <AnimatePresence mode="wait">
-        {imageUrl && (
+        {imageUrl && (!transparent || transparentUrl) && (
           <motion.div
-            key={imageUrl}
+            key={transparent ? transparentUrl! : imageUrl}
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
             className="absolute inset-0 flex items-center justify-center p-2"
           >
             <img
-              src={imageUrl}
+              src={transparent ? transparentUrl! : imageUrl}
               alt={`${year} ${make} ${model}${selectedColor ? ` in ${selectedColor}` : ""}`}
               className="max-w-full max-h-full object-contain"
             />
