@@ -341,7 +341,7 @@ const PortalPreview = () => {
           <Metric label="Estimated Value" value={`${fmt(MOCK.range.low)} – ${fmt(MOCK.range.high)}`}
             sub={<span className="text-[#16A34A] font-medium inline-flex items-center gap-1"><TrendingUp className="w-3 h-3" />Strong Market</span>}
             Icon={BarChart3} tint="indigo" />
-          <Metric label="Best Offer" value={fmt(MOCK.firmOffer)} sub={MOCK.customer.dealer}
+          <Metric label="Firm Offer" value={fmt(MOCK.firmOffer)} sub={MOCK.customer.dealer}
             Icon={Tag} tint="emerald" />
           <Metric label="Market Demand" value={MOCK.marketDemand} sub="vs last 30 days"
             Icon={TrendingUp} tint="green" />
