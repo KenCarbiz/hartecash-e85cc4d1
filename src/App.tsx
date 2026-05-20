@@ -29,6 +29,7 @@ const UploadPhotos = lazy(() => import("./pages/UploadPhotos"));
 const UploadDocs = lazy(() => import("./pages/UploadDocs"));
 const BoostOfferClarity = lazy(() => import("./pages/BoostOfferClarity"));
 const CustomerPortal = lazy(() => import("./pages/CustomerPortal"));
+const PortalPreview = lazy(() => import("./pages/PortalPreview"));
 const CustomerLookup = lazy(() => import("./pages/CustomerLookup"));
 const ScheduleVisit = lazy(() => import("./pages/ScheduleVisit"));
 const WatchMyCar = lazy(() => import("./pages/WatchMyCar"));
@@ -240,6 +241,7 @@ const AnimatedRoutes = () => {
         <Route path="/boost-offer/:token" element={<BoostOfferClarity />} />
         <Route path="/my-submission" element={<CustomerLookup />} />
         <Route path="/my-submission/:token" element={<CustomerPortal />} />
+        <Route path="/portal-preview" element={<PortalPreview />} />
         <Route path="/reschedule/:token" element={<RescheduleAppointment />} />
         <Route path="/call-feedback/:token" element={<CallFeedback />} />
         <Route path="/schedule" element={<ScheduleVisit />} />
