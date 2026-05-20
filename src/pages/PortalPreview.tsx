@@ -384,7 +384,7 @@ const PortalPreview = () => {
                   </button>
                 </div>
               </div>
-              <div className="relative h-[200px] md:h-[240px] flex items-center justify-center overflow-hidden">
+              <div className="relative h-[220px] md:h-[260px] flex items-center justify-center overflow-hidden">
                 {/* Tuner toggle */}
                 <button
                   onClick={() => setShowTuner((v) => !v)}
