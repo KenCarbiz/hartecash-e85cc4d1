@@ -5,6 +5,7 @@ import {
   TrendingUp, Clock, Shield, ShieldCheck, Truck, Handshake,
   Upload, MessageSquare, LineChart as LineIcon, X, ArrowRight,
 } from "lucide-react";
+import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 
 /* ──────────────────────────────────────────────────────────────────
    Premium customer portal dashboard (preview / mock).
@@ -350,24 +351,37 @@ const PortalPreview = () => {
                   </button>
                 </div>
               </div>
-              <div className="relative h-[200px] md:h-[220px]">
-                <VehicleSVG />
+              <div className="relative h-[200px] md:h-[220px] flex items-center justify-center">
+                {/* Soft halo */}
+                <div className="absolute inset-0 grid place-items-center pointer-events-none">
+                  <div className="w-[78%] h-[78%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(199,210,254,0.55)_0%,_rgba(224,231,255,0.25)_55%,_transparent_75%)]" />
+                </div>
+                {/* Vehicle photo */}
+                <img
+                  src={vehicleHero}
+                  alt={`${MOCK.vehicle.year} ${MOCK.vehicle.make} ${MOCK.vehicle.model} ${MOCK.vehicle.trim}`}
+                  width={1024}
+                  height={1024}
+                  loading="lazy"
+                  className="relative z-10 max-h-full w-auto object-contain drop-shadow-[0_22px_18px_rgba(15,23,42,0.18)]"
+                />
+                {/* Ground shadow ellipse */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-[70%] h-[14px] rounded-[50%] bg-black/25 blur-md z-0" />
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-[#EEF0F4]">
-              <div className="flex items-end justify-between flex-wrap gap-3">
-                <div>
-                  <div className="text-xs text-[#53627A]">Estimated Value Range</div>
-                  <div className="text-[22px] font-bold leading-tight">
-                    {fmt(MOCK.range.low)} – {fmt(MOCK.range.high)}
-                  </div>
-                  <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2.5 py-1 rounded-full">
-                    <TrendingUp className="w-3 h-3" /> Strong Market
-                  </span>
-                </div>
+            {/* Compact estimated value range strip (~25-33% of card row) */}
+            <div className="mt-4 pt-3 border-t border-[#EEF0F4] flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-baseline gap-2">
+                <span className="text-[11px] text-[#53627A]">Estimated Value Range</span>
+                <span className="text-[15px] font-bold leading-tight text-[#06194A]">
+                  {fmt(MOCK.range.low)} – {fmt(MOCK.range.high)}
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2 py-0.5 rounded-full">
+                  <TrendingUp className="w-3 h-3" /> Strong Market
+                </span>
               </div>
-              <div className="mt-3"><MiniTrend /></div>
+              <div className="w-[200px] max-w-full opacity-90"><MiniTrend /></div>
             </div>
           </div>
 
