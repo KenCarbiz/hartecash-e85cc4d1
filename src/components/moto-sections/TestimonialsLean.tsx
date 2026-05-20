@@ -61,8 +61,9 @@ const TestimonialsLean = () => {
 
   return (
     <section
+      id="reviews"
       aria-labelledby="reviews-heading"
-      className="py-20 lg:py-24 px-5 bg-background border-t border-border/60"
+      className="py-20 lg:py-24 px-5 bg-background border-t border-border/60 scroll-mt-24"
     >
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12 lg:mb-16">
