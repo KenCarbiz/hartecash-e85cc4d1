@@ -477,12 +477,13 @@ const PortalPreview = () => {
                 <div className="text-[11px] text-[#53627A]">Last update: {MOCK.lastUpdate}</div>
               </div>
             </div>
-            <div className="mt-2 rounded-xl bg-[#F4F6FA] p-2.5 text-[12.5px] text-[#0B1F4A] leading-snug font-medium">
+            <div className="mt-2 rounded-xl bg-[#F4F6FA] border border-[#EAEDF3] p-2.5 text-[12.5px] text-[#0B1F4A] leading-snug font-medium">
               {MOCK.dealerMessage}
             </div>
             <button onClick={() => setShowConv(true)}
-              className="mt-2 w-full text-sm font-semibold text-[#4F46E5] bg-[#EEF0FF] hover:bg-[#E2E5FF] rounded-xl py-2 transition">
-              View Conversation
+              className="group mt-2 w-full inline-flex items-center justify-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-95 rounded-xl py-2.5 transition shadow-[0_8px_20px_-10px_rgba(79,70,229,0.6)]">
+              <MessageCircle className="w-4 h-4" /> View Conversation
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
             </button>
           </div>
 
