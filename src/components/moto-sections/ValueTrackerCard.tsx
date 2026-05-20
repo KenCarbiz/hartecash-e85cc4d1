@@ -270,32 +270,34 @@ const ValueTrackerCard = () => {
             <div className="bg-white rounded-3xl border border-border/60 shadow-[0_12px_40px_-16px_rgb(15_23_42_/_0.12)] p-6 lg:p-8">
               {/* Top row: thumbnail + title + tracking badge */}
               <div className="flex items-start gap-4 mb-8">
-                {/* Vehicle thumbnail placeholder — Lucide Car on soft-gray
-                    rounded square. Editable later with a real image
-                    via background-image if a per-tenant or
-                    vehicle-specific shot is wanted. */}
+                {/* Vehicle thumbnail — dynamically resolves to the
+                    dealership's OEM flagship via VehicleImage's
+                    Black Book → Wikipedia → AI cascade. The image
+                    sits in a soft-gray rounded square so the white
+                    PNG bg disappears into the frame. */}
                 <div
                   className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden"
                   style={{ background: "hsl(220 14% 96%)" }}
                   aria-hidden
                 >
-                  <img
-                    src={vehicleImage}
-                    alt=""
-                    loading="lazy"
-                    width={1024}
-                    height={1024}
-                    className="w-full h-full object-contain"
+                  <VehicleImage
+                    year={flagship.year}
+                    make={flagship.make}
+                    model={flagship.model}
+                    style={flagship.style}
+                    selectedColor="Silver"
+                    hideColorLabel
+                    fill
                   />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="min-w-0">
                       <h3 className="text-lg lg:text-xl font-bold text-foreground tracking-tight truncate">
-                        2022 Ford Explorer XLT
+                        {flagship.year} {flagship.make} {flagship.model} {flagship.style}
                       </h3>
                       <p className="text-[13px] text-foreground/60 mt-1">
-                        4D SUV · 2.3L EcoBoost · 38,450 mi
+                        {flagship.specs}
                       </p>
                     </div>
                     <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 shrink-0">
