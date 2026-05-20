@@ -2,6 +2,7 @@ import SEO from "@/components/SEO";
 import { LocalBusinessJsonLd, FAQPageJsonLd, HowToJsonLd, WebSiteJsonLd } from "@/components/JsonLd";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import BrandFooter from "@/components/BrandFooter";
 import BackToTop from "@/components/BackToTop";
 import LandingTemplateRouter from "@/components/landing/LandingTemplateRouter";
 import NearestRooftopBanner from "@/components/NearestRooftopBanner";
@@ -11,6 +12,12 @@ import { useEmbedMode } from "@/hooks/useEmbedMode";
 const Index = () => {
   const { config } = useSiteConfig();
   const embed = useEmbedMode();
+
+  // The Moto template uses the new minimal BrandFooter (one row of
+  // identity + mission + last-CTA + legal). Every other template
+  // keeps the existing 3-column SiteFooter — they're styled to
+  // expect it and changing them is out of scope here.
+  const isMoto = config.landing_template === "moto";
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,7 +39,7 @@ const Index = () => {
       <main>
         <LandingTemplateRouter />
       </main>
-      {!embed && <SiteFooter />}
+      {!embed && (isMoto ? <BrandFooter /> : <SiteFooter />)}
       {!embed && <BackToTop />}
     </div>
   );
