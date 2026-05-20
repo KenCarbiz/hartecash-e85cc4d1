@@ -517,7 +517,7 @@ const PortalPreview = () => {
                 <div className="w-7 h-7 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><TrendingUp className="w-3.5 h-3.5" /></div>
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-[#53627A]">Market Trend</div>
-                  <div className="text-xs font-bold">Strong</div>
+                  <div className="text-[13px] font-bold text-[#0B1F4A]">Strong</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
