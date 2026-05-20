@@ -91,7 +91,8 @@ const TrackerVehicleMapping = () => {
   // landing renders.
   const effective = useMemo(() => mergeFlagships(overrides), [overrides]);
 
-  const dirty = JSON.stringify(overrides) !== JSON.stringify(savedOverrides);
+
+
 
   const updateEntry = (key: string, patch: Partial<FlagshipEntry>) => {
     setOverrides((prev) => {
