@@ -31,8 +31,8 @@ import {
   TrendingUp,
   ArrowRight,
   ArrowUp,
-  Car,
 } from "lucide-react";
+import vehicleImage from "@/assets/value-tracker-vehicle.png";
 
 const scrollToForm = () => {
   const form = document.getElementById("sell-car-form");
