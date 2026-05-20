@@ -476,7 +476,7 @@ const PortalPreview = () => {
                 <div className="text-[11px] text-[#53627A]">Last update: {MOCK.lastUpdate}</div>
               </div>
             </div>
-            <div className="mt-2 rounded-xl bg-[#F4F6FA] p-2.5 text-[12px] text-[#06194A] leading-snug">
+            <div className="mt-2 rounded-xl bg-[#F4F6FA] p-2.5 text-[12.5px] text-[#0B1F4A] leading-snug font-medium">
               {MOCK.dealerMessage}
             </div>
             <button onClick={() => setShowConv(true)}
@@ -491,8 +491,8 @@ const PortalPreview = () => {
             <ul className="space-y-2">
               {MOCK.docs.map((d) => (
                 <li key={d.name} className="flex items-center justify-between text-sm">
-                  <span className="text-[#06194A]">{d.name}</span>
-                  <span className="inline-flex items-center gap-1.5 text-[12px] text-[#16A34A] font-medium">
+                  <span className="text-[#0B1F4A] font-medium">{d.name}</span>
+                  <span className="inline-flex items-center gap-1.5 text-[12px] text-[#0F7A3E] font-semibold">
                     Uploaded <span className="w-4 h-4 rounded-full bg-[#16A34A] grid place-items-center"><Check className="w-2.5 h-2.5 text-white" strokeWidth={3} /></span>
                   </span>
                 </li>
