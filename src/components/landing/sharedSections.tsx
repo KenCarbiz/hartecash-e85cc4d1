@@ -76,6 +76,7 @@ export const HowItWorksLeanSection = () => <Lazy><HowItWorksLean /></Lazy>;
 export const TestimonialsLeanSection = () => <Lazy><TestimonialsLean /></Lazy>;
 export const ValueTrackerCardSection = () => <Lazy withSkeleton={false}><ValueTrackerCard /></Lazy>;
 export const FAQLeanSection = () => <Lazy><FAQLean /></Lazy>;
+export const FindOfferLeanSection = () => <Lazy withSkeleton={false}><FindOfferLean /></Lazy>;
 
 /**
  * "Learn more" accordion. Wraps sections that historically padded the
