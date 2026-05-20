@@ -4,6 +4,7 @@ import {
   Search, Bell, ChevronDown, ChevronLeft, ChevronRight, Copy, Check,
   TrendingUp, Clock, Shield, ShieldCheck, Truck, Handshake,
   Upload, MessageSquare, LineChart as LineIcon, X, ArrowRight,
+  Sliders, RotateCcw,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 
