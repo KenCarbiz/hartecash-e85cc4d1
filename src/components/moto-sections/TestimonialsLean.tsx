@@ -120,8 +120,13 @@ const TestimonialsLean = () => {
 
         {/* Inline CTA so customers landing on this section from the
             top nav can jump straight back to the offer flow without
-            a route change. */}
-        <div className="mt-12 flex justify-center">
+            a route change. Quiet secondary link below routes to the
+            /reviews subpage — both gives the late-funnel skeptic a
+            "read more" escape hatch and gives /reviews a contextual
+            body-link (replaces the BrandFooter legal-row link cut in
+            the same PR, so /reviews keeps its sitewide entry point
+            and its JSON-LD rich snippets stay eligible). */}
+        <div className="mt-12 flex flex-col items-center gap-4">
           <Link
             to="/#top"
             onClick={(e) => {
@@ -132,6 +137,14 @@ const TestimonialsLean = () => {
           >
             Get My Offer
             <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
+          </Link>
+          <Link
+            to="/reviews"
+            onClick={() => window.scrollTo(0, 0)}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            Read all reviews
+            <ArrowRight className="w-4 h-4" strokeWidth={2} />
           </Link>
         </div>
       </div>
