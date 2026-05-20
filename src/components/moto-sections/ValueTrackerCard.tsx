@@ -25,6 +25,7 @@
 // tracking feature on every dealer's landing. Only the primary
 // color CSS var bleeds through, which is how every other moto-
 // section maintains brand cohesion.
+import { useState } from "react";
 import {
   ShieldCheck,
   Bell,
@@ -36,6 +37,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { mergeFlagships, resolveFlagship } from "@/data/oemFlagships";
 import VehicleImage from "@/components/sell-form/VehicleImage";
+import ValueTrackingModal from "@/components/moto-sections/ValueTrackingModal";
 
 const scrollToForm = () => {
   const form = document.getElementById("sell-car-form");
@@ -155,6 +157,7 @@ const POPULAR_FLAGSHIP = {
 const ValueTrackerCard = () => {
   const { tenant } = useTenant();
   const { config } = useSiteConfig();
+  const [showModal, setShowModal] = useState(false);
 
   let flagship;
   if (config.tracker_vehicle_mode === "custom" && config.tracker_vehicle_make && config.tracker_vehicle_model) {
@@ -236,10 +239,12 @@ const ValueTrackerCard = () => {
                 ))}
               </div>
 
-              {/* CTA — text-link style per spec (not a filled button). */}
+              {/* CTA — text-link style per spec (not a filled button).
+                  Opens the ValueTrackingModal explainer; the modal's
+                  own "Get Started" handles the scroll-to-form. */}
               <button
                 type="button"
-                onClick={scrollToForm}
+                onClick={() => setShowModal(true)}
                 className="inline-flex items-center gap-2 text-base font-semibold text-primary underline-offset-4 hover:underline"
               >
                 Learn how it works
@@ -486,6 +491,8 @@ const ValueTrackerCard = () => {
           </div>
         </div>
       </div>
+
+      <ValueTrackingModal open={showModal} onOpenChange={setShowModal} />
     </section>
   );
 };
