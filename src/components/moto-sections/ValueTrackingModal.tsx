@@ -13,10 +13,12 @@
 //
 // Illustration: top image is the supplied PNG (silver crossover +
 // rising blue value line with $ / $$ callouts). Asset path:
-//   public/value-tracker-illustration.png  →  /value-tracker-illustration.png
-// Drop the supplied image at that path before deploy; if Lovable
-// auto-routed the pasted image to /lovable-uploads/<hash>.png,
-// either rename it or update the src below to that hash path.
+//   public/brand/autocurb/value-tracker-illustration.png
+//     →  /brand/autocurb/value-tracker-illustration.png  at runtime.
+// Drop the supplied image at exactly that path. The folder currently
+// holds AutoCurb logo design proofs; the car-graph illustration is
+// a separate file that needs to be saved with the filename above
+// (or update ILLUSTRATION_SRC below to whatever filename you give it).
 //
 // CTA matches the landing form's primary button language exactly:
 // `--cta-offer` / `--cta-offer-text` CSS vars from ThemeProvider so
@@ -26,7 +28,7 @@ import { X, TrendingUp } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 
-const ILLUSTRATION_SRC = "/value-tracker-illustration.png";
+const ILLUSTRATION_SRC = "/brand/autocurb/value-tracker-illustration.png";
 const ILLUSTRATION_ALT =
   "A silver crossover beneath a rising blue value line with $ and $$ callout bubbles, indicating vehicle value increasing over time.";
 
