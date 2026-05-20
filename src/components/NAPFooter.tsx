@@ -10,6 +10,7 @@
 // Design intent: low-key, restrained. Sits at the very bottom of the
 // landing chrome on desktop AND inside the mobile DefaultBelowFold
 // so mobile-first indexing picks it up. No decorative noise.
+import { Link } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
@@ -78,6 +79,32 @@ const NAPFooter = () => {
             </div>
           ) : null}
         </address>
+
+        {/* Inline links row. Crawlable internal link to /reviews so
+            Google + visitors find the Review/AggregateRating-rich
+            page that was carved out of the landing in PR 3a. */}
+        <nav className="mt-8 pt-6 border-t border-border/60 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+          <Link
+            to="/reviews"
+            className="hover:text-primary transition-colors"
+          >
+            Customer reviews
+          </Link>
+          <Link
+            to="/"
+            className="hover:text-primary transition-colors"
+          >
+            Get an offer
+          </Link>
+          {(config as { privacy_url?: string }).privacy_url ? (
+            <a
+              href={(config as { privacy_url?: string }).privacy_url}
+              className="hover:text-primary transition-colors"
+            >
+              Privacy
+            </a>
+          ) : null}
+        </nav>
       </div>
     </section>
   );

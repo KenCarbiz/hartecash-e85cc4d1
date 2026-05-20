@@ -79,6 +79,7 @@ const StatusPage = lazy(() => import("./pages/StatusPage"));
 const SlaPage = lazy(() => import("./pages/SlaPage"));
 const DocsLanding = lazy(() => import("./pages/DocsLanding"));
 const GroupLandingPage = lazy(() => import("./pages/GroupLandingPage"));
+const Reviews = lazy(() => import("./pages/Reviews"));
 // /billing removed — /plan is now the canonical billing surface, with
 // a "Manage billing" button that opens the Stripe Customer Portal
 // directly. The previous BillingPage was orphaned (not in the sidebar)
@@ -214,6 +215,7 @@ const AnimatedRoutes = () => {
             microsite by default; iframed onto the dealer's own site
             with ?embed=true so the top + disclosure bars drop out. */}
         <Route path="/sell" element={<SellFlow />} />
+        <Route path="/reviews" element={<Reviews />} />
         <Route path="/upload/:token" element={<UploadPhotos />} />
         <Route path="/docs/:token" element={<UploadDocs />} />
         <Route path="/boost-offer/:token" element={<BoostOfferClarity />} />
