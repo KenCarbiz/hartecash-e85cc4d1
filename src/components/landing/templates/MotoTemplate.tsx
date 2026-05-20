@@ -1,58 +1,98 @@
 import SellFlow from "@/pages/SellFlow";
-import { FullBelowFold } from "../sharedSections";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { FullBelowFold, DefaultBelowFold } from "../sharedSections";
+import BrandStructuredData from "@/components/BrandStructuredData";
+import NAPFooter from "@/components/NAPFooter";
 
 /**
  * "Instant Offer" landing template — the MotoAcquire-style 8-step
- * appraisal flow.
+ * appraisal flow PLUS responsive SEO/marketing chrome below.
  *
  * Layout:
  *   ┌──────────────────────────────────────────┐
  *   │ <SellFlow />        (mobile + desktop)   │
  *   │   the 8-step instant-offer form          │
  *   ├──────────────────────────────────────────┤
- *   │ <FullBelowFold />   (desktop only)       │
- *   │   How It Works, TrustBadges,             │
- *   │   CompetitorComparison, ValueProps,      │
- *   │   Testimonials, FAQ, Referral, CTA       │
+ *   │ Desktop (md+):  <FullBelowFold />        │
+ *   │   all sections inline, max content       │
+ *   │                                          │
+ *   │ Mobile (<md):   <DefaultBelowFold />     │
+ *   │   trust + comparison + how-it-works      │
+ *   │   visible; value-props/testimonials/FAQ  │
+ *   │   collapse behind a "Learn more" accordion│
+ *   ├──────────────────────────────────────────┤
+ *   │ <NAPFooter />                            │
+ *   │   semantic <address> for local SEO       │
  *   └──────────────────────────────────────────┘
  *
- * Why the desktop-only gate:
- *   * The Moto flow is mobile-first and the form alone is the right
- *     mobile experience — anything below the fold on mobile just adds
- *     thumb-swipes between the customer and the price they came for.
- *   * On desktop the form sits in the top portion of a wide viewport
- *     and there's vertical room for the marketing content beneath it
- *     without competing for the customer's primary attention.
- *   * Crawler bots (Google, Bing, social previews) render the page at
- *     desktop widths by default, so the SEO content is indexed
- *     regardless of what mobile users see.
+ * Why mobile shows the chrome (collapsed):
+ *   The previous version used `hidden md:block` claiming bots render
+ *   at desktop widths. WRONG — Googlebot Smartphone has been the
+ *   primary crawler since 2020 (mobile-first indexing). Hiding
+ *   content with display:none means Google still INDEXES it but
+ *   DISCOUNTS its ranking weight. Content inside a closed accordion
+ *   in the DOM is fully indexed AND fully weighted — same SEO payload
+ *   as desktop, near-zero mobile UX cost. DefaultBelowFold uses the
+ *   existing LearnMoreFold accordion in sharedSections.tsx.
  *
- * SEO purpose:
- *   The Moto template was previously hero-less and form-only, which
- *   meant the landing had ~50 words of indexable text — terrible for
- *   ranking on "sell my car <city>" / "trade-in <make>" queries.
- *   FullBelowFold adds ~800-1000 words of dealer-specific marketing
- *   content (How It Works, comparison vs. competitors, testimonials,
- *   FAQ) that's all wired to site_config, so each dealer's landing
- *   gets unique indexable copy without per-tenant authoring.
+ * SEO additions vs. the prior pass:
+ *   * Page-level H1 (sr-only — the form's own headlines are the
+ *     visual hero; an H1 added here gives crawlers the
+ *     "Sell Your Car ... | {Dealer}" signal without competing with
+ *     the form visually).
+ *   * Semantic <main> landmark for accessibility + SEO.
+ *   * BrandStructuredData emits AutoDealer + FAQPage + WebSite
+ *     JSON-LD, all driven by site_config so each tenant gets a
+ *     distinct graph.
+ *   * NAPFooter is a real <address> element with crawlable
+ *     name/address/phone — required for local-pack ranking.
  *
- * The flow itself is responsive (MotoShell), respects ?embed=true to
- * strip its top + disclosure bars when iframed, and reads
- * pricing_reveal_mode + landing_cta_color from the tenant's
- * site_config + offer_settings.
+ * Per-tenant correctness:
+ *   Every section reads from useSiteConfig. A different dealer
+ *   selecting landing_template=moto gets their own:
+ *     dealership_name → comparison + ValueProps headers, NAP, JSON-LD
+ *     stats_cars_purchased + established_year → TrustBadges, JSON-LD
+ *     stats_rating → TrustBadges, AggregateRating in JSON-LD
+ *     pickup_offered → HowItWorks step 3 + FAQ + comparison rows
+ *     price_guarantee_days → comparison + ValueProps + FAQ
+ *     address, phone, email, business_hours → NAP block + JSON-LD
  */
-const MotoTemplate = () => (
-  <>
-    <SellFlow />
-    {/* Desktop-only marketing chrome. md: == 768px+ in our Tailwind
-        config. Hidden on mobile so the form alone owns small screens.
-        bg-background keeps the chrome on the same neutral surface as
-        the form above; individual sections (TrustBadges' deep-blue
-        stat strip, etc.) bring their own contrast. */}
-    <div className="hidden md:block bg-background">
-      <FullBelowFold />
-    </div>
-  </>
-);
+const MotoTemplate = () => {
+  const { config } = useSiteConfig();
+  const dealerName = (config.dealership_name || "").trim();
+  // H1 leverages the dealer's name when configured; falls back to
+  // generic intent-keyword copy for new tenants who haven't
+  // completed onboarding yet.
+  const h1 = dealerName && dealerName !== "Our Dealership"
+    ? `Sell Your Car — Instant Cash Offer from ${dealerName}`
+    : "Sell Your Car — Instant Cash Offer";
+
+  return (
+    <main>
+      {/* Per-page H1. Hidden visually (the form's own headlines are
+          the visual hero), but present in the DOM so crawlers and
+          screen readers see one clear primary heading. */}
+      <h1 className="sr-only">{h1}</h1>
+
+      <BrandStructuredData />
+
+      <SellFlow />
+
+      {/* Desktop chrome: full inline marketing content. */}
+      <div className="hidden md:block bg-background">
+        <FullBelowFold />
+      </div>
+
+      {/* Mobile chrome: trust + comparison + how-it-works visible,
+          everything else collapsed behind LearnMoreFold. Same DOM
+          content as desktop, just compressed. */}
+      <div className="md:hidden bg-background">
+        <DefaultBelowFold />
+      </div>
+
+      <NAPFooter />
+    </main>
+  );
+};
 
 export default MotoTemplate;
