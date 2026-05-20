@@ -19,6 +19,7 @@ const HowItWorksLean = lazy(() => import("@/components/moto-sections/HowItWorksL
 const TestimonialsLean = lazy(() => import("@/components/moto-sections/TestimonialsLean"));
 const ValueTrackerCard = lazy(() => import("@/components/moto-sections/ValueTrackerCard"));
 const FAQLean = lazy(() => import("@/components/moto-sections/FAQLean"));
+const FindOfferLean = lazy(() => import("@/components/moto-sections/FindOfferLean"));
 
 class SectionErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
