@@ -140,23 +140,43 @@ function buildChartPath() {
 const CHART_LINE_PATH = buildChartPath();
 const CHART_FILL_PATH = `${CHART_LINE_PATH} L 560 240 L 40 240 Z`;
 
-// Y-axis ticks (labels on the right edge of the chart area).
+// Y-axis ticks for the 520×260 chart (plot y: 12..185 → $25K..$19K).
 const Y_TICKS = [
-  { k: 25, label: "$25K" },
-  { k: 23, label: "$23K" },
-  { k: 21, label: "$21K" },
-  { k: 19, label: "$19K" },
+  { y: 12,    label: "$25K" },
+  { y: 69.7,  label: "$23K" },
+  { y: 127.3, label: "$21K" },
+  { y: 185,   label: "$19K" },
 ];
 
-// X-axis label positions (6 labels evenly spaced).
+// X-axis labels evenly spaced across the 35..485 plot.
 const X_LABELS = [
-  { x: 40, label: "MAR 1" },
-  { x: 144, label: "MAR 15" },
-  { x: 248, label: "MAR 29" },
-  { x: 352, label: "APR 12" },
-  { x: 456, label: "APR 26" },
-  { x: 560, label: "MAY 10" },
+  { x: 35,  label: "MAR 1" },
+  { x: 125, label: "MAR 15" },
+  { x: 215, label: "MAR 29" },
+  { x: 305, label: "APR 12" },
+  { x: 395, label: "APR 26" },
+  { x: 485, label: "MAY 10" },
 ];
+
+// Hand-authored SVG path for the trend line — steady rise, a dip
+// around MAR 29, then a strong recovery to a higher finish.
+const CHART_LINE_PATH = [
+  "M35 185",
+  "C50 165, 65 155, 82 150",
+  "C96 145, 105 132, 118 130",
+  "C130 128, 136 112, 150 111",
+  "C165 110, 174 96, 190 94",
+  "C205 92, 215 103, 228 102",
+  "C242 101, 252 120, 265 143",
+  "C278 130, 288 112, 305 101",
+  "C320 92, 330 82, 344 78",
+  "C358 74, 365 58, 382 55",
+  "C398 52, 408 38, 425 39",
+  "C440 40, 448 34, 460 26",
+  "C472 19, 480 15, 485 12",
+].join(" ");
+const CHART_FILL_PATH = `${CHART_LINE_PATH} L 485 210 L 35 210 Z`;
+const FINAL_POINT = { x: 485, y: 12 };
 
 // Popular fallback used when admin chooses "popular" mode and the
 // dealership isn't tied to a single OEM brand.
