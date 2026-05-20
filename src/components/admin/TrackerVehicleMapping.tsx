@@ -21,6 +21,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+type Mode = "oem" | "popular" | "custom";
+interface TenantOverride {
+  tracker_vehicle_mode: Mode;
+  tracker_vehicle_year: number | null;
+  tracker_vehicle_make: string | null;
+  tracker_vehicle_model: string | null;
+  tracker_vehicle_style: string | null;
+  tracker_vehicle_specs: string | null;
+}
+const DEFAULT_TENANT_OVERRIDE: TenantOverride = {
+  tracker_vehicle_mode: "oem",
+  tracker_vehicle_year: null,
+  tracker_vehicle_make: null,
+  tracker_vehicle_model: null,
+  tracker_vehicle_style: null,
+  tracker_vehicle_specs: null,
+};
 
 type FlagshipMap = Record<string, FlagshipEntry>;
 
