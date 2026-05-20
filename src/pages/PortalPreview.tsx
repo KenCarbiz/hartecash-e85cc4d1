@@ -3,8 +3,7 @@ import {
   Home, Car, Tag, Activity, MessageCircle, FileText, BarChart3, Settings,
   Search, Bell, ChevronDown, ChevronLeft, ChevronRight, Copy, Check,
   TrendingUp, Clock, Shield, ShieldCheck, Truck, Handshake,
-  Upload, MessageSquare, LineChart as LineIcon, X, ArrowRight,
-  Sliders, RotateCcw,
+  Upload, MessageSquare, LineChart as LineIcon, ArrowRight, X,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 
@@ -53,11 +52,14 @@ const NAV = [
 
 const Sidebar = () => (
   <aside className="hidden lg:flex flex-col w-[220px] shrink-0 bg-white border-r border-[#E6EAF0] py-6 px-3">
-    <div className="px-3 mb-8">
-      <div className="text-[15px] font-black tracking-tight text-[#06194A]">
-        Harte<span className="text-[#4F46E5]"> Auto</span>
+    <div className="px-3 mb-8 flex items-center gap-2.5">
+      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center text-white font-black text-[13px] shadow-[0_4px_10px_-3px_rgba(79,70,229,0.5)]">
+        H
       </div>
-      <div className="text-[10px] uppercase tracking-[0.18em] text-[#53627A]">Group</div>
+      <div className="leading-tight">
+        <div className="text-[14px] font-extrabold tracking-tight text-[#06194A]">Harte Auto</div>
+        <div className="text-[9px] uppercase tracking-[0.22em] text-[#8893A8] font-semibold">Group</div>
+      </div>
     </div>
     <nav className="flex-1 flex flex-col gap-1">
       {NAV.map(({ key, label, Icon, active }) => (
@@ -133,14 +135,14 @@ const TINTS: Record<MetricProps["tint"], string> = {
   orange: "bg-[#FEF3E2] text-[#F59E0B]",
 };
 const Metric = ({ label, value, sub, Icon, tint }: MetricProps) => (
-  <div className="flex items-center gap-3 px-4 py-3">
-    <div className={`w-11 h-11 rounded-full grid place-items-center shrink-0 ${TINTS[tint]}`}>
-      <Icon className="w-5 h-5" />
+  <div className="flex items-center gap-3.5 px-5 py-4">
+    <div className={`w-12 h-12 rounded-full grid place-items-center shrink-0 ${TINTS[tint]}`}>
+      <Icon className="w-[22px] h-[22px]" />
     </div>
     <div className="min-w-0">
-      <div className="text-[11px] uppercase tracking-wide text-[#53627A] font-medium">{label}</div>
-      <div className="text-[15px] font-bold text-[#06194A] leading-tight truncate">{value}</div>
-      {sub && <div className="text-[11px] text-[#53627A] mt-0.5">{sub}</div>}
+      <div className="text-[11px] uppercase tracking-[0.14em] text-[#53627A] font-semibold">{label}</div>
+      <div className="text-[17px] font-bold text-[#06194A] leading-tight truncate mt-0.5">{value}</div>
+      {sub && <div className="text-[12px] text-[#53627A] mt-1">{sub}</div>}
     </div>
   </div>
 );
@@ -148,26 +150,28 @@ const Metric = ({ label, value, sub, Icon, tint }: MetricProps) => (
 /* ── SVG line charts ─────────────────────────────────────────────── */
 const MiniTrend = () => {
   const pts = [10, 18, 14, 22, 26, 24, 32, 36, 34, 42, 46, 52];
-  const w = 520, h = 64, pad = 4;
+  const w = 520, h = 84, pad = 6;
   const max = Math.max(...pts), min = Math.min(...pts);
   const x = (i: number) => pad + (i * (w - pad * 2)) / (pts.length - 1);
   const y = (v: number) => h - pad - ((v - min) / (max - min)) * (h - pad * 2);
   const d = pts.map((v, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(v)}`).join(" ");
   const area = `${d} L${x(pts.length - 1)},${h} L${x(0)},${h} Z`;
+  const lastX = x(pts.length - 1);
+  const lastY = y(pts[pts.length - 1]);
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[64px]" preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[84px]" preserveAspectRatio="none">
       <defs>
         <linearGradient id="miniFill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#16A34A" stopOpacity="0.22" />
+          <stop offset="0%" stopColor="#16A34A" stopOpacity="0.28" />
           <stop offset="100%" stopColor="#16A34A" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={area} fill="url(#miniFill)" />
-      <path d={d} fill="none" stroke="#16A34A" strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" />
+      <path d={d} fill="none" stroke="#16A34A" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
       {pts.map((v, i) => (
-        <circle key={i} cx={x(i)} cy={y(v)} r="2" fill="#16A34A" />
+        <circle key={i} cx={x(i)} cy={y(v)} r="2.25" fill="#16A34A" />
       ))}
-      <circle cx={x(pts.length - 1)} cy={y(pts[pts.length - 1])} r="3.5" fill="#16A34A" />
+      <circle cx={lastX} cy={lastY} r="5" fill="#fff" stroke="#16A34A" strokeWidth="2.25" />
     </svg>
   );
 };
@@ -306,27 +310,12 @@ const Modal = ({
 };
 
 /* ── Page ─────────────────────────────────────────────────────────── */
-const TUNER_KEY = "portalPreviewVehicleTuner_v1";
-const TUNER_DEFAULTS = { scale: 1.0, x: 0, y: 0 };
-
 const PortalPreview = () => {
   const [copied, setCopied] = useState(false);
   const [showConv, setShowConv] = useState(false);
   const [showDocs, setShowDocs] = useState(false);
   const [showOffer, setShowOffer] = useState(false);
-  const [showTuner, setShowTuner] = useState(false);
-  const [tuner, setTuner] = useState(TUNER_DEFAULTS);
   const offerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(TUNER_KEY);
-      if (raw) setTuner({ ...TUNER_DEFAULTS, ...JSON.parse(raw) });
-    } catch { /* noop */ }
-  }, []);
-  useEffect(() => {
-    try { localStorage.setItem(TUNER_KEY, JSON.stringify(tuner)); } catch { /* noop */ }
-  }, [tuner]);
 
   const copyVin = async () => {
     try {
@@ -386,19 +375,13 @@ const PortalPreview = () => {
                   </button>
                 </div>
               </div>
-              <div className="relative h-[220px] md:h-[260px] flex items-center justify-center overflow-hidden">
-                {/* Tuner toggle */}
-                <button
-                  onClick={() => setShowTuner((v) => !v)}
-                  className="absolute top-1 right-1 z-30 inline-flex items-center gap-1 px-2 py-1 rounded-md border border-[#E6EAF0] bg-white/90 backdrop-blur text-[10px] font-medium text-[#53627A] hover:bg-white shadow-sm"
-                  aria-label="Tune vehicle position"
-                >
-                  <Sliders className="w-3 h-3" /> Tune
-                </button>
-
-                {/* Soft halo */}
+              <div className="relative h-[240px] md:h-[280px] flex items-center justify-center overflow-hidden">
+                {/* Soft pale blue/purple halo glow */}
                 <div className="absolute inset-0 grid place-items-center pointer-events-none">
-                  <div className="w-[78%] h-[78%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(199,210,254,0.55)_0%,_rgba(224,231,255,0.25)_55%,_transparent_75%)]" />
+                  <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
+                </div>
+                <div className="absolute inset-0 grid place-items-center pointer-events-none">
+                  <div className="w-[62%] h-[62%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(199,210,254,0.55)_0%,_transparent_70%)]" />
                 </div>
                 {/* Vehicle photo */}
                 <img
@@ -407,70 +390,24 @@ const PortalPreview = () => {
                   width={1024}
                   height={1024}
                   loading="lazy"
-                  style={{
-                    transform: `translate(${tuner.x}%, ${tuner.y}%) scale(${tuner.scale})`,
-                    transformOrigin: "center center",
-                  }}
-                  className="relative z-10 max-h-full w-auto object-contain drop-shadow-[0_22px_18px_rgba(15,23,42,0.18)] transition-transform"
+                  className="relative z-10 max-h-full w-auto object-contain scale-[1.15] drop-shadow-[0_24px_20px_rgba(15,23,42,0.22)]"
                 />
                 {/* Ground shadow ellipse */}
-                <div
-                  style={{ transform: `translateX(calc(-50% + ${tuner.x * 0.6}%)) scaleX(${tuner.scale})` }}
-                  className="absolute bottom-3 left-1/2 w-[70%] h-[14px] rounded-[50%] bg-black/25 blur-md z-0"
-                />
-
-                {/* Tuner panel */}
-                {showTuner && (
-                  <div className="absolute top-10 right-1 z-30 w-[230px] rounded-xl border border-[#E6EAF0] bg-white shadow-lg p-3 text-[#06194A]">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[11px] font-semibold uppercase tracking-wide text-[#53627A]">Vehicle Tuner</span>
-                      <button onClick={() => setShowTuner(false)} aria-label="Close tuner" className="text-[#53627A] hover:text-[#06194A]">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    {[
-                      { key: "scale" as const, label: "Size", min: 0.5, max: 2, step: 0.01, fmtVal: (v: number) => `${Math.round(v * 100)}%` },
-                      { key: "x" as const, label: "Left / Right", min: -40, max: 40, step: 1, fmtVal: (v: number) => `${v}%` },
-                      { key: "y" as const, label: "Up / Down", min: -40, max: 40, step: 1, fmtVal: (v: number) => `${v}%` },
-                    ].map(({ key, label, min, max, step, fmtVal }) => (
-                      <div key={key} className="mb-2">
-                        <div className="flex items-center justify-between text-[10px] text-[#53627A] mb-0.5">
-                          <span>{label}</span>
-                          <span className="font-mono">{fmtVal(tuner[key])}</span>
-                        </div>
-                        <input
-                          type="range"
-                          min={min}
-                          max={max}
-                          step={step}
-                          value={tuner[key]}
-                          onChange={(e) => setTuner((t) => ({ ...t, [key]: parseFloat(e.target.value) }))}
-                          className="w-full accent-[#4F46E5]"
-                        />
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => setTuner(TUNER_DEFAULTS)}
-                      className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[#4F46E5] hover:underline"
-                    >
-                      <RotateCcw className="w-3 h-3" /> Reset
-                    </button>
-                  </div>
-                )}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[70%] h-[16px] rounded-[50%] bg-black/25 blur-md z-0" />
               </div>
             </div>
 
             {/* Estimated value range + full-width trend chart */}
-            <div className="mt-3 pt-3 border-t border-[#EEF0F4] flex items-end gap-4">
-              <div className="flex flex-col gap-1 shrink-0">
-                <span className="text-[11px] text-[#53627A]">Estimated Value Range</span>
-                <span className="text-[22px] font-bold leading-tight text-[#06194A] whitespace-nowrap">
-                  {fmt(MOCK.range.low)} – {fmt(MOCK.range.high)}
+            <div className="mt-4 pt-4 border-t border-[#EEF0F4] flex items-end gap-5">
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#53627A]">Estimated Value Range</span>
+                <span className="text-[26px] font-extrabold leading-none text-[#06194A] whitespace-nowrap tracking-tight">
+                  {fmt(MOCK.range.low)} <span className="text-[#94A3B8] font-bold">–</span> {fmt(MOCK.range.high)}
                 </span>
-                <MarketPill demand={MOCK.marketDemand} />
+                <div className="mt-1"><MarketPill demand={MOCK.marketDemand} /></div>
               </div>
               <div className="flex-1 min-w-0 self-stretch flex items-end">
-                <div className="w-full opacity-95"><MiniTrend /></div>
+                <div className="w-full"><MiniTrend /></div>
               </div>
             </div>
           </div>
@@ -582,23 +519,23 @@ const PortalPreview = () => {
           {/* Quick Actions */}
           <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
             <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Quick Actions</div>
-            <ul className="space-y-1">
+            <ul className="divide-y divide-[#EEF0F4]">
               {[
                 { title: "Upload Documents", desc: "Upload and manage documents safely.", Icon: Upload, tint: "green" as const, onClick: () => setShowDocs(true) },
-                { title: "Message Dealer", desc: "Chat securely with your dealer and get answers.", Icon: MessageSquare, tint: "orange" as const, onClick: () => setShowConv(true) },
+                { title: "Message Dealer", desc: "Chat securely with your dealer.", Icon: MessageSquare, tint: "orange" as const, onClick: () => setShowConv(true) },
                 { title: "Track Offer", desc: "Monitor your offer status and next steps.", Icon: BarChart3, tint: "indigo" as const, onClick: () => setShowOffer(true) },
-              ].map(({ title, desc, Icon, tint, onClick }) => (
+              ].map(({ title, desc, Icon, tint, onClick }, i) => (
                 <li key={title}>
                   <button onClick={onClick}
-                    className="w-full flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-[#F4F6FA] transition text-left">
-                    <div className={`w-8 h-8 rounded-full grid place-items-center shrink-0 ${TINTS[tint]}`}>
-                      <Icon className="w-3.5 h-3.5" />
+                    className={`group w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F4F6FA] transition text-left ${i === 0 ? "" : "mt-0"}`}>
+                    <div className={`w-10 h-10 rounded-full grid place-items-center shrink-0 ${TINTS[tint]} ring-1 ring-inset ring-black/[0.02]`}>
+                      <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-semibold text-[#06194A] leading-tight">{title}</div>
-                      <div className="text-[11px] text-[#53627A] truncate">{desc}</div>
+                      <div className="text-[11px] text-[#53627A] truncate mt-0.5">{desc}</div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-[#53627A]" />
+                    <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition" />
                   </button>
                 </li>
               ))}
