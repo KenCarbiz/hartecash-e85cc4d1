@@ -274,6 +274,15 @@ export interface SiteConfig {
    *    2 → pulse + soft toast (Day 5–6)
    *    3 → pulse + toast + Day 7 auto-open (full machine) */
   embed_escalation_max_tier: 0 | 1 | 2 | 3;
+  /** Homepage Value Tracker card vehicle source.
+   *    'oem'     — auto-pick a flagship from the dealership name (default)
+   *    'popular' — system-chosen mainstream vehicle (Toyota RAV4)
+   *    'custom'  — use tracker_vehicle_year/make/model/style below */
+  tracker_vehicle_mode: "oem" | "popular" | "custom";
+  tracker_vehicle_year: number | null;
+  tracker_vehicle_make: string | null;
+  tracker_vehicle_model: string | null;
+  tracker_vehicle_style: string | null;
 }
 
 const DEFAULTS: SiteConfig = {
