@@ -20,6 +20,11 @@ interface Props {
    *  already shaping the slot — otherwise the inner 4/3 fights
    *  with the outer 16/9 and the car renders letterboxed. */
   fill?: boolean;
+  /** When true, render on a transparent background (no white fill).
+   *  Use only when the surrounding card already provides the
+   *  background and the vehicle PNG is known to come back with a
+   *  cleanly-keyed alpha channel. */
+  transparent?: boolean;
 }
 
 // Preload an image and resolve when ready
