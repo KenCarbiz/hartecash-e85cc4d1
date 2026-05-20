@@ -3,8 +3,7 @@ import {
   Home, Car, Tag, Activity, MessageCircle, FileText, BarChart3, Settings,
   Search, Bell, ChevronDown, ChevronLeft, ChevronRight, Copy, Check,
   TrendingUp, Clock, Shield, ShieldCheck, Truck, Handshake,
-  Upload, MessageSquare, LineChart as LineIcon, X, ArrowRight,
-  Sliders, RotateCcw,
+  Upload, MessageSquare, LineChart as LineIcon, ArrowRight,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 
