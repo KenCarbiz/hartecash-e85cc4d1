@@ -33,7 +33,16 @@ import {
   ArrowUp,
 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import VehicleImage from "@/components/sell-form/VehicleImage";
+
+// System-chosen "popular" fallback when the dealer picks the
+// 'popular' tracker mode — Toyota RAV4 has been the bestselling
+// non-truck nameplate in the US for several years running.
+const POPULAR_FLAGSHIP = {
+  year: "2022", make: "Toyota", model: "RAV4", style: "XLE",
+  specs: "4D SUV · 2.5L · 36,100 mi",
+};
 
 // Map of OEM brand → flagship vehicle to feature in the value
 // tracker mockup. Keys are lowercased substrings searched inside
