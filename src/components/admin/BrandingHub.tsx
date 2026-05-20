@@ -5,6 +5,7 @@ import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
 const AppearanceSettings = React.lazy(() => import("./AppearanceSettings"));
 const LandingFlowConfig = React.lazy(() => import("./LandingFlowConfig"));
+const TrackerVehicleMapping = React.lazy(() => import("./TrackerVehicleMapping"));
 
 interface BrandingHubProps {
   /** Deep-link tab. Maps from legacy section keys:
@@ -12,7 +13,7 @@ interface BrandingHubProps {
    *  "appearance"   → appearance
    *  "landing-flow" → landing
    *  "branding"     → identity (default) */
-  initialTab?: "identity" | "appearance" | "landing";
+  initialTab?: "identity" | "appearance" | "landing" | "tracker";
   userRole?: string;
   canManageAccess?: boolean;
   /** Forwarded to SiteConfiguration so the auto-scroll on a specific
