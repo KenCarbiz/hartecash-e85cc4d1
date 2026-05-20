@@ -13,10 +13,10 @@ const LANDING_ROUTES = ["/", "/trade", "/service", "/about", "/schedule"];
 // link works from any route — on the landing page browser scrolls
 // smoothly, on /reviews etc. it routes to / and lands on the section.
 const MOTO_NAV = [
-  { hash: "how-it-works",  label: "How It Works" },
+  { hash: "how-it-works",   label: "How It Works" },
   { hash: "value-tracking", label: "Value Tracking" },
-  { to: "/reviews",        label: "Reviews" },
-  { hash: "faq",           label: "FAQ" },
+  { hash: "reviews",        label: "Reviews" },
+  { hash: "faq",            label: "FAQ" },
 ];
 
 const SiteHeader = () => {
@@ -119,26 +119,16 @@ const SiteHeader = () => {
             //   divider to read as a secondary-utility link.
             <nav className="hidden lg:flex items-center text-sm font-medium text-foreground">
               <div className="flex items-center gap-8">
-                {MOTO_NAV.map((item) =>
-                  "hash" in item ? (
-                    <a
-                      key={item.hash}
-                      href={`/#${item.hash}`}
-                      onClick={goToHash(item.hash)}
-                      className="hover:text-primary transition-colors"
-                    >
-                      {item.label}
-                    </a>
-                  ) : (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className="hover:text-primary transition-colors"
-                    >
-                      {item.label}
-                    </Link>
-                  ),
-                )}
+                {MOTO_NAV.map((item) => (
+                  <a
+                    key={item.hash}
+                    href={`/#${item.hash}`}
+                    onClick={goToHash(item.hash)}
+                    className="hover:text-primary transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                ))}
               </div>
               <span className="mx-6 h-4 w-px bg-border/80" aria-hidden />
               <Link
@@ -228,7 +218,7 @@ const SiteHeader = () => {
                     ? [
                         { hash: "how-it-works", icon: Workflow, label: "How It Works" },
                         { hash: "value-tracking", icon: TrendingUp, label: "Value Tracking" },
-                        { to: "/reviews", icon: MessageSquare, label: "Reviews" },
+                        { hash: "reviews", icon: MessageSquare, label: "Reviews" },
                         { hash: "faq", icon: HelpCircle, label: "FAQ" },
                         { to: "/my-submission", icon: LogIn, label: "Sign In", separated: true },
                       ]

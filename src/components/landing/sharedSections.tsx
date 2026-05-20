@@ -247,6 +247,7 @@ export const MotoBelowFold = () => (
   <>
     <HowItWorksLeanSection />
     <ValueTrackerCardSection />
+    <TestimonialsLeanSection />
     <FAQLeanSection />
     {/* Closing CTA is now part of BrandFooter (mounted by Index.tsx)
         — folded in to eliminate the tonal seam between the prior

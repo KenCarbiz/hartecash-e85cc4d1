@@ -12,7 +12,8 @@
 // Loading state returns null (don't show a spinner where the form
 // is still vying for primary attention).
 import { useEffect, useState } from "react";
-import { Star } from "lucide-react";
+import { Star, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
@@ -60,8 +61,9 @@ const TestimonialsLean = () => {
 
   return (
     <section
+      id="reviews"
       aria-labelledby="reviews-heading"
-      className="py-20 lg:py-24 px-5 bg-background border-t border-border/60"
+      className="py-20 lg:py-24 px-5 bg-background border-t border-border/60 scroll-mt-24"
     >
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12 lg:mb-16">
@@ -114,6 +116,23 @@ const TestimonialsLean = () => {
               </footer>
             </article>
           ))}
+        </div>
+
+        {/* Inline CTA so customers landing on this section from the
+            top nav can jump straight back to the offer flow without
+            a route change. */}
+        <div className="mt-12 flex justify-center">
+          <Link
+            to="/#top"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Get My Offer
+            <ArrowRight className="w-4 h-4" strokeWidth={2.25} />
+          </Link>
         </div>
       </div>
     </section>
