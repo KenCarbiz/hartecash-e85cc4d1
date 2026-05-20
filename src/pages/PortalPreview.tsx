@@ -358,7 +358,7 @@ const PortalPreview = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Vehicle card */}
           <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] gap-4 items-start">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Your Vehicle</div>
                 <h2 className="text-[22px] font-bold leading-tight">
