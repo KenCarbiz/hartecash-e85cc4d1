@@ -1,38 +1,60 @@
-// Minimal national-brand footer for the Moto landing.
+// Unified closing slab for the Moto landing.
 //
-// Per the three-footer-agent benchmark (PR #265) — and follow-up
-// CTA-redundancy audit by a second three-agent panel (UX +
-// visual-hierarchy + CRO data) that all converged on "cut the footer
-// button" — the footer is now pure typography. The sticky
-// StickyOfferCTA pill (bottom-right of the viewport) carries the
-// scroll-end click; the footer carries the brand sign-off. Two
-// identical navy pills in the same viewport flatten hierarchy and
-// cannibalize each other (~15-30% of footer-button clicks would
-// otherwise route through the higher-performing sticky).
+// Iteration history:
+//   * PR #265: minimal footer (logo + mission + legal). Removed the
+//     mid-page NAPFooter "Visit X" block.
+//   * PR #266: cut the closing "Get my offer" button from inside
+//     the footer — it cannibalized the StickyOfferCTA pill.
+//   * (now): merged CTABannerLean's "Get started with a 30-second
+//     valuation" closer INTO the footer. The previous separate
+//     CTABannerLean + BrandFooter rendered as two padded blocks with
+//     a tonal seam between them, which read as "page ended twice."
+//     One continuous soft-gray slab now does the closing job:
 //
-// The footer's only jobs now:
-//   1. Identity      (logo + dealer name, single lockup)
-//   2. Mission       (one sentence signature under the wordmark)
-//   3. Legal         (Privacy / Terms / Offer Disclosure + copyright)
-//   4. One internal trust link (Customer Reviews)
-//   5. Optional platform credit (AutoCurb.io) per resolved attribution
+//       ┌────────────────────────────────────────┐
+//       │  See what {Dealer} will pay            │
+//       │  for your car.                         │
+//       │           [  Get my offer  ]           │  ← in-flow closer
+//       │                                        │
+//       │             [Dealer Logo]              │
+//       │  The modern way to sell your car.      │  ← identity
+//       │  ───────── hairline ─────────          │
+//       │  © · Reviews · Privacy · Terms · …     │  ← legal
+//       └────────────────────────────────────────┘
+//
+// Why a closing CTA can come back here without cannibalizing the
+// sticky pill (which is still on screen at scroll-end):
+//   * The previously-cut button was a CLONE of the sticky — same
+//     label, same role. This one is reframed as a VALUE-PROP CLOSE
+//     (outcome-focused headline + button) — different container,
+//     different framing, different intent (deliberate end-of-content
+//     decision vs mid-scroll utility).
+//   * The CRO data agent's note: "Sticky ≠ scroll-end CTA in
+//     function. Sticky serves mid-scroll impulse; in-flow block
+//     serves deliberate end-of-content decision. Removing the
+//     in-flow block typically costs 5-15% of bottom-page
+//     conversions in tested DTC/auto funnels."
 //
 // EXPLICITLY EXCLUDED per product-owner direction:
-//   * Phone number   — funnel off-ramp; appt time is given at booking
-//   * Business hours — implies "drive to a dealership" frame
-//   * Schedule a Visit / Our Locations / Quick Links grid — all
-//     route the customer OUT of the form before they have an offer
-//   * Referral Program — wrong audience pre-sale
-//   * Sitemap link — vestigial exit surface
-//   * Closing "Get my offer" button — cannibalizes the sticky pill
+//   * Phone number / business hours / NAP grid / Schedule-a-Visit
+//   * Referral Program / Sitemap link
 //
-// Mission-line copy: "The modern way to sell your car." — intent-first
-// pattern (Carvana cadence). Single sentence, present tense, no
-// exclamation marks, no superlatives, no "no X / no Y" defensive
-// posture. Tenant-overridable via site_config.brand_mission (string,
-// optional column — falls back to the default if absent).
+// Tone rules: no exclamation marks, no superlatives. Assert, don't
+// reassure. One sentence per element.
+//
+// Per-tenant: dealership_name powers the CTA headline + copyright;
+// site_config.brand_mission overrides the default mission line.
 import { Link } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+
+const scrollToForm = () => {
+  const form = document.getElementById("sell-car-form");
+  if (form) {
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+  } else {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
 
 const DEFAULT_MISSION = "The modern way to sell your car.";
 
@@ -42,18 +64,26 @@ const BrandFooter = () => {
   const showDealerName = dealerName && dealerName !== "Our Dealership";
   const year = new Date().getFullYear();
 
-  // Per-tenant override hook. If the dealer hasn't set a brand_mission
-  // (or the column doesn't exist), use the brand-voice default. We
-  // intentionally do NOT fall back to `config.tagline` — the legacy
-  // tagline default is "Sell Your Car The Easy Way" which is exactly
-  // the DTC-promo copy the brand-voice agent diagnosed as off-brand.
+  // First word of the dealer name reads more like brand voice than
+  // "Harte Auto Group" (e.g. "Harte" vs full legal name).
+  const shortName = showDealerName ? dealerName.split(/\s+/)[0] : null;
+
+  // CTA headline — outcome-framed per the CRO agent's call (banner
+  // should be a value-prop close, not a second sticky). Falls back
+  // gracefully when no dealer name is configured.
+  const ctaHeadline = shortName
+    ? `See what ${shortName} will pay for your car.`
+    : "See what your car is worth.";
+
+  // Mission line. Tenant-overridable via site_config.brand_mission.
+  // Falls back to the brand-voice default — NOT to config.tagline,
+  // whose legacy default ("Sell Your Car The Easy Way") is the
+  // exact DTC-promo copy the brand-voice agent flagged.
   const mission =
     ((config as { brand_mission?: string }).brand_mission || "").trim() ||
     DEFAULT_MISSION;
 
-  // Resolve platform attribution the same way SiteFooter does — a
-  // super-admin force override always wins; otherwise the dealer's
-  // white_label_settings dictate.
+  // Resolve platform attribution.
   const wl = config.white_label_settings as {
     hide_branding?: boolean;
     powered_by_mode?: "autocurb" | "dealer" | "hidden";
@@ -66,40 +96,55 @@ const BrandFooter = () => {
   return (
     <footer
       aria-labelledby="brand-footer-heading"
-      className="border-t border-border/60 bg-background"
+      className="border-t border-border/60"
+      style={{ background: "hsl(220 14% 96%)" }}
     >
       <h2 id="brand-footer-heading" className="sr-only">
         {showDealerName ? dealerName : "Site"} footer
       </h2>
 
-      <div className="max-w-4xl mx-auto px-5 py-14 lg:py-16 text-center">
-        {/* Identity lockup — logo if configured, else dealer name. */}
+      {/* CTA close — value-prop framing + button. Sits inside the
+          unified slab, not its own section, so there's no tonal
+          seam between this and the identity block below. */}
+      <div className="max-w-3xl mx-auto px-5 pt-20 lg:pt-24 pb-10 text-center">
+        <h2 className="text-3xl lg:text-5xl font-semibold tracking-tight text-foreground mb-8">
+          {ctaHeadline}
+        </h2>
+        <button
+          type="button"
+          onClick={scrollToForm}
+          className="inline-flex items-center justify-center px-10 py-4 bg-primary text-primary-foreground rounded-xl text-base font-semibold hover:bg-primary/95 transition-colors"
+        >
+          Get my offer
+        </button>
+      </div>
+
+      {/* Identity — logo + mission signature, no separator above
+          (the slab is continuous). Reduced top padding pulls this
+          tight under the CTA. */}
+      <div className="max-w-4xl mx-auto px-5 pb-10 text-center">
         {config.logo_url ? (
           <img
             src={config.logo_url}
             alt={showDealerName ? dealerName : "Logo"}
-            className="h-10 lg:h-12 w-auto mx-auto mb-4 opacity-90"
-            width={120}
-            height={48}
+            className="h-9 lg:h-10 w-auto mx-auto mb-3 opacity-90"
+            width={100}
+            height={40}
             loading="lazy"
           />
         ) : showDealerName ? (
-          <p className="text-lg font-semibold text-foreground tracking-tight mb-4">
+          <p className="text-base font-semibold text-foreground tracking-tight mb-3">
             {dealerName}
           </p>
         ) : null}
-
-        {/* Mission signature — one size step down from identity, ~70%
-            opacity. Treated as signature, not paragraph. The footer
-            ends here — no closing button. Sticky StickyOfferCTA pill
-            (bottom-right) carries scroll-end conversion intent. */}
-        <p className="text-base text-foreground/70 max-w-md mx-auto">
+        <p className="text-sm text-foreground/70 max-w-md mx-auto">
           {mission}
         </p>
       </div>
 
-      {/* Hairline divider + legal row. Inline, muted, single line on
-          desktop. */}
+      {/* Legal row. Hairline divider above is the only visual break
+          inside the slab — the slab itself is one continuous
+          background tone from CTA through legal. */}
       <div className="border-t border-border/60 px-5 py-6">
         <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
           <span>

@@ -11,10 +11,12 @@ const CTABanner = lazy(() => import("@/components/CTABanner"));
 const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
 
 // Moto-aesthetic lean variants — see src/components/moto-sections/.
+// CTABannerLean was retired — its content is now folded into the
+// unified BrandFooter slab so there's no tonal seam between the
+// closing CTA and the identity/legal rows below it.
 const TrustBadgesLean = lazy(() => import("@/components/moto-sections/TrustBadgesLean"));
 const HowItWorksLean = lazy(() => import("@/components/moto-sections/HowItWorksLean"));
 const TestimonialsLean = lazy(() => import("@/components/moto-sections/TestimonialsLean"));
-const CTABannerLean = lazy(() => import("@/components/moto-sections/CTABannerLean"));
 const ValueTrackerCard = lazy(() => import("@/components/moto-sections/ValueTrackerCard"));
 const FAQLean = lazy(() => import("@/components/moto-sections/FAQLean"));
 
@@ -71,7 +73,6 @@ export const ReferralBannerSection = () => <Lazy withSkeleton={false}><ReferralB
 export const TrustBadgesLeanSection = () => <Lazy><TrustBadgesLean /></Lazy>;
 export const HowItWorksLeanSection = () => <Lazy><HowItWorksLean /></Lazy>;
 export const TestimonialsLeanSection = () => <Lazy><TestimonialsLean /></Lazy>;
-export const CTABannerLeanSection = () => <Lazy withSkeleton={false}><CTABannerLean /></Lazy>;
 export const ValueTrackerCardSection = () => <Lazy withSkeleton={false}><ValueTrackerCard /></Lazy>;
 export const FAQLeanSection = () => <Lazy><FAQLean /></Lazy>;
 
@@ -201,7 +202,6 @@ export const MotoMobileBelowFold = () => (
   <>
     <HowItWorksLeanSection />
     <FAQLeanSection />
-    <CTABannerLeanSection />
   </>
 );
 
@@ -243,6 +243,8 @@ export const MotoBelowFold = () => (
     <HowItWorksLeanSection />
     <ValueTrackerCardSection />
     <FAQLeanSection />
-    <CTABannerLeanSection />
+    {/* Closing CTA is now part of BrandFooter (mounted by Index.tsx)
+        — folded in to eliminate the tonal seam between the prior
+        standalone CTABannerLean section and the footer block. */}
   </>
 );
