@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Camera } from "lucide-react";
+import { Loader2, Camera, Car } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
@@ -98,6 +98,7 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
   const [transparentUrl, setTransparentUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [transparentFailed, setTransparentFailed] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const currentColorRef = useRef<string>("");
   const prefetchedRef = useRef<Set<string>>(new Set());
@@ -108,14 +109,20 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
   useEffect(() => {
     if (!transparent || !imageUrl) {
       setTransparentUrl(null);
+      setTransparentFailed(false);
       return;
     }
     const tKey = `vehicle-img-transparent-${imageUrl.slice(0, 80)}`;
     const cached = localStorage.getItem(tKey);
-    if (cached) { setTransparentUrl(cached); return; }
+    if (cached) { setTransparentUrl(cached); setTransparentFailed(false); return; }
     let cancelled = false;
+    setTransparentFailed(false);
     keyOutWhite(imageUrl).then((url) => {
-      if (cancelled || !url) return;
+      if (cancelled) return;
+      if (!url) {
+        setTransparentFailed(true);
+        return;
+      }
       try { localStorage.setItem(tKey, url); } catch { /* quota */ }
       setTransparentUrl(url);
     });
@@ -306,10 +313,10 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
         {imageUrl && (!transparent || transparentUrl) && (
           <motion.div
             key={transparent ? transparentUrl! : imageUrl}
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 1, scale: 1 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-            className="absolute inset-0 flex items-center justify-center p-2"
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="absolute inset-1 flex items-center justify-center p-1"
           >
             <img
               src={transparent ? transparentUrl! : imageUrl}
@@ -319,6 +326,30 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Transparent keying failed — show a generic vehicle icon */}
+      {transparent && transparentFailed && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+          <div
+            className="rounded-full flex items-center justify-center"
+            style={{
+              width: compact ? "2.25rem" : "3rem",
+              height: compact ? "2.25rem" : "3rem",
+              background: "hsl(220 14% 96%)",
+            }}
+          >
+            <Car
+              className="text-muted-foreground/50"
+              style={{
+                width: compact ? "1.25rem" : "1.5rem",
+                height: compact ? "1.25rem" : "1.5rem",
+              }}
+              strokeWidth={1.5}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground/60">Vehicle image</p>
+        </div>
+      )}
 
       {/* Color label chip */}
       {!hideColorLabel && (
