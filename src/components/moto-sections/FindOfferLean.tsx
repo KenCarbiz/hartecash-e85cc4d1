@@ -59,8 +59,15 @@ const FindOfferLean = () => {
   return (
     <section
       id="find-offer"
+      // Inherits the landing's white bg — FindOfferLean is rendered
+      // inline via the landing's hash-swap (#find-offer), so a soft-
+      // gray section bg read as "the page just changed color" under
+      // the (now persistent) sticky header. The standalone Sign In
+      // route at /my-submission keeps its soft-gray "single-card on
+      // a tray" treatment via CustomerLookup; that's the page-system
+      // rule — single-artifact pages = soft-gray tray, in-page
+      // sections that swap inside the landing = inherit white.
       className="scroll-mt-24 px-5 py-16 lg:py-20"
-      style={{ background: "hsl(220 14% 98%)" }}
     >
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
