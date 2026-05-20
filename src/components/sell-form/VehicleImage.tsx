@@ -87,11 +87,33 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
   const { config } = useSiteConfig();
   const imageAngle = imageAngleProp || config.vehicle_image_angle || "three_quarter";
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [transparentUrl, setTransparentUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const currentColorRef = useRef<string>("");
   const prefetchedRef = useRef<Set<string>>(new Set());
+
+  // When transparent mode is requested, run a white-key pass after
+  // the source image loads and cache the resulting transparent PNG
+  // in localStorage so we don't re-process on every mount.
+  useEffect(() => {
+    if (!transparent || !imageUrl) {
+      setTransparentUrl(null);
+      return;
+    }
+    const tKey = `vehicle-img-transparent-${imageUrl.slice(0, 80)}`;
+    const cached = localStorage.getItem(tKey);
+    if (cached) { setTransparentUrl(cached); return; }
+    let cancelled = false;
+    keyOutWhite(imageUrl).then((url) => {
+      if (cancelled || !url) return;
+      try { localStorage.setItem(tKey, url); } catch { /* quota */ }
+      setTransparentUrl(url);
+    });
+    return () => { cancelled = true; };
+  }, [transparent, imageUrl]);
+
 
   const buildCacheKey = useCallback((color: string) => {
     const colorKey = (color || "white").toLowerCase().replace(/\s+/g, "_");
