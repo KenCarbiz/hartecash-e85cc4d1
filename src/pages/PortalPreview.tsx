@@ -334,8 +334,9 @@ const PortalPreview = () => {
     <div className="min-h-screen bg-[#F7F8FB] text-[#06194A] flex">
       <Sidebar />
 
-      <div className="flex-1 min-w-0 p-5 sm:p-7 lg:p-8">
-        <Header />
+      <div className="flex-1 min-w-0 flex justify-center">
+        <div className="w-full max-w-[1360px] p-5 sm:p-7 lg:p-8">
+          <Header />
 
         {/* TOP — four-metric strip */}
         <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-6 grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-[#EEF0F4]">
@@ -558,6 +559,7 @@ const PortalPreview = () => {
               ))}
             </ul>
           </div>
+        </div>
         </div>
       </div>
 
