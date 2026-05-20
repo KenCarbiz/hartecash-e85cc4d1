@@ -129,8 +129,11 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
     // v2 — bumped to invalidate cached PNGs that came back with the
     // checkerboard "transparent" pattern baked into the pixel data
     // before we changed the AI prompt to anchor on pure white.
-    return `vehicle-img-v2-${year}-${make}-${model}-${colorKey}-${angleKey}`.toLowerCase().replace(/\s+/g, "_");
-  }, [year, make, model, imageAngle]);
+    // studio suffix isolates the strict white-background-only pipeline
+    // used by transparent consumers (e.g. value tracker thumbnail).
+    const studio = transparent ? "-studio" : "";
+    return `vehicle-img-v2-${year}-${make}-${model}-${colorKey}-${angleKey}${studio}`.toLowerCase().replace(/\s+/g, "_");
+  }, [year, make, model, imageAngle, transparent]);
 
   const fetchImage = useCallback(async (color: string, isPrefetch = false) => {
     if (!year || !make || !model) return;
@@ -158,7 +161,7 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
 
     try {
       const { data, error: fnErr } = await supabase.functions.invoke("generate-vehicle-image", {
-        body: { year, make, model, style, color: color || "white", uvc, angle: imageAngle },
+        body: { year, make, model, style, color: color || "white", uvc, angle: imageAngle, studio_only: transparent },
       });
 
       if (currentColorRef.current !== color && !isPrefetch) return;
