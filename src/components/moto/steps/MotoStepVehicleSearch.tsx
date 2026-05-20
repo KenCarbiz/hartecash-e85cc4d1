@@ -155,7 +155,7 @@ const MotoStepVehicleSearch = ({
       {/* Break out of MotoShell's max-w-screen-sm so the hero can fill
           the viewport. Card stays max-w-md on the left, vehicle image
           gets all remaining width on the right. */}
-      <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen px-6 lg:px-12">
+      <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-x-clip px-6 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
           <div className="flex w-full flex-col items-center justify-center gap-8 lg:flex-row lg:items-center lg:gap-10 xl:gap-14">
             {/* Left column: heading + card stay locked-aligned to the
