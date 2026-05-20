@@ -49,7 +49,7 @@ const TrackerVehicleMapping = () => {
         .select("tracker_oem_flagships")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
-      const raw = (data?.tracker_oem_flagships as FlagshipMap) || {};
+      const raw = (data?.tracker_oem_flagships as unknown as FlagshipMap) || {};
       setOverrides(raw);
       setSavedOverrides(raw);
       setLoading(false);
