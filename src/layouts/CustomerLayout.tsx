@@ -11,8 +11,20 @@
 // the slot under the header changes between route transitions; the
 // header, footer, and back-to-top stay put.
 //
+// CRITICAL: the inner Suspense around <Outlet /> is what keeps the
+// sticky header mounted while a destination page's lazy chunk
+// downloads. Every page on this router is React.lazy(...), and
+// without an inner Suspense the closest fallback boundary is the
+// outer one in App.tsx (AnimatedRoutes), which sits ABOVE this
+// layout — when the destination page suspends, that outer fallback
+// replaces the entire layout subtree (header + footer included)
+// with null, then re-mounts everything once the chunk arrives.
+// Catching the suspension inside the layout means only the body
+// area goes blank for the (usually invisible) chunk load.
+//
 // Embed mode (?embed=true) keeps chrome stripped so the page can be
 // iframed onto a dealer's existing site without nested headers.
+import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
@@ -31,7 +43,9 @@ const CustomerLayout = () => {
       {/* Skip-link lives in App.tsx so it stays focusable across
           every route, including non-CustomerLayout routes. */}
       {!embed && <SiteHeader />}
-      <Outlet />
+      <Suspense fallback={<div className="flex-1" aria-hidden="true" />}>
+        <Outlet />
+      </Suspense>
       {!embed && (isMoto ? <BrandFooter /> : <SiteFooter />)}
       {!embed && <BackToTop />}
     </div>
@@ -39,3 +53,4 @@ const CustomerLayout = () => {
 };
 
 export default CustomerLayout;
+
