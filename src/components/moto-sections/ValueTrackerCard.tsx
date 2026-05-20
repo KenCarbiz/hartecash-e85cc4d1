@@ -176,8 +176,9 @@ const ValueTrackerCard = () => {
 
   return (
     <section
+      id="value-tracking"
       aria-labelledby="value-tracking-heading"
-      className="py-20 lg:py-28 px-5 border-t border-border/60"
+      className="py-20 lg:py-28 px-5 border-t border-border/60 scroll-mt-24"
       style={{ background: "hsl(220 14% 98%)" }}
     >
       <div className="max-w-[1200px] mx-auto">
