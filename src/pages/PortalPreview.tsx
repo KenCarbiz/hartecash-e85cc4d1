@@ -339,16 +339,25 @@ const PortalPreview = () => {
           <Header />
 
         {/* TOP — four-metric strip */}
-        <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-6 grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-[#EEF0F4]">
-          <Metric label="Estimated Value" value={`${fmt(MOCK.range.low)} – ${fmt(MOCK.range.high)}`}
-            sub={<span className="text-[#16A34A] font-medium inline-flex items-center gap-1"><TrendingUp className="w-3 h-3" />Strong Market</span>}
-            Icon={BarChart3} tint="indigo" />
-          <Metric label="Firm Offer" value={fmt(MOCK.firmOffer)} sub={MOCK.customer.dealer}
-            Icon={Tag} tint="emerald" />
-          <Metric label="Market Demand" value={MOCK.marketDemand} sub="vs last 30 days"
-            Icon={TrendingUp} tint="green" />
-          <Metric label="Response Time" value={MOCK.responseTime} sub="Dealer average"
-            Icon={Clock} tint="orange" />
+        <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-6 grid grid-cols-2 lg:grid-cols-4">
+          {[
+            <Metric key="ev" label="Estimated Value" value={`${fmt(MOCK.range.low)} – ${fmt(MOCK.range.high)}`}
+              sub={<span className="text-[#16A34A] font-medium inline-flex items-center gap-1"><TrendingUp className="w-3 h-3" />Strong Market</span>}
+              Icon={BarChart3} tint="indigo" />,
+            <Metric key="fo" label="Firm Offer" value={fmt(MOCK.firmOffer)} sub={MOCK.customer.dealer}
+              Icon={Tag} tint="emerald" />,
+            <Metric key="md" label="Market Demand" value={MOCK.marketDemand} sub="vs last 30 days"
+              Icon={TrendingUp} tint="green" />,
+            <Metric key="rt" label="Response Time" value={MOCK.responseTime} sub="Dealer average"
+              Icon={Clock} tint="orange" />,
+          ].map((m, i) => (
+            <div
+              key={i}
+              className={`relative ${i > 0 ? "lg:before:content-[''] lg:before:absolute lg:before:left-0 lg:before:top-1/2 lg:before:-translate-y-1/2 lg:before:h-[45%] lg:before:w-px lg:before:bg-[#E6EAF0]" : ""} ${i === 2 ? "before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[45%] before:w-px before:bg-[#E6EAF0] lg:before:hidden" : ""}`}
+            >
+              {m}
+            </div>
+          ))}
         </div>
 
         {/* MAIN ROW */}
