@@ -27,8 +27,6 @@
 // (separate migration + admin UI), tracked outside this PR.
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
-import BrandFooter from "@/components/BrandFooter";
-import SiteHeader from "@/components/SiteHeader";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
@@ -108,19 +106,17 @@ const OfferDisclosure = () => {
   const dealerName = (config.dealership_name || "").trim() || "Our Dealership";
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ background: "hsl(220 14% 98%)" }}
-    >
+    <>
       <SEO
         title={`How We Calculate Your Offer | ${dealerName}`}
         description={`Full transparency on how ${dealerName} determines your vehicle's cash offer — inspection factors, valuation methodology, and price guarantee details.`}
         path="/disclosure"
       />
 
-      <SiteHeader />
-
-      <main className="flex-1 px-5 py-12 lg:py-16">
+      <main
+        className="flex-1 px-5 py-12 lg:py-16"
+        style={{ background: "hsl(220 14% 98%)" }}
+      >
         <div className="max-w-3xl mx-auto">
           {/* Slim nav row — back + Get my offer, same pattern as
               PrivacyPolicy / TermsOfService. */}
@@ -687,9 +683,7 @@ const OfferDisclosure = () => {
           </div>
         </div>
       </main>
-
-      <BrandFooter />
-    </div>
+    </>
   );
 };
 

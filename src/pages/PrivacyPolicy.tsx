@@ -10,8 +10,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Shield } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import BrandFooter from "@/components/BrandFooter";
-import SiteHeader from "@/components/SiteHeader";
 import SEO from "@/components/SEO";
 
 const PrivacyPolicy = () => {
@@ -19,19 +17,17 @@ const PrivacyPolicy = () => {
   const dealerName = (config.dealership_name || "").trim() || "Our Dealership";
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ background: "hsl(220 14% 98%)" }}
-    >
+    <>
       <SEO
         title={`Privacy Policy | ${dealerName}`}
         description={`Learn how ${dealerName} collects, uses, and protects your personal information.`}
         path="/privacy"
       />
 
-      <SiteHeader />
-
-      <main className="flex-1 px-5 py-12 lg:py-16">
+      <main
+        className="flex-1 px-5 py-12 lg:py-16"
+        style={{ background: "hsl(220 14% 98%)" }}
+      >
         <div className="max-w-3xl mx-auto">
           {/* Slim nav row — back arrow on the left, "Get my offer"
               link on the right. Replaces the legacy SiteHeader so the
@@ -448,9 +444,7 @@ const PrivacyPolicy = () => {
           </div>
         </div>
       </main>
-
-      <BrandFooter />
-    </div>
+    </>
   );
 };
 

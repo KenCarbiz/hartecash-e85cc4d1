@@ -29,7 +29,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import SEO from "@/components/SEO";
 import BrandStructuredData from "@/components/BrandStructuredData";
-import BrandFooter from "@/components/BrandFooter";
 
 interface Testimonial {
   id: string;
@@ -96,7 +95,7 @@ const Reviews = () => {
     : null;
 
   return (
-    <main className="bg-background min-h-screen">
+    <main className="flex-1 bg-background">
       <SEO
         title={`Reviews — ${dealerName || "Our customers"} | Real seller stories`}
         description={`Real reviews from customers who sold their car to ${displayName}. ${ratingVal}★ rating across ${reviewsCount} sellers.`}
@@ -224,8 +223,6 @@ const Reviews = () => {
           </div>
         </section>
       ) : null}
-
-      <BrandFooter />
     </main>
   );
 };
