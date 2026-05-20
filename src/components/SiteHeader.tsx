@@ -59,7 +59,12 @@ const SiteHeader = () => {
     if (location.pathname === "/") {
       e.preventDefault();
       const el = document.getElementById(hash);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (el) {
+        // Sign In snaps instantly to the top of the section; other
+        // anchors keep the smooth in-page scroll.
+        const behavior: ScrollBehavior = hash === "find-offer" ? "auto" : "smooth";
+        el.scrollIntoView({ behavior, block: "start" });
+      }
     } else {
       e.preventDefault();
       navigate(`/#${hash}`);
