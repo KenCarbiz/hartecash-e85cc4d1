@@ -506,11 +506,11 @@ const PortalPreview = () => {
         {/* BOTTOM ROW */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.4fr_1fr] gap-6">
           {/* Dealer Communication */}
-          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-3">Dealer Communication</div>
+          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Dealer Communication</div>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#FEF3E2] text-[#F59E0B] grid place-items-center">
-                <Handshake className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-full bg-[#FEF3E2] text-[#F59E0B] grid place-items-center">
+                <Handshake className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -520,19 +520,19 @@ const PortalPreview = () => {
                 <div className="text-[11px] text-[#53627A]">Last update: {MOCK.lastUpdate}</div>
               </div>
             </div>
-            <div className="mt-3 rounded-xl bg-[#F4F6FA] p-3 text-[12px] text-[#06194A] leading-snug">
+            <div className="mt-2 rounded-xl bg-[#F4F6FA] p-2.5 text-[12px] text-[#06194A] leading-snug">
               {MOCK.dealerMessage}
             </div>
             <button onClick={() => setShowConv(true)}
-              className="mt-3 w-full text-sm font-semibold text-[#4F46E5] bg-[#EEF0FF] hover:bg-[#E2E5FF] rounded-xl py-2.5 transition">
+              className="mt-2 w-full text-sm font-semibold text-[#4F46E5] bg-[#EEF0FF] hover:bg-[#E2E5FF] rounded-xl py-2 transition">
               View Conversation
             </button>
           </div>
 
           {/* Document Status */}
-          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-3">Documents Status</div>
-            <ul className="space-y-2.5">
+          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Documents Status</div>
+            <ul className="space-y-2">
               {MOCK.docs.map((d) => (
                 <li key={d.name} className="flex items-center justify-between text-sm">
                   <span className="text-[#06194A]">{d.name}</span>
@@ -543,7 +543,7 @@ const PortalPreview = () => {
               ))}
             </ul>
             <button onClick={() => setShowDocs(true)}
-              className="mt-4 w-full text-sm font-semibold text-[#16A34A] bg-[#E8F8EE] hover:bg-[#D4F0E0] rounded-xl py-2.5 transition">
+              className="mt-2 w-full text-sm font-semibold text-[#16A34A] bg-[#E8F8EE] hover:bg-[#D4F0E0] rounded-xl py-2 transition">
               Manage Documents
             </button>
           </div>
