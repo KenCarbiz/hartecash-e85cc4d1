@@ -4543,6 +4543,7 @@ export type Database = {
           tracker_vehicle_make: string | null
           tracker_vehicle_mode: string
           tracker_vehicle_model: string | null
+          tracker_vehicle_specs: string | null
           tracker_vehicle_style: string | null
           tracker_vehicle_year: number | null
           trade_hero_headline: string
@@ -4666,6 +4667,7 @@ export type Database = {
           tracker_vehicle_make?: string | null
           tracker_vehicle_mode?: string
           tracker_vehicle_model?: string | null
+          tracker_vehicle_specs?: string | null
           tracker_vehicle_style?: string | null
           tracker_vehicle_year?: number | null
           trade_hero_headline?: string
@@ -4789,6 +4791,7 @@ export type Database = {
           tracker_vehicle_make?: string | null
           tracker_vehicle_mode?: string
           tracker_vehicle_model?: string | null
+          tracker_vehicle_specs?: string | null
           tracker_vehicle_style?: string | null
           tracker_vehicle_year?: number | null
           trade_hero_headline?: string
