@@ -127,7 +127,7 @@ const FindOfferLean = () => {
           <button
             type="submit"
             disabled={loading || !email.trim() || !phone.trim()}
-            className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2 hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            className="w-full h-12 rounded-xl bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)] font-semibold text-base flex items-center justify-center gap-2 hover:opacity-95 active:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--cta-offer))]"
           >
             {loading ? (
               "Searching…"
