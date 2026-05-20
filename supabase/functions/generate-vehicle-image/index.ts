@@ -159,7 +159,7 @@ serve(async (req) => {
     const bbPassword = Deno.env.get("BLACKBOOK_PASSWORD");
     const yearNum = parseInt(year, 10);
 
-    if (uvc && bbUsername && bbPassword && yearNum >= 2001) {
+    if (!studio_only && uvc && bbUsername && bbPassword && yearNum >= 2001) {
       try {
         const credentials = btoa(`${bbUsername}:${bbPassword}`);
         const bbPhotoUrl = `${BB_PHOTO_BASE}/${encodeURIComponent(uvc)}`;
@@ -193,7 +193,9 @@ serve(async (req) => {
     // 3. Wikipedia infobox — free, fast (~500ms), high hit rate for
     //    common cars. Tried before AI so we don't burn 10-30s on
     //    Gemini for vehicles Wikipedia already has a clean photo of.
-    if (!imageBytes) {
+    //    Skipped in studio_only mode (Wikipedia photos have real
+    //    backgrounds that won't key cleanly).
+    if (!imageBytes && !studio_only) {
       const wikiBytes = await fetchWikipediaImage(String(year), make, model);
       if (wikiBytes) {
         imageBytes = wikiBytes;
