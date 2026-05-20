@@ -59,6 +59,8 @@ async function keyOutWhite(url: string): Promise<string | null> {
     ctx.drawImage(img, 0, 0);
     const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const px = data.data;
+    let keyedCount = 0;
+    const totalPixels = px.length / 4;
     // Threshold: pixels brighter than ~245 in every channel and with
     // low saturation get keyed out. The fade band (235-245) gets a
     // partial alpha so vehicle edges don't fringe hard.
@@ -70,11 +72,17 @@ async function keyOutWhite(url: string): Promise<string | null> {
       if (sat > 18) continue; // colored pixel, keep
       if (min >= 245) {
         px[i + 3] = 0;
+        keyedCount++;
       } else if (min >= 232) {
         // soft edge taper
         px[i + 3] = Math.round(((245 - min) / 13) * 255);
       }
     }
+    // POLICY: a true studio shot keys out at least ~12% of pixels as
+    // background. If we keyed out less than that, the source image
+    // doesn't actually have a clean white background — refuse to
+    // render rather than show a vehicle stuck on a colored backdrop.
+    if (keyedCount / totalPixels < 0.12) return null;
     ctx.putImageData(data, 0, 0);
     return canvas.toDataURL("image/png");
   } catch {
