@@ -80,7 +80,12 @@ const SlaPage = lazy(() => import("./pages/SlaPage"));
 const DocsLanding = lazy(() => import("./pages/DocsLanding"));
 const GroupLandingPage = lazy(() => import("./pages/GroupLandingPage"));
 const Reviews = lazy(() => import("./pages/Reviews"));
-const CustomerLayout = lazy(() => import("./layouts/CustomerLayout"));
+// CustomerLayout is imported eagerly (not lazy) — it's the shell
+// every customer-facing route renders into, so lazy-loading it
+// would mean the first navigation suspends on the layout chunk
+// itself (the outer Suspense fallback would unmount SiteHeader
+// before it ever mounted). Tiny module, used everywhere.
+import CustomerLayout from "./layouts/CustomerLayout";
 // /billing removed — /plan is now the canonical billing surface, with
 // a "Manage billing" button that opens the Stripe Customer Portal
 // directly. The previous BillingPage was orphaned (not in the sidebar)
