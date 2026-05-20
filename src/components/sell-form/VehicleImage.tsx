@@ -90,6 +90,7 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
   const [transparentUrl, setTransparentUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [transparentFailed, setTransparentFailed] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const currentColorRef = useRef<string>("");
   const prefetchedRef = useRef<Set<string>>(new Set());
