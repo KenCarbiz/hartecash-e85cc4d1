@@ -119,26 +119,16 @@ const SiteHeader = () => {
             //   divider to read as a secondary-utility link.
             <nav className="hidden lg:flex items-center text-sm font-medium text-foreground">
               <div className="flex items-center gap-8">
-                {MOTO_NAV.map((item) =>
-                  "hash" in item ? (
-                    <a
-                      key={item.hash}
-                      href={`/#${item.hash}`}
-                      onClick={goToHash(item.hash)}
-                      className="hover:text-primary transition-colors"
-                    >
-                      {item.label}
-                    </a>
-                  ) : (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className="hover:text-primary transition-colors"
-                    >
-                      {item.label}
-                    </Link>
-                  ),
-                )}
+                {MOTO_NAV.map((item) => (
+                  <a
+                    key={item.hash}
+                    href={`/#${item.hash}`}
+                    onClick={goToHash(item.hash)}
+                    className="hover:text-primary transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                ))}
               </div>
               <span className="mx-6 h-4 w-px bg-border/80" aria-hidden />
               <Link
