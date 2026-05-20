@@ -4539,6 +4539,11 @@ export type Database = {
           top_bar_style: string | null
           top_bar_text: string | null
           track_abandoned_leads: boolean
+          tracker_vehicle_make: string | null
+          tracker_vehicle_mode: string
+          tracker_vehicle_model: string | null
+          tracker_vehicle_style: string | null
+          tracker_vehicle_year: number | null
           trade_hero_headline: string
           trade_hero_subtext: string
           ui_refresh_enabled: boolean
@@ -4656,6 +4661,11 @@ export type Database = {
           top_bar_style?: string | null
           top_bar_text?: string | null
           track_abandoned_leads?: boolean
+          tracker_vehicle_make?: string | null
+          tracker_vehicle_mode?: string
+          tracker_vehicle_model?: string | null
+          tracker_vehicle_style?: string | null
+          tracker_vehicle_year?: number | null
           trade_hero_headline?: string
           trade_hero_subtext?: string
           ui_refresh_enabled?: boolean
@@ -4773,6 +4783,11 @@ export type Database = {
           top_bar_style?: string | null
           top_bar_text?: string | null
           track_abandoned_leads?: boolean
+          tracker_vehicle_make?: string | null
+          tracker_vehicle_mode?: string
+          tracker_vehicle_model?: string | null
+          tracker_vehicle_style?: string | null
+          tracker_vehicle_year?: number | null
           trade_hero_headline?: string
           trade_hero_subtext?: string
           ui_refresh_enabled?: boolean
