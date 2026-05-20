@@ -141,13 +141,34 @@ const X_LABELS = [
   { x: 560, label: "MAY 10" },
 ];
 
+// Popular fallback used when admin chooses "popular" mode and the
+// dealership isn't tied to a single OEM brand.
+const POPULAR_FLAGSHIP = {
+  year: "2022", make: "Toyota", model: "RAV4", style: "XLE",
+  specs: "4D SUV · 2.5L · 36,100 mi",
+};
+
 const ValueTrackerCard = () => {
   const { tenant } = useTenant();
   const { config } = useSiteConfig();
-  const flagship = resolveFlagship(
-    tenant?.display_name,
-    mergeFlagships(config.tracker_oem_flagships),
-  );
+
+  let flagship;
+  if (config.tracker_vehicle_mode === "custom" && config.tracker_vehicle_make && config.tracker_vehicle_model) {
+    flagship = {
+      year:  config.tracker_vehicle_year ? String(config.tracker_vehicle_year) : "2022",
+      make:  config.tracker_vehicle_make,
+      model: config.tracker_vehicle_model,
+      style: config.tracker_vehicle_style || "",
+      specs: config.tracker_vehicle_specs || "",
+    };
+  } else if (config.tracker_vehicle_mode === "popular") {
+    flagship = POPULAR_FLAGSHIP;
+  } else {
+    flagship = resolveFlagship(
+      tenant?.display_name,
+      mergeFlagships(config.tracker_oem_flagships),
+    );
+  }
   const finalPoint = POINTS[POINTS.length - 1];
   const finalY = yFor(finalPoint.k);
 
