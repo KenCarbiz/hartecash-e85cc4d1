@@ -173,6 +173,39 @@ export const FullBelowFold = () => (
 );
 
 /**
+ * Mobile counterpart to MotoBelowFold (below).
+ *
+ * Per product-owner direction: "very watered down version for mobile."
+ * The Moto form is the priority on small screens — the marketing
+ * chrome exists below it ONLY for the SEO weight (mobile-first
+ * indexing means whatever's in the mobile DOM is what Google sees
+ * primarily). Heavy promo cards (ValueTrackerCard with its inline
+ * SVG illustration) are skipped on mobile because they double the
+ * vertical scroll on small viewports without commensurate value —
+ * the value-tracker opt-in already lives on the form's contact
+ * step via MotoTrackValueBlock.
+ *
+ * Mobile scroll order:
+ *   1. HowItWorksLean — three steps stack vertically; per-step CTAs
+ *      anchor to #sell-car-form
+ *   2. FAQLean — five questions collapse to single-column accordion
+ *   3. CTABannerLean — compact closer
+ *
+ * All three sections are the same lean variants used on desktop, so
+ * the SEO payload (process content, FAQ schema-eligible Q&As, dealer
+ * mission via CTA copy) is preserved. Just no Value Tracker promo
+ * card and no Trust Badges / Comparison / Testimonials grids (the
+ * three-agent benchmark cut those on desktop too).
+ */
+export const MotoMobileBelowFold = () => (
+  <>
+    <HowItWorksLeanSection />
+    <FAQLeanSection />
+    <CTABannerLeanSection />
+  </>
+);
+
+/**
  * Moto-template marketing chrome — third iteration per the
  * three-agent benchmark vs sellyourcar.online (MotoAcquire's own
  * consumer site).
