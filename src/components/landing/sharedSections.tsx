@@ -19,6 +19,7 @@ const HowItWorksLean = lazy(() => import("@/components/moto-sections/HowItWorksL
 const TestimonialsLean = lazy(() => import("@/components/moto-sections/TestimonialsLean"));
 const ValueTrackerCard = lazy(() => import("@/components/moto-sections/ValueTrackerCard"));
 const FAQLean = lazy(() => import("@/components/moto-sections/FAQLean"));
+const FindOfferLean = lazy(() => import("@/components/moto-sections/FindOfferLean"));
 
 class SectionErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -75,6 +76,7 @@ export const HowItWorksLeanSection = () => <Lazy><HowItWorksLean /></Lazy>;
 export const TestimonialsLeanSection = () => <Lazy><TestimonialsLean /></Lazy>;
 export const ValueTrackerCardSection = () => <Lazy withSkeleton={false}><ValueTrackerCard /></Lazy>;
 export const FAQLeanSection = () => <Lazy><FAQLean /></Lazy>;
+export const FindOfferLeanSection = () => <Lazy withSkeleton={false}><FindOfferLean /></Lazy>;
 
 /**
  * "Learn more" accordion. Wraps sections that historically padded the
@@ -207,6 +209,7 @@ export const MotoMobileBelowFold = () => (
         image bytes. */}
     <ValueTrackerCardSection />
     <FAQLeanSection />
+    <FindOfferLeanSection />
   </>
 );
 
@@ -249,6 +252,7 @@ export const MotoBelowFold = () => (
     <ValueTrackerCardSection />
     <TestimonialsLeanSection />
     <FAQLeanSection />
+    <FindOfferLeanSection />
     {/* Closing CTA is now part of BrandFooter (mounted by Index.tsx)
         — folded in to eliminate the tonal seam between the prior
         standalone CTABannerLean section and the footer block. */}

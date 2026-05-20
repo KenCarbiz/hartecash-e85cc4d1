@@ -131,13 +131,14 @@ const SiteHeader = () => {
                 ))}
               </div>
               <span className="mx-6 h-4 w-px bg-border/80" aria-hidden />
-              <Link
-                to="/my-submission"
+              <a
+                href="/#find-offer"
+                onClick={goToHash("find-offer")}
                 className="inline-flex items-center gap-1.5 hover:text-primary transition-colors"
               >
                 <LogIn className="w-3.5 h-3.5" strokeWidth={2} />
                 Sign In
-              </Link>
+              </a>
             </nav>
           ) : (
             // Historical nav — preserved unchanged for the 19 other
@@ -220,7 +221,7 @@ const SiteHeader = () => {
                         { hash: "value-tracking", icon: TrendingUp, label: "Value Tracking" },
                         { hash: "reviews", icon: MessageSquare, label: "Reviews" },
                         { hash: "faq", icon: HelpCircle, label: "FAQ" },
-                        { to: "/my-submission", icon: LogIn, label: "Sign In", separated: true },
+                        { hash: "find-offer", icon: LogIn, label: "Sign In", separated: true },
                       ]
                     : [
                         { to: "/trade", icon: ArrowLeftRight, label: "Trade-In" },
@@ -231,18 +232,22 @@ const SiteHeader = () => {
                   ).map((item) => {
                     if ("hash" in item) {
                       return (
-                        <a
-                          key={item.hash}
-                          href={`/#${item.hash}`}
-                          onClick={(e) => {
-                            setOpen(false);
-                            goToHash(item.hash)(e);
-                          }}
-                          className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-card-foreground hover:bg-primary/5 hover:text-primary transition-all duration-150 mx-1.5 rounded-lg"
-                        >
-                          <item.icon className="w-4 h-4 text-primary/70" />
-                          {item.label}
-                        </a>
+                        <div key={item.hash}>
+                          {(item as { separated?: boolean }).separated && (
+                            <div className="h-px bg-border/70 mx-3 my-1" />
+                          )}
+                          <a
+                            href={`/#${item.hash}`}
+                            onClick={(e) => {
+                              setOpen(false);
+                              goToHash(item.hash)(e);
+                            }}
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-card-foreground hover:bg-primary/5 hover:text-primary transition-all duration-150 mx-1.5 rounded-lg"
+                          >
+                            <item.icon className="w-4 h-4 text-primary/70" />
+                            {item.label}
+                          </a>
+                        </div>
                       );
                     }
                     const onCurrentPage = location.pathname === item.to;
