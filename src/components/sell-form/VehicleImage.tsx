@@ -327,27 +327,20 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
         )}
       </AnimatePresence>
 
-      {/* Transparent keying failed — show a generic vehicle icon */}
+      {/* Transparent keying failed — render a clean vehicle icon only
+          (no label, no chip). Policy: tracker image must be either a
+          true transparent-background vehicle photo or a generic
+          vehicle icon. Nothing in between. */}
       {transparent && transparentFailed && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-          <div
-            className="rounded-full flex items-center justify-center"
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Car
+            className="text-muted-foreground/40"
             style={{
-              width: compact ? "2.25rem" : "3rem",
-              height: compact ? "2.25rem" : "3rem",
-              background: "hsl(220 14% 96%)",
+              width: compact ? "2.25rem" : "3.25rem",
+              height: compact ? "2.25rem" : "3.25rem",
             }}
-          >
-            <Car
-              className="text-muted-foreground/50"
-              style={{
-                width: compact ? "1.25rem" : "1.5rem",
-                height: compact ? "1.25rem" : "1.5rem",
-              }}
-              strokeWidth={1.5}
-            />
-          </div>
-          <p className="text-[11px] text-muted-foreground/60">Vehicle image</p>
+            strokeWidth={1.25}
+          />
         </div>
       )}
 
