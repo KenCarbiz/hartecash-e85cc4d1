@@ -5,6 +5,7 @@ import {
   TrendingUp, Clock, Shield, ShieldCheck, Truck, Handshake,
   Upload, MessageSquare, LineChart as LineIcon, X, ArrowRight,
 } from "lucide-react";
+import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 
 /* ──────────────────────────────────────────────────────────────────
    Premium customer portal dashboard (preview / mock).
