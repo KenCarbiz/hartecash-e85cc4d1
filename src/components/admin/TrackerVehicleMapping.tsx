@@ -57,6 +57,8 @@ const TrackerVehicleMapping = () => {
 
   const [overrides, setOverrides] = useState<FlagshipMap>({});
   const [savedOverrides, setSavedOverrides] = useState<FlagshipMap>({});
+  const [tenantOv, setTenantOv] = useState<TenantOverride>(DEFAULT_TENANT_OVERRIDE);
+  const [savedTenantOv, setSavedTenantOv] = useState<TenantOverride>(DEFAULT_TENANT_OVERRIDE);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -65,12 +67,22 @@ const TrackerVehicleMapping = () => {
       setLoading(true);
       const { data } = await supabase
         .from("site_config")
-        .select("tracker_oem_flagships")
+        .select("tracker_oem_flagships, tracker_vehicle_mode, tracker_vehicle_year, tracker_vehicle_make, tracker_vehicle_model, tracker_vehicle_style, tracker_vehicle_specs")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
       const raw = (data?.tracker_oem_flagships as unknown as FlagshipMap) || {};
       setOverrides(raw);
       setSavedOverrides(raw);
+      const tov: TenantOverride = {
+        tracker_vehicle_mode: ((data?.tracker_vehicle_mode as Mode) || "oem"),
+        tracker_vehicle_year: data?.tracker_vehicle_year ?? null,
+        tracker_vehicle_make: data?.tracker_vehicle_make ?? null,
+        tracker_vehicle_model: data?.tracker_vehicle_model ?? null,
+        tracker_vehicle_style: data?.tracker_vehicle_style ?? null,
+        tracker_vehicle_specs: (data as any)?.tracker_vehicle_specs ?? null,
+      };
+      setTenantOv(tov);
+      setSavedTenantOv(tov);
       setLoading(false);
     })();
   }, [dealershipId]);
