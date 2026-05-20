@@ -504,7 +504,7 @@ const PortalPreview = () => {
         </div>
 
         {/* BOTTOM ROW */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.4fr_1fr] gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.6fr_1fr] gap-6 items-stretch">
           {/* Dealer Communication */}
           <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
             <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Dealer Communication</div>
