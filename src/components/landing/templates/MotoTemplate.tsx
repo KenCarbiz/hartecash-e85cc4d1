@@ -1,6 +1,6 @@
 import SellFlow from "@/pages/SellFlow";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { MotoBelowFold, DefaultBelowFold } from "../sharedSections";
+import { MotoBelowFold, MotoMobileBelowFold } from "../sharedSections";
 import BrandStructuredData from "@/components/BrandStructuredData";
 import StickyOfferCTA from "@/components/moto-sections/StickyOfferCTA";
 
@@ -8,31 +8,45 @@ import StickyOfferCTA from "@/components/moto-sections/StickyOfferCTA";
  * "Instant Offer" landing template — the MotoAcquire-style 8-step
  * appraisal flow PLUS a calibrated below-fold marketing chrome.
  *
- * Design intent (third iteration, per the three-agent benchmark vs
- * sellyourcar.online — MotoAcquire's own consumer site):
+ * Design intent (per the three-agent benchmark vs sellyourcar.online):
  *
- *   "Negative space as authority" is the national-brand tell. We
- *   pulled the page back from a six-section marketing wall to four
- *   tight sections that match MotoAcquire's calmer cadence:
- *     HowItWorks → ValueTracker → FAQ → CTA
- *   No testimonials grid (moves to /reviews subpage in a follow-up
- *   PR), no comparison table, no stat strip, no NAP block in the
- *   main scroll. The page reads as one continuous surface with
- *   hairline dividers instead of alternating bg tones.
+ *   "Negative space as authority" is the national-brand tell. The
+ *   page reads as one continuous surface with hairline dividers
+ *   instead of alternating bg tones.
  *
- * Mobile: keep DefaultBelowFold's LearnMoreFold accordion so the
- * extra SEO content is indexed but compressed visually. Closed-
- * accordion content in the DOM is fully indexed AND fully weighted
- * by Google.
+ * DESKTOP (md+) — 4 sections:
+ *   HowItWorks → ValueTracker → FAQ → CTA
  *
- * NAP block moves to a footer-line slot below the closing CTA so
- * local-pack ranking signals are preserved without breaking the
- * mid-page flow. Hidden when the dealer hasn't filled in NAP fields.
+ * MOBILE (<md) — 3 sections, watered down per product-owner direction:
+ *   HowItWorks → FAQ → CTA
+ *
+ *   Skipped on mobile: ValueTrackerCard. Its inline-SVG illustration
+ *   doubles the vertical scroll on small viewports without
+ *   commensurate value — the value-tracker opt-in already lives on
+ *   the form's contact step via MotoTrackValueBlock.
+ *
+ *   Skipped from both viewports (cut by the three-agent benchmark):
+ *     * TrustBadges stat strip
+ *     * CompetitorComparison table
+ *     * Testimonials grid (moved to /reviews subpage)
+ *     * ValueProps card row
+ *     * ReferralBanner
+ *     * NAP "Visit X" block (NAP now lives in JSON-LD only)
  *
  * Per-tenant correctness: every section reads from useSiteConfig.
  * BrandStructuredData passes faqVariant="moto" so the JSON-LD
  * FAQPage matches the visible 5-question FAQLean (Google's "must
  * match" rule for FAQ rich-result eligibility).
+ *
+ * Sticky CTA pill: desktop-only (≥lg). Floats bottom-right after the
+ * hero is scrolled past; hides when the form anchor is in view.
+ * Mobile gets the existing in-flow CTAs plus MotoStickyFooter from
+ * MotoShell, so adding another floating pill there would break
+ * thumb-zone ergonomics.
+ *
+ * Footer is owned by Index.tsx — picks BrandFooter for Moto and
+ * SiteFooter for every other template. Mounting one here would
+ * double-render.
  */
 const MotoTemplate = () => {
   const { config } = useSiteConfig();
@@ -54,20 +68,13 @@ const MotoTemplate = () => {
         <MotoBelowFold />
       </div>
 
-      {/* Mobile chrome: existing LearnMoreFold accordion pattern.
-          Mobile lean variants are a follow-up pass. */}
+      {/* Mobile chrome: 3 sections, watered down. */}
       <div className="md:hidden bg-background">
-        <DefaultBelowFold />
+        <MotoMobileBelowFold />
       </div>
 
-      {/* Footer is owned by Index.tsx — it picks BrandFooter for the
-          Moto template (minimal one-row national-brand footer) and
-          SiteFooter for everything else. Mounting one here would
-          double-render. */}
-
-      {/* Sticky desktop pill — a second-look visitor scrolling back
-          up through the page is never more than one click from the
-          form. Hidden when the form itself is in view. */}
+      {/* Sticky desktop pill — second-look visitor scrolling back up
+          is never more than one click from the form. */}
       <StickyOfferCTA />
     </main>
   );
