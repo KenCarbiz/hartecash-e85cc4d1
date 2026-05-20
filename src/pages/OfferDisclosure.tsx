@@ -28,6 +28,7 @@
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import BrandFooter from "@/components/BrandFooter";
+import SiteHeader from "@/components/SiteHeader";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
@@ -116,6 +117,8 @@ const OfferDisclosure = () => {
         description={`Full transparency on how ${dealerName} determines your vehicle's cash offer — inspection factors, valuation methodology, and price guarantee details.`}
         path="/disclosure"
       />
+
+      <SiteHeader />
 
       <main className="flex-1 px-5 py-12 lg:py-16">
         <div className="max-w-3xl mx-auto">

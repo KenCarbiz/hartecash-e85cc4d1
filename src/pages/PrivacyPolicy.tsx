@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Shield } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import BrandFooter from "@/components/BrandFooter";
+import SiteHeader from "@/components/SiteHeader";
 import SEO from "@/components/SEO";
 
 const PrivacyPolicy = () => {
@@ -27,6 +28,8 @@ const PrivacyPolicy = () => {
         description={`Learn how ${dealerName} collects, uses, and protects your personal information.`}
         path="/privacy"
       />
+
+      <SiteHeader />
 
       <main className="flex-1 px-5 py-12 lg:py-16">
         <div className="max-w-3xl mx-auto">

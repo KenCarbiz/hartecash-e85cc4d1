@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import BrandFooter from "@/components/BrandFooter";
+import SiteHeader from "@/components/SiteHeader";
 import SEO from "@/components/SEO";
 
 const PLACEHOLDER_NAMES = new Set([
@@ -42,6 +43,8 @@ const TermsOfService = () => {
         description={`Review the terms and conditions for using ${dealerName}'s vehicle appraisal and purchasing services.`}
         path="/terms"
       />
+
+      <SiteHeader />
 
       <main className="flex-1 px-5 py-12 lg:py-16">
         <div className="max-w-3xl mx-auto">
