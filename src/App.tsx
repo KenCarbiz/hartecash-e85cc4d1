@@ -80,6 +80,7 @@ const SlaPage = lazy(() => import("./pages/SlaPage"));
 const DocsLanding = lazy(() => import("./pages/DocsLanding"));
 const GroupLandingPage = lazy(() => import("./pages/GroupLandingPage"));
 const Reviews = lazy(() => import("./pages/Reviews"));
+const CustomerLayout = lazy(() => import("./layouts/CustomerLayout"));
 // /billing removed — /plan is now the canonical billing surface, with
 // a "Manage billing" button that opens the Stripe Customer Portal
 // directly. The previous BillingPage was orphaned (not in the sidebar)
@@ -206,16 +207,29 @@ const AnimatedRoutes = () => {
       </a>
       <main id="main-content" tabIndex={-1}>
       <Routes>
-        <Route path="/" element={<RootLanding />} />
-        {/* Subdirectory rooftop URL — preferred for SEO, pools authority to
-            the main domain. Renders the same Index; TenantContext resolves
-            the rooftop from the slug path segment. */}
-        <Route path="/locations/:rooftopSlug" element={<Index />} />
+        {/* CustomerLayout wraps every customer-facing surface that
+            shares the SiteHeader + BrandFooter chrome. Hoisting the
+            chrome to the layout means React keeps SiteHeader mounted
+            across route changes between these pages — clicking a
+            footer link from the landing to /privacy (or any pair of
+            legal pages) no longer remounts the sticky bar. The
+            individual pages render just their inner content into
+            the layout's <Outlet />. */}
+        <Route element={<CustomerLayout />}>
+          <Route path="/" element={<RootLanding />} />
+          {/* Subdirectory rooftop URL — preferred for SEO, pools authority to
+              the main domain. Renders the same Index; TenantContext resolves
+              the rooftop from the slug path segment. */}
+          <Route path="/locations/:rooftopSlug" element={<Index />} />
+          <Route path="/reviews" element={<Reviews />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/disclosure" element={<OfferDisclosure />} />
+        </Route>
         {/* MotoAcquire-style standalone sell flow. Standalone dealer
             microsite by default; iframed onto the dealer's own site
             with ?embed=true so the top + disclosure bars drop out. */}
         <Route path="/sell" element={<SellFlow />} />
-        <Route path="/reviews" element={<Reviews />} />
         <Route path="/upload/:token" element={<UploadPhotos />} />
         <Route path="/docs/:token" element={<UploadDocs />} />
         <Route path="/boost-offer/:token" element={<BoostOfferClarity />} />
@@ -235,8 +249,9 @@ const AnimatedRoutes = () => {
         <Route path="/platform" element={<PlatformPitch />} />
         <Route path="/ken" element={<KenPage />} />
         <Route path="/servicelinkgen" element={<ServiceLinkGen />} />
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/terms" element={<TermsOfService />} />
+        {/* /privacy and /terms moved into CustomerLayout above so
+            SiteHeader stays mounted when navigating between them
+            and the landing/legal/reviews set. */}
         <Route path="/offer/:token" element={<OfferPage />} />
         <Route path="/arrive/:token" element={<CustomerArrival />} />
         <Route path="/quick-offer" element={<QuickOfferPage />} />
@@ -248,7 +263,7 @@ const AnimatedRoutes = () => {
         <Route path="/embed/:dealershipId" element={<EmbedLanding />} />
         <Route path="/push-pull-tow" element={<PushPullTow />} />
         <Route path="/deal/:token" element={<DealAccepted />} />
-        <Route path="/disclosure" element={<OfferDisclosure />} />
+        {/* /disclosure moved into CustomerLayout above. */}
         <Route path="/updates" element={<Updates />} />
         <Route path="/preview/loader" element={<PreviewLoader />} />
         <Route path="/about" element={<AboutPage />} />

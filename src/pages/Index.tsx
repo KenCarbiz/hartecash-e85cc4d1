@@ -1,12 +1,14 @@
+// Landing page content. SiteHeader / BrandFooter / SiteFooter /
+// BackToTop now live in CustomerLayout (src/layouts/CustomerLayout.tsx)
+// so they stay mounted across route changes to /reviews, /privacy,
+// /terms, /disclosure. This page renders just the landing-specific
+// pieces: SEO + JSON-LD, the NearestRooftopBanner (landing-only),
+// and the Find-Offer hash-driven body swap below the sticky header.
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import SEO from "@/components/SEO";
 import { LocalBusinessJsonLd, FAQPageJsonLd, HowToJsonLd, WebSiteJsonLd } from "@/components/JsonLd";
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
-import BrandFooter from "@/components/BrandFooter";
-import BackToTop from "@/components/BackToTop";
 import LandingTemplateRouter from "@/components/landing/LandingTemplateRouter";
 import NearestRooftopBanner from "@/components/NearestRooftopBanner";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -20,12 +22,11 @@ const Index = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isMoto = config.landing_template === "moto";
-
   // Hash-driven "Find Your Offer" view. The sticky header's Sign In
   // link sets the hash to #find-offer — we swap the <main> body
   // without unmounting the header/footer so the sticky bar never
-  // flashes or "refreshes".
+  // flashes or "refreshes". (Same effect now extends to footer
+  // links across the landing/legal/reviews set via CustomerLayout.)
   const [showFindOffer, setShowFindOffer] = useState(location.hash === "#find-offer");
   useEffect(() => {
     const next = location.hash === "#find-offer";
@@ -36,7 +37,7 @@ const Index = () => {
   const exitFindOffer = () => navigate("/", { replace: false });
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEO
         title={`Sell Your Car for Cash in 2 Minutes | ${config.dealership_name}`}
         description={`Get a top-dollar cash offer for your car in 2 minutes. Free pickup, no obligation. ${config.dealership_name}.`}
@@ -46,9 +47,8 @@ const Index = () => {
       <LocalBusinessJsonLd />
       <FAQPageJsonLd />
       <HowToJsonLd />
-      {!embed && <SiteHeader />}
       {!embed && !showFindOffer && <NearestRooftopBanner />}
-      <main>
+      <main className="flex-1">
         {showFindOffer ? (
           <Suspense fallback={<div className="min-h-[60vh]" />}>
             <div className="max-w-md mx-auto px-5 pt-6">
@@ -66,9 +66,7 @@ const Index = () => {
           <LandingTemplateRouter />
         )}
       </main>
-      {!embed && (isMoto ? <BrandFooter /> : <SiteFooter />)}
-      {!embed && <BackToTop />}
-    </div>
+    </>
   );
 };
 

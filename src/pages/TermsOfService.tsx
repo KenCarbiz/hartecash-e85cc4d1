@@ -14,8 +14,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import BrandFooter from "@/components/BrandFooter";
-import SiteHeader from "@/components/SiteHeader";
 import SEO from "@/components/SEO";
 
 const PLACEHOLDER_NAMES = new Set([
@@ -34,19 +32,17 @@ const TermsOfService = () => {
   const dealerName = legalEntityName(config.dealership_name);
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ background: "hsl(220 14% 98%)" }}
-    >
+    <>
       <SEO
         title={`Terms of Service | ${dealerName}`}
         description={`Review the terms and conditions for using ${dealerName}'s vehicle appraisal and purchasing services.`}
         path="/terms"
       />
 
-      <SiteHeader />
-
-      <main className="flex-1 px-5 py-12 lg:py-16">
+      <main
+        className="flex-1 px-5 py-12 lg:py-16"
+        style={{ background: "hsl(220 14% 98%)" }}
+      >
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-10">
             <Link
@@ -187,9 +183,7 @@ const TermsOfService = () => {
           </div>
         </div>
       </main>
-
-      <BrandFooter />
-    </div>
+    </>
   );
 };
 
