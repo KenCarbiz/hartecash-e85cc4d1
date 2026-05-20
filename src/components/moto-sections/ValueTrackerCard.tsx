@@ -104,25 +104,46 @@ const X_LABELS = [
   { x: 485, label: "MAY 10" },
 ];
 
-// Hand-authored SVG path for the trend line — steady rise, a dip
-// around MAR 29, then a strong recovery to a higher finish.
-const CHART_LINE_PATH = [
-  "M35 185",
-  "C50 165, 65 155, 82 150",
-  "C96 145, 105 132, 118 130",
-  "C130 128, 136 112, 150 111",
-  "C165 110, 174 96, 190 94",
-  "C205 92, 215 103, 228 102",
-  "C242 101, 252 120, 265 143",
-  "C278 130, 288 112, 305 101",
-  "C320 92, 330 82, 344 78",
-  "C358 74, 365 58, 382 55",
-  "C398 52, 408 38, 425 39",
-  "C440 40, 448 34, 460 26",
-  "C472 19, 480 15, 485 12",
-].join(" ");
+// Straight-segment trend line — small linear wobbles, dip at MAR 29,
+// then a steady jagged climb to $25K. Reads like a real market chart.
+const TREND_POINTS: [number, number][] = [
+  [35,  164.8], // Mar 1 ~$19.70 (open-circle start)
+  [50,  160.5],
+  [65,  163.4],
+  [82,  157.6],
+  [98,  160.5],
+  [115, 153.3],
+  [130, 149.0],
+  [145, 144.7], // Mar 15
+  [160, 147.6],
+  [178, 137.5],
+  [195, 131.7],
+  [210, 136.1],
+  [225, 144.7], // descending
+  [240, 154.8],
+  [255, 160.5],
+  [270, 163.4], // Mar 29 bottom of dip
+  [285, 156.3], // recovery starts
+  [300, 147.6],
+  [315, 140.4],
+  [330, 143.3],
+  [345, 131.7],
+  [360, 124.5],
+  [375, 127.4],
+  [390, 115.9],
+  [405, 107.3],
+  [420, 103.0],
+  [435, 91.5],
+  [450, 78.4],
+  [465, 61.1],
+  [478, 35.1],
+  [485, 12],   // May 10 final marker at $25K
+];
+const CHART_LINE_PATH =
+  "M" + TREND_POINTS.map(([x, y]) => `${x} ${y}`).join(" L ");
 const CHART_FILL_PATH = `${CHART_LINE_PATH} L 485 210 L 35 210 Z`;
 const FINAL_POINT = { x: 485, y: 12 };
+const START_POINT = { x: 35, y: 164.8 };
 
 // Popular fallback used when admin chooses "popular" mode and the
 // dealership isn't tied to a single OEM brand.
@@ -360,6 +381,16 @@ const ValueTrackerCard = () => {
                       cy={FINAL_POINT.y}
                       r="3"
                       fill="#1e3a8a"
+                    />
+
+                    {/* Open-circle marker on the starting point */}
+                    <circle
+                      cx={START_POINT.x}
+                      cy={START_POINT.y}
+                      r="4.5"
+                      fill="white"
+                      stroke="#1e3a8a"
+                      strokeWidth="2"
                     />
 
                     {/* Y-axis labels (right side) */}
