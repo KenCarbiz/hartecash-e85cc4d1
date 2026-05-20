@@ -131,13 +131,14 @@ const SiteHeader = () => {
                 ))}
               </div>
               <span className="mx-6 h-4 w-px bg-border/80" aria-hidden />
-              <Link
-                to="/my-submission"
+              <a
+                href="/#find-offer"
+                onClick={goToHash("find-offer")}
                 className="inline-flex items-center gap-1.5 hover:text-primary transition-colors"
               >
                 <LogIn className="w-3.5 h-3.5" strokeWidth={2} />
                 Sign In
-              </Link>
+              </a>
             </nav>
           ) : (
             // Historical nav — preserved unchanged for the 19 other
