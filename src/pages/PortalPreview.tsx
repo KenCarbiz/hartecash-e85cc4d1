@@ -335,7 +335,7 @@ const PortalPreview = () => {
       <Sidebar />
 
       <div className="flex-1 min-w-0 flex justify-center">
-        <div className="w-full max-w-[1360px] p-5 sm:p-7 lg:p-8">
+        <div className="w-full max-w-[1320px] p-5 sm:p-7 lg:p-8">
           <Header />
 
         {/* TOP — four-metric strip */}
