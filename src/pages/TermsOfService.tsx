@@ -1,21 +1,23 @@
+// Terms of Service — overhauled to match the Moto landing aesthetic.
+//
+// Same chrome language as PrivacyPolicy and CustomerLookup: soft-gray
+// bg flowing into BrandFooter, no separate hero slab, icon tile + H1,
+// white rounded-3xl article card holding the body. The slim inline
+// row at the top carries the back arrow + "Get my offer" link so the
+// customer can bail in either direction (SPA navigation, no refresh).
+//
+// Substitution safety preserved: if the dealership name is missing or
+// matches a placeholder, the contract refuses to render the
+// counterparty name and surfaces "(legal entity not configured)" —
+// rendering a contract with "{dealerName}" or "Our Dealership" as the
+// counterparty would be a contract-validity problem.
 import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import BrandFooter from "@/components/BrandFooter";
+import SiteHeader from "@/components/SiteHeader";
 import SEO from "@/components/SEO";
 
-/**
- * Substitute the dealership name into the contract body. We
- * deliberately fail safe here: if site_config.dealership_name is
- * missing or matches the placeholder list, we refuse to render the
- * legal-entity name and surface "(legal entity not configured)".
- *
- * Why: rendering a contract that says "{dealerName}" as the
- * counterparty is a contract-validity problem — the customer
- * doesn't know who they're agreeing with. The compliance audit
- * (May 2026) flagged this. The DB-side CHECK in 20260509050000
- * blocks new placeholder values; this function is the runtime
- * fallback for tenants whose config predates the constraint.
- */
 const PLACEHOLDER_NAMES = new Set([
   "our dealership", "dealership", "default", "tbd", "your dealership",
 ]);
@@ -30,139 +32,163 @@ function legalEntityName(raw: string | null | undefined): string {
 const TermsOfService = () => {
   const { config } = useSiteConfig();
   const dealerName = legalEntityName(config.dealership_name);
-  // Template-aware chrome — same pattern as PrivacyPolicy. Clarity
-  // dealers get the quiet white header; every other template
-  // keeps the dark primary banner. Body content unchanged.
-  const isClarity = config.landing_template === "clarity";
+
   return (
-    <div className={`min-h-screen flex flex-col ${isClarity ? "bg-white text-zinc-900" : "bg-background"}`}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: "hsl(220 14% 98%)" }}
+    >
       <SEO
         title={`Terms of Service | ${dealerName}`}
         description={`Review the terms and conditions for using ${dealerName}'s vehicle appraisal and purchasing services.`}
         path="/terms"
       />
-      {isClarity ? (
-        <header className="border-b border-zinc-200 bg-white">
-          <div className="max-w-3xl mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-3 min-w-0">
-              <ArrowLeft className="w-4 h-4 text-zinc-500" aria-hidden="true" />
-              {config.logo_url ? (
-                <img src={config.logo_url} alt={dealerName} className="h-16 md:h-20 w-auto object-contain" />
-              ) : (
-                <span className="text-sm font-semibold tracking-tight truncate text-zinc-900">{dealerName}</span>
-              )}
+
+      <SiteHeader />
+
+      <main className="flex-1 px-5 py-12 lg:py-16">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center justify-between mb-10">
+            <Link
+              to="/"
+              onClick={() => window.scrollTo(0, 0)}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-foreground/70 hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" strokeWidth={2} />
+              Back
             </Link>
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+            <Link
+              to="/"
+              onClick={() => window.scrollTo(0, 0)}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              Get my offer
+              <ArrowRight className="w-4 h-4" strokeWidth={2} />
+            </Link>
+          </div>
+
+          <div className="text-center mb-10">
+            <div
+              className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-5"
+              style={{ background: "hsl(220 100% 96%)" }}
+            >
+              <FileText className="w-5 h-5 text-primary" strokeWidth={1.75} />
+            </div>
+            <h1 className="text-3xl lg:text-[40px] font-bold text-foreground leading-[1.15] tracking-tight mb-3">
               Terms of Service
-            </span>
+            </h1>
+            <p className="text-sm text-foreground/55">Last updated: May 9, 2026</p>
           </div>
-        </header>
-      ) : (
-        <div className="bg-primary text-primary-foreground px-6 py-4">
-          <div className="max-w-3xl mx-auto flex items-center gap-3">
-            <Link to="/" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-              <ArrowLeft className="w-5 h-5" />
+
+          <article className="bg-white rounded-3xl border border-border/60 shadow-[0_8px_32px_-12px_rgb(15_23_42_/_0.08)] p-7 lg:p-10 space-y-8 text-[15px] text-foreground/75 leading-relaxed">
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-2">1. Acceptance of Terms</h2>
+              <p>
+                By accessing or using this website and related services operated by{" "}
+                {dealerName} ("we," "us," or "our"), you agree to be bound by these Terms of
+                Service. If you do not agree to these terms, please do not use our services.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-2">2. Services</h2>
+              <p>
+                {dealerName} provides an online platform for vehicle appraisals, trade-in
+                offers, appointment scheduling, and related automotive services. All offers
+                and valuations provided through our website are estimates and subject to
+                in-person vehicle inspection and verification.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-2">3. User Submissions</h2>
+              <p>
+                When you submit information through our forms (including vehicle details,
+                contact information, and photographs), you represent that the information
+                provided is accurate and that you are authorized to submit it. You retain
+                ownership of any photos you upload but grant us a non-exclusive license to
+                use them for appraisal purposes.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-2">4. Communications Consent</h2>
+              <p>
+                By submitting your contact information through any form on our website, you
+                consent to receive communications from {dealerName}, including but not
+                limited to phone calls, text messages (SMS/MMS), and emails regarding your
+                vehicle submission, offer, or appointment. See our{" "}
+                <Link
+                  to="/privacy#sms-consent"
+                  className="text-primary underline-offset-4 hover:underline"
+                >
+                  Privacy Policy — SMS Consent section
+                </Link>{" "}
+                for full details on text messaging terms.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-2">5. Price Guarantee</h2>
+              <p>
+                Offers made through our platform are valid for 8 calendar days from the date
+                of issuance, subject to vehicle inspection confirming the accuracy of the
+                information provided. Material discrepancies between the submitted
+                information and the actual vehicle condition may result in an adjusted
+                offer.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-2">6. Limitation of Liability</h2>
+              <p>
+                Our website and services are provided "as is" without warranties of any
+                kind. {dealerName} shall not be liable for any indirect, incidental, or
+                consequential damages arising from your use of our services.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-2">7. Governing Law</h2>
+              <p>
+                These Terms shall be governed by and construed in accordance with the laws
+                of the State of Connecticut, without regard to its conflict of law
+                provisions.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-2">8. Contact</h2>
+              <p>
+                Questions about these Terms should be directed to {dealerName} at (866)
+                851-7390 or at 150 Weston Street, Hartford, CT 06120.
+              </p>
+            </section>
+          </article>
+
+          <div className="flex items-center justify-center gap-6 mt-10 text-sm">
+            <Link
+              to="/"
+              onClick={() => window.scrollTo(0, 0)}
+              className="inline-flex items-center gap-2 text-foreground/65 hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" strokeWidth={2} />
+              Back
             </Link>
-            {config.logo_white_url ? (
-              <img src={config.logo_white_url} alt={dealerName} className="h-20 w-auto" />
-            ) : (
-              <span className="text-lg font-bold">{dealerName}</span>
-            )}
-            <h1 className="font-bold text-lg">Terms of Service</h1>
+            <span className="text-foreground/30">·</span>
+            <Link
+              to="/"
+              onClick={() => window.scrollTo(0, 0)}
+              className="inline-flex items-center gap-1.5 font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              Get my offer
+              <ArrowRight className="w-4 h-4" strokeWidth={2} />
+            </Link>
           </div>
-        </div>
-      )}
-
-      <main className={`flex-1 max-w-3xl mx-auto px-5 py-10 md:py-14 ${isClarity ? "text-zinc-700" : ""}`}>
-        <h1 className={`text-3xl font-extrabold mb-2 ${isClarity ? "font-sans tracking-[-0.025em] text-zinc-900" : "text-foreground"}`}>Terms of Service</h1>
-        <p className="text-sm text-muted-foreground mb-8">Last updated: May 9, 2026</p>
-
-        <div className="prose prose-sm max-w-none text-foreground/90 space-y-6">
-          <section>
-            <h2 className="text-xl font-bold text-foreground">1. Acceptance of Terms</h2>
-            <p>
-              By accessing or using this website and related services operated by
-              {dealerName} ("we," "us," or "our"), you agree to be bound by these Terms of
-              Service. If you do not agree to these terms, please do not use our services.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-foreground">2. Services</h2>
-            <p>
-              {dealerName} provides an online platform for vehicle appraisals, trade-in offers,
-              appointment scheduling, and related automotive services. All offers and valuations
-              provided through our website are estimates and subject to in-person vehicle inspection
-              and verification.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-foreground">3. User Submissions</h2>
-            <p>
-              When you submit information through our forms (including vehicle details, contact
-              information, and photographs), you represent that the information provided is accurate
-              and that you are authorized to submit it. You retain ownership of any photos you upload
-              but grant us a non-exclusive license to use them for appraisal purposes.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-foreground">4. Communications Consent</h2>
-            <p>
-              By submitting your contact information through any form on our website, you consent to
-              receive communications from {dealerName}, including but not limited to phone calls,
-              text messages (SMS/MMS), and emails regarding your vehicle submission, offer, or
-              appointment. See our{" "}
-              <Link to="/privacy#sms-consent" className="text-primary underline hover:no-underline">
-                Privacy Policy — SMS Consent section
-              </Link>{" "}
-              for full details on text messaging terms.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-foreground">5. Price Guarantee</h2>
-            <p>
-              Offers made through our platform are valid for 8 calendar days from the date of issuance,
-              subject to vehicle inspection confirming the accuracy of the information provided.
-              Material discrepancies between the submitted information and the actual vehicle condition
-              may result in an adjusted offer.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-foreground">6. Limitation of Liability</h2>
-            <p>
-              Our website and services are provided "as is" without warranties of any kind. {dealerName}
-              Group shall not be liable for any indirect, incidental, or consequential damages arising
-              from your use of our services.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-foreground">7. Governing Law</h2>
-            <p>
-              These Terms shall be governed by and construed in accordance with the laws of the
-              State of Connecticut, without regard to its conflict of law provisions.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-foreground">8. Contact</h2>
-            <p>
-              Questions about these Terms should be directed to {dealerName} at (866) 851-7390
-              or at 150 Weston Street, Hartford, CT 06120.
-            </p>
-          </section>
         </div>
       </main>
 
-      <footer className="border-t border-border py-6 px-5 text-center">
-        <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} {dealerName}. All rights reserved.
-        </p>
-      </footer>
+      <BrandFooter />
     </div>
   );
 };
