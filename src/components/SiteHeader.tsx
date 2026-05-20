@@ -56,17 +56,19 @@ const SiteHeader = () => {
   // smooth-scroll without a route change; from /reviews etc. we
   // navigate to / and let the browser pick up the hash.
   const goToHash = (hash: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Sign In swaps the body to the dedicated Find-Your-Offer view
+    // via the #find-offer hash (Index.tsx watches it). All other
+    // hashes are in-page anchors and smooth-scroll to their section.
+    if (hash === "find-offer") {
+      navigate("/#find-offer");
+      window.scrollTo({ top: 0, behavior: "auto" });
+      return;
+    }
     if (location.pathname === "/") {
-      e.preventDefault();
       const el = document.getElementById(hash);
-      if (el) {
-        // Sign In snaps instantly to the top of the section; other
-        // anchors keep the smooth in-page scroll.
-        const behavior: ScrollBehavior = hash === "find-offer" ? "auto" : "smooth";
-        el.scrollIntoView({ behavior, block: "start" });
-      }
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
-      e.preventDefault();
       navigate(`/#${hash}`);
     }
   };
