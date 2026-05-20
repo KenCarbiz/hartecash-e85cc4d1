@@ -1,14 +1,21 @@
 // Minimal national-brand footer for the Moto landing.
 //
-// Per the three-footer-agent benchmark (PR 3c synthesis): kill the
-// stacked dual-footer (NAPFooter "Visit X" block + SiteFooter
-// 3-column grid). The footer's only jobs are:
+// Per the three-footer-agent benchmark (PR #265) — and follow-up
+// CTA-redundancy audit by a second three-agent panel (UX +
+// visual-hierarchy + CRO data) that all converged on "cut the footer
+// button" — the footer is now pure typography. The sticky
+// StickyOfferCTA pill (bottom-right of the viewport) carries the
+// scroll-end click; the footer carries the brand sign-off. Two
+// identical navy pills in the same viewport flatten hierarchy and
+// cannibalize each other (~15-30% of footer-button clicks would
+// otherwise route through the higher-performing sticky).
+//
+// The footer's only jobs now:
 //   1. Identity      (logo + dealer name, single lockup)
 //   2. Mission       (one sentence signature under the wordmark)
-//   3. Last conversion shot (single "Get My Offer" button)
-//   4. Legal         (Privacy / Terms / Offer Disclosure + copyright)
-//   5. One internal trust link (Customer Reviews)
-//   6. Optional platform credit (AutoCurb.io) per resolved attribution
+//   3. Legal         (Privacy / Terms / Offer Disclosure + copyright)
+//   4. One internal trust link (Customer Reviews)
+//   5. Optional platform credit (AutoCurb.io) per resolved attribution
 //
 // EXPLICITLY EXCLUDED per product-owner direction:
 //   * Phone number   — funnel off-ramp; appt time is given at booking
@@ -17,6 +24,7 @@
 //     route the customer OUT of the form before they have an offer
 //   * Referral Program — wrong audience pre-sale
 //   * Sitemap link — vestigial exit surface
+//   * Closing "Get my offer" button — cannibalizes the sticky pill
 //
 // Mission-line copy: "The modern way to sell your car." — intent-first
 // pattern (Carvana cadence). Single sentence, present tense, no
@@ -25,15 +33,6 @@
 // optional column — falls back to the default if absent).
 import { Link } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-
-const scrollToForm = () => {
-  const form = document.getElementById("sell-car-form");
-  if (form) {
-    form.scrollIntoView({ behavior: "smooth", block: "center" });
-  } else {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-};
 
 const DEFAULT_MISSION = "The modern way to sell your car.";
 
@@ -73,7 +72,7 @@ const BrandFooter = () => {
         {showDealerName ? dealerName : "Site"} footer
       </h2>
 
-      <div className="max-w-4xl mx-auto px-5 py-16 lg:py-20 text-center">
+      <div className="max-w-4xl mx-auto px-5 py-14 lg:py-16 text-center">
         {/* Identity lockup — logo if configured, else dealer name. */}
         {config.logo_url ? (
           <img
@@ -91,19 +90,12 @@ const BrandFooter = () => {
         ) : null}
 
         {/* Mission signature — one size step down from identity, ~70%
-            opacity. Treated as signature, not paragraph. */}
-        <p className="text-base text-foreground/70 max-w-md mx-auto mb-10">
+            opacity. Treated as signature, not paragraph. The footer
+            ends here — no closing button. Sticky StickyOfferCTA pill
+            (bottom-right) carries scroll-end conversion intent. */}
+        <p className="text-base text-foreground/70 max-w-md mx-auto">
           {mission}
         </p>
-
-        {/* Single closing CTA — last chance to loop back to the form. */}
-        <button
-          type="button"
-          onClick={scrollToForm}
-          className="inline-flex items-center justify-center px-8 py-3 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/95 transition-colors"
-        >
-          Get my offer
-        </button>
       </div>
 
       {/* Hairline divider + legal row. Inline, muted, single line on
