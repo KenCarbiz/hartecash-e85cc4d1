@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSiteConfig, type LandingTemplate } from "@/hooks/useSiteConfig";
 
@@ -80,15 +80,76 @@ interface Props {
   override?: LandingTemplate;
 }
 
+// localStorage key for the last-known template choice for this browser
+// session. Read SYNCHRONOUSLY at module load so the first paint after
+// a hot navigation uses the cached value instead of falling back to
+// `classic` while the site_config query is in flight.
+//
+// Without this, the flow was:
+//   1. useSiteConfig returns DEFAULTS (landing_template: "classic")
+//   2. Router renders ClassicTemplate
+//   3. React Query resolves ~200-500ms later
+//   4. config.landing_template updates to "moto" / "clarity" / etc
+//   5. Router re-renders the right template
+// Result: the wrong template flashed for half a second on every cold
+// load — felt cheap and confused customers who never saw the dealer's
+// configured branding on the first paint.
+const LS_KEY = "autocurb:last_landing_template";
+
+const readCachedTemplate = (): LandingTemplate | null => {
+  try {
+    const v = typeof window !== "undefined" ? localStorage.getItem(LS_KEY) : null;
+    if (v && VALID_TEMPLATES.has(v as LandingTemplate)) return v as LandingTemplate;
+  } catch (e) {
+    // Private mode / disabled storage — fall through to spinner fallback.
+    console.debug("LandingTemplateRouter: localStorage read blocked:", e);
+  }
+  return null;
+};
+
 const LandingTemplateRouter = ({ override }: Props) => {
-  const { config } = useSiteConfig();
+  const { config, loading } = useSiteConfig();
   const [searchParams] = useSearchParams();
 
-  // Resolution order: prop override → ?template= URL param (used by embeds) → configured default.
+  // Resolution order:
+  //   1. prop override (admin preview)
+  //   2. ?template= URL param (embeds)
+  //   3. live config from useSiteConfig (once loaded)
+  //   4. localStorage cache from a prior visit (synchronous, no flash)
+  //   5. spinner placeholder while everything else loads
+  //   6. final fallback to "classic" only when truly nothing else exists
   const urlParam = searchParams.get("template") as LandingTemplate | null;
   const fromUrl = urlParam && VALID_TEMPLATES.has(urlParam) ? urlParam : null;
-  const chosen: LandingTemplate =
-    override || fromUrl || (config.landing_template as LandingTemplate) || "classic";
+  const fromConfig = !loading && config.landing_template
+    ? (config.landing_template as LandingTemplate)
+    : null;
+  const fromCache = readCachedTemplate();
+
+  const chosen: LandingTemplate | null =
+    override || fromUrl || fromConfig || fromCache;
+
+  // Update the cache when live config arrives so the next cold load
+  // paints correct immediately. Only writes when the resolved choice
+  // actually came from config (not from override/URL/cache) — that
+  // way an embed-time `?template=` override doesn't pollute the
+  // dealer's saved choice.
+  useEffect(() => {
+    if (!fromConfig) return;
+    try {
+      const prev = localStorage.getItem(LS_KEY);
+      if (prev !== fromConfig) localStorage.setItem(LS_KEY, fromConfig);
+    } catch (e) {
+      console.debug("LandingTemplateRouter: localStorage write blocked:", e);
+    }
+  }, [fromConfig]);
+
+  // No resolved choice yet (first-ever visit, no URL hint, config still
+  // loading) → show the spinner instead of guessing wrong. Same skeleton
+  // we already use for the lazy-import Suspense boundary so the visual
+  // is consistent.
+  if (!chosen) {
+    return <TemplateFallback />;
+  }
 
   const Template = templateMap[chosen] || ClassicTemplate;
 
