@@ -149,14 +149,24 @@ const TrackerVehicleMapping = () => {
     setNewKey("");
   };
 
+  const dirty =
+    JSON.stringify(overrides) !== JSON.stringify(savedOverrides) ||
+    JSON.stringify(tenantOv) !== JSON.stringify(savedTenantOv);
+
   const handleSave = async () => {
     setSaving(true);
     const { error } = await supabase
       .from("site_config")
       .update({
         tracker_oem_flagships: overrides as any,
+        tracker_vehicle_mode: tenantOv.tracker_vehicle_mode,
+        tracker_vehicle_year: tenantOv.tracker_vehicle_year,
+        tracker_vehicle_make: tenantOv.tracker_vehicle_make,
+        tracker_vehicle_model: tenantOv.tracker_vehicle_model,
+        tracker_vehicle_style: tenantOv.tracker_vehicle_style,
+        tracker_vehicle_specs: tenantOv.tracker_vehicle_specs,
         updated_at: new Date().toISOString(),
-      })
+      } as any)
       .eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
@@ -168,6 +178,7 @@ const TrackerVehicleMapping = () => {
       return;
     }
     setSavedOverrides(overrides);
+    setSavedTenantOv(tenantOv);
     queryClient.invalidateQueries({ queryKey: ["site_config"] });
     toast({
       title: "Tracker vehicles saved",
@@ -175,7 +186,10 @@ const TrackerVehicleMapping = () => {
     });
   };
 
-  const discard = () => setOverrides(savedOverrides);
+  const discard = () => {
+    setOverrides(savedOverrides);
+    setTenantOv(savedTenantOv);
+  };
 
   // Show all keys present in either defaults or overrides, sorted
   // alphabetically.
