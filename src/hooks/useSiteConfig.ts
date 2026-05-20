@@ -274,6 +274,18 @@ export interface SiteConfig {
    *    2 → pulse + soft toast (Day 5–6)
    *    3 → pulse + toast + Day 7 auto-open (full machine) */
   embed_escalation_max_tier: 0 | 1 | 2 | 3;
+  /** Per-tenant overrides for the homepage Value Tracker OEM→flagship
+   *  vehicle map. Keys are lowercase brand substrings (matched against
+   *  tenant.display_name); values are partial FlagshipEntry objects.
+   *  Empty object = use built-in defaults. Managed in Branding →
+   *  Tracker Vehicles. */
+  tracker_oem_flagships: Record<string, {
+    year?: string;
+    make?: string;
+    model?: string;
+    style?: string;
+    specs?: string;
+  }>;
 }
 
 const DEFAULTS: SiteConfig = {
