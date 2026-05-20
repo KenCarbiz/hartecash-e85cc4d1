@@ -13,10 +13,10 @@ const LANDING_ROUTES = ["/", "/trade", "/service", "/about", "/schedule"];
 // link works from any route — on the landing page browser scrolls
 // smoothly, on /reviews etc. it routes to / and lands on the section.
 const MOTO_NAV = [
-  { hash: "how-it-works",  label: "How It Works" },
+  { hash: "how-it-works",   label: "How It Works" },
   { hash: "value-tracking", label: "Value Tracking" },
-  { to: "/reviews",        label: "Reviews" },
-  { hash: "faq",           label: "FAQ" },
+  { hash: "reviews",        label: "Reviews" },
+  { hash: "faq",            label: "FAQ" },
 ];
 
 const SiteHeader = () => {
