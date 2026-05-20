@@ -3,6 +3,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { MotoBelowFold, DefaultBelowFold } from "../sharedSections";
 import BrandStructuredData from "@/components/BrandStructuredData";
 import NAPFooter from "@/components/NAPFooter";
+import StickyOfferCTA from "@/components/moto-sections/StickyOfferCTA";
 
 /**
  * "Instant Offer" landing template — the MotoAcquire-style 8-step
@@ -64,6 +65,11 @@ const MotoTemplate = () => {
           doesn't break the flow but still feeds local-pack ranking
           (NAP discovery + JSON-LD address are still present). */}
       <NAPFooter />
+
+      {/* Sticky desktop pill — a second-look visitor scrolling back
+          up through the page is never more than one click from the
+          form. Hidden when the form itself is in view. */}
+      <StickyOfferCTA />
     </main>
   );
 };
