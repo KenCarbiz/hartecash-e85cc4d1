@@ -101,14 +101,20 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
   useEffect(() => {
     if (!transparent || !imageUrl) {
       setTransparentUrl(null);
+      setTransparentFailed(false);
       return;
     }
     const tKey = `vehicle-img-transparent-${imageUrl.slice(0, 80)}`;
     const cached = localStorage.getItem(tKey);
-    if (cached) { setTransparentUrl(cached); return; }
+    if (cached) { setTransparentUrl(cached); setTransparentFailed(false); return; }
     let cancelled = false;
+    setTransparentFailed(false);
     keyOutWhite(imageUrl).then((url) => {
-      if (cancelled || !url) return;
+      if (cancelled) return;
+      if (!url) {
+        setTransparentFailed(true);
+        return;
+      }
       try { localStorage.setItem(tKey, url); } catch { /* quota */ }
       setTransparentUrl(url);
     });
