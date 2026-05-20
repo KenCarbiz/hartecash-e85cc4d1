@@ -23,7 +23,7 @@ const MOCK = {
   range: { low: 19250, high: 21450 },
   firmOffer: 20150,
   offerExpires: "May 17, 2025",
-  marketDemand: "High" as "High" | "Medium" | "Low" | "Minimal",
+  marketDemand: "High" as "High" | "Medium" | "Low" | "Minimal" | "Poor",
   responseTime: "2.4 hrs",
   lastUpdate: "2 min ago",
   dealerMessage:
