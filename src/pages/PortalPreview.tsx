@@ -53,13 +53,13 @@ const NAV = [
 
 const Sidebar = () => (
   <aside className="hidden lg:flex flex-col w-[220px] shrink-0 bg-white border-r border-[#E6EAF0] py-6 px-3">
-    <div className="px-3 mb-8 flex items-center gap-2.5">
-      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center text-white font-black text-[13px] shadow-[0_4px_10px_-3px_rgba(79,70,229,0.5)]">
-        H
+    <div className="px-2 mb-8 flex items-center gap-3">
+      <div className="w-11 h-11 rounded-xl bg-white border border-[#E6EAF0] shadow-[0_2px_6px_-2px_rgba(15,23,42,0.08)] grid place-items-center overflow-hidden p-1.5">
+        <img src={harteLogo} alt="Harte Auto Group" className="w-full h-full object-contain" />
       </div>
       <div className="leading-tight">
         <div className="text-[14px] font-extrabold tracking-tight text-[#06194A]">Harte Auto</div>
-        <div className="text-[9px] uppercase tracking-[0.22em] text-[#8893A8] font-semibold">Group</div>
+        <div className="text-[9px] uppercase tracking-[0.24em] text-[#8893A8] font-semibold mt-0.5">Group</div>
       </div>
     </div>
     <nav className="flex-1 flex flex-col gap-1">
