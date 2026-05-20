@@ -68,25 +68,27 @@ const TRUST_POINTS = [
 // Inner plot area: x ∈ [40, 560], y ∈ [40, 240].
 // Y-axis maps $19K..$25K → 240..40 (200px tall, 6 dollar units).
 //
-// Data points were hand-tuned to match the brief: small early dip,
-// realistic wobble, clear recovery, steady climb to the final
-// highlight at the upper-right. Not perfectly smooth — quadratic
-// bezier control points add subtle organic curvature between
-// data nodes without being volatile.
+// Data points were hand-tuned for the rise → dip → recovery shape
+// the product owner provided in the reference screenshot: low start,
+// climb through Mar 15 to a small local peak (~$21.3K) around Mar
+// 22, a visible V-shaped dip to ~$20.5K at Mar 29, then a strong
+// steady recovery to the all-time high at May 10. Quadratic-bezier
+// control points add organic curvature between data nodes without
+// being volatile.
 const yFor = (k: number) => 240 - ((k - 19) * 200) / 6;
 
 const POINTS: { x: number; k: number }[] = [
-  { x: 40, k: 19.6 },
-  { x: 92, k: 19.2 },   // small early dip
-  { x: 144, k: 19.5 },
-  { x: 196, k: 19.9 },
-  { x: 248, k: 20.4 },
-  { x: 300, k: 20.2 },  // slight wobble back
-  { x: 352, k: 21.0 },
-  { x: 404, k: 21.7 },
-  { x: 456, k: 22.4 },
-  { x: 508, k: 23.6 },
-  { x: 560, k: 25.0 },  // final highlighted marker
+  { x: 40, k: 19.7 },   // Mar 1 — low start
+  { x: 92, k: 20.3 },   // climbing
+  { x: 144, k: 21.0 },  // Mar 15
+  { x: 196, k: 21.3 },  // local peak before the dip
+  { x: 248, k: 20.5 },  // Mar 29 — the DIP
+  { x: 300, k: 20.8 },  // recovery begins
+  { x: 352, k: 21.8 },  // Apr 12 — back above pre-dip levels
+  { x: 404, k: 22.5 },
+  { x: 456, k: 23.4 },  // Apr 26
+  { x: 508, k: 24.2 },
+  { x: 560, k: 25.0 },  // May 10 — final highlighted marker
 ];
 
 // Smooth path via quadratic curves between data points. Each segment
@@ -277,7 +279,7 @@ const ValueTrackerCard = () => {
                     viewBox="0 0 600 280"
                     className="w-full h-auto"
                     role="img"
-                    aria-label="Vehicle value trend rising from $19.6K to $25K between March 1 and May 10."
+                    aria-label="Vehicle value trend from $19.7K on March 1, dipping to $20.5K on March 29, then recovering steadily to $25K by May 10."
                   >
                     {/* Dashed horizontal grid lines */}
                     {Y_TICKS.map(({ k }) => (
