@@ -383,6 +383,16 @@ const ValueTrackerCard = () => {
                       fill="#1e3a8a"
                     />
 
+                    {/* Open-circle marker on the starting point */}
+                    <circle
+                      cx={START_POINT.x}
+                      cy={START_POINT.y}
+                      r="4.5"
+                      fill="white"
+                      stroke="#1e3a8a"
+                      strokeWidth="2"
+                    />
+
                     {/* Y-axis labels (right side) */}
                     {Y_TICKS.map(({ y, label }) => (
                       <text
