@@ -23,7 +23,7 @@ const MOCK = {
   range: { low: 19250, high: 21450 },
   firmOffer: 20150,
   offerExpires: "May 17, 2025",
-  marketDemand: "High" as "High" | "Medium" | "Low" | "Minimal",
+  marketDemand: "High" as "High" | "Medium" | "Low" | "Minimal" | "Poor",
   responseTime: "2.4 hrs",
   lastUpdate: "2 min ago",
   dealerMessage:
@@ -202,6 +202,23 @@ const MarketChart = () => {
   );
 };
 
+/* ── Market indicator pill ─────────────────────────────────────────── */
+const MARKET_PILL_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  "High":    { label: "Strong Market", color: "text-[#16A34A]", bg: "bg-[#E8F8EE]" },
+  "Medium":  { label: "Soft Market",   color: "text-[#D97706]", bg: "bg-[#FEF3E2]" },
+  "Low":     { label: "Weak Market",   color: "text-[#DC2626]", bg: "bg-[#FEE2E2]" },
+  "Minimal": { label: "Little Market", color: "text-[#DC2626]", bg: "bg-[#FEE2E2]" },
+  "Poor":    { label: "Poor Market",   color: "text-[#DC2626]", bg: "bg-[#FEE2E2]" },
+};
+const MarketPill = ({ demand }: { demand: string }) => {
+  const cfg = MARKET_PILL_CONFIG[demand] ?? MARKET_PILL_CONFIG["Low"];
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${cfg.color} ${cfg.bg} px-2.5 py-1 rounded-full w-fit`}>
+      <TrendingUp className="w-3 h-3" /> {cfg.label}
+    </span>
+  );
+};
+
 /* ── Vehicle illustration (SVG SUV w/ shadow) ─────────────────────── */
 const VehicleSVG = () => (
   <svg viewBox="0 0 360 220" className="w-full h-full" aria-label="Vehicle preview">
@@ -371,17 +388,15 @@ const PortalPreview = () => {
             </div>
 
             {/* Compact estimated value range strip (~25-33% of card row) */}
-            <div className="mt-4 pt-3 border-t border-[#EEF0F4] flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-baseline gap-2">
+            <div className="mt-3 pt-3 border-t border-[#EEF0F4] flex items-end justify-between gap-3">
+              <div className="flex flex-col gap-1">
                 <span className="text-[11px] text-[#53627A]">Estimated Value Range</span>
-                <span className="text-[15px] font-bold leading-tight text-[#06194A]">
+                <span className="text-[22px] font-bold leading-tight text-[#06194A]">
                   {fmt(MOCK.range.low)} – {fmt(MOCK.range.high)}
                 </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2 py-0.5 rounded-full">
-                  <TrendingUp className="w-3 h-3" /> Strong Market
-                </span>
+                <MarketPill demand={MOCK.marketDemand} />
               </div>
-              <div className="w-[200px] max-w-full opacity-90"><MiniTrend /></div>
+              <div className="w-[140px] max-w-full opacity-90"><MiniTrend /></div>
             </div>
           </div>
 
