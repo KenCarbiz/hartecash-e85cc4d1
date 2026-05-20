@@ -1,11 +1,30 @@
+// Sign-in / customer-portal-entry page.
+//
+// Overhauled to match the Moto landing's clean-contemporary aesthetic
+// per product-owner direction. Same design language as the new
+// landing chrome (PRs #263–#274):
+//
+//   * Single soft-gray bg surface (hsl 220 14% 98%) flowing into the
+//     BrandFooter — no separate hero block, no navy slab break
+//   * Centered single-column card, rounded-3xl, hairline border,
+//     soft shadow (matches ValueTrackerCard's outer shell language)
+//   * One primary accent (the dealer's --primary), no gradients, no
+//     trust-badge strip, no "Sell Another Vehicle" tinted CTA card
+//   * Inputs use the same h-12 / rounded-xl pattern as the Moto form
+//   * BrandFooter at the bottom (Moto template uses it via Index.tsx
+//     but this page is a standalone route, so we mount it inline)
+//
+// Behavior unchanged: customer enters email + phone, lookup RPC
+// returns matching submissions, click → /my-submission/:token.
+// Empty-state offers a return-to-form path; results list each
+// vehicle as a clickable card.
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Car, Shield, ChevronRight, Clock, Star, ArrowRight } from "lucide-react";
+import { Search, Car, ChevronRight, ArrowRight, LogIn } from "lucide-react";
 import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+import BrandFooter from "@/components/BrandFooter";
+import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface FoundSubmission {
@@ -25,6 +44,11 @@ const CustomerLookup = () => {
   const navigate = useNavigate();
   const { config } = useSiteConfig();
 
+  const dealerName = (config.dealership_name || "").trim();
+  const shortName = dealerName && dealerName !== "Our Dealership"
+    ? dealerName.split(/\s+/)[0]
+    : null;
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !phone.trim()) return;
@@ -39,149 +63,183 @@ const CustomerLookup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: "hsl(220 14% 98%)" }}
+    >
+      <SEO
+        title={`Sign in${shortName ? ` to ${shortName}` : ""} — Find your offer`}
+        description="Sign in to view your offer, upload documents, or schedule your visit."
+        path="/my-submission"
+        noindex
+      />
+
       <SiteHeader />
 
-      {/* Hero Header */}
-      <section className="bg-primary text-primary-foreground py-12 md:py-16 px-5">
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="w-16 h-16 rounded-2xl bg-primary-foreground/10 flex items-center justify-center mx-auto mb-5">
-            <Search className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <h1 className="font-display text-3xl md:text-4xl font-extrabold tracking-[0.04em] mb-3">
-            Find My Submission
-          </h1>
-          <p className="text-primary-foreground/70 text-base md:text-lg max-w-lg mx-auto">
-            Already submitted your vehicle? Look up your submission to check your offer status, upload documents, or schedule your visit.
-          </p>
-        </div>
-      </section>
-
-      {/* Trust badges */}
-      <div className="bg-card border-b border-border py-4 px-5">
-        <div className="max-w-2xl mx-auto flex items-center justify-center gap-6 md:gap-10 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 text-primary" />
-            Secure & Private
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-primary" />
-            Instant Results
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Star className="w-3.5 h-3.5 text-primary" />
-            {config.stats_rating || "4.9"}-Star Rated
-          </span>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <main className="flex-1 py-10 md:py-14 px-5">
-        <div className="max-w-lg mx-auto">
-          {/* Search Form */}
-          <form onSubmit={handleSearch} className="bg-card rounded-xl p-6 md:p-8 shadow-sm border border-border space-y-5">
-            <div className="text-center mb-2">
-              <h2 className="font-display text-xl font-bold text-foreground mb-1">Look Up Your Vehicle</h2>
-              <p className="text-sm text-muted-foreground">
-                Enter the email and phone you used when you submitted.
-              </p>
+      <main className="flex-1 px-5 py-16 lg:py-24">
+        <div className="max-w-md mx-auto">
+          {/* Page heading — minimal, brand-voice, present tense. */}
+          <div className="text-center mb-10">
+            <div
+              className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-5"
+              style={{ background: "hsl(220 100% 96%)" }}
+            >
+              <LogIn className="w-5 h-5 text-primary" strokeWidth={1.75} />
             </div>
+            <h1 className="text-3xl lg:text-[40px] font-bold text-foreground leading-[1.15] tracking-tight mb-3">
+              Find your offer
+            </h1>
+            <p className="text-base text-foreground/65 leading-relaxed">
+              Enter the email and phone you used when you submitted your vehicle.
+            </p>
+          </div>
+
+          {/* Lookup card — same shell language as ValueTrackerCard's
+              inner card. White, hairline border, soft shadow. */}
+          <form
+            onSubmit={handleSearch}
+            className="bg-white rounded-3xl border border-border/60 shadow-[0_8px_32px_-12px_rgb(15_23_42_/_0.08)] p-7 lg:p-8 space-y-5"
+          >
             <div>
-              <label className="text-sm font-semibold text-foreground mb-1.5 block">Email Address</label>
-              <Input
+              <label
+                htmlFor="signin-email"
+                className="text-sm font-semibold text-foreground mb-2 block"
+              >
+                Email
+              </label>
+              <input
+                id="signin-email"
                 type="email"
-                placeholder="your@email.com"
+                autoComplete="email"
+                inputMode="email"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12"
+                className="w-full h-12 px-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-colors"
               />
             </div>
+
             <div>
-              <label className="text-sm font-semibold text-foreground mb-1.5 block">Phone Number</label>
-              <Input
+              <label
+                htmlFor="signin-phone"
+                className="text-sm font-semibold text-foreground mb-2 block"
+              >
+                Phone
+              </label>
+              <input
+                id="signin-phone"
                 type="tel"
+                autoComplete="tel"
+                inputMode="tel"
                 placeholder="(555) 123-4567"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
-                className="h-12"
+                className="w-full h-12 px-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-colors"
               />
             </div>
-            <Button type="submit" disabled={loading} size="lg" className="w-full font-bold text-base gap-2">
-              {loading ? "Searching..." : (
-                <>
-                  <Search className="w-4 h-4" />
-                  Find My Submission
-                </>
-              )}
-            </Button>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl py-3.5 text-base font-semibold tracking-wide bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)] hover:opacity-95 active:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--cta-offer))]"
+            >
+              {loading ? "Searching…" : "Find my offer"}
+            </button>
           </form>
 
-          {/* Results */}
+          {/* Empty state — no results match. Soft tone, single recovery
+              link back to the landing form. */}
           {searched && results.length === 0 && (
-            <div className="mt-8 text-center bg-card border border-border rounded-xl p-6">
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-                <Search className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <p className="font-semibold text-foreground mb-1">No Submissions Found</p>
-              <p className="text-sm text-muted-foreground mb-4">
-                We couldn't find any submissions matching that email and phone number. Double-check your info or start a new submission.
+            <div className="mt-8 rounded-3xl border border-border/60 bg-white p-7 text-center">
+              <p className="text-base font-semibold text-foreground mb-2">
+                We couldn't find an offer with that info.
               </p>
-              <Link to="/" onClick={() => window.scrollTo(0, 0)}>
-                <Button variant="outline" className="gap-2">
-                  Get Your Cash Offer <ArrowRight className="w-4 h-4" />
-                </Button>
+              <p className="text-sm text-foreground/65 leading-relaxed mb-5">
+                Double-check the email and phone — they need to match exactly
+                what you used when you submitted.
+              </p>
+              <Link
+                to="/"
+                onClick={() => window.scrollTo(0, 0)}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                Or start a new offer
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           )}
 
+          {/* Results list — one card per matching submission. Same
+              card token as the form above so the page reads as one
+              continuous system. */}
           {results.length > 0 && (
             <div className="mt-8 space-y-3">
-              <h3 className="font-display text-lg font-bold text-foreground">Your Submissions</h3>
-              {results.map((r) => (
-                <button
-                  key={r.token}
-                  onClick={() => navigate(`/my-submission/${r.token}`)}
-                  className="w-full bg-card rounded-xl p-5 shadow-sm border border-border hover:border-primary/40 hover:shadow-md transition-all text-left flex items-center gap-4 group"
-                >
-                  <div className="shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Car className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-foreground truncate">
-                      {[r.vehicle_year, r.vehicle_make, r.vehicle_model].filter(Boolean).join(" ") || "Vehicle"}
-                    </p>
-                    {r.name && <p className="text-sm text-muted-foreground truncate">{r.name}</p>}
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-                </button>
-              ))}
+              <p className="text-xs uppercase tracking-[0.12em] font-semibold text-foreground/55 px-1 mb-1">
+                Your offers
+              </p>
+              {results.map((r) => {
+                const vehicleLine =
+                  [r.vehicle_year, r.vehicle_make, r.vehicle_model]
+                    .filter(Boolean)
+                    .join(" ") || "Vehicle";
+                return (
+                  <button
+                    key={r.token}
+                    type="button"
+                    onClick={() => navigate(`/my-submission/${r.token}`)}
+                    className="w-full rounded-2xl border border-border/60 bg-white p-5 hover:border-primary/40 hover:shadow-[0_8px_24px_-12px_rgb(15_23_42_/_0.1)] transition-all text-left flex items-center gap-4 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                  >
+                    <div
+                      className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
+                      style={{ background: "hsl(220 14% 96%)" }}
+                    >
+                      <Car
+                        className="w-5 h-5"
+                        strokeWidth={1.5}
+                        style={{ color: "hsl(220 13% 35%)" }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-base font-semibold text-foreground truncate">
+                        {vehicleLine}
+                      </p>
+                      {r.name && (
+                        <p className="text-sm text-foreground/60 truncate">
+                          {r.name}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronRight
+                      className="w-4 h-4 text-foreground/40 group-hover:text-primary transition-colors shrink-0"
+                      strokeWidth={2}
+                    />
+                  </button>
+                );
+              })}
             </div>
           )}
 
-          {/* Sell Another CTA */}
-          <div className="mt-10 bg-primary/5 border border-primary/20 rounded-xl p-6 text-center">
-            <h3 className="font-display text-lg font-bold text-foreground mb-1">Have Another Vehicle?</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Get a cash offer in under 2 minutes — no obligation.
+          {/* New-customer link — quiet text link to the form, not a
+              bright tinted CTA card. Matches the calm closing-slab
+              voice from the rest of the landing. */}
+          {!searched && (
+            <p className="text-center mt-10 text-sm text-foreground/60">
+              First time here?{" "}
+              <Link
+                to="/"
+                onClick={() => window.scrollTo(0, 0)}
+                className="font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                Get an offer
+              </Link>
             </p>
-            <Link to="/" onClick={() => window.scrollTo(0, 0)}>
-              <Button className="gap-2 font-bold">
-                Sell Another Vehicle <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
-
-          {/* Security note */}
-          <p className="text-center mt-6 text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-            <Shield className="w-3.5 h-3.5" />
-            We only show submissions matching your exact contact information.
-          </p>
+          )}
         </div>
       </main>
 
-      <SiteFooter />
+      <BrandFooter />
     </div>
   );
 };
