@@ -151,26 +151,28 @@ const Metric = ({ label, value, sub, Icon, tint }: MetricProps) => (
 /* ── SVG line charts ─────────────────────────────────────────────── */
 const MiniTrend = () => {
   const pts = [10, 18, 14, 22, 26, 24, 32, 36, 34, 42, 46, 52];
-  const w = 520, h = 64, pad = 4;
+  const w = 520, h = 84, pad = 6;
   const max = Math.max(...pts), min = Math.min(...pts);
   const x = (i: number) => pad + (i * (w - pad * 2)) / (pts.length - 1);
   const y = (v: number) => h - pad - ((v - min) / (max - min)) * (h - pad * 2);
   const d = pts.map((v, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(v)}`).join(" ");
   const area = `${d} L${x(pts.length - 1)},${h} L${x(0)},${h} Z`;
+  const lastX = x(pts.length - 1);
+  const lastY = y(pts[pts.length - 1]);
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[64px]" preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[84px]" preserveAspectRatio="none">
       <defs>
         <linearGradient id="miniFill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#16A34A" stopOpacity="0.22" />
+          <stop offset="0%" stopColor="#16A34A" stopOpacity="0.28" />
           <stop offset="100%" stopColor="#16A34A" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={area} fill="url(#miniFill)" />
-      <path d={d} fill="none" stroke="#16A34A" strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" />
+      <path d={d} fill="none" stroke="#16A34A" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
       {pts.map((v, i) => (
-        <circle key={i} cx={x(i)} cy={y(v)} r="2" fill="#16A34A" />
+        <circle key={i} cx={x(i)} cy={y(v)} r="2.25" fill="#16A34A" />
       ))}
-      <circle cx={x(pts.length - 1)} cy={y(pts[pts.length - 1])} r="3.5" fill="#16A34A" />
+      <circle cx={lastX} cy={lastY} r="5" fill="#fff" stroke="#16A34A" strokeWidth="2.25" />
     </svg>
   );
 };
