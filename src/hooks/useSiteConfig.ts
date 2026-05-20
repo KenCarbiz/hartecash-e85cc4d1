@@ -516,6 +516,61 @@ async function fetchSiteConfig(
   return merged;
 }
 
+// localStorage key for the whole site_config blob, namespaced by
+// tenant so a browser that swaps dealerships doesn't paint Tenant A's
+// name/logo/colors to Tenant B's user. Read synchronously as
+// React Query's initialData so EVERY useSiteConfig consumer gets the
+// dealer's last-known values on first paint — fixes flash for:
+//   * dealership_name (header, tab title)
+//   * tagline
+//   * logo_url / logo_white_url / favicon_url
+//   * hero_headline / hero_subtext
+//   * primary_color / accent_color / success_color
+//   * landing_template (the original symptom that motivated this cache)
+// All in one place instead of N component-level caches.
+//
+// History: PR #257 cached landing_template; PR #258 cached theme
+// colors. This consolidates by caching the whole blob — both prior
+// caches now compose naturally with this baseline. Cache write fires
+// from the React Query success callback so we only persist values
+// that actually came from the database (never the DEFAULTS).
+const LS_SITE_CONFIG_KEY = "autocurb:last_site_config";
+
+function tenantCacheKey(dealershipId: string, locationId: string | null | undefined): string {
+  return `${LS_SITE_CONFIG_KEY}:${dealershipId}:${locationId ?? "_"}`;
+}
+
+function readCachedSiteConfig(
+  dealershipId: string,
+  locationId: string | null | undefined,
+): SiteConfig | undefined {
+  try {
+    if (typeof window === "undefined") return undefined;
+    const raw = localStorage.getItem(tenantCacheKey(dealershipId, locationId));
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && "dealership_name" in parsed) {
+      return parsed as SiteConfig;
+    }
+  } catch (e) {
+    console.debug("useSiteConfig: cache read failed:", e);
+  }
+  return undefined;
+}
+
+function writeCachedSiteConfig(
+  dealershipId: string,
+  locationId: string | null | undefined,
+  data: SiteConfig,
+): void {
+  try {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(tenantCacheKey(dealershipId, locationId), JSON.stringify(data));
+  } catch (e) {
+    console.debug("useSiteConfig: cache write failed:", e);
+  }
+}
+
 export function useSiteConfig() {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
@@ -523,7 +578,22 @@ export function useSiteConfig() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["site_config", dealershipId, locationId],
-    queryFn: () => fetchSiteConfig(dealershipId, locationId),
+    queryFn: async () => {
+      const fresh = await fetchSiteConfig(dealershipId, locationId);
+      writeCachedSiteConfig(dealershipId, locationId, fresh);
+      return fresh;
+    },
+    // Synchronous read at query-mount time. When present, the query
+    // starts with cached data and React Query marks it as fresh until
+    // staleTime expires — so a repeat visitor paints with the dealer's
+    // last-known config IMMEDIATELY and the background revalidation
+    // happens silently after staleTime. Cache is per-tenant so swapping
+    // dealerships in the same browser doesn't show stale branding.
+    initialData: () => readCachedSiteConfig(dealershipId, locationId),
+    // When initialData hits, treat the data as already-stale-enough to
+    // refetch on next access (gives us live updates) but use the cached
+    // version for the immediate paint.
+    initialDataUpdatedAt: () => 0,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
