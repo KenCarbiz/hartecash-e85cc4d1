@@ -12,7 +12,8 @@
 // Loading state returns null (don't show a spinner where the form
 // is still vying for primary attention).
 import { useEffect, useState } from "react";
-import { Star } from "lucide-react";
+import { Star, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
