@@ -218,7 +218,7 @@ const SiteHeader = () => {
                     ? [
                         { hash: "how-it-works", icon: Workflow, label: "How It Works" },
                         { hash: "value-tracking", icon: TrendingUp, label: "Value Tracking" },
-                        { to: "/reviews", icon: MessageSquare, label: "Reviews" },
+                        { hash: "reviews", icon: MessageSquare, label: "Reviews" },
                         { hash: "faq", icon: HelpCircle, label: "FAQ" },
                         { to: "/my-submission", icon: LogIn, label: "Sign In", separated: true },
                       ]
