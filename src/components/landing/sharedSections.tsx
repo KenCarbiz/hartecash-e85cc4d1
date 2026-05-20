@@ -201,6 +201,11 @@ export const FullBelowFold = () => (
 export const MotoMobileBelowFold = () => (
   <>
     <HowItWorksLeanSection />
+    {/* ValueTrackerCard is responsive (left/right cols stack on mobile)
+        so it lands on small viewports too. The premium SVG-based
+        chart degrades gracefully — no horizontal scroll, no heavy
+        image bytes. */}
+    <ValueTrackerCardSection />
     <FAQLeanSection />
   </>
 );
