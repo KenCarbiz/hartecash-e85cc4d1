@@ -300,19 +300,26 @@ const ValueTrackerCard = () => {
                 {/* Chart */}
                 <div className="min-w-0">
                   <svg
-                    viewBox="0 0 600 280"
+                    viewBox="0 0 520 260"
                     className="w-full h-auto"
                     role="img"
-                    aria-label="Vehicle value trend from $19.5K on March 1, climbing with daily fluctuations to a $21K peak around March 22, dipping to $20K at the end of March, then recovering through April to $25K by May 10."
+                    aria-label="Vehicle value trend from $19K on March 1, rising steadily with a dip around March 29, then a strong recovery to $25K by May 10."
                   >
+                    <defs>
+                      <linearGradient id="value-tracker-fill" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.28" />
+                        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+
                     {/* Dashed horizontal grid lines */}
-                    {Y_TICKS.map(({ k }) => (
+                    {Y_TICKS.map(({ y }) => (
                       <line
-                        key={k}
-                        x1="40"
-                        y1={yFor(k)}
-                        x2="560"
-                        y2={yFor(k)}
+                        key={y}
+                        x1="35"
+                        y1={y}
+                        x2="485"
+                        y2={y}
                         stroke="hsl(220 13% 91%)"
                         strokeWidth="1"
                         strokeDasharray="4 4"
@@ -320,45 +327,47 @@ const ValueTrackerCard = () => {
                     ))}
 
                     {/* Area fill under the line */}
-                    <path
-                      d={CHART_FILL_PATH}
-                      fill="hsl(var(--primary))"
-                      fillOpacity="0.06"
-                    />
+                    <path d={CHART_FILL_PATH} fill="url(#value-tracker-fill)" />
 
-                    {/* Trend line */}
+                    {/* Trend line — navy */}
                     <path
                       d={CHART_LINE_PATH}
                       fill="none"
-                      stroke="hsl(var(--primary))"
+                      stroke="#1e3a8a"
                       strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
 
-                    {/* Highlight ring + marker on the final data point */}
+                    {/* Highlight glow + marker on the final point */}
                     <circle
-                      cx={finalPoint.x}
-                      cy={finalY}
+                      cx={FINAL_POINT.x}
+                      cy={FINAL_POINT.y}
                       r="14"
-                      fill="hsl(var(--primary))"
-                      fillOpacity="0.12"
+                      fill="#86efac"
+                      fillOpacity="0.45"
                     />
                     <circle
-                      cx={finalPoint.x}
-                      cy={finalY}
+                      cx={FINAL_POINT.x}
+                      cy={FINAL_POINT.y}
                       r="7"
                       fill="white"
-                      stroke="hsl(var(--primary))"
+                      stroke="#1e3a8a"
                       strokeWidth="3"
+                    />
+                    <circle
+                      cx={FINAL_POINT.x}
+                      cy={FINAL_POINT.y}
+                      r="3"
+                      fill="#1e3a8a"
                     />
 
                     {/* Y-axis labels (right side) */}
-                    {Y_TICKS.map(({ k, label }) => (
+                    {Y_TICKS.map(({ y, label }) => (
                       <text
-                        key={k}
-                        x="595"
-                        y={yFor(k) + 4}
+                        key={label}
+                        x="515"
+                        y={y + 4}
                         textAnchor="end"
                         fontSize="11"
                         fontWeight="500"
@@ -373,7 +382,7 @@ const ValueTrackerCard = () => {
                       <text
                         key={label}
                         x={x}
-                        y="270"
+                        y="250"
                         textAnchor={
                           i === 0 ? "start" : i === X_LABELS.length - 1 ? "end" : "middle"
                         }
