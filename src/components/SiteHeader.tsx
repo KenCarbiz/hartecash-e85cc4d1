@@ -221,7 +221,7 @@ const SiteHeader = () => {
                         { hash: "value-tracking", icon: TrendingUp, label: "Value Tracking" },
                         { hash: "reviews", icon: MessageSquare, label: "Reviews" },
                         { hash: "faq", icon: HelpCircle, label: "FAQ" },
-                        { to: "/my-submission", icon: LogIn, label: "Sign In", separated: true },
+                        { hash: "find-offer", icon: LogIn, label: "Sign In", separated: true },
                       ]
                     : [
                         { to: "/trade", icon: ArrowLeftRight, label: "Trade-In" },
