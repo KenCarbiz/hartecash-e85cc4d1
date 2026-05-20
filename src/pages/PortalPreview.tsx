@@ -549,26 +549,26 @@ const PortalPreview = () => {
           </div>
 
           {/* Market Insights */}
-          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
+            <div className="flex items-center justify-between mb-2">
               <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Market Insights</div>
-              <button className="text-[11px] text-[#53627A] inline-flex items-center gap-1 border border-[#E6EAF0] rounded-lg px-2 py-1 hover:bg-[#F4F6FA]">
+              <button className="text-[11px] text-[#53627A] inline-flex items-center gap-1 border border-[#E6EAF0] rounded-lg px-2 py-0.5 hover:bg-[#F4F6FA]">
                 7 Days <ChevronDown className="w-3 h-3" />
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-3 mb-2">
+            <div className="grid grid-cols-2 gap-3 mb-1">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><TrendingUp className="w-4 h-4" /></div>
+                <div className="w-7 h-7 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><TrendingUp className="w-3.5 h-3.5" /></div>
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-[#53627A]">Market Trend</div>
-                  <div className="text-sm font-bold">Strong</div>
+                  <div className="text-xs font-bold">Strong</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><LineIcon className="w-4 h-4" /></div>
+                <div className="w-7 h-7 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><LineIcon className="w-3.5 h-3.5" /></div>
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-[#53627A]">Market Demand</div>
-                  <div className="text-sm font-bold">High</div>
+                  <div className="text-xs font-bold">High</div>
                 </div>
               </div>
             </div>
@@ -576,9 +576,9 @@ const PortalPreview = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-3">Quick Actions</div>
-            <ul className="space-y-2">
+          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Quick Actions</div>
+            <ul className="space-y-1">
               {[
                 { title: "Upload Documents", desc: "Upload and manage documents safely.", Icon: Upload, tint: "green" as const, onClick: () => setShowDocs(true) },
                 { title: "Message Dealer", desc: "Chat securely with your dealer and get answers.", Icon: MessageSquare, tint: "orange" as const, onClick: () => setShowConv(true) },
@@ -586,12 +586,12 @@ const PortalPreview = () => {
               ].map(({ title, desc, Icon, tint, onClick }) => (
                 <li key={title}>
                   <button onClick={onClick}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#F4F6FA] transition text-left">
-                    <div className={`w-9 h-9 rounded-full grid place-items-center shrink-0 ${TINTS[tint]}`}>
-                      <Icon className="w-4 h-4" />
+                    className="w-full flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-[#F4F6FA] transition text-left">
+                    <div className={`w-8 h-8 rounded-full grid place-items-center shrink-0 ${TINTS[tint]}`}>
+                      <Icon className="w-3.5 h-3.5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-[#06194A]">{title}</div>
+                      <div className="text-[13px] font-semibold text-[#06194A] leading-tight">{title}</div>
                       <div className="text-[11px] text-[#53627A] truncate">{desc}</div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-[#53627A]" />
