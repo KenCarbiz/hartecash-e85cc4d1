@@ -71,42 +71,44 @@ const TRUST_POINTS = [
 // Inner plot area: x ∈ [40, 560], y ∈ [40, 240].
 // Y-axis maps $19K..$25K → 240..40 (200px tall, 6 dollar units).
 //
-// 22 hand-tuned data points reproduce the reference screenshot's
-// jagged-yet-readable trend: bumpy climb from Mar 1 to a small local
-// peak near Mar 22, V-shape dip to ~$20.2K right around Mar 29, then
-// a bumpy recovery to the all-time high at May 10. Each consecutive
-// pair varies by ~$0.1-0.5K so the line reads as real market noise
-// instead of a smoothed marketing curve.
+// 22 hand-tuned data points re-traced from the product owner's
+// reference screenshot. Key landmarks:
+//   * Mar 1   start ~$19.5K
+//   * ~Mar 22 small local peak ~$21.0K (touches the dashed $21K line)
+//   * Mar 29  bottom of the V, ~$20.0K
+//   * Apr 12  ~$21.3K (climbing back above pre-dip levels)
+//   * Apr 26  ~$22.9K
+//   * May 10  $25.0K final highlighted marker (touches the $25K line)
 //
-// Path is built with straight-line segments (L commands) instead of
-// quadratic curves — with this point density, bezier smoothing was
-// flattening the bumps the reference shows. Stroke-linejoin "round"
-// softens the angles enough that they don't read as graphics-paper
-// sharp.
+// Each consecutive pair varies by ~$0.1-0.5K so the line reads as
+// real market noise. Path uses straight-line (L) segments — with
+// this point density, quadratic-bezier smoothing flattened the
+// bumps. stroke-linejoin="round" softens the angles enough they
+// don't read as graphics-paper sharp.
 const yFor = (k: number) => 240 - ((k - 19) * 200) / 6;
 
 const POINTS: { x: number; k: number }[] = [
-  { x: 40,  k: 19.70 },  // Mar 1 — start
-  { x: 65,  k: 19.85 },
-  { x: 90,  k: 19.75 },  // small early dip
-  { x: 115, k: 20.05 },
-  { x: 140, k: 20.30 },  // Mar 15
-  { x: 165, k: 20.45 },
-  { x: 190, k: 20.30 },  // small wobble down
-  { x: 215, k: 20.75 },
-  { x: 240, k: 20.55 },  // descent into the dip starts
-  { x: 265, k: 20.20 },  // Mar 29 — bottom of the V
-  { x: 290, k: 20.55 },  // recovery begins
-  { x: 315, k: 20.85 },
-  { x: 340, k: 21.10 },
-  { x: 365, k: 21.00 },  // small wobble during recovery
-  { x: 390, k: 21.40 },
-  { x: 415, k: 21.65 },  // ~Apr 19
-  { x: 440, k: 22.00 },
-  { x: 465, k: 22.25 },
-  { x: 490, k: 22.75 },
-  { x: 515, k: 23.35 },
-  { x: 540, k: 24.10 },
+  { x: 40,  k: 19.50 },  // Mar 1 — low start, sits just above $19K line
+  { x: 65,  k: 19.70 },
+  { x: 90,  k: 19.85 },
+  { x: 115, k: 19.85 },  // small wobble / flat
+  { x: 140, k: 20.20 },  // Mar 15 — climbing
+  { x: 165, k: 20.40 },
+  { x: 190, k: 21.00 },  // ~Mar 22 — pre-dip peak, touches $21K line
+  { x: 215, k: 20.85 },
+  { x: 240, k: 20.45 },  // descending into the dip
+  { x: 265, k: 20.00 },  // ~Mar 31 — bottom of the V
+  { x: 290, k: 20.25 },  // recovery begins
+  { x: 315, k: 20.60 },
+  { x: 340, k: 20.95 },
+  { x: 365, k: 21.30 },  // ~Apr 14 — back above the $21K line
+  { x: 390, k: 21.55 },
+  { x: 415, k: 21.95 },
+  { x: 440, k: 22.40 },
+  { x: 465, k: 22.90 },  // ~Apr 27
+  { x: 490, k: 23.40 },
+  { x: 515, k: 24.05 },
+  { x: 540, k: 24.55 },
   { x: 560, k: 25.00 },  // May 10 — final highlighted marker
 ];
 
@@ -298,7 +300,7 @@ const ValueTrackerCard = () => {
                     viewBox="0 0 600 280"
                     className="w-full h-auto"
                     role="img"
-                    aria-label="Vehicle value trend from $19.7K on March 1, climbing with daily fluctuations to a small peak near March 22, dipping to $20.2K on March 29, then recovering with continued bumps to $25K by May 10."
+                    aria-label="Vehicle value trend from $19.5K on March 1, climbing with daily fluctuations to a $21K peak around March 22, dipping to $20K at the end of March, then recovering through April to $25K by May 10."
                   >
                     {/* Dashed horizontal grid lines */}
                     {Y_TICKS.map(({ k }) => (
