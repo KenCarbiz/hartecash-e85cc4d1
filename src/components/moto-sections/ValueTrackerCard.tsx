@@ -87,29 +87,46 @@ const TRUST_POINTS = [
 // don't read as graphics-paper sharp.
 const yFor = (k: number) => 240 - ((k - 19) * 200) / 6;
 
+// Re-traced from reference: jagged climb, sharp dip ~Mar 29, then a
+// strong jagged incline to $25K May 10. More zigzag noise (~$0.2-0.4K)
+// between landmarks so the line reads as real, noisy market data.
 const POINTS: { x: number; k: number }[] = [
-  { x: 40,  k: 19.50 },  // Mar 1 — low start, sits just above $19K line
-  { x: 65,  k: 19.70 },
-  { x: 90,  k: 19.85 },
-  { x: 115, k: 19.85 },  // small wobble / flat
-  { x: 140, k: 20.20 },  // Mar 15 — climbing
-  { x: 165, k: 20.40 },
-  { x: 190, k: 21.00 },  // ~Mar 22 — pre-dip peak, touches $21K line
-  { x: 215, k: 20.85 },
-  { x: 240, k: 20.45 },  // descending into the dip
-  { x: 265, k: 20.00 },  // ~Mar 31 — bottom of the V
-  { x: 290, k: 20.25 },  // recovery begins
-  { x: 315, k: 20.60 },
-  { x: 340, k: 20.95 },
-  { x: 365, k: 21.30 },  // ~Apr 14 — back above the $21K line
-  { x: 390, k: 21.55 },
-  { x: 415, k: 21.95 },
-  { x: 440, k: 22.40 },
-  { x: 465, k: 22.90 },  // ~Apr 27
-  { x: 490, k: 23.40 },
-  { x: 515, k: 24.05 },
-  { x: 540, k: 24.55 },
-  { x: 560, k: 25.00 },  // May 10 — final highlighted marker
+  { x: 40,  k: 19.65 },  // Mar 1 start
+  { x: 55,  k: 19.78 },
+  { x: 70,  k: 19.62 },  // small jitter down
+  { x: 85,  k: 19.92 },
+  { x: 100, k: 19.80 },
+  { x: 115, k: 20.15 },
+  { x: 130, k: 20.05 },
+  { x: 145, k: 20.35 },  // Mar 15 climbing
+  { x: 160, k: 20.55 },
+  { x: 175, k: 20.40 },  // wobble
+  { x: 190, k: 20.75 },
+  { x: 205, k: 20.60 },
+  { x: 220, k: 20.45 },  // starting the descent
+  { x: 235, k: 20.20 },
+  { x: 250, k: 19.95 },
+  { x: 265, k: 19.75 },  // Mar 29 bottom of V
+  { x: 280, k: 19.95 },  // recovery starts
+  { x: 295, k: 20.25 },
+  { x: 310, k: 20.55 },
+  { x: 325, k: 20.45 },  // jitter
+  { x: 340, k: 20.85 },
+  { x: 355, k: 21.20 },
+  { x: 370, k: 21.05 },  // small dip
+  { x: 385, k: 21.55 },
+  { x: 400, k: 21.85 },
+  { x: 415, k: 21.70 },  // jitter
+  { x: 430, k: 22.15 },
+  { x: 445, k: 22.50 },
+  { x: 460, k: 22.40 },
+  { x: 475, k: 22.85 },  // Apr 27
+  { x: 490, k: 23.20 },
+  { x: 505, k: 23.55 },
+  { x: 520, k: 23.45 },  // jitter
+  { x: 535, k: 24.05 },
+  { x: 550, k: 24.55 },
+  { x: 560, k: 25.00 },  // May 10 final marker
 ];
 
 function buildChartPath() {
