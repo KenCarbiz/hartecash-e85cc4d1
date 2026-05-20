@@ -17,12 +17,32 @@ export interface DealerFaqItem {
   a: string;
 }
 
-export function buildDealerFaqs(config: Pick<SiteConfig, "price_guarantee_days" | "pickup_offered" | "dealership_name">): DealerFaqItem[] {
+// Curated subset used on the Moto template per the 3-agent design
+// review — drops the two most generic Q's ("how long does it take",
+// "is there any obligation") to keep the FAQ tight and weighted
+// toward long-tail SEO intent (payoff, title, leased vehicles,
+// price lock). The full set is still emitted on other templates.
+const MOTO_VARIANT_KEYS = new Set([
+  "Do I need to bring my car to you?",
+  "What if I still owe money on my car?",
+  "What paperwork do I need?",
+  "Can I trade in my leased vehicle?",
+  "How long is my offer valid?",
+]);
+
+interface BuildOptions {
+  variant?: "full" | "moto";
+}
+
+export function buildDealerFaqs(
+  config: Pick<SiteConfig, "price_guarantee_days" | "pickup_offered" | "dealership_name">,
+  options: BuildOptions = {},
+): DealerFaqItem[] {
   const days = config.price_guarantee_days || 8;
   const pickup = config.pickup_offered !== false;
   const dealer = config.dealership_name || "We";
 
-  return [
+  const all: DealerFaqItem[] = [
     {
       q: "How long does it take to get an offer?",
       a: "Most offers are generated within 2 minutes of submitting your vehicle information. Complex cases may take up to 24 hours.",
@@ -54,4 +74,9 @@ export function buildDealerFaqs(config: Pick<SiteConfig, "price_guarantee_days" 
       a: `Your offer is guaranteed for ${days} full days. No pressure, no bait-and-switch — sell when you're ready.`,
     },
   ];
+
+  if (options.variant === "moto") {
+    return all.filter((f) => MOTO_VARIANT_KEYS.has(f.q));
+  }
+  return all;
 }

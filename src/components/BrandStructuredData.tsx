@@ -92,7 +92,16 @@ function parseHourRange(hoursSpec: string): { opens: string; closes: string } | 
   return { opens: to24(m[1], m[2], m[3]), closes: to24(m[4], m[5], m[6]) };
 }
 
-const BrandStructuredData = () => {
+interface BrandStructuredDataProps {
+  /** Which FAQ set to emit. Must match what the visible <FAQ /> on
+   *  the same page renders or Google rejects the FAQ rich-result
+   *  ("must match" rule). Moto template uses the curated 5; other
+   *  templates use the full 7. Defaults to "full" for backwards
+   *  compatibility with templates that don't pass a variant. */
+  faqVariant?: "full" | "moto";
+}
+
+const BrandStructuredData = ({ faqVariant = "full" }: BrandStructuredDataProps = {}) => {
   const { config } = useSiteConfig();
   if (typeof window === "undefined") return null;
 
@@ -173,7 +182,7 @@ const BrandStructuredData = () => {
   });
 
   // ── FAQPage block ───────────────────────────────────────────────
-  const faqs = buildDealerFaqs(config);
+  const faqs = buildDealerFaqs(config, { variant: faqVariant });
   const faqPage: JsonLdObject = {
     "@context": "https://schema.org",
     "@type": "FAQPage",

@@ -15,6 +15,8 @@ const TrustBadgesLean = lazy(() => import("@/components/moto-sections/TrustBadge
 const HowItWorksLean = lazy(() => import("@/components/moto-sections/HowItWorksLean"));
 const TestimonialsLean = lazy(() => import("@/components/moto-sections/TestimonialsLean"));
 const CTABannerLean = lazy(() => import("@/components/moto-sections/CTABannerLean"));
+const ValueTrackerCard = lazy(() => import("@/components/moto-sections/ValueTrackerCard"));
+const FAQLean = lazy(() => import("@/components/moto-sections/FAQLean"));
 
 class SectionErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -70,6 +72,8 @@ export const TrustBadgesLeanSection = () => <Lazy><TrustBadgesLean /></Lazy>;
 export const HowItWorksLeanSection = () => <Lazy><HowItWorksLean /></Lazy>;
 export const TestimonialsLeanSection = () => <Lazy><TestimonialsLean /></Lazy>;
 export const CTABannerLeanSection = () => <Lazy withSkeleton={false}><CTABannerLean /></Lazy>;
+export const ValueTrackerCardSection = () => <Lazy withSkeleton={false}><ValueTrackerCard /></Lazy>;
+export const FAQLeanSection = () => <Lazy><FAQLean /></Lazy>;
 
 /**
  * "Learn more" accordion. Wraps sections that historically padded the
@@ -169,38 +173,43 @@ export const FullBelowFold = () => (
 );
 
 /**
- * Moto-template marketing chrome.
+ * Moto-template marketing chrome — third iteration per the
+ * three-agent benchmark vs sellyourcar.online (MotoAcquire's own
+ * consumer site).
  *
- * Per the three-agent design review (PR #260 follow-up):
+ * Strip-down from the prior version (which was already lean):
  *
- *   * KEEP (refactored): TrustBadgesLean, HowItWorksLean,
- *     TestimonialsLean, CTABannerLean. Same data, flat visuals.
- *   * KEEP as-is: CompetitorComparisonSection (already on-brand;
- *     just drops its outer shadow), FAQSection (collapsed by default
- *     and gold for FAQPage schema).
- *   * TOSS from Moto chrome: ValueProps (duplicates the Comparison
- *     table content), ReferralBanner (wrong audience — hasn't sold
- *     yet, nothing to refer).
+ *   * DROPPED: TrustBadgesLean — national-tier valuation sites
+ *     don't stack stat strips below the form. AggregateRating
+ *     already lives in JSON-LD via BrandStructuredData.
+ *   * DROPPED: CompetitorComparison — defensive/analytical mindset
+ *     too early. Objections are handled by FAQ instead.
+ *   * DROPPED: TestimonialsLean — DTC/Trustpilot-era. Moves to
+ *     /reviews subpage (PR 3c) with Review/AggregateRating JSON-LD.
+ *   * KEPT (rebuilt): HowItWorksLean with semantic Lucide icons in
+ *     soft-gray circles + per-step CTA links anchoring to the form
+ *     — each step is a micro-conversion ramp instead of inert copy.
+ *   * NEW: ValueTrackerCard — MotoAcquire's signature secondary
+ *     conversion. "Track your vehicle value for free!" with a
+ *     value-curve illustration. Routes to the form's track-value
+ *     toggle (already wired via MotoTrackValueBlock).
+ *   * REPLACED: FAQ → FAQLean. Two-column asymmetric layout (title
+ *     left, accordion right). 5 curated questions instead of 7
+ *     (drops the most generic).
+ *   * KEPT (simplified): CTABannerLean. Soft-gray bg, single line,
+ *     single navy pill button.
  *
- * Order chosen for the desktop visual flow:
- *   1. TrustBadges     numeric reassurance immediately after the form
- *   2. Comparison      "Why {Dealer} Wins" — primary conversion wedge
- *   3. HowItWorks      three-step process explainer
- *   4. Testimonials    static grid of social proof
- *   5. FAQ             long-tail SEO + objection handling
- *   6. CTABanner       finisher with scroll-back-to-form
- *
- * Each lean section has its own `border-t border-border/60` so the
- * page reads as one continuous surface with hairline dividers
- * instead of alternating bg tones.
+ * Final scroll order:
+ *   1. HowItWorksLean       three-step process with per-step CTAs
+ *   2. ValueTrackerCard     value-tracking opt-in promo
+ *   3. FAQLean              5-question 2-column accordion
+ *   4. CTABannerLean        single-line centered finisher
  */
 export const MotoBelowFold = () => (
   <>
-    <TrustBadgesLeanSection />
-    <CompetitorComparisonSection />
     <HowItWorksLeanSection />
-    <TestimonialsLeanSection />
-    <FAQSection />
+    <ValueTrackerCardSection />
+    <FAQLeanSection />
     <CTABannerLeanSection />
   </>
 );

@@ -1,52 +1,55 @@
-// Moto-aesthetic variant of CTABanner.
+// Moto-aesthetic closing CTA — third iteration per the 3-agent
+// benchmark vs MotoAcquire's "Get started with a 30-second
+// valuation!" finisher.
 //
-// Visual rules:
-//   * Solid primary (navy) — NO red accent gradient, no decorative
-//     blurred circles, no backdrop-blur pill
-//   * Button matches the Moto form's CTA button language exactly
-//     (rounded-xl, white bg, primary text, no big shadow stack)
-//   * Single line of value proposition copy under the heading
-//
-// Scrolls to the SellFlow form anchor when clicked.
-import { ArrowRight } from "lucide-react";
+// Visual:
+//   * Soft-gray bg (matches MotoAcquire's bottom strip), NOT a
+//     full navy block. Sits like a calm coda rather than a
+//     final shout.
+//   * One line of copy, one navy pill button. No subtext, no
+//     decorative blurred circles, no shadow stack.
+//   * Button matches the form's CTA exactly so the visual loop
+//     "form → form" is unmistakable.
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+
+const scrollToForm = () => {
+  const form = document.getElementById("sell-car-form");
+  if (form) {
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+  } else {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
 
 const CTABannerLean = () => {
   const { config } = useSiteConfig();
-
-  const scrollToForm = () => {
-    const form = document.getElementById("sell-car-form");
-    if (form) {
-      form.scrollIntoView({ behavior: "smooth", block: "center" });
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  const days = config.price_guarantee_days || 8;
-  const dealer = config.dealership_name || "us";
+  // Use dealer name when configured; falls back to generic so new
+  // tenants pre-onboarding still get a usable line.
+  const dealerNameRaw = (config.dealership_name || "").trim();
+  const headline =
+    dealerNameRaw && dealerNameRaw !== "Our Dealership"
+      ? `Get started with a 30-second valuation from ${dealerNameRaw.split(" ")[0]}`
+      : `Get started with a 30-second valuation`;
 
   return (
     <section
       aria-labelledby="cta-heading"
-      className="bg-primary text-primary-foreground py-20 lg:py-24 px-5 text-center"
+      className="py-20 lg:py-24 px-5 border-t border-border/60"
+      style={{ background: "hsl(220 14% 96%)" }}
     >
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto text-center">
         <h2
           id="cta-heading"
-          className="text-3xl lg:text-5xl font-semibold tracking-tight mb-4"
+          className="text-2xl lg:text-3xl font-semibold tracking-tight text-foreground mb-8"
         >
-          Ready to sell your car?
+          {headline}
         </h2>
-        <p className="text-base lg:text-lg text-primary-foreground/80 mb-10 max-w-xl mx-auto">
-          {days}-day locked offer. Sell to {dealer} on your schedule, no pressure.
-        </p>
         <button
+          type="button"
           onClick={scrollToForm}
-          className="inline-flex items-center gap-2 px-10 py-4 bg-card text-primary rounded-xl text-base font-semibold hover:bg-card/95 transition-colors"
+          className="inline-flex items-center justify-center px-10 py-4 bg-primary text-primary-foreground rounded-xl text-base font-semibold hover:bg-primary/95 transition-colors"
         >
-          Get my offer
-          <ArrowRight className="w-4 h-4" />
+          Get started
         </button>
       </div>
     </section>

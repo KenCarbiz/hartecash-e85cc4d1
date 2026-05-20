@@ -1,14 +1,31 @@
-// Moto-aesthetic variant of HowItWorks.
+// Moto-aesthetic "How it works" — second iteration per the 3-agent
+// benchmark vs sellyourcar.online (MotoAcquire's own consumer site).
 //
 // Visual rules:
-//   * White bg, no radial dot grid
-//   * Outlined circle numerals (border + primary color), no gradient fill,
-//     no shadow-lg, no glow-ring hover
-//   * Section eyebrow ("SIMPLE PROCESS" uppercase tracking-wider) removed —
-//     it was template-era noise. H2 alone is enough.
+//   * Soft-gray FILLED circle (~64px) with a semantic Lucide icon —
+//     NOT outlined numerals. The icon implies the step's meaning
+//     so the heading can be a verb instead of a label.
+//   * Uppercase "STEP 1 / STEP 2 / STEP 3" eyebrow above each
+//     heading at 11px tracking-[0.12em].
+//   * Per-step inline CTA link (`text-primary underline-offset-4
+//     hover:underline`) anchoring back to #sell-car-form so each
+//     step is its own micro-conversion ramp — not inert copy.
+//   * No section eyebrow ("SIMPLE PROCESS"), no radial-dot bg,
+//     no connector line, no hover-glow.
 //
-// Step content + pickup_offered toggle preserved from the original.
+// Per-tenant: pickup_offered still flips step 3 between "we pick up"
+// and "drop off" — same as the original.
+import { DollarSign, LineChart, ShieldCheck } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+
+const scrollToForm = () => {
+  const form = document.getElementById("sell-car-form");
+  if (form) {
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+  } else {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
 
 const HowItWorksLean = () => {
   const { config } = useSiteConfig();
@@ -16,26 +33,25 @@ const HowItWorksLean = () => {
 
   const steps = [
     {
-      num: 1,
-      title: "Tell us about your car",
+      Icon: DollarSign,
+      title: "Get an instant valuation",
       desc: "Enter your license plate or VIN and basic details. Takes less than 2 minutes.",
+      cta: "Get started",
     },
     {
-      num: 2,
-      title: "Get your cash offer",
-      desc: "Receive a competitive, no-obligation offer based on real market data.",
+      Icon: LineChart,
+      title: "Track your vehicle's value",
+      desc: "Not ready to sell? Our free tracking tool monitors your car's value so you know the right moment.",
+      cta: "Track my value",
     },
-    pickupOffered
-      ? {
-          num: 3,
-          title: "Get paid & we pick up",
-          desc: "Accept your offer, get paid on the spot, and we'll pick up your car for free.",
-        }
-      : {
-          num: 3,
-          title: "Drop off & get paid",
-          desc: "Bring your car to us when it's convenient. We'll inspect, pay you on the spot, and handle the paperwork.",
-        },
+    {
+      Icon: ShieldCheck,
+      title: pickupOffered ? "Get paid & we pick up" : "Drop off & get paid",
+      desc: pickupOffered
+        ? "Accept your offer, get paid on the spot, and we'll pick up your car for free."
+        : "Bring your car to us when it's convenient. We'll inspect, pay you on the spot, and handle the paperwork.",
+      cta: "Get my offer",
+    },
   ];
 
   return (
@@ -46,23 +62,36 @@ const HowItWorksLean = () => {
     >
       <h2
         id="how-heading"
-        className="text-3xl font-semibold tracking-tight text-foreground text-center mb-12 lg:mb-16"
+        className="text-3xl font-semibold tracking-tight text-foreground text-center mb-14 lg:mb-16"
       >
-        How it works
+        How our process works
       </h2>
 
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
-        {steps.map((step) => (
-          <div key={step.num} className="text-center">
-            <div className="mx-auto mb-5 w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center text-lg font-semibold text-primary">
-              {step.num}
+        {steps.map((step, i) => (
+          <div key={i} className="text-center">
+            <div
+              className="mx-auto mb-6 w-16 h-16 rounded-full flex items-center justify-center"
+              style={{ background: "hsl(220 14% 96%)" }}
+            >
+              <step.Icon className="w-7 h-7" strokeWidth={1.5} style={{ color: "hsl(220 13% 35%)" }} />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">
+            <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-muted-foreground mb-2">
+              Step {i + 1}
+            </p>
+            <h3 className="text-lg font-semibold text-foreground mb-3">
               {step.title}
             </h3>
-            <p className="text-base text-muted-foreground leading-relaxed max-w-xs mx-auto">
+            <p className="text-base text-muted-foreground leading-relaxed max-w-xs mx-auto mb-5">
               {step.desc}
             </p>
+            <button
+              type="button"
+              onClick={scrollToForm}
+              className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              {step.cta}
+            </button>
           </div>
         ))}
       </div>
