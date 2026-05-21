@@ -89,25 +89,110 @@ const SummaryChip = ({
   );
 };
 
-/* Clickable status pill with hover lift + glow. */
+/* Clickable status pill with hover lift + glow. Pending states subtly pulse. */
 const ActionPill = ({
-  tone, Icon, children, onClick,
-}: { tone: "green" | "orange" | "gray" | "indigo"; Icon: any; children: React.ReactNode; onClick: () => void }) => {
+  tone, Icon, children, onClick, pulse = false,
+}: { tone: "green" | "orange" | "gray" | "indigo"; Icon: any; children: React.ReactNode; onClick: () => void; pulse?: boolean }) => {
   const tones: Record<string, string> = {
     green:  "text-[#0F7A3E] bg-[#E8F8EE] hover:shadow-[0_8px_18px_-10px_rgba(15,122,62,0.55)]",
     orange: "text-[#B45309] bg-[#FEF3E2] hover:shadow-[0_8px_18px_-10px_rgba(180,83,9,0.5)]",
     gray:   "text-[#53627A] bg-[#F4F6FA] hover:shadow-[0_8px_18px_-10px_rgba(83,98,122,0.4)]",
     indigo: "text-[#4F46E5] bg-[#EEF0FF] hover:shadow-[0_8px_18px_-10px_rgba(79,70,229,0.55)]",
   };
+  const dotTone: Record<string, string> = {
+    green: "bg-[#16A34A]", orange: "bg-[#F59E0B]", gray: "bg-[#94A3B8]", indigo: "bg-[#4F46E5]",
+  };
   return (
     <button
       onClick={onClick}
-      className={`group inline-flex items-center gap-1.5 text-[11.5px] font-semibold pl-2 pr-2.5 py-1.5 rounded-full transition-all hover:-translate-y-0.5 active:scale-[0.97] ${tones[tone]}`}
+      className={`group relative inline-flex items-center gap-1.5 text-[11.5px] font-semibold pl-2 pr-2.5 py-1.5 rounded-full transition-all hover:-translate-y-0.5 active:scale-[0.97] ${tones[tone]}`}
     >
       <Icon className="w-3.5 h-3.5" />
       <span>{children}</span>
+      {pulse && (
+        <span className="relative flex h-1.5 w-1.5 ml-0.5">
+          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${dotTone[tone]}`} />
+          <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${dotTone[tone]}`} />
+        </span>
+      )}
       <ChevronRight className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all" />
     </button>
+  );
+};
+
+/* Smart contextual guidance banner. Adapts CTA + tone to vehicle state. */
+const SmartGuidanceBanner = ({
+  tone, Icon, title, description, ctaLabel, onCta,
+}: { tone: "indigo" | "orange" | "green"; Icon: any; title: string; description: string; ctaLabel: string; onCta: () => void }) => {
+  const tones = {
+    indigo: { bg: "from-[#EEF0FF] to-white", border: "border-[#C7D2FE]", icon: "bg-white text-[#4F46E5]", btn: "bg-[#4F46E5] hover:bg-[#4338CA] text-white" },
+    orange: { bg: "from-[#FEF3E2] to-white", border: "border-[#FCD9A8]", icon: "bg-white text-[#B45309]", btn: "bg-[#B45309] hover:bg-[#92400E] text-white" },
+    green:  { bg: "from-[#E8F8EE] to-white", border: "border-[#BBE5C6]", icon: "bg-white text-[#0F7A3E]", btn: "bg-[#0F7A3E] hover:bg-[#0B5C2F] text-white" },
+  }[tone];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+      className={`mb-5 rounded-2xl border ${tones.border} bg-gradient-to-r ${tones.bg} p-3.5 sm:p-4 flex items-start sm:items-center gap-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]`}
+    >
+      <span className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 ${tones.icon} shadow-sm`}>
+        <Icon className="w-[18px] h-[18px]" />
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-bold text-[#06194A]">{title}</div>
+        <div className="text-[12px] text-[#53627A] mt-0.5">{description}</div>
+      </div>
+      <button
+        onClick={onCta}
+        className={`shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-3.5 py-2 rounded-xl transition ${tones.btn}`}
+      >
+        {ctaLabel} <ArrowRight className="w-3.5 h-3.5" />
+      </button>
+    </motion.div>
+  );
+};
+
+/* Overflow menu — danger actions live here so they don't compete with primary CTA. */
+const OverflowMenu = ({
+  onRemove, onArchive, onDownload,
+}: { onRemove: () => void; onArchive: () => void; onDownload: () => void }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+  return (
+    <div ref={ref} className="ml-auto relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label="More actions"
+        className="w-9 h-9 rounded-xl text-[#53627A] hover:text-[#06194A] hover:bg-[#F4F6FA] grid place-items-center transition"
+      >
+        <MoreHorizontal className="w-[18px] h-[18px]" />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 mt-1 w-56 rounded-xl bg-white border border-[#E6EAF0] shadow-[0_18px_40px_-14px_rgba(15,23,42,0.18)] p-1.5 z-20"
+          >
+            <button onClick={() => { setOpen(false); onDownload(); }} className="w-full flex items-center gap-2.5 text-left text-[13px] font-medium text-[#06194A] px-2.5 py-2 rounded-lg hover:bg-[#F4F6FA] transition">
+              <Download className="w-4 h-4 text-[#53627A]" /> Download Vehicle Data
+            </button>
+            <button onClick={() => { setOpen(false); onArchive(); }} className="w-full flex items-center gap-2.5 text-left text-[13px] font-medium text-[#06194A] px-2.5 py-2 rounded-lg hover:bg-[#F4F6FA] transition">
+              <Archive className="w-4 h-4 text-[#53627A]" /> Archive Vehicle
+            </button>
+            <div className="h-px bg-[#E6EAF0] my-1" />
+            <button onClick={() => { setOpen(false); onRemove(); }} className="w-full flex items-center gap-2.5 text-left text-[13px] font-medium text-[#53627A] hover:text-[#B91C1C] px-2.5 py-2 rounded-lg hover:bg-[#FEF2F2] transition">
+              <Trash2 className="w-4 h-4" /> Remove Vehicle
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
