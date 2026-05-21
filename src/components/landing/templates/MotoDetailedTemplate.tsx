@@ -2,18 +2,15 @@ import SEO from "@/components/SEO";
 import MotoDetailedFlow from "@/components/moto-detailed/MotoDetailedFlow";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import BrandStructuredData from "@/components/BrandStructuredData";
+import type { JourneyPresetId } from "@/components/moto-detailed/presets";
 
 /**
  * "Instant Offer — Detailed" landing template.
  *
- * Mounts the premium guided MotoDetailedFlow journey (left rail on
- * desktop, top stepper on mobile, live valuation right-rail). The
- * underlying journey is a modular engine driven by JourneyConfig —
- * dealers can pick a preset, switch offer timing, or supply a fully
- * custom step order without touching template code.
- *
- * The original "moto" template is unchanged; this is a sibling, not
- * a replacement.
+ * Reads the dealer's saved journey preset + offer-timing from
+ * site_config and renders MotoDetailedFlow accordingly. Falls back
+ * to safe defaults so a half-provisioned tenant still gets a
+ * working premium flow instead of a blank screen.
  */
 const MotoDetailedTemplate = () => {
   const { config } = useSiteConfig();
@@ -22,11 +19,9 @@ const MotoDetailedTemplate = () => {
     ? `Sell Your Car — Instant Valuation from ${dealerName}`
     : "Sell Your Car — Instant Vehicle Valuation";
 
-  const offerMode =
-    ((config as any).moto_detailed_offer_display_mode as
-      | "before_contact_info"
-      | "after_contact_info"
-      | undefined) ?? "after_contact_info";
+  const preset: JourneyPresetId =
+    (config.moto_detailed_preset as JourneyPresetId) || "moto_detailed";
+  const offerMode = config.moto_detailed_offer_display_mode || "after_contact_info";
 
   return (
     <main>
@@ -37,7 +32,7 @@ const MotoDetailedTemplate = () => {
         description={`Get a guided, premium offer from ${config.dealership_name}. See your estimated value in seconds.`}
         path="/sell"
       />
-      <MotoDetailedFlow offerDisplayMode={offerMode} />
+      <MotoDetailedFlow preset={preset} offerDisplayMode={offerMode} />
     </main>
   );
 };
