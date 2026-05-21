@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Paperclip, Phone, Mail, ChevronLeft, Search, Upload, ShieldCheck,
   FileText, Camera, Receipt, ClipboardList, CheckCircle2, Clock, Truck,
-  DollarSign, BadgeCheck, Lock, Star, Zap, MessageSquare, LifeBuoy,
-  PhoneCall, AlertTriangle, Eye, Sparkles, X, Image as ImageIcon,
+  DollarSign, BadgeCheck, Lock, Star, Zap,
+  PhoneCall, AlertTriangle, Eye, Sparkles, Image as ImageIcon,
 } from "lucide-react";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
