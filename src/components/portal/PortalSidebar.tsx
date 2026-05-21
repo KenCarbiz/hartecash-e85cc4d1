@@ -41,7 +41,7 @@ const NAV: NavItem[] = [
   { key: "settings",  label: "Settings",  Icon: Settings },
 ];
 
-type Customer = { name: string; initials: string; dealer: string };
+type Customer = { name: string; initials: string; dealer: string; email: string };
 
 /* ── shared nav button ─────────────────────────────────────────── */
 const NavButton = ({
