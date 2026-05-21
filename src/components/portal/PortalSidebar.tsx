@@ -365,8 +365,8 @@ export const PortalMobileTopBar = ({
                     </button>
                   ))}
                 </div>
-                <UserProfile customer={customer} collapsed={false} />
               </div>
+              <MobileSupportFooter />
             </motion.aside>
           </>
         )}
