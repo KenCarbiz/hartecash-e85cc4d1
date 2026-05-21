@@ -2,11 +2,13 @@
 // benchmark vs sellyourcar.online (MotoAcquire's own consumer site).
 //
 // Visual rules:
-//   * Each step uses an uploaded illustration asset (soft-gray
-//     circular tile + navy icon, baked into the PNG itself). The
-//     wrapper div used to provide its own circle bg; now the image
-//     carries both, so we render an <img> directly without an
-//     enclosing tile.
+//   * Each step uses an uploaded illustration asset — navy stroke
+//     glyph on a transparent background. No grey-circle wrapper
+//     here or in code: the section is part of the landing's
+//     "negative space as authority" rhythm, and naked icons read
+//     cleaner / more confident at this size than a feature-card-
+//     style tile. (Grey-circle variants exist in /brand/autocurb
+//     history if we ever need to swap back.)
 //   * Uppercase "STEP 1 / STEP 2 / STEP 3" eyebrow above each
 //     heading at 11px tracking-[0.12em].
 //   * Per-step inline CTA link (`text-primary underline-offset-4
