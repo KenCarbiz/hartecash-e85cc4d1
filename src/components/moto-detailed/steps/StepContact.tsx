@@ -1,6 +1,7 @@
 import { Lock } from "lucide-react";
 import PrimaryCTA from "../PrimaryCTA";
 import type { StepContext } from "../types";
+import { trackContactSubmitted, trackCtaClicked } from "../analytics";
 
 const StepContact = ({ state, update, next }: StepContext) => {
   const c = state.contact;
