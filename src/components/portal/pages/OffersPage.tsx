@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import {
   ShieldCheck, Truck, Shield, Check, Clock, ArrowRight, MessageSquare,
   BarChart3, Sparkles, TrendingUp, Info, X, Zap, Lock, Award, Star,
-  CheckCircle2, FileSignature, CalendarDays, Wallet, ChevronRight,
+  CheckCircle2, CalendarDays, Wallet,
   AlertTriangle, Users, FileText, HelpCircle, Paperclip,
 } from "lucide-react";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
