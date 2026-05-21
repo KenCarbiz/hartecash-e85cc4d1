@@ -7,14 +7,15 @@ export type LandingTemplate =
   | "cinema" | "portal" | "carousel" | "slab" | "diagonal"
   | "pickup" | "magazine" | "circular" | "motion" | "mosaic"
   | "clarity" | "marquee" | "velocity" | "heritage"
-  | "moto"
+  | "moto" | "moto_detailed"
   | "legacy";
 
 export const LANDING_TEMPLATES: { value: LandingTemplate; label: string; description: string }[] = [
   // ── Legacy Hartecash (the pre-audit maximalist look) ──
   { value: "legacy",   label: "Legacy Hartecash", description: "The original Hartecash long-scroll. Hero + form, then every trust signal, value prop, testimonial, and FAQ visible inline. Best for single-rooftop dealers whose conversions came from the long scroll." },
   // ── 2026 sell-flow design audit (recommended starting points) ──
-  { value: "moto",     label: "Instant Offer", description: "MotoAcquire-style 8-step instant valuation flow with auto-opt-in monthly value tracker. White background, navy CTA, single tenant variable (button color). Best for dealers who want the simplest, highest-conversion mobile-first surface — and the retention loop that comes with it." },
+  { value: "moto",          label: "Instant Offer", description: "MotoAcquire-style 8-step instant valuation flow with auto-opt-in monthly value tracker. White background, navy CTA, single tenant variable (button color). Best for dealers who want the simplest, highest-conversion mobile-first surface — and the retention loop that comes with it." },
+  { value: "moto_detailed", label: "Instant Offer — Detailed", description: "Premium guided 5-step journey with desktop left rail, live valuation range, trust badges, and a calm one-task-per-screen layout. Modular engine — reorder, inject, or skip steps via dealer config. Best for dealers who want a national-brand feel and higher perceived offer quality." },
   { value: "clarity",  label: "Clarity",  description: "Apple-minimal white. Centered form is the hero. No stock photo, no FAQ above the fold. Best for premium import single-rooftops + EV dealers." },
   { value: "marquee",  label: "Marquee",  description: "Premium dark / luxury. Full-bleed near-black, brass accents, serif headline. Best for BMW / Audi / Lexus / Porsche / Mercedes." },
   { value: "velocity", label: "Velocity", description: "Carvana-style conversion-tuned. Brand-blue gradient, yellow CTA, single social-proof line. Best for mass-market multi-rooftops + domestics." },
