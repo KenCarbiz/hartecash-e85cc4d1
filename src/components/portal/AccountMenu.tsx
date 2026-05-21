@@ -19,7 +19,7 @@ type Customer = {
 type Props = {
   customer: Customer;
   variant?: "desktop" | "mobile";
-  onNavigate?: (k: NavKey) => void;
+  onNavigate?: (k: string) => void;
 };
 
 type DrawerKey =
@@ -275,7 +275,7 @@ export const AccountMenu = ({ customer, variant = "desktop", onNavigate }: Props
     };
   }, [open]);
 
-  const go = (k: NavKey) => { setOpen(false); onNavigate?.(k); };
+  const go = (k: string) => { setOpen(false); onNavigate?.(k); };
   const openDrawer = (k: Exclude<DrawerKey, null>) => { setOpen(false); setDrawer(k); };
 
   const Menu = (
