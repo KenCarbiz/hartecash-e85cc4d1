@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Upload, Eye, RefreshCw, ShieldCheck, Lock, FileText, Camera, AlertCircle, Check } from "lucide-react";
+import { Upload, Eye, RefreshCw, ShieldCheck, Lock, FileText, AlertCircle, Check } from "lucide-react";
 import { PORTAL_MOCK as MOCK } from "../portalMock";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, StatusPill, SectionLabel } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
+import { DocumentUploadDrawer } from "../DocumentUploadDrawer";
+
 
 const STATUS_TONE = {
   "Approved":     "green",
