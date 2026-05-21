@@ -297,7 +297,26 @@ export interface SiteConfig {
   tracker_vehicle_model: string | null;
   tracker_vehicle_style: string | null;
   tracker_vehicle_specs: string | null;
+  /**
+   * Customer acquisition journey template. Independent of
+   * landing_template — when 'moto_detailed', the MotoDetailed
+   * journey engine is rendered with the preset + offer-timing
+   * below. Defaults to 'moto' (original ultra-minimal flow).
+   */
+  customer_journey_template: "moto" | "moto_detailed";
+  /** Preset id passed to the JourneyEngine when journey = moto_detailed. */
+  moto_detailed_preset:
+    | "moto"
+    | "moto_detailed"
+    | "instant_offer"
+    | "high_qualification"
+    | "luxury_experience";
+  /** Offer timing for the MotoDetailed flow. */
+  moto_detailed_offer_display_mode: "before_contact_info" | "after_contact_info";
+  /** Optional dealer-authored JourneyConfig overrides (reorders / injected steps). */
+  moto_detailed_custom_config: Record<string, unknown> | null;
 }
+
 
 const DEFAULTS: SiteConfig = {
   dealership_name: "Our Dealership",
@@ -417,7 +436,12 @@ const DEFAULTS: SiteConfig = {
   tracker_vehicle_model: null,
   tracker_vehicle_style: null,
   tracker_vehicle_specs: null,
+  customer_journey_template: "moto",
+  moto_detailed_preset: "moto_detailed",
+  moto_detailed_offer_display_mode: "after_contact_info",
+  moto_detailed_custom_config: null,
 };
+
 
 /**
  * Fields on dealership_locations that can override the corporate site_config.
