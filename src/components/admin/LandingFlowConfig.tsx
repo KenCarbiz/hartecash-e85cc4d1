@@ -46,7 +46,7 @@ const FORM_VARIANTS: Array<{
  * dealership_locations admin.
  */
 
-type FormDensity = "simple" | "standard" | "detailed";
+type FormDensity = "simple" | "standard" | "detailed" | "dealer_configured";
 type ConditionCardStyle = "basic" | "kbb";
 
 interface State {
