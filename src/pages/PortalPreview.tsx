@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { Search, Bell } from "lucide-react";
+import { AccountMenu } from "@/components/portal/AccountMenu";
 import { PortalSidebar, PortalMobileTopBar, type NavKey } from "@/components/portal/PortalSidebar";
 import { PORTAL_MOCK as MOCK } from "@/components/portal/portalMock";
 import DashboardPage from "@/components/portal/pages/DashboardPage";
