@@ -122,7 +122,7 @@ export const SettingsPage = () => {
         footer={<PrimaryButton onClick={() => setPanel(null)} className="w-full">Save Preferences</PrimaryButton>}>
         <div className="space-y-1">
           {[
-            { k: "sms" as const,           title: "SMS",                 desc: "Text alerts for offer updates" },
+            { k: "sms" as const,           title: "SMS",                 desc: "Text alerts for offer updates", onChange: handleSmsToggle },
             { k: "email" as const,         title: "Email",               desc: "Receipts, summaries, weekly digest" },
             { k: "push" as const,          title: "Push notifications",  desc: "On-device alerts" },
             { k: "offerUpdates" as const,  title: "Offer updates",       desc: "When your offer changes or expires" },
@@ -133,7 +133,7 @@ export const SettingsPage = () => {
                 <div className="text-sm font-semibold text-[#06194A]">{row.title}</div>
                 <div className="text-[11px] text-[#53627A]">{row.desc}</div>
               </div>
-              <Toggle on={prefs[row.k]} onChange={() => flip(row.k)} />
+              <Toggle on={prefs[row.k]} onChange={row.onChange ?? (() => flip(row.k))} />
             </div>
           ))}
         </div>
