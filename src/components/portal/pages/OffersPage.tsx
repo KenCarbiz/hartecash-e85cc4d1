@@ -732,10 +732,10 @@ export const OffersPage = ({ onNavigate }: Props) => {
               <li key={b.label}>
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-[#06194A] font-medium">{b.label}</span>
-                  <span className={`font-bold tabular-nums ${positive ? "text-[#0F7A3E]" : "text-[#B91C1C]"}`}>{positive ? "+" : "−"}{fmt(Math.abs(b.value))}</span>
+                  <span className={`font-bold tabular-nums ${positive ? "text-[#0F7A3E]" : "text-[#B45309]"}`}>{positive ? "+" : "−"}{fmt(Math.abs(b.value))}</span>
                 </div>
                 <div className="mt-1.5 h-2 rounded-full bg-[#F4F6FA] overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${w}%` }} transition={{ duration: 0.6 }} className={`h-full rounded-full ${positive ? "bg-gradient-to-r from-[#22C55E] to-[#16A34A]" : "bg-gradient-to-r from-[#FCA5A5] to-[#EF4444]"}`} />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${w}%` }} transition={{ duration: 0.6 }} className={`h-full rounded-full ${positive ? "bg-gradient-to-r from-[#22C55E] to-[#16A34A]" : "bg-gradient-to-r from-[#FCD9A8] to-[#F59E0B]"}`} />
                 </div>
                 <p className="text-[11.5px] text-[#53627A] mt-1.5">{b.why}</p>
               </li>
