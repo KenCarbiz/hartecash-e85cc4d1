@@ -274,7 +274,9 @@ export const OffersPage = ({ onNavigate }: Props) => {
   const [counter, setCounter] = useState(false);
   const [ask, setAsk] = useState(false);
   const [breakdown, setBreakdown] = useState(false);
+  const [advantage, setAdvantage] = useState<AdvantageKey | null>(null);
   const { days, hours, mins, secs, pct, urgent, expired } = useCountdown(MOCK.offerExpires);
+  const marketStatus = useRotatingMarketStatus();
 
   const minCounter = MOCK.firmOffer + 500;
   const maxCounter = MOCK.firmOffer + 1200;
