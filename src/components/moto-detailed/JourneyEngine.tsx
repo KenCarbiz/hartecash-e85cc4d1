@@ -75,6 +75,12 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
     trackOfferSeen(state.valuation.firm ?? Math.round((state.valuation.low + state.valuation.high) / 2));
   }, [state.valuation, preview]);
 
+  // Keep a live ref to the latest state so deferred nav (goTo invoked
+  // immediately after an update() in the same handler) re-evaluates
+  // shouldRender against fresh state, not the closure snapshot.
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   const update = useCallback((patch: Partial<JourneyState>) => {
     setState((prev) => ({ ...prev, ...patch }));
   }, []);
@@ -89,10 +95,17 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
 
   const goTo = useCallback(
     (stepId: string) => {
-      const i = activeSteps.findIndex((s) => s.id === stepId);
-      if (i >= 0) setCursor(i);
+      // Defer to the next macrotask so any setState() called immediately
+      // before goTo() has been committed and shouldRender sees fresh state.
+      setTimeout(() => {
+        const fresh = config.steps.filter((s) =>
+          s.shouldRender ? s.shouldRender(stateRef.current) : true,
+        );
+        const i = fresh.findIndex((s) => s.id === stepId);
+        if (i >= 0) setCursor(i);
+      }, 0);
     },
-    [activeSteps],
+    [config.steps],
   );
 
   const ctx: StepContext = { state, update, next, back, goTo, offerDisplayMode: config.offerDisplayMode };
