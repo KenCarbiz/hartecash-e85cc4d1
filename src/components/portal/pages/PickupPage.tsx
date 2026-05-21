@@ -9,6 +9,7 @@ import {
 import { PORTAL_MOCK as MOCK } from "../portalMock";
 import { PortalPageShell, Card, SectionLabel, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
+import { AIInspectionFlow, type InspectionResult } from "../AIInspectionFlow";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Method = null | "dealership" | "ai";
