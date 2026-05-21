@@ -5,7 +5,7 @@ import {
   LifeBuoy, Tag, Upload, Calendar, MessageSquare, Repeat, LogOut, X, Check,
 } from "lucide-react";
 import { SlideOver } from "./SlideOver";
-import type { NavKey } from "./PortalSidebar";
+
 
 /* AccountMenu — premium SaaS account center for the portal.
    Desktop : floating glass dropdown anchored under the trigger.
