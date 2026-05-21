@@ -12,6 +12,7 @@ import MotoStepPhotos from "@/components/moto/steps/MotoStepPhotos";
 import MotoStepSchedule from "@/components/moto/steps/MotoStepSchedule";
 import MotoStepQueued from "@/components/moto/steps/MotoStepQueued";
 import MotoTrackValueBlock from "@/components/moto/MotoTrackValueBlock";
+import MotoDetailedFlow from "@/components/moto-detailed/MotoDetailedFlow";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
