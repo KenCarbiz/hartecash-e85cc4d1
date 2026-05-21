@@ -108,21 +108,13 @@ export const DocumentsPage = () => {
         })}
       </div>
 
-      {/* Upload slide-over */}
-      <SlideOver open={!!upload} onClose={() => setUpload(null)} title={`Upload ${upload ?? ""}`}
-        subtitle="Drag, drop, or capture with your camera" width="lg"
-        footer={<PrimaryButton className="w-full">Submit Document</PrimaryButton>}>
-        <button className="w-full border-2 border-dashed border-[#C7D2FE] bg-[#FAFBFE] rounded-2xl p-10 text-center hover:bg-[#EEF0FF] transition">
-          <Upload className="w-10 h-10 mx-auto text-[#4F46E5] mb-2" />
-          <div className="text-sm font-semibold text-[#06194A]">Drop a file or tap to upload</div>
-          <div className="text-[11px] text-[#53627A] mt-1">PDF, JPG, PNG up to 25MB</div>
-        </button>
-        <SecondaryButton className="w-full mt-3"><Camera className="w-4 h-4" /> Use Camera</SecondaryButton>
-        <div className="mt-5 rounded-2xl bg-[#F7F8FB] p-4 text-[12px] text-[#53627A] inline-flex items-start gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#16A34A] mt-0.5" />
-          Documents are encrypted in transit and at rest. Only your dealer team can view them.
-        </div>
-      </SlideOver>
+      {/* Premium upload drawer with mobile handoff */}
+      <DocumentUploadDrawer
+        open={!!upload}
+        onClose={() => setUpload(null)}
+        docName={upload ?? "Document"}
+      />
+
 
       {/* Preview modal (also slide-over for consistency) */}
       <SlideOver open={!!preview} onClose={() => setPreview(null)} title={`${preview ?? ""} Preview`} width="lg"
