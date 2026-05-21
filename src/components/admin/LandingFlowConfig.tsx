@@ -586,9 +586,6 @@ const LandingFlowConfig = () => {
         </p>
       </header>
 
-      {/* ── Customer Journey (Moto vs Moto Detailed) ── */}
-      <MotoDetailedJourneyConfig />
-
       {/* ── Transaction Settings · Payout Methods ── */}
       <PayoutMethodsConfig />
 
