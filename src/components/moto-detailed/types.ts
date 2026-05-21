@@ -58,22 +58,35 @@ export interface JourneyAppointment {
   timeSlot?: string;
 }
 
+export type PhotoQuality = "green" | "yellow" | "red";
+
+export interface PhotoQualityResult {
+  status: PhotoQuality;
+  message: string;
+}
+
 export interface JourneyBoost {
   /** Photo category keys the customer has uploaded. */
   uploadedCategories: string[];
+  /** Per-category AI quality verdicts. */
+  qualityByCategory: Record<string, PhotoQualityResult>;
   /** AI-derived confidence 0..1. */
   aiConfidence: number | null;
-  /** Boosted firm offer. */
+  /** Boosted firm offer. Null when AI couldn't confidently enhance. */
   boostedFirm: number | null;
   /** Diff between boosted firm and original firm. */
   delta: number | null;
+  /** True once the full cinematic AI analysis has finished. */
+  analyzed: boolean;
 }
 
 export const emptyBoost: JourneyBoost = {
   uploadedCategories: [],
+  qualityByCategory: {},
   aiConfidence: null,
   boostedFirm: null,
   delta: null,
+  analyzed: false,
 };
 
 export interface JourneyState {
