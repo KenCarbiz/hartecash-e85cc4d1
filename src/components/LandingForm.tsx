@@ -83,7 +83,10 @@ const LandingForm = ({ leadSource, variant = "split", initial, theme, loader, gh
   // and "standard" densities. The "detailed" density and any
   // non-handoff entry (admin preview, embed, legacy direct mount) keep
   // using the existing SellCarForm.
-  const density = ((config as any).landing_form_density ?? "simple") as "simple" | "standard" | "detailed";
+  const rawDensity = ((config as any).landing_form_density ?? "simple") as string;
+  // "dealer_configured" routes through the full form so the dealer's
+  // form_config toggles (steps + questions) drive the journey directly.
+  const density = (rawDensity === "dealer_configured" ? "detailed" : rawDensity) as "simple" | "standard" | "detailed";
   const hasPlateHandoff = !!(initial?.plate && initial?.state);
   const hasVinHandoff = !!(initial?.vin && initial.vin.length === 17);
   // Resolve the ghost-screen choice. Template-prop wins, otherwise
