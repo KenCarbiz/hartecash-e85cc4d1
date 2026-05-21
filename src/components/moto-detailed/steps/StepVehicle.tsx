@@ -22,9 +22,11 @@ const StepVehicle = ({ state, update, next, lookup = defaultBlackBookAdapter }: 
 
   const submit = async () => {
     if (!valid) return;
+    trackCtaClicked("vehicle", "Next");
     setBusy(true);
-    update({ vehicle: { year, make, model, trim } });
-    const valuation = await fakeLookup(year, make, model);
+    const input = { year, make, model, trim };
+    update({ vehicle: buildVehicleFromInput(input) });
+    const valuation = await lookup(input);
     update({ valuation });
     setBusy(false);
     next();
