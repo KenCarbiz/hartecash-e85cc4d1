@@ -9,6 +9,7 @@ import {
 import { PORTAL_MOCK as MOCK } from "../portalMock";
 import { PortalPageShell, Card, SectionLabel, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
+import { AIInspectionFlow, type InspectionResult } from "../AIInspectionFlow";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Method = null | "dealership" | "ai";
@@ -586,75 +587,20 @@ export const PickupPage = () => {
 
       {/* ── Drawers ─────────────────────────────────────────────────── */}
 
-      {/* AI Inspection drawer */}
-      <SlideOver open={aiOpen} onClose={() => setAiOpen(false)} title="AI Photo Inspection"
-        subtitle={`Step ${aiStep + 1} of ${AI_STEPS.length} · ${AI_STEPS[aiStep].label}`} width="lg"
-        footer={
-          aiStatus === "approved" ? (
-            <PrimaryButton className="w-full" onClick={() => setAiOpen(false)}><CheckCircle2 className="w-4 h-4" /> All set — close</PrimaryButton>
-          ) : (
-            <div className="flex gap-2">
-              <SecondaryButton onClick={() => aiStatus === "idle" && aiStep > 0 && setAiStep((s) => Math.max(0, s - 1))} className={`flex-1 ${(aiStep === 0 || aiStatus !== "idle") ? "opacity-50 cursor-not-allowed" : ""}`}>
-                <ArrowLeft className="w-4 h-4" /> Back
-              </SecondaryButton>
-              <PrimaryButton onClick={() => aiStatus === "idle" && runAiStep()} className={`flex-1 ${aiStatus !== "idle" ? "opacity-70 cursor-not-allowed" : ""}`}>
-                {aiStatus === "uploading" ? "Uploading…" : aiStatus === "analyzing" ? "Analyzing…" : aiStep === AI_STEPS.length - 1 ? "Finish & Approve" : "Capture & Continue"} <ArrowRight className="w-4 h-4" />
-              </PrimaryButton>
-            </div>
-          )
-        }>
-        <div className="space-y-4">
-          {/* Progress bar */}
-          <div>
-            <div className="flex justify-between text-[10px] text-[#8893A8] font-semibold mb-1.5">
-              <span>Progress</span><span>{aiCompleted.size}/{AI_STEPS.length}</span>
-            </div>
-            <div className="h-2 rounded-full bg-[#F4F6FA] overflow-hidden">
-              <motion.div className="h-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"
-                animate={{ width: `${(aiCompleted.size / AI_STEPS.length) * 100}%` }} transition={{ duration: 0.5 }} />
-            </div>
-          </div>
-
-          {/* Current step capture */}
-          <div className="rounded-2xl border-2 border-dashed border-[#C7D2FE] bg-gradient-to-br from-[#FAFBFE] to-white p-6 text-center">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center text-white">
-              <Camera className="w-6 h-6" />
-            </div>
-            <div className="text-sm font-bold text-[#06194A] mt-3">{AI_STEPS[aiStep].label}</div>
-            <div className="text-[12px] text-[#53627A] mt-1">{AI_STEPS[aiStep].hint}</div>
-
-            <AnimatePresence mode="wait">
-              {aiStatus !== "idle" && (
-                <motion.div key={aiStatus} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-white border border-[#E6EAF0] px-3 py-1.5 text-[12px] font-semibold text-[#06194A]">
-                  {aiStatus === "uploading" && <><motion.div className="w-3 h-3 rounded-full bg-[#4F46E5]" animate={{ scale: [1, 1.4, 1] }} transition={{ duration: 1, repeat: Infinity }} /> Uploading…</>}
-                  {aiStatus === "analyzing" && <><Sparkles className="w-3 h-3 text-[#7C3AED]" /> AI analyzing image…</>}
-                  {aiStatus === "approved" && <><CheckCircle2 className="w-3 h-3 text-[#16A34A]" /> Inspection approved</>}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* AI verification feed */}
-          <div>
-            <div className="text-[11px] uppercase tracking-wide font-semibold text-[#8893A8] mb-2">AI Verification</div>
-            <div className="space-y-1.5">
-              {AI_STEPS.map((s, i) => {
-                const done = aiCompleted.has(i); const active = i === aiStep;
-                return (
-                  <div key={s.id} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-[12px] transition ${
-                    done ? "bg-[#ECFDF5] text-[#047857]" : active ? "bg-[#EEF0FF] text-[#4F46E5]" : "bg-[#F7F8FB] text-[#8893A8]"
-                  }`}>
-                    {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : active ? <motion.div className="w-2 h-2 rounded-full bg-current" animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.5, repeat: Infinity }} /> : <div className="w-2 h-2 rounded-full bg-current opacity-30" />}
-                    <span className="font-semibold flex-1">{s.label}</span>
-                    {done && <span className="text-[10px]">Verified</span>}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </SlideOver>
+      {/* AI Inspection — premium fullscreen guided workflow */}
+      <AIInspectionFlow
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        onApproved={(result: InspectionResult) => {
+          setInspectionApproved(true);
+          setAiOpen(false);
+          // Mark every internal AI step as completed for the legacy summary chip
+          setAiCompleted(new Set(AI_STEPS.map((_, i) => i)));
+          setAiStatus("approved");
+          void result;
+        }}
+        vehicle={MOCK.vehicle}
+      />
 
       {/* Confirm pickup */}
       <SlideOver open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Pickup Scheduled"
