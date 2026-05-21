@@ -10,6 +10,7 @@ import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
 import { Input } from "@/components/ui/input";
 import PayoutMethodsConfig from "@/components/admin/PayoutMethodsConfig";
+import { useFormConfig } from "@/hooks/useFormConfig";
 
 type FormVariant = "detailed" | "quick";
 
@@ -46,7 +47,7 @@ const FORM_VARIANTS: Array<{
  * dealership_locations admin.
  */
 
-type FormDensity = "simple" | "standard" | "detailed";
+type FormDensity = "simple" | "standard" | "detailed" | "dealer_configured";
 type ConditionCardStyle = "basic" | "kbb";
 
 interface State {
@@ -100,6 +101,7 @@ const LandingFlowConfig = () => {
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { formConfig } = useFormConfig();
 
   const [state, setState] = useState<State>(DEFAULTS);
   const [saved, setSaved] = useState<State>(DEFAULTS);
@@ -649,28 +651,34 @@ const LandingFlowConfig = () => {
           </span>
         </div>
         <p className="text-xs text-muted-foreground mb-5">
-          How many condition questions does the customer answer? Per the May-2026 design audit, the goal is a 3-page customer journey. Only swap to <strong>Detailed</strong> if your appraisal team needs the full inspection capture before the offer reveals.
+          Pick the shape of the customer journey. The first three are tuned presets; pick <strong>Dealer Configured</strong> to build the journey entirely from your toggles below (form steps, condition questions, pricing reveal, payment timing).
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           {[
             {
               value: "simple" as const,
-              label: "Simple",
+              label: "Fast Conversion",
               tagline: "3 questions · 3 pages",
-              body: "Mileage, condition, ownership. The fastest path. Recommended.",
+              body: "Minimal questions, highest completion rates, shortest journey.",
               recommended: true,
             },
             {
               value: "standard" as const,
-              label: "Standard",
+              label: "Balanced",
               tagline: "5 questions · 3 pages",
-              body: "Adds accidents and mechanical-issues. Still 3 pages.",
+              body: "Moderate qualification with better lead quality — still conversion-optimized.",
             },
             {
               value: "detailed" as const,
-              label: "Detailed",
-              tagline: "Full Lead Form · 4-9 pages",
-              body: "All questions configured in your Capture & Inspection settings.",
+              label: "Full Appraisal",
+              tagline: "Full Lead Form · 4–9 pages",
+              body: "Full inspection-style acquisition flow with deep condition capture.",
+            },
+            {
+              value: "dealer_configured" as const,
+              label: "Dealer Configured",
+              tagline: "Custom · driven by your toggles",
+              body: "No preset. The journey is generated from the form steps and questions you enable below.",
             },
           ].map((d) => {
             const active = state.landing_form_density === d.value;
@@ -681,7 +689,7 @@ const LandingFlowConfig = () => {
                 onClick={() => setState((prev) => ({ ...prev, landing_form_density: d.value }))}
                 className={`relative text-left rounded-xl border-2 p-4 transition-all ${
                   active
-                    ? "border-primary bg-primary/5 shadow-md"
+                    ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/20"
                     : "border-border bg-muted/30 hover:bg-muted hover:border-primary/30"
                 }`}
                 aria-pressed={active}
@@ -702,7 +710,63 @@ const LandingFlowConfig = () => {
             );
           })}
         </div>
+
+        {state.landing_form_density === "dealer_configured" && (() => {
+          // Dynamic summary derived from the dealer's existing form_config
+          // toggles. Purely presentational — does not change any saved
+          // values. Updates live as the dealer toggles questions/steps
+          // in the Lead Form admin.
+          const fc: any = formConfig || {};
+          const questionKeys = Object.keys(fc).filter((k) => k.startsWith("q_"));
+          const enabledQuestions = questionKeys.filter((k) => fc[k] === true).length;
+          const stepKeys = ["step_vehicle_build", "step_condition_history", "step_ai_photos"];
+          const enabledSteps = stepKeys.filter((k) => fc[k] === true).length;
+          // Screens = Search + each enabled optional step + Contact + Offer.
+          const screens = 1 + enabledSteps + 1 + 1;
+          // Rough completion estimate: 8s per question + 12s per screen.
+          const totalSec = enabledQuestions * 8 + screens * 12;
+          const mins = Math.floor(totalSec / 60);
+          const secs = totalSec % 60;
+          const eta = mins > 0 ? `${mins}m ${secs.toString().padStart(2, "0")}s` : `${secs}s`;
+          const impact =
+            enabledQuestions <= 4 ? { label: "High", tone: "text-emerald-600" } :
+            enabledQuestions <= 8 ? { label: "Moderate", tone: "text-amber-600" } :
+                                    { label: "Lower", tone: "text-rose-600" };
+
+          return (
+            <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                  Estimated Customer Experience
+                </span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Questions</div>
+                  <div className="font-bold">{enabledQuestions}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Screens</div>
+                  <div className="font-bold">{screens}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Est. completion</div>
+                  <div className="font-bold">{eta}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Conversion impact</div>
+                  <div className={`font-bold ${impact.tone}`}>{impact.label}</div>
+                </div>
+              </div>
+              <p className="mt-3 text-[11px] text-muted-foreground leading-snug">
+                Updates live as you toggle questions and steps in <strong>Setup · Dealer · Lead Form</strong>. Presets are bypassed in this mode.
+              </p>
+            </div>
+          );
+        })()}
       </section>
+
 
       {/* ── Pickup toggle ──
           Drives "We pick up your car" copy on HowItWorks step 3 and the
