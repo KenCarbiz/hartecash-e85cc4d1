@@ -236,10 +236,9 @@ export const PortalSidebar = ({ active, onChange, customer }: SidebarProps) => {
         ))}
       </nav>
 
-      {/* support + profile */}
-      <div className="mt-4 px-2">
-        <SupportCard collapsed={collapsed} />
-        <UserProfile customer={customer} collapsed={collapsed} />
+      {/* support only — profile lives in top-right AccountMenu */}
+      <div className="mt-auto pb-3 pt-4 px-2">
+        <SupportModule collapsed={collapsed} />
       </div>
     </motion.aside>
   );
