@@ -101,26 +101,8 @@ const MotoDetailedFlow = ({
   config,
 }: Props) => {
   const [seed, setSeed] = useState<Partial<JourneyState> | null>(null);
-  // Mirror MotoShell's state shape minimally so MotoStepVehicleSearch's
-  // controlled props (state.lookupMode, state.vin, etc.) are respected.
-  const [searchState, setSearchState] = useState<MotoFlowState>(() => ({
-    step: "search",
-    lookupMode: "vin",
-    vin: "",
-    plate: "",
-    plateState: "",
-    ymm: { year: "", make: "", model: "", trim: "" },
-    bbVehicle: null,
-    condition: null as never,
-    tradeOrSell: null as never,
-    ownership: null as never,
-    color: "",
-    photos: [],
-    contact: { firstName: "", lastName: "", email: "", phone: "", zip: "" },
-    submissionId: null,
-    submissionToken: null,
-    offer: { low: 0, high: 0, firm: 0 },
-  } as unknown as MotoFlowState));
+  // Controlled state for the shared landing search step.
+  const [searchState, setSearchState] = useState<MotoFlowState>(emptyMotoFlowState);
 
   const handleResolved = (patch: Partial<MotoFlowState>) => {
     setSearchState((prev) => ({ ...prev, ...patch }));
