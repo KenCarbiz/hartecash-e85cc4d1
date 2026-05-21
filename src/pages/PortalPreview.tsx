@@ -42,7 +42,7 @@ const fmt = (n: number) => `$${n.toLocaleString()}`;
 /* ── Sidebar ─────────────────────────────────────────────────────── */
 const NAV = [
   { key: "dashboard", label: "Dashboard", Icon: Home, active: true },
-  { key: "vehicles", label: "Vehicles", Icon: Car },
+  { key: "vehicle", label: "Vehicle", Icon: Car },
   { key: "offers", label: "Offers", Icon: Tag },
   { key: "activity", label: "Activity", Icon: Activity },
   { key: "messages", label: "Messages", Icon: MessageCircle },
