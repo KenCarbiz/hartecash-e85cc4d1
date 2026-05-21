@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   Plus, Car, Upload, Edit3, Trash2, ArrowRight, Camera, ChevronLeft,
   ChevronRight, X, ImageIcon, Gauge, Cog, Palette, ShieldCheck, FileText,
   CalendarDays, MessageSquare, DollarSign, Check, CheckCircle2, AlertCircle,
-  Clock, Search, Sparkles, Settings2, ZoomIn,
+  Clock, Search, Sparkles, Settings2, ZoomIn, MoreHorizontal, Archive, Download,
+  Pencil, Lightbulb, Fingerprint, History, FileCheck2,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
