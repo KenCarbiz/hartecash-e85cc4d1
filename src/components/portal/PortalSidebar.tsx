@@ -23,7 +23,7 @@ export type NavKey =
 type NavItem = {
   key: NavKey;
   label: string;
-  Icon: ComponentType<{ className?: string; strokeWidth?: number }>;
+  Icon: LucideIcon;
   badge?: number | string;
 };
 
