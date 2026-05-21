@@ -748,6 +748,48 @@ export const OffersPage = ({ onNavigate }: Props) => {
         </div>
       </SlideOver>
 
+      {/* Competitive advantage detail drawer */}
+      <SlideOver
+        open={!!advantage} onClose={() => setAdvantage(null)}
+        title={advantage ? ADVANTAGES[advantage].title : ""}
+        subtitle={advantage ? ADVANTAGES[advantage].tagline : ""}
+        width="md"
+        footer={
+          <PrimaryButton onClick={() => setAdvantage(null)} className="w-full">
+            <Check className="w-4 h-4" /> Got it
+          </PrimaryButton>
+        }
+      >
+        {advantage && (() => {
+          const a = ADVANTAGES[advantage];
+          const tone = a.tone === "green"
+            ? { bg: "from-[#E8F8EE] to-white", border: "border-[#BBE5C6]", icon: "bg-white text-[#0F7A3E]" }
+            : { bg: "from-[#EEF0FF] to-white", border: "border-[#C7D2FE]", icon: "bg-white text-[#4F46E5]" };
+          return (
+            <div className="space-y-4">
+              <div className={`rounded-2xl bg-gradient-to-br ${tone.bg} border ${tone.border} p-4 flex items-center gap-3`}>
+                <span className={`w-11 h-11 rounded-xl grid place-items-center shadow-sm ${tone.icon}`}>
+                  <a.Icon className="w-5 h-5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[14px] font-bold text-[#06194A]">{a.title}</div>
+                  <div className="text-[11.5px] text-[#53627A]">{a.tagline}</div>
+                </div>
+              </div>
+              <p className="text-sm text-[#53627A] leading-relaxed">{a.body}</p>
+              <ul className="space-y-2">
+                {a.bullets.map((b) => (
+                  <li key={b} className="flex items-start gap-2.5 text-[13px] text-[#06194A]">
+                    <CheckCircle2 className="w-4 h-4 text-[#16A34A] mt-0.5 shrink-0" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })()}
+      </SlideOver>
+
       <AcceptFlow open={accept} onClose={() => setAccept(false)} onNavigate={onNavigate} />
     </PortalPageShell>
   );
