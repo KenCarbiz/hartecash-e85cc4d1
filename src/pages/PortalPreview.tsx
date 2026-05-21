@@ -56,7 +56,7 @@ const PortalPreview = () => {
             <Bell className="w-[18px] h-[18px]" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#EF4444] ring-2 ring-[#F7F8FB]" />
           </button>
-          <AccountMenu customer={MOCK.customer} variant="desktop" onNavigate={setActiveNav} />
+          <AccountMenu customer={MOCK.customer} variant="desktop" onNavigate={(k) => setActiveNav(k as NavKey)} />
 
         </div>
 
