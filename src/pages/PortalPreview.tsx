@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import harteLogo from "@/assets/harte-logo.png";
+import { PortalSidebar, PortalMobileTopBar, type NavKey } from "@/components/portal/PortalSidebar";
 
 /* ──────────────────────────────────────────────────────────────────
    Premium customer portal dashboard (preview / mock).
