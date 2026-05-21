@@ -1,9 +1,10 @@
-import { useState, useEffect, type ComponentType } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Home, Car, Tag, Activity, MessageCircle, FileText, BarChart3,
   CreditCard, Truck, Settings, ChevronLeft, ChevronRight, ChevronDown,
   Menu, X, Bell, MessageSquare, Upload, HelpCircle,
+  type LucideIcon,
 } from "lucide-react";
 import harteLogo from "@/assets/harte-logo.png";
 
