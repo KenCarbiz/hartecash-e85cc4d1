@@ -7,6 +7,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import harteLogo from "@/assets/harte-logo.png";
+import { AccountMenu } from "./AccountMenu";
 
 /* ─────────────────────────────────────────────────────────────────
    PortalSidebar — premium customer-portal navigation.
@@ -40,7 +41,7 @@ const NAV: NavItem[] = [
   { key: "settings",  label: "Settings",  Icon: Settings },
 ];
 
-type Customer = { name: string; initials: string; dealer: string };
+type Customer = { name: string; initials: string; dealer: string; email: string };
 
 /* ── shared nav button ─────────────────────────────────────────── */
 const NavButton = ({
@@ -254,9 +255,7 @@ export const PortalMobileTopBar = ({
             <Bell className="w-[18px] h-[18px]" />
             <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#EF4444]" />
           </button>
-          <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#4F46E5] grid place-items-center text-xs font-semibold">
-            {customer.initials}
-          </div>
+          <AccountMenu customer={customer} variant="mobile" onNavigate={(k) => onChange(k as NavKey)} />
         </div>
       </header>
 

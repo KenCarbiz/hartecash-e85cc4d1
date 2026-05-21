@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { Search, Bell } from "lucide-react";
+import { AccountMenu } from "@/components/portal/AccountMenu";
 import { PortalSidebar, PortalMobileTopBar, type NavKey } from "@/components/portal/PortalSidebar";
 import { PORTAL_MOCK as MOCK } from "@/components/portal/portalMock";
 import DashboardPage from "@/components/portal/pages/DashboardPage";
@@ -55,16 +56,8 @@ const PortalPreview = () => {
             <Bell className="w-[18px] h-[18px]" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#EF4444] ring-2 ring-[#F7F8FB]" />
           </button>
-          <div className="flex items-center gap-2.5 pl-3 border-l border-[#E6EAF0]">
-            <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#4F46E5] grid place-items-center text-xs font-semibold">
-              {MOCK.customer.initials}
-            </div>
-            <div className="hidden sm:block leading-tight">
-              <div className="text-sm font-semibold text-[#06194A]">{MOCK.customer.name}</div>
-              <div className="text-[11px] text-[#53627A]">{MOCK.customer.dealer}</div>
-            </div>
-            <ChevronDown className="w-4 h-4 text-[#53627A]" />
-          </div>
+          <AccountMenu customer={MOCK.customer} variant="desktop" onNavigate={(k) => setActiveNav(k as NavKey)} />
+
         </div>
 
         <div className="flex-1 flex justify-center">
