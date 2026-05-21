@@ -166,8 +166,8 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
               Phase-1 vehicle step still appears as completed) */}
           <div className="lg:col-span-3">
             <JourneyRail
-              steps={config.steps}
-              activeIndex={Math.max(0, config.steps.findIndex((s) => s.id === current.id))}
+              steps={activeSteps}
+              activeIndex={safeCursor}
             />
           </div>
 
