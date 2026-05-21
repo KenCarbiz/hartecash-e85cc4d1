@@ -6,7 +6,7 @@ import {
   BarChart3, Sparkles, TrendingUp, Info, X, Zap, Lock, Award, Star,
   CheckCircle2, CalendarDays, Wallet,
   AlertTriangle, Users, FileText, HelpCircle, Paperclip,
-  Activity as ActivityIcon, Eye, MapPin, ChevronRight,
+  Eye, ChevronRight,
 } from "lucide-react";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, SectionLabel } from "../PortalPageShell";
