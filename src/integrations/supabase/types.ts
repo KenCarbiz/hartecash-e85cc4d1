@@ -4466,6 +4466,7 @@ export type Database = {
           cta_offer_color: string
           customer_file_accent: string | null
           customer_file_accent_2: string | null
+          customer_journey_template: string
           dealership_id: string
           dealership_name: string
           demo_mode: boolean
@@ -4499,6 +4500,9 @@ export type Database = {
           landing_template: string
           logo_url: string | null
           logo_white_url: string | null
+          moto_detailed_custom_config: Json | null
+          moto_detailed_offer_display_mode: string
+          moto_detailed_preset: string
           phone: string | null
           photo_allow_color_change: boolean
           photo_overlay_color: string
@@ -4590,6 +4594,7 @@ export type Database = {
           cta_offer_color?: string
           customer_file_accent?: string | null
           customer_file_accent_2?: string | null
+          customer_journey_template?: string
           dealership_id?: string
           dealership_name?: string
           demo_mode?: boolean
@@ -4623,6 +4628,9 @@ export type Database = {
           landing_template?: string
           logo_url?: string | null
           logo_white_url?: string | null
+          moto_detailed_custom_config?: Json | null
+          moto_detailed_offer_display_mode?: string
+          moto_detailed_preset?: string
           phone?: string | null
           photo_allow_color_change?: boolean
           photo_overlay_color?: string
@@ -4714,6 +4722,7 @@ export type Database = {
           cta_offer_color?: string
           customer_file_accent?: string | null
           customer_file_accent_2?: string | null
+          customer_journey_template?: string
           dealership_id?: string
           dealership_name?: string
           demo_mode?: boolean
@@ -4747,6 +4756,9 @@ export type Database = {
           landing_template?: string
           logo_url?: string | null
           logo_white_url?: string | null
+          moto_detailed_custom_config?: Json | null
+          moto_detailed_offer_display_mode?: string
+          moto_detailed_preset?: string
           phone?: string | null
           photo_allow_color_change?: boolean
           photo_overlay_color?: string
