@@ -532,25 +532,48 @@ export const OffersPage = ({ onNavigate }: Props) => {
         </Card>
       </div>
 
-      {/* What happens next */}
+      {/* What happens next — clickable steps with animated connectors */}
       <Card className="p-5 mt-6">
         <SectionLabel>What Happens Next</SectionLabel>
         <ol className="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-3 relative">
-          {[
-            { Icon: Check,         t: "Accept Offer",     d: "Lock in your firm number", time: "1 min" },
-            { Icon: FileText,      t: "Final Documents",  d: "Upload or sign at pickup", time: "5 min" },
-            { Icon: CalendarDays,  t: "Schedule Pickup",  d: "We come to you",           time: "Free" },
-            { Icon: Wallet,        t: "Receive Payment",  d: "Secure ACH transfer",      time: "1 business day" },
-          ].map((s, i) => (
-            <li key={s.t} className="relative rounded-xl border border-[#E6EAF0] p-4 hover:border-[#4F46E5]/40 transition-all">
-              <div className="flex items-center justify-between">
-                <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#E9E2FF] text-[#4F46E5] grid place-items-center"><s.Icon className="w-4 h-4" /></span>
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8893A8]">Step {i + 1}</span>
-              </div>
-              <div className="text-[13.5px] font-bold text-[#06194A] mt-3">{s.t}</div>
-              <div className="text-[11.5px] text-[#53627A] mt-0.5">{s.d}</div>
-              <div className="text-[10.5px] text-[#4F46E5] font-semibold mt-2">{s.time}</div>
-            </li>
+          {/* Connector line (desktop only) */}
+          <span aria-hidden className="hidden sm:block absolute top-[34px] left-[8%] right-[8%] h-[2px] bg-[#EEF0F4] rounded-full" />
+          <motion.span
+            aria-hidden initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
+            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+            style={{ transformOrigin: "left" }}
+            className="hidden sm:block absolute top-[34px] left-[8%] right-[8%] h-[2px] bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#4F46E5]/30 rounded-full"
+          />
+          {([
+            { key: "accept",   Icon: Check,         t: "Accept Offer",    d: "Lock in your firm number", time: "1 min",          onClick: () => setAccept(true) },
+            { key: "docs",     Icon: FileText,      t: "Final Documents", d: "Upload or sign at pickup", time: "5 min",          onClick: () => onNavigate("documents") },
+            { key: "pickup",   Icon: CalendarDays,  t: "Schedule Pickup", d: "We come to you",           time: "Free",           onClick: () => onNavigate("pickup") },
+            { key: "payment",  Icon: Wallet,        t: "Receive Payment", d: "Secure ACH transfer",      time: "1 business day", onClick: () => onNavigate("payments") },
+          ] as { key: string; Icon: any; t: string; d: string; time: string; onClick: () => void }[]).map((s, i) => (
+            <motion.li
+              key={s.key}
+              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.1 + i * 0.07 }}
+              className="relative"
+            >
+              <button
+                onClick={s.onClick}
+                className="group w-full text-left rounded-xl border border-[#E6EAF0] bg-white p-4 hover:border-[#4F46E5]/40 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-16px_rgba(79,70,229,0.5)] transition-all active:scale-[0.98]"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#E9E2FF] text-[#4F46E5] grid place-items-center transition-transform group-hover:scale-110">
+                    <s.Icon className="w-4 h-4" />
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8893A8]">Step {i + 1}</span>
+                </div>
+                <div className="text-[13.5px] font-bold text-[#06194A] mt-3 flex items-center gap-1">
+                  {s.t}
+                  <ChevronRight className="w-3.5 h-3.5 text-[#B6BECC] opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <div className="text-[11.5px] text-[#53627A] mt-0.5">{s.d}</div>
+                <div className="text-[10.5px] text-[#4F46E5] font-semibold mt-2">{s.time}</div>
+              </button>
+            </motion.li>
           ))}
         </ol>
       </Card>
