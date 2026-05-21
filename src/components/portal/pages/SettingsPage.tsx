@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { User, Bell, Shield, Building2, Lock, ChevronRight, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  User, Bell, Shield, Building2, Lock, ChevronRight, AlertCircle,
+  MessageSquare, FileText, Calendar, CreditCard, Tag, X, Mail
+} from "lucide-react";
 import { PORTAL_MOCK as MOCK } from "../portalMock";
 import { PortalPageShell, Card, SectionLabel, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
