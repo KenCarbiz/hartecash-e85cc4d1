@@ -62,6 +62,34 @@ const SellFlow = () => {
   const [state, setState] = useState<MotoFlowState>(emptyMotoFlowState);
   const [revealMode, setRevealMode] = useState<RevealMode>("contact_first");
 
+  // Dealer-selectable journey template. Defaults to the existing
+  // ultra-minimal "moto" flow; "moto_detailed" routes to the new
+  // premium guided journey engine without touching the original.
+  const journeyTemplate =
+    ((config as any).customer_journey_template as
+      | "moto"
+      | "moto_detailed"
+      | undefined) ?? "moto";
+  const detailedOfferMode =
+    ((config as any).moto_detailed_offer_display_mode as
+      | "before_contact_info"
+      | "after_contact_info"
+      | undefined) ?? "after_contact_info";
+
+  if (journeyTemplate === "moto_detailed") {
+    return (
+      <>
+        <SEO
+          title={`Get an Instant Vehicle Valuation | ${config.dealership_name}`}
+          description={`Get a guided, premium offer from ${config.dealership_name}. See your estimated value in seconds.`}
+          path="/sell"
+        />
+        <MotoDetailedFlow offerDisplayMode={detailedOfferMode} />
+      </>
+    );
+  }
+
+
   // Load the dealer's contact placement preference once on mount.
   // Soft-fail to contact_first if offer_settings isn't yet populated
   // for this rooftop — that matches the rest of the flow's default.
