@@ -14,6 +14,13 @@ export type JourneyAnalyticsEvent =
   | { type: "step_completed"; stepId: string; index: number; msOnStep: number; device: JourneyDevice; at: number }
   | { type: "step_abandoned"; stepId: string; index: number; msOnStep: number; device: JourneyDevice; at: number }
   | { type: "offer_seen"; estimate?: number; device: JourneyDevice; at: number }
+  | { type: "offer_accepted"; amount: number; device: JourneyDevice; at: number }
+  | { type: "offer_saved"; amount: number; device: JourneyDevice; at: number }
+  | { type: "ai_boost_started"; device: JourneyDevice; at: number }
+  | { type: "ai_boost_completed"; uploadedCount: number; device: JourneyDevice; at: number }
+  | { type: "enhanced_offer_viewed"; original: number; boosted: number; delta: number; device: JourneyDevice; at: number }
+  | { type: "enhanced_offer_accepted"; original: number; boosted: number; device: JourneyDevice; at: number }
+  | { type: "upload_abandoned"; uploadedCount: number; device: JourneyDevice; at: number }
   | { type: "contact_submitted"; device: JourneyDevice; at: number }
   | { type: "cta_clicked"; stepId: string; label: string; device: JourneyDevice; at: number };
 
