@@ -100,8 +100,57 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
   if (!current) return null;
   const StepComponent = current.Component;
 
+  // ── Phase 1: ultra-minimal public landing ─────────────────────────
+  // Before any valuation lands, the journey renders as a calm,
+  // centered, single-column experience — no rail, no summary, no
+  // portal chrome. The moment BlackBook returns a range we slide
+  // into Phase 2 (guided 3-column transaction layout).
+  const inPhaseOne = !state.valuation && safeCursor === 0;
+
+  if (inPhaseOne) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white via-white to-zinc-50">
+        <div className="mx-auto max-w-2xl px-4 pb-24 pt-16 sm:pt-24">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="phase-one"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <header className="mb-8 text-center">
+                <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-[hsl(262_83%_58%)]">
+                  Instant Vehicle Valuation
+                </p>
+                <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
+                  {current.pageTitle}
+                </h1>
+                {current.pageSubtitle && (
+                  <p className="mx-auto mt-3 max-w-md text-base text-zinc-500">
+                    {current.pageSubtitle}
+                  </p>
+                )}
+              </header>
+              <StepComponent {...ctx} />
+              <p className="mt-8 text-center text-xs text-zinc-400">
+                Free, no obligation · Your info stays private
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Phase 2: guided transaction layout ────────────────────────────
   return (
-    <div className="min-h-screen bg-white">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="min-h-screen bg-white"
+    >
       <div className="mx-auto max-w-7xl px-4 pb-24 pt-8 lg:px-8 lg:pt-16">
         {/* Mobile stepper */}
         <div className="mb-6 lg:hidden">
@@ -157,7 +206,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
