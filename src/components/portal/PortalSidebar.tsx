@@ -93,52 +93,82 @@ const NavButton = ({
   );
 };
 
-/* ── support card ──────────────────────────────────────────────── */
-const SupportCard = ({ collapsed }: { collapsed: boolean }) => {
+/* ── support module (replaces duplicated profile) ─────────────── */
+const SupportModule = ({ collapsed }: { collapsed: boolean }) => {
   if (collapsed) {
     return (
-      <button
-        title="Contact Support"
-        className="mx-auto mb-3 w-11 h-11 rounded-xl bg-[#4F46E5] hover:bg-[#3F37CC] text-white grid place-items-center transition-colors shadow-[0_4px_14px_-4px_rgba(79,70,229,0.5)]"
-      >
-        <HelpCircle className="w-[18px] h-[18px]" />
-      </button>
+      <div className="flex flex-col items-center gap-3">
+        <button
+          title="Contact Support"
+          className="w-11 h-11 rounded-xl bg-[#4F46E5] hover:bg-[#3F37CC] text-white grid place-items-center transition-colors shadow-[0_4px_14px_-4px_rgba(79,70,229,0.5)]"
+        >
+          <HelpCircle className="w-[18px] h-[18px]" />
+        </button>
+        <div className="flex flex-col items-center gap-1.5">
+          <Lock className="w-3 h-3 text-[#8893A8]" />
+          <ShieldCheck className="w-3 h-3 text-[#8893A8]" />
+        </div>
+      </div>
     );
   }
   return (
-    <div className="mx-1 mb-3 rounded-2xl border border-[#E6EAF0] bg-gradient-to-b from-white to-[#FAFBFE] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-      <div className="text-sm font-semibold text-[#06194A]">Need Help?</div>
-      <p className="text-xs text-[#53627A] mt-1 mb-3 leading-snug">
-        Our team is here every step of the way.
-      </p>
-      <button className="w-full rounded-xl bg-[#4F46E5] hover:bg-[#3F37CC] active:scale-[0.98] text-white text-xs font-semibold py-2.5 inline-flex items-center justify-center gap-1.5 transition-all shadow-[0_4px_14px_-4px_rgba(79,70,229,0.5)]">
-        <MessageCircle className="w-3.5 h-3.5" />
-        Live Chat
-      </button>
+    <div className="mx-1 space-y-2">
+      <div className="rounded-2xl border border-[#E6EAF0] bg-gradient-to-b from-white to-[#FAFBFE] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-semibold text-[#06194A]">Need Help?</div>
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#EEF0FF] text-[#4F46E5] text-[10px] font-semibold">
+            <Bot className="w-3 h-3" />
+            AI
+          </span>
+        </div>
+        <p className="text-xs text-[#53627A] mt-1.5 mb-3 leading-snug">
+          Our team is here every step of the way.
+        </p>
+        <button className="w-full rounded-xl bg-[#4F46E5] hover:bg-[#3F37CC] active:scale-[0.98] text-white text-xs font-semibold py-2.5 inline-flex items-center justify-center gap-1.5 transition-all shadow-[0_4px_14px_-4px_rgba(79,70,229,0.5)]">
+          <MessageCircle className="w-3.5 h-3.5" />
+          Live Chat
+        </button>
+      </div>
+
+      {/* trust bar */}
+      <div className="flex items-center justify-center gap-3 px-2 py-2">
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#8893A8]">
+          <ShieldCheck className="w-3 h-3 text-[#16A34A]" />
+          SOC 2
+        </span>
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#8893A8]">
+          <Lock className="w-3 h-3 text-[#4F46E5]" />
+          Encrypted
+        </span>
+      </div>
     </div>
   );
 };
 
-/* ── user profile footer ───────────────────────────────────────── */
-const UserProfile = ({ customer, collapsed }: { customer: Customer; collapsed: boolean }) => (
-  <div className={`border-t border-[#E6EAF0] pt-3 ${collapsed ? "px-1" : "px-1"}`}>
-    <button className={`w-full flex items-center gap-3 rounded-xl p-2 hover:bg-[#F4F6FA] transition-colors ${collapsed ? "justify-center" : ""}`}>
-      <div className="relative shrink-0">
-        <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#4F46E5] grid place-items-center text-xs font-semibold ring-2 ring-white shadow-sm">
-          {customer.initials}
-        </div>
-        <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#16A34A] ring-2 ring-white" />
-      </div>
-      {!collapsed && (
-        <>
-          <div className="flex-1 min-w-0 leading-tight text-left">
-            <div className="text-sm font-semibold text-[#06194A] truncate">{customer.name}</div>
-            <div className="text-[11px] text-[#53627A] truncate">{customer.dealer}</div>
-          </div>
-          <ChevronDown className="w-4 h-4 text-[#8893A8]" />
-        </>
-      )}
+/* ── mobile support footer (compact) ───────────────────────────── */
+const MobileSupportFooter = () => (
+  <div className="px-4 pt-3 pb-5 border-t border-[#E6EAF0] bg-[#FAFBFE]">
+    <div className="flex items-center gap-2 mb-3">
+      <div className="text-xs font-semibold text-[#06194A]">Need Help?</div>
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#EEF0FF] text-[#4F46E5] text-[10px] font-semibold">
+        <Bot className="w-3 h-3" />
+        AI
+      </span>
+    </div>
+    <button className="w-full rounded-xl bg-[#4F46E5] hover:bg-[#3F37CC] active:scale-[0.98] text-white text-xs font-semibold py-2.5 inline-flex items-center justify-center gap-1.5 transition-all shadow-[0_4px_14px_-4px_rgba(79,70,229,0.5)]">
+      <MessageCircle className="w-3.5 h-3.5" />
+      Live Chat
     </button>
+    <div className="flex items-center justify-center gap-3 mt-3">
+      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#8893A8]">
+        <ShieldCheck className="w-3 h-3 text-[#16A34A]" />
+        SOC 2
+      </span>
+      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#8893A8]">
+        <Lock className="w-3 h-3 text-[#4F46E5]" />
+        Encrypted
+      </span>
+    </div>
   </div>
 );
 
