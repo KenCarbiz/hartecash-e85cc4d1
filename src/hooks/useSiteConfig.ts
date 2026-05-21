@@ -110,7 +110,7 @@ export interface SiteConfig {
    *   detailed → falls back to the existing multi-step SellCarForm.
    *              4-9+ pages depending on the dealer's Lead Form config.
    */
-  landing_form_density: "simple" | "standard" | "detailed";
+  landing_form_density: "simple" | "standard" | "detailed" | "dealer_configured";
   /**
    * Whether the dealer offers free at-home pickup. Drives the
    * "We pick up your car" messaging on the landing page (HowItWorks
