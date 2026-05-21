@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { User, Bell, Shield, Building2, Lock, ChevronRight, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  User, Bell, Shield, Building2, Lock, ChevronRight, AlertCircle,
+  MessageSquare, FileText, Calendar, CreditCard, Tag, X, Mail
+} from "lucide-react";
 import { PORTAL_MOCK as MOCK } from "../portalMock";
 import { PortalPageShell, Card, SectionLabel, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
@@ -13,14 +17,36 @@ const Toggle = ({ on, onChange }: { on: boolean; onChange: () => void }) => (
 
 type Panel = "profile" | "notifications" | "security" | "dealer" | null;
 
+const SMS_IMPACTS = [
+  { Icon: Tag, label: "Offer changes", desc: "Price adjustments, expiration warnings" },
+  { Icon: FileText, label: "Document issues", desc: "Missing or rejected paperwork alerts" },
+  { Icon: Calendar, label: "Pickup reminders", desc: "Schedule confirmations and driver updates" },
+  { Icon: CreditCard, label: "Payment updates", desc: "Payoff confirmations and fund transfers" },
+];
+
 export const SettingsPage = () => {
   const [panel, setPanel] = useState<Panel>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [smsConfirmOpen, setSmsConfirmOpen] = useState(false);
   const [prefs, setPrefs] = useState({
     sms: true, email: true, push: false,
     offerUpdates: true, docReminders: true, dataShare: false,
   });
+
   const flip = (k: keyof typeof prefs) => setPrefs((p) => ({ ...p, [k]: !p[k] }));
+
+  const handleSmsToggle = () => {
+    if (prefs.sms) {
+      setSmsConfirmOpen(true);
+    } else {
+      flip("sms");
+    }
+  };
+
+  const confirmSmsOff = () => {
+    flip("sms");
+    setSmsConfirmOpen(false);
+  };
 
   const SECTIONS: { key: Panel; Icon: React.ComponentType<{ className?: string }>; title: string; desc: string }[] = [
     { key: "profile",       Icon: User,      title: "Profile",            desc: "Name, contact, avatar" },
@@ -96,7 +122,7 @@ export const SettingsPage = () => {
         footer={<PrimaryButton onClick={() => setPanel(null)} className="w-full">Save Preferences</PrimaryButton>}>
         <div className="space-y-1">
           {[
-            { k: "sms" as const,           title: "SMS",                 desc: "Text alerts for offer updates" },
+            { k: "sms" as const,           title: "SMS",                 desc: "Text alerts for offer updates", onChange: handleSmsToggle },
             { k: "email" as const,         title: "Email",               desc: "Receipts, summaries, weekly digest" },
             { k: "push" as const,          title: "Push notifications",  desc: "On-device alerts" },
             { k: "offerUpdates" as const,  title: "Offer updates",       desc: "When your offer changes or expires" },
@@ -107,7 +133,7 @@ export const SettingsPage = () => {
                 <div className="text-sm font-semibold text-[#06194A]">{row.title}</div>
                 <div className="text-[11px] text-[#53627A]">{row.desc}</div>
               </div>
-              <Toggle on={prefs[row.k]} onChange={() => flip(row.k)} />
+              <Toggle on={prefs[row.k]} onChange={row.onChange ?? (() => flip(row.k))} />
             </div>
           ))}
         </div>
@@ -159,6 +185,90 @@ export const SettingsPage = () => {
         <p className="text-sm text-[#53627A] mt-4">Type <span className="font-semibold text-[#06194A]">DELETE</span> to confirm.</p>
         <input className="mt-2 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#DC2626] focus:ring-2 focus:ring-[#DC2626]/20 outline-none" />
       </SlideOver>
+
+      {/* SMS Turn-off confirmation modal */}
+      <AnimatePresence>
+        {smsConfirmOpen && (
+          <>
+            <motion.div
+              key="sms-backdrop"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setSmsConfirmOpen(false)}
+              className="fixed inset-1 z-50 bg-[#06194A]/50 backdrop-blur-md"
+            />
+            <motion.div
+              key="sms-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Turn off SMS updates"
+              initial={{ opacity: 0, scale: 0.96, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 16 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              className="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] max-w-[420px] bg-white rounded-3xl shadow-2xl overflow-hidden"
+            >
+              {/* Header */}
+              <div className="px-6 pt-6 pb-4 text-center">
+                <div className="mx-auto w-12 h-12 rounded-2xl bg-[#FEF3E2] text-[#B45309] grid place-items-center mb-3">
+                  <MessageSquare className="w-6 h-6" />
+                </div>
+                <h3 className="text-[17px] font-bold text-[#06194A]">You're turning off SMS updates</h3>
+                <p className="text-[12.5px] text-[#53627A] mt-1.5 leading-relaxed">
+                  You'll no longer receive text messages about:
+                </p>
+              </div>
+
+              {/* Impact list */}
+              <div className="px-6 space-y-2.5 pb-2">
+                {SMS_IMPACTS.map((item) => (
+                  <div key={item.label} className="flex items-start gap-3 rounded-xl bg-[#F7F8FB] p-3">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-[#E6EAF0] text-[#4F46E5] grid place-items-center shrink-0">
+                      <item.Icon className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-1">
+                      <div className="text-[13px] font-semibold text-[#06194A]">{item.label}</div>
+                      <div className="text-[11.5px] text-[#8893A8] mt-0.5">{item.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Email fallback note */}
+              <div className="mx-6 mt-4 mb-2 rounded-xl bg-[#EEF0FF] border border-[#C7D2FE]/40 p-3 flex items-start gap-2.5">
+                <Mail className="w-4 h-4 text-[#4F46E5] mt-0.5 shrink-0" />
+                <p className="text-[11.5px] text-[#4F46E5] leading-relaxed">
+                  Important transaction notices may still be sent by email.
+                </p>
+              </div>
+
+              {/* Footer actions */}
+              <div className="flex items-center gap-3 px-6 pt-4 pb-6">
+                <SecondaryButton onClick={() => setSmsConfirmOpen(false)} className="flex-1">
+                  Cancel
+                </SecondaryButton>
+                <button
+                  onClick={confirmSmsOff}
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-sm font-semibold text-white bg-gradient-to-r from-[#DC2626] to-[#B91C1C] hover:opacity-95 active:scale-[0.98] transition shadow-[0_8px_20px_-10px_rgba(220,38,38,0.5)]"
+                >
+                  Turn Off SMS
+                </button>
+              </div>
+
+              {/* Close X */}
+              <button
+                onClick={() => setSmsConfirmOpen(false)}
+                aria-label="Close"
+                className="absolute top-3 right-3 w-8 h-8 rounded-full hover:bg-[#F4F6FA] text-[#8893A8] grid place-items-center transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </PortalPageShell>
   );
 };
