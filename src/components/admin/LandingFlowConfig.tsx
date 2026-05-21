@@ -101,6 +101,7 @@ const LandingFlowConfig = () => {
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { config: formConfig } = useFormConfig();
 
   const [state, setState] = useState<State>(DEFAULTS);
   const [saved, setSaved] = useState<State>(DEFAULTS);
