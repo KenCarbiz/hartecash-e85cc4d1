@@ -14,6 +14,13 @@ export type JourneyAnalyticsEvent =
   | { type: "step_completed"; stepId: string; index: number; msOnStep: number; device: JourneyDevice; at: number }
   | { type: "step_abandoned"; stepId: string; index: number; msOnStep: number; device: JourneyDevice; at: number }
   | { type: "offer_seen"; estimate?: number; device: JourneyDevice; at: number }
+  | { type: "offer_accepted"; amount: number; device: JourneyDevice; at: number }
+  | { type: "offer_saved"; amount: number; device: JourneyDevice; at: number }
+  | { type: "ai_boost_started"; device: JourneyDevice; at: number }
+  | { type: "ai_boost_completed"; uploadedCount: number; device: JourneyDevice; at: number }
+  | { type: "enhanced_offer_viewed"; original: number; boosted: number; delta: number; device: JourneyDevice; at: number }
+  | { type: "enhanced_offer_accepted"; original: number; boosted: number; device: JourneyDevice; at: number }
+  | { type: "upload_abandoned"; uploadedCount: number; device: JourneyDevice; at: number }
   | { type: "contact_submitted"; device: JourneyDevice; at: number }
   | { type: "cta_clicked"; stepId: string; label: string; device: JourneyDevice; at: number };
 
@@ -49,6 +56,27 @@ export const trackStepAbandoned = (stepId: string, index: number, msOnStep: numb
 
 export const trackOfferSeen = (estimate?: number) =>
   sink({ type: "offer_seen", estimate, device: getDevice(), at: now() });
+
+export const trackOfferAccepted = (amount: number) =>
+  sink({ type: "offer_accepted", amount, device: getDevice(), at: now() });
+
+export const trackOfferSaved = (amount: number) =>
+  sink({ type: "offer_saved", amount, device: getDevice(), at: now() });
+
+export const trackAiBoostStarted = () =>
+  sink({ type: "ai_boost_started", device: getDevice(), at: now() });
+
+export const trackAiBoostCompleted = (uploadedCount: number) =>
+  sink({ type: "ai_boost_completed", uploadedCount, device: getDevice(), at: now() });
+
+export const trackEnhancedOfferViewed = (original: number, boosted: number) =>
+  sink({ type: "enhanced_offer_viewed", original, boosted, delta: boosted - original, device: getDevice(), at: now() });
+
+export const trackEnhancedOfferAccepted = (original: number, boosted: number) =>
+  sink({ type: "enhanced_offer_accepted", original, boosted, device: getDevice(), at: now() });
+
+export const trackUploadAbandoned = (uploadedCount: number) =>
+  sink({ type: "upload_abandoned", uploadedCount, device: getDevice(), at: now() });
 
 export const trackContactSubmitted = () =>
   sink({ type: "contact_submitted", device: getDevice(), at: now() });

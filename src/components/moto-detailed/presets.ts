@@ -4,6 +4,10 @@ import StepCondition from "./steps/StepCondition";
 import StepUsage from "./steps/StepUsage";
 import StepContact from "./steps/StepContact";
 import StepOfferReady from "./steps/StepOfferReady";
+import StepAccepted from "./steps/StepAccepted";
+import StepBoostIntro from "./steps/StepBoostIntro";
+import StepBoostUpload from "./steps/StepBoostUpload";
+import StepBoostResult from "./steps/StepBoostResult";
 
 
 /**
@@ -64,8 +68,45 @@ const contact = (): StepDefinition => ({
 const offer = (): StepDefinition => ({
   id: "offer", title: "Offer Ready", helper: "Review your offer and choose next step",
   pageTitle: "Your offer is ready",
-  pageSubtitle: "Here's what your vehicle is worth today.",
+  pageSubtitle: "Here's what your vehicle is worth today — pick how you'd like to move forward.",
   Component: StepOfferReady,
+});
+
+// ── Post-offer branches ─────────────────────────────────────────────
+// The engine reaches these steps via goTo() from StepOfferReady / boost
+// flow. shouldRender hides each branch unless the customer has chosen
+// it, so the rail and cursor stay coherent.
+
+const accepted = (): StepDefinition => ({
+  id: "accepted", title: "Confirmation", helper: "Lock in and schedule",
+  pageTitle: "Your offer is locked in",
+  pageSubtitle: "Pick a time, finish your checklist, and we'll handle the rest.",
+  Component: StepAccepted,
+  shouldRender: (state) => state.branch === "accept",
+});
+
+const boostIntro = (): StepDefinition => ({
+  id: "boost_intro", title: "Boost", helper: "Get a higher offer with AI",
+  pageTitle: "Want to increase your offer?",
+  pageSubtitle: "Our AI can review your vehicle photos and instantly refine your appraisal.",
+  Component: StepBoostIntro,
+  shouldRender: (state) => state.branch === "boost",
+});
+
+const boostUpload = (): StepDefinition => ({
+  id: "boost_upload", title: "Photos", helper: "Capture key angles",
+  pageTitle: "Add a few quick photos",
+  pageSubtitle: "Tap each tile to capture or attach. We need 6 or more for the best result.",
+  Component: StepBoostUpload,
+  shouldRender: (state) => state.branch === "boost" && !state.boost.boostedFirm,
+});
+
+const boostResult = (): StepDefinition => ({
+  id: "boost_result", title: "Enhanced Offer", helper: "Review your boosted number",
+  pageTitle: "Your AI-enhanced offer",
+  pageSubtitle: "Compare both numbers and choose what's best for you.",
+  Component: StepBoostResult,
+  shouldRender: (state) => state.branch === "boost" && !!state.boost.boostedFirm,
 });
 
 // ── Presets ─────────────────────────────────────────────────────────
@@ -94,7 +135,10 @@ export const PRESETS: Record<JourneyPresetId, JourneyPreset> = {
     estimatedSeconds: 120,
     build: () => ({
       offerDisplayMode: "after_contact_info",
-      steps: [vehicle(), condition(), usage(), contact(), offer()],
+      steps: [
+        vehicle(), condition(), usage(), contact(), offer(),
+        accepted(), boostIntro(), boostUpload(), boostResult(),
+      ],
     }),
   },
   instant_offer: {
@@ -106,7 +150,10 @@ export const PRESETS: Record<JourneyPresetId, JourneyPreset> = {
     estimatedSeconds: 75,
     build: () => ({
       offerDisplayMode: "before_contact_info",
-      steps: [vehicle(), condition(), usage(), offer(), contact()],
+      steps: [
+        vehicle(), condition(), usage(), offer(), contact(),
+        accepted(), boostIntro(), boostUpload(), boostResult(),
+      ],
     }),
   },
   high_qualification: {
