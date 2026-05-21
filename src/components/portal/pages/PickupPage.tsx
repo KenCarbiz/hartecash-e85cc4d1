@@ -437,7 +437,7 @@ export const PickupPage = () => {
                   </div>
                 </div>
 
-                <PrimaryButton onClick={() => setConfirmOpen(true)} disabled={!selectedDay || !selectedWindow} className="mt-5 w-full py-3">
+                <PrimaryButton onClick={() => (selectedDay && selectedWindow) && setConfirmOpen(true)} className={`mt-5 w-full py-3 ${(!selectedDay || !selectedWindow) ? "opacity-50 cursor-not-allowed" : ""}`}>
                   Confirm Pickup
                 </PrimaryButton>
               </Card>
