@@ -6,12 +6,14 @@ import {
   BarChart3, Sparkles, TrendingUp, Info, X, Zap, Lock, Award, Star,
   CheckCircle2, CalendarDays, Wallet,
   AlertTriangle, Users, FileText, HelpCircle, Paperclip,
+  Activity as ActivityIcon, Eye, MapPin, ChevronRight,
 } from "lucide-react";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, SectionLabel } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
 
-type Props = { onNavigate: (k: "messages" | "pickup") => void };
+type NavTarget = "messages" | "pickup" | "documents" | "payments";
+type Props = { onNavigate: (k: NavTarget) => void };
 
 /* ─── Live countdown ─────────────────────────────────────────── */
 const useCountdown = (deadline: string) => {
