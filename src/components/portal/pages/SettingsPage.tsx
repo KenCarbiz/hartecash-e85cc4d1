@@ -17,14 +17,36 @@ const Toggle = ({ on, onChange }: { on: boolean; onChange: () => void }) => (
 
 type Panel = "profile" | "notifications" | "security" | "dealer" | null;
 
+const SMS_IMPACTS = [
+  { Icon: Tag, label: "Offer changes", desc: "Price adjustments, expiration warnings" },
+  { Icon: FileText, label: "Document issues", desc: "Missing or rejected paperwork alerts" },
+  { Icon: Calendar, label: "Pickup reminders", desc: "Schedule confirmations and driver updates" },
+  { Icon: CreditCard, label: "Payment updates", desc: "Payoff confirmations and fund transfers" },
+];
+
 export const SettingsPage = () => {
   const [panel, setPanel] = useState<Panel>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [smsConfirmOpen, setSmsConfirmOpen] = useState(false);
   const [prefs, setPrefs] = useState({
     sms: true, email: true, push: false,
     offerUpdates: true, docReminders: true, dataShare: false,
   });
+
   const flip = (k: keyof typeof prefs) => setPrefs((p) => ({ ...p, [k]: !p[k] }));
+
+  const handleSmsToggle = () => {
+    if (prefs.sms) {
+      setSmsConfirmOpen(true);
+    } else {
+      flip("sms");
+    }
+  };
+
+  const confirmSmsOff = () => {
+    flip("sms");
+    setSmsConfirmOpen(false);
+  };
 
   const SECTIONS: { key: Panel; Icon: React.ComponentType<{ className?: string }>; title: string; desc: string }[] = [
     { key: "profile",       Icon: User,      title: "Profile",            desc: "Name, contact, avatar" },
