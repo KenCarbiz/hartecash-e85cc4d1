@@ -37,22 +37,19 @@ const HowItWorksLean = () => {
 
   const steps = [
     {
-      iconSrc: STEP_ICONS.valuation,
-      iconAlt: "Dollar sign icon — instant valuation",
+      Icon: DollarSign,
       title: "Get an instant valuation",
       desc: "Enter your license plate or VIN and basic details. Takes less than 2 minutes.",
       cta: "Get started",
     },
     {
-      iconSrc: STEP_ICONS.trackValue,
-      iconAlt: "Rising line chart icon — track your vehicle's value",
+      Icon: TrendingUp,
       title: "Track your vehicle's value",
       desc: "Not ready to sell? Our free tracking tool monitors your car's value so you know the right moment.",
       cta: "Track my value",
     },
     {
-      iconSrc: STEP_ICONS.getPaid,
-      iconAlt: "Shield with dollar icon — secure payment",
+      Icon: ShieldCheck,
       title: pickupOffered ? "Get paid & we pick up" : "Drop off & get paid",
       desc: pickupOffered
         ? "Accept your offer, get paid on the spot, and we'll pick up your car for free."
@@ -77,15 +74,14 @@ const HowItWorksLean = () => {
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
         {steps.map((step, i) => (
           <div key={i} className="text-center">
-            <img
-              src={step.iconSrc}
-              alt={step.iconAlt}
-              className="mx-auto mb-6 w-20 h-20 object-contain"
-              width={80}
-              height={80}
-              loading="lazy"
-              decoding="async"
-            />
+            <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-muted/60 flex items-center justify-center">
+              <step.Icon
+                className="w-9 h-9 text-primary"
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
+            </div>
+
             <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-muted-foreground mb-2">
               Step {i + 1}
             </p>
