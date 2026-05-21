@@ -594,10 +594,10 @@ export const PickupPage = () => {
             <PrimaryButton className="w-full" onClick={() => setAiOpen(false)}><CheckCircle2 className="w-4 h-4" /> All set — close</PrimaryButton>
           ) : (
             <div className="flex gap-2">
-              <SecondaryButton onClick={() => setAiStep((s) => Math.max(0, s - 1))} disabled={aiStep === 0 || aiStatus !== "idle"} className="flex-1">
+              <SecondaryButton onClick={() => aiStatus === "idle" && aiStep > 0 && setAiStep((s) => Math.max(0, s - 1))} className={`flex-1 ${(aiStep === 0 || aiStatus !== "idle") ? "opacity-50 cursor-not-allowed" : ""}`}>
                 <ArrowLeft className="w-4 h-4" /> Back
               </SecondaryButton>
-              <PrimaryButton onClick={runAiStep} disabled={aiStatus !== "idle"} className="flex-1">
+              <PrimaryButton onClick={() => aiStatus === "idle" && runAiStep()} className={`flex-1 ${aiStatus !== "idle" ? "opacity-70 cursor-not-allowed" : ""}`}>
                 {aiStatus === "uploading" ? "Uploading…" : aiStatus === "analyzing" ? "Analyzing…" : aiStep === AI_STEPS.length - 1 ? "Finish & Approve" : "Capture & Continue"} <ArrowRight className="w-4 h-4" />
               </PrimaryButton>
             </div>
