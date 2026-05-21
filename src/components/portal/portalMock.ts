@@ -3,7 +3,63 @@
    without wiring the real submission/offer pipeline yet. */
 
 export const PORTAL_MOCK = {
-  customer: { name: "Alex Morgan", initials: "AM", dealer: "Liberty Automotive", email: "alex.morgan@example.com", phone: "(555) 214-9087" },
+  customer: {
+    name: "Alex Morgan",
+    firstName: "Alex",
+    lastName: "Morgan",
+    initials: "AM",
+    dealer: "Liberty Automotive",
+    email: "alex.morgan@example.com",
+    phone: "(555) 214-9087",
+    mailingAddress: {
+      street: "248 Brookline Ave",
+      unit: "Apt 3B",
+      city: "Boston",
+      state: "MA",
+      zip: "02215",
+    },
+  },
+  /* Dealer onboarding capability flags. Pickup UI is fully gated by pickupEnabled. */
+  dealerCapabilities: {
+    pickupEnabled: true,
+    dropoffEnabled: true,
+    remoteInspection: true,
+  },
+  /* Lifecycle of the current transaction — gates address editability. */
+  transactionStage: "scheduled" as
+    | "pre_schedule"
+    | "scheduled"
+    | "driver_assigned"
+    | "in_transit"
+    | "complete",
+  pickupLocations: [
+    {
+      id: "home",
+      type: "home" as const,
+      nickname: "Home Garage",
+      street: "248 Brookline Ave",
+      unit: "Apt 3B",
+      city: "Boston",
+      state: "MA",
+      zip: "02215",
+      instructions: "Gate code 4421. Park in visitor spot #6.",
+      isDefault: true,
+      verified: true,
+    },
+    {
+      id: "work",
+      type: "work" as const,
+      nickname: "Office Parking Lot",
+      street: "1 Federal St",
+      unit: "Level 2",
+      city: "Boston",
+      state: "MA",
+      zip: "02110",
+      instructions: "Call on arrival, security desk extension 230.",
+      isDefault: false,
+      verified: true,
+    },
+  ],
   vehicle: {
     year: 2021, make: "Toyota", model: "RAV4", trim: "XLE",
     miles: "26,540", engine: "2.5L", body: "SUV",
@@ -11,6 +67,7 @@ export const PORTAL_MOCK = {
     vin: "2T3P1RFVXMW123456",
     ownership: "Owned outright", payoff: 0,
   },
+
   range: { low: 19250, high: 21450 },
   firmOffer: 20150,
   offerExpires: "May 17, 2025",
