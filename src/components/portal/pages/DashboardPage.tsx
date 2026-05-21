@@ -9,6 +9,8 @@ import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
 import { SlideOver } from "../SlideOver";
 import { PrimaryButton, SecondaryButton } from "../PortalPageShell";
+import { VehicleHeroCarousel } from "../VehicleHeroCarousel";
+
 
 /* ── small visuals (kept inline so the dashboard page is portable) ── */
 const TINTS = {
