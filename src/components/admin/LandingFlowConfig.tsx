@@ -9,7 +9,6 @@ import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
 import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
 import { Input } from "@/components/ui/input";
-import MotoDetailedJourneyConfig from "@/components/moto-detailed/MotoDetailedJourneyConfig";
 import PayoutMethodsConfig from "@/components/admin/PayoutMethodsConfig";
 
 type FormVariant = "detailed" | "quick";
@@ -586,9 +585,6 @@ const LandingFlowConfig = () => {
           every &quot;what the customer sees in the form&quot; decision is in one place.
         </p>
       </header>
-
-      {/* ── Customer Journey (Moto vs Moto Detailed) ── */}
-      <MotoDetailedJourneyConfig />
 
       {/* ── Transaction Settings · Payout Methods ── */}
       <PayoutMethodsConfig />
