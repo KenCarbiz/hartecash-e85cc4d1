@@ -87,6 +87,27 @@ export const trackEnhancedOfferAccepted = (original: number, boosted: number) =>
 export const trackUploadAbandoned = (uploadedCount: number) =>
   sink({ type: "upload_abandoned", uploadedCount, device: getDevice(), at: now() });
 
+export const trackUploadRetry = (category: string) =>
+  sink({ type: "upload_retry", category, device: getDevice(), at: now() });
+
+export const trackImageQuality = (quality: ImageQuality, category: string, reason?: string) =>
+  sink({ type: "image_quality", quality, category, reason, device: getDevice(), at: now() });
+
+export const trackAiAnalysisStarted = () =>
+  sink({ type: "ai_analysis_started", device: getDevice(), at: now() });
+
+export const trackAiAnalysisCompleted = (durationMs: number) =>
+  sink({ type: "ai_analysis_completed", durationMs, device: getDevice(), at: now() });
+
+export const trackEnhancementGenerated = (original: number, boosted: number) =>
+  sink({ type: "enhancement_generated", original, boosted, device: getDevice(), at: now() });
+
+export const trackEnhancementNotGenerated = (reason: string) =>
+  sink({ type: "enhancement_not_generated", reason, device: getDevice(), at: now() });
+
+export const trackAppraiserQueueTriggered = (reason: string, confidence: number) =>
+  sink({ type: "appraiser_queue_triggered", reason, confidence, device: getDevice(), at: now() });
+
 export const trackContactSubmitted = () =>
   sink({ type: "contact_submitted", device: getDevice(), at: now() });
 
