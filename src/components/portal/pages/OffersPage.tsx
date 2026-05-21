@@ -393,14 +393,40 @@ export const OffersPage = ({ onNavigate }: Props) => {
         <div className="relative grid grid-cols-1 sm:grid-cols-[1.4fr_1fr_1fr] gap-2 mt-5">
           <button
             onClick={() => setAccept(true)}
-            className="group relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl py-4 px-5 text-[15px] font-bold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] shadow-[0_14px_30px_-12px_rgba(79,70,229,0.65)] hover:shadow-[0_18px_36px_-12px_rgba(79,70,229,0.8)] active:scale-[0.98] transition-all"
+            className="group relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl py-4 px-5 text-[15px] font-bold text-white bg-gradient-to-r from-[#4F46E5] via-[#5B47EA] to-[#7C3AED] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_14px_30px_-12px_rgba(79,70,229,0.7)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_22px_40px_-12px_rgba(79,70,229,0.9)] active:scale-[0.98] transition-all"
           >
-            <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent group-hover:translate-x-full transition-transform duration-[900ms]" />
-            <Check className="w-[18px] h-[18px]" /> Accept Offer <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            {/* periodic shimmer every ~9s + faster hover sweep */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:via-white/55"
+              style={{ animation: "acceptShimmer 9s ease-in-out infinite" }}
+            />
+            <style>{`@keyframes acceptShimmer { 0%, 78%, 100% { transform: translateX(-120%) skewX(-20deg); opacity: 0; } 84% { opacity: 1; } 96% { transform: translateX(420%) skewX(-20deg); opacity: 0; } }`}</style>
+            <Check className="w-[18px] h-[18px] relative z-10" />
+            <span className="relative z-10">Accept Offer</span>
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 relative z-10" />
           </button>
           <SecondaryButton onClick={() => setCounter(true)} className="py-4">Counter Offer</SecondaryButton>
           <SecondaryButton onClick={() => setAsk(true)} className="py-4"><MessageSquare className="w-4 h-4" /> Ask Question</SecondaryButton>
         </div>
+
+        {/* Live activity strip — premium SaaS intelligence */}
+        <motion.div
+          initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="relative mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11.5px] text-[#53627A]"
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-70" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#16A34A]" /></span>
+            <Eye className="w-3.5 h-3.5 text-[#0F7A3E]" /> Dealer reviewed your offer <strong className="text-[#06194A] font-semibold">12 min ago</strong>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-[#4F46E5]" /> Regional SUV demand <strong className="text-[#06194A] font-semibold">+8%</strong> this week
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Truck className="w-3.5 h-3.5 text-[#B45309]" /> Pickup available <strong className="text-[#06194A] font-semibold">within 24 hrs</strong>
+          </span>
+        </motion.div>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
