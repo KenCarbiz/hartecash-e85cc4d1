@@ -552,30 +552,41 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <SectionLabel>Vehicle Details</SectionLabel>
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EEF0FF] text-[#4F46E5]">
+            <button
+              onClick={() => setVerify(true)}
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EEF0FF] text-[#4F46E5] hover:bg-[#E0E4FF] transition"
+            >
               <ShieldCheck className="w-3 h-3" /> Verified Vehicle Data
-            </span>
+            </button>
           </div>
           <dl className="mt-3 grid grid-cols-2 gap-y-1 text-sm">
             {([
-              ["Trim",       v.trim,       Settings2],
-              ["Drivetrain", v.drivetrain, Cog],
-              ["Engine",     v.engine,     Gauge],
-              ["Body",       v.body,       Car],
-              ["Exterior",   v.exterior,   Palette],
-              ["Interior",   v.interior,   Palette],
-              ["Ownership",  v.ownership,  ShieldCheck],
-              ["Payoff",     v.payoff ? fmt(v.payoff) : "None", DollarSign],
-            ] as [string, string, any][]).map(([k, val, Icon]) => (
-              <div key={k} className="rounded-lg px-2 py-2 hover:bg-[#F4F6FA] transition-colors flex items-start gap-2.5">
+              ["Engine",     v.engine,     Gauge,      true],
+              ["Drivetrain", v.drivetrain, Cog,        false],
+              ["Trim",       v.trim,       Settings2,  false],
+              ["Body",       v.body,       Car,        false],
+              ["Exterior",   v.exterior,   Palette,    true],
+              ["Interior",   v.interior,   Palette,    true],
+              ["Ownership",  v.ownership,  ShieldCheck, true],
+              ["Payoff",     v.payoff ? fmt(v.payoff) : "None", DollarSign, true],
+            ] as [string, string, any, boolean][]).map(([k, val, Icon, editable]) => (
+              <button
+                key={k}
+                onClick={() => editable && setEdit(true)}
+                disabled={!editable}
+                className={`group rounded-lg px-2 py-2 transition-colors flex items-start gap-2.5 text-left ${editable ? "hover:bg-[#F4F6FA] cursor-pointer" : "cursor-default"}`}
+              >
                 <span className="w-7 h-7 rounded-md bg-[#F4F6FA] text-[#4F46E5] grid place-items-center shrink-0">
                   <Icon className="w-[13px] h-[13px]" />
                 </span>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <dt className="text-[10.5px] uppercase tracking-wide text-[#8893A8] font-semibold">{k}</dt>
-                  <dd className="text-[#06194A] font-semibold text-[13px] mt-0.5 truncate">{val}</dd>
+                  <dd className="text-[#06194A] font-semibold text-[13px] mt-0.5 truncate flex items-center gap-1.5">
+                    <span className="truncate">{val}</span>
+                    {editable && <Pencil className="w-3 h-3 text-[#8893A8] opacity-0 group-hover:opacity-100 transition-opacity" />}
+                  </dd>
                 </div>
-              </div>
+              </button>
             ))}
           </dl>
         </Card>
