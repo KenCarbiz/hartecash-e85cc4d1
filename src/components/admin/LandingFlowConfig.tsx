@@ -10,6 +10,7 @@ import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
 import { Input } from "@/components/ui/input";
 import PayoutMethodsConfig from "@/components/admin/PayoutMethodsConfig";
+import { useFormConfig } from "@/hooks/useFormConfig";
 
 type FormVariant = "detailed" | "quick";
 
