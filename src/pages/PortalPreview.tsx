@@ -321,6 +321,7 @@ const PortalPreview = () => {
   const [showConv, setShowConv] = useState(false);
   const [showDocs, setShowDocs] = useState(false);
   const [showOffer, setShowOffer] = useState(false);
+  const [activeNav, setActiveNav] = useState<NavKey>("dashboard");
   const offerRef = useRef<HTMLDivElement>(null);
 
   const copyVin = async () => {
@@ -333,9 +334,11 @@ const PortalPreview = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F8FB] text-[#06194A] flex">
-      <Sidebar />
+      <PortalSidebar active={activeNav} onChange={setActiveNav} customer={MOCK.customer} />
 
-      <div className="flex-1 min-w-0 flex justify-center">
+      <div className="flex-1 min-w-0 flex flex-col">
+        <PortalMobileTopBar active={activeNav} onChange={setActiveNav} customer={MOCK.customer} />
+        <div className="flex-1 flex justify-center">
         <div className="w-full max-w-[1320px] p-5 sm:p-7 lg:p-8">
           <Header />
 
