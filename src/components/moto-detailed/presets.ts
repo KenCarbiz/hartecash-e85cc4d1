@@ -4,6 +4,16 @@ import StepCondition from "./steps/StepCondition";
 import StepUsage from "./steps/StepUsage";
 import StepContact from "./steps/StepContact";
 import StepOfferReady from "./steps/StepOfferReady";
+import {
+  StepPhotos,
+  StepPayoff,
+  StepTradeSell,
+  StepDealerQuestions,
+  StepDocuments,
+  StepSchedule,
+  StepComplete,
+} from "./steps/StepPlaceholder";
+
 
 /**
  * Preset journey templates. Each preset is a JourneyConfig factory —
@@ -85,11 +95,24 @@ export const PRESETS: Record<JourneyPresetId, JourneyPreset> = {
     label: "Moto Detailed",
     tagline: "Premium guided acquisition flow",
     description:
-      "Calm 5-step guided journey with desktop rail, live valuation, and trust badges. Recommended default.",
-    estimatedSeconds: 95,
+      "Two-phase national-brand journey: ultra-minimal landing, then a guided multi-step transaction experience with desktop rail, live valuation, and trust badges.",
+    estimatedSeconds: 240,
     build: () => ({
       offerDisplayMode: "after_contact_info",
-      steps: [vehicle(), condition(), usage(), contact(), offer()],
+      steps: [
+        vehicle(),
+        condition(),
+        usage(),
+        { id: "photos", title: "Photos", helper: "Quick walk-around", pageTitle: "Add a few photos", Component: StepPhotos },
+        { id: "payoff", title: "Payoff", helper: "Loan or lease", pageTitle: "Loan or lease payoff", Component: StepPayoff },
+        { id: "trade_sell", title: "Trade/Sell", helper: "How to complete", pageTitle: "Trade-in or sell outright?", Component: StepTradeSell },
+        { id: "dealer_questions", title: "Dealer Questions", helper: "Optional", pageTitle: "A few quick questions", Component: StepDealerQuestions },
+        contact(),
+        offer(),
+        { id: "documents", title: "Documents", helper: "Licence + title", pageTitle: "Upload your documents", Component: StepDocuments },
+        { id: "schedule", title: "Schedule", helper: "Pick a time", pageTitle: "Schedule your appointment", Component: StepSchedule },
+        { id: "complete", title: "Complete", helper: "You're all set", pageTitle: "All done", Component: StepComplete },
+      ],
     }),
   },
   instant_offer: {
