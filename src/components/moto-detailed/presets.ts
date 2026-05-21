@@ -96,17 +96,17 @@ const boostIntro = (): StepDefinition => ({
 const boostUpload = (): StepDefinition => ({
   id: "boost_upload", title: "Photos", helper: "Capture key angles",
   pageTitle: "Add a few quick photos",
-  pageSubtitle: "Tap each tile to capture or attach. We need 6 or more for the best result.",
+  pageSubtitle: "Tap each tile to capture or attach. Our AI analyzes each photo as it comes in.",
   Component: StepBoostUpload,
-  shouldRender: (state) => state.branch === "boost" && !state.boost.boostedFirm,
+  shouldRender: (state) => state.branch === "boost" && !state.boost.analyzed,
 });
 
 const boostResult = (): StepDefinition => ({
-  id: "boost_result", title: "Enhanced Offer", helper: "Review your boosted number",
-  pageTitle: "Your AI-enhanced offer",
-  pageSubtitle: "Compare both numbers and choose what's best for you.",
+  id: "boost_result", title: "AI Result", helper: "See your refined valuation",
+  pageTitle: "Your AI valuation is ready",
+  pageSubtitle: "Here's what our analysis found.",
   Component: StepBoostResult,
-  shouldRender: (state) => state.branch === "boost" && !!state.boost.boostedFirm,
+  shouldRender: (state) => state.branch === "boost" && state.boost.analyzed,
 });
 
 // ── Presets ─────────────────────────────────────────────────────────
