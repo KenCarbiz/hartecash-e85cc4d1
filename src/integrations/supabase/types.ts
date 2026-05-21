@@ -4477,6 +4477,7 @@ export type Database = {
           embed_escalation_max_tier: number
           enable_animations: boolean
           enable_dl_ocr: boolean
+          enabled_payout_methods: Json
           established_year: number | null
           facebook_url: string | null
           favicon_url: string | null
@@ -4605,6 +4606,7 @@ export type Database = {
           embed_escalation_max_tier?: number
           enable_animations?: boolean
           enable_dl_ocr?: boolean
+          enabled_payout_methods?: Json
           established_year?: number | null
           facebook_url?: string | null
           favicon_url?: string | null
@@ -4733,6 +4735,7 @@ export type Database = {
           embed_escalation_max_tier?: number
           enable_animations?: boolean
           enable_dl_ocr?: boolean
+          enabled_payout_methods?: Json
           established_year?: number | null
           facebook_url?: string | null
           favicon_url?: string | null

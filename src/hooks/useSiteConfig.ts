@@ -315,6 +315,19 @@ export interface SiteConfig {
   moto_detailed_offer_display_mode: "before_contact_info" | "after_contact_info";
   /** Optional dealer-authored JourneyConfig overrides (reorders / injected steps). */
   moto_detailed_custom_config: Record<string, unknown> | null;
+  /**
+   * Which payout methods the dealer offers customers in the
+   * Payment Center. Default reflects how most dealerships actually
+   * pay sellers: paper check at handoff, everything else off. The
+   * customer-facing UI renders ONLY enabled methods.
+   */
+  enabled_payout_methods: {
+    paper_check: boolean;
+    ach: boolean;
+    eft: boolean;
+    instant_debit: boolean;
+    wire_transfer: boolean;
+  };
 }
 
 
@@ -440,6 +453,13 @@ const DEFAULTS: SiteConfig = {
   moto_detailed_preset: "moto_detailed",
   moto_detailed_offer_display_mode: "after_contact_info",
   moto_detailed_custom_config: null,
+  enabled_payout_methods: {
+    paper_check: true,
+    ach: false,
+    eft: false,
+    instant_debit: false,
+    wire_transfer: false,
+  },
 };
 
 

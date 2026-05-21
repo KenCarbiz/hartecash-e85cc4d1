@@ -1,29 +1,21 @@
-// Sign-in / customer-portal-entry page.
+// Portal entry / transaction continuation page.
 //
-// Overhauled to match the Moto landing's clean-contemporary aesthetic
-// per product-owner direction. Same design language as the new
-// landing chrome (PRs #263–#274):
+// Redesigned (Dec 2026) to feel like a premium secure transaction
+// continuation experience rather than a generic login form. Mirrors
+// the visual language of the customer portal (PaymentsPage, sidebar)
+// — indigo→violet gradient CTA, soft shadows, restrained chrome.
 //
-//   * Single soft-gray bg surface (hsl 220 14% 98%) flowing into the
-//     BrandFooter — no separate hero block, no navy slab break
-//   * Centered single-column card, rounded-3xl, hairline border,
-//     soft shadow (matches ValueTrackerCard's outer shell language)
-//   * One primary accent (the dealer's --primary), no gradients, no
-//     trust-badge strip, no "Sell Another Vehicle" tinted CTA card
-//   * Inputs use the same h-12 / rounded-xl pattern as the Moto form
-//   * BrandFooter at the bottom (Moto template uses it via Index.tsx
-//     but this page is a standalone route, so we mount it inline)
-//
-// Behavior unchanged: customer enters email + phone, lookup RPC
-// returns matching submissions, click → /my-submission/:token.
-// Empty-state offers a return-to-form path; results list each
-// vehicle as a clickable card.
-import { useState } from "react";
+// Behavior unchanged: customer enters email + phone, lookup RPC returns
+// matching submissions, click → /my-submission/:token. Optional
+// "welcome back" card surfaces if a recently-tracked vehicle exists in
+// localStorage (written by MotoTrackValueBlock).
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Car, ChevronRight, ArrowRight, LogIn } from "lucide-react";
-import SiteHeader from "@/components/SiteHeader";
-import BrandFooter from "@/components/BrandFooter";
+import {
+  Search, Car, ChevronRight, ArrowRight, ShieldCheck,
+  FileText, Wallet, CalendarCheck, Eye, HelpCircle, LifeBuoy, Mail,
+} from "lucide-react";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
@@ -35,19 +27,50 @@ interface FoundSubmission {
   name: string | null;
 }
 
+// Match key written by MotoTrackValueBlock.
+const SUB_STORAGE_PREFIX = "moto.watched_token.";
+
+interface LastSession {
+  token: string;
+  label: string;
+}
+
+const readLastSession = (): LastSession | null => {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith(SUB_STORAGE_PREFIX)) continue;
+      const token = localStorage.getItem(k);
+      if (!token) continue;
+      const suffix = k.slice(SUB_STORAGE_PREFIX.length);
+      // suffix is either a VIN (17 chars, no dashes in the YMM form)
+      // or `${year}-${make}-${model}`
+      const label = suffix.includes("-")
+        ? suffix.split("-").join(" ")
+        : "Your saved vehicle";
+      return { token, label };
+    }
+  } catch { /* localStorage blocked */ }
+  return null;
+};
+
 const CustomerLookup = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [results, setResults] = useState<FoundSubmission[]>([]);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [lastSession, setLastSession] = useState<LastSession | null>(null);
   const navigate = useNavigate();
   const { config } = useSiteConfig();
+
+  useEffect(() => { setLastSession(readLastSession()); }, []);
 
   const dealerName = (config.dealership_name || "").trim();
   const shortName = dealerName && dealerName !== "Our Dealership"
     ? dealerName.split(/\s+/)[0]
     : null;
+  const logoUrl = (config as { logo_url?: string }).logo_url || null;
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,49 +85,99 @@ const CustomerLookup = () => {
     setLoading(false);
   };
 
+  const reassurance = useMemo(() => ([
+    { icon: Eye, label: "View your offer" },
+    { icon: FileText, label: "Upload documents" },
+    { icon: Wallet, label: "Track payout" },
+    { icon: CalendarCheck, label: "Schedule pickup" },
+  ]), []);
+
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: "hsl(220 14% 98%)" }}
+      style={{ background: "hsl(220 20% 97%)" }}
     >
       <SEO
-        title={`Sign in${shortName ? ` to ${shortName}` : ""} — Find your offer`}
-        description="Sign in to view your offer, upload documents, or schedule your visit."
+        title={`Continue your vehicle sale${shortName ? ` — ${shortName}` : ""}`}
+        description="Securely continue your vehicle transaction — view your offer, upload documents, track payout, and schedule pickup."
         path="/my-submission"
         noindex
       />
 
-      <SiteHeader />
+      {/* Slim portal-style header — logo + lightweight support links. */}
+      <header className="border-b border-border/40 bg-white/70 backdrop-blur-md sticky top-0 z-30">
+        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            {logoUrl ? (
+              <img src={logoUrl} alt={dealerName || "Home"} className="h-8 w-auto" />
+            ) : (
+              <span className="text-base font-bold tracking-tight text-foreground">
+                {dealerName || "Customer Portal"}
+              </span>
+            )}
+          </Link>
+          <nav className="flex items-center gap-1 sm:gap-2 text-sm">
+            <Link to="/support" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
+              <LifeBuoy className="w-4 h-4" /> Support
+            </Link>
+            <Link to="/faq" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
+              <HelpCircle className="w-4 h-4" /> FAQ
+            </Link>
+            <Link to="/contact" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
+              <Mail className="w-4 h-4" /> Contact
+            </Link>
+            <span className="hidden md:inline-flex items-center gap-1.5 ml-2 px-3 py-1.5 rounded-full bg-[#EEF0FF] text-[#4F46E5] text-xs font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5" /> Secure Login
+            </span>
+          </nav>
+        </div>
+      </header>
 
-      <main className="flex-1 px-5 py-16 lg:py-24">
-        <div className="max-w-md mx-auto">
-          {/* Page heading — minimal, brand-voice, present tense. */}
-          <div className="text-center mb-10">
-            <div
-              className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-5"
-              style={{ background: "hsl(220 100% 96%)" }}
-            >
-              <LogIn className="w-5 h-5 text-primary" strokeWidth={1.75} />
+      <main className="flex-1 flex items-center px-5 py-10 lg:py-16">
+        <div className="w-full max-w-lg mx-auto">
+          {/* Heading — emotional continuity with the transaction. */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5 bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_10px_28px_-12px_rgba(79,70,229,0.55)]">
+              <ShieldCheck className="w-6 h-6 text-white" strokeWidth={2} />
             </div>
-            <h1 className="text-3xl lg:text-[40px] font-bold text-foreground leading-[1.15] tracking-tight mb-3">
-              Find your offer
+            <h1 className="text-3xl lg:text-[38px] font-bold text-foreground leading-[1.15] tracking-tight mb-3">
+              Continue Your Vehicle Sale
             </h1>
-            <p className="text-base text-foreground/65 leading-relaxed">
-              Enter the email and phone you used when you submitted your vehicle.
+            <p className="text-base text-foreground/65 leading-relaxed max-w-md mx-auto">
+              Access your vehicle dashboard, documents, payout details, and next steps.
             </p>
           </div>
 
-          {/* Lookup card — same shell language as ValueTrackerCard's
-              inner card. White, hairline border, soft shadow. */}
+          {/* Session continuity — only if a saved vehicle exists. */}
+          {lastSession && !searched && (
+            <button
+              type="button"
+              onClick={() => navigate(`/my-submission/${lastSession.token}`)}
+              className="w-full mb-5 rounded-2xl border border-[#C7D2FE] bg-gradient-to-br from-[#EEF0FF] via-white to-white p-5 text-left flex items-center gap-4 hover:shadow-[0_12px_28px_-14px_rgba(79,70,229,0.35)] transition-shadow group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/40"
+            >
+              <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center">
+                <Car className="w-5 h-5 text-white" strokeWidth={2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#4F46E5] mb-0.5">
+                  Welcome back
+                </p>
+                <p className="text-sm font-semibold text-foreground truncate capitalize">
+                  {lastSession.label}
+                </p>
+                <p className="text-xs text-foreground/55">Continue where you left off</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[#4F46E5] shrink-0 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          )}
+
+          {/* Lookup card — larger, softer, more premium. */}
           <form
             onSubmit={handleSearch}
-            className="bg-white rounded-3xl border border-border/60 shadow-[0_8px_32px_-12px_rgb(15_23_42_/_0.08)] p-7 lg:p-8 space-y-5"
+            className="bg-white rounded-3xl border border-border/50 shadow-[0_20px_50px_-20px_rgb(15_23_42_/_0.12),0_8px_20px_-12px_rgb(15_23_42_/_0.06)] p-7 lg:p-9 space-y-6"
           >
             <div>
-              <label
-                htmlFor="signin-email"
-                className="text-sm font-semibold text-foreground mb-2 block"
-              >
+              <label htmlFor="signin-email" className="text-sm font-semibold text-foreground mb-2 block">
                 Email
               </label>
               <input
@@ -116,15 +189,12 @@ const CustomerLookup = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full h-12 px-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-colors"
+                className="w-full h-12 px-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="signin-phone"
-                className="text-sm font-semibold text-foreground mb-2 block"
-              >
+              <label htmlFor="signin-phone" className="text-sm font-semibold text-foreground mb-2 block">
                 Phone
               </label>
               <input
@@ -136,25 +206,44 @@ const CustomerLookup = () => {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
-                className="w-full h-12 px-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-colors"
+                className="w-full h-12 px-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl py-3.5 text-base font-semibold tracking-wide bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)] hover:opacity-95 active:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--cta-offer))]"
+              className="w-full rounded-xl py-3.5 text-base font-semibold tracking-wide text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:from-[#4338CA] hover:to-[#6D28D9] shadow-[0_10px_24px_-10px_rgba(79,70,229,0.55)] hover:shadow-[0_14px_32px_-12px_rgba(79,70,229,0.65)] disabled:opacity-60 disabled:cursor-not-allowed transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#4F46E5] flex items-center justify-center gap-2"
             >
-              {loading ? "Searching…" : "Find my offer"}
+              {loading ? "Searching…" : (<><Search className="w-4 h-4" /> Access My Transaction</>)}
             </button>
+
+            <p className="flex items-center justify-center gap-1.5 text-xs text-foreground/55">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Secure access · Your info is never shared
+            </p>
           </form>
 
-          {/* Empty state — no results match. Soft tone, single recovery
-              link back to the landing form. */}
+          {/* Reassurance row — transaction workspace, not a generic portal. */}
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {reassurance.map(({ icon: Icon, label }) => (
+              <div
+                key={label}
+                className="flex items-center gap-2 rounded-xl border border-border/40 bg-white/70 px-3 py-2.5"
+              >
+                <Icon className="w-4 h-4 text-[#4F46E5] shrink-0" strokeWidth={2} />
+                <span className="text-[12px] font-medium text-foreground/75 leading-tight">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Empty state. */}
           {searched && results.length === 0 && (
-            <div className="mt-8 rounded-3xl border border-border/60 bg-white p-7 text-center">
+            <div className="mt-6 rounded-2xl border border-border/60 bg-white p-6 text-center">
               <p className="text-base font-semibold text-foreground mb-2">
-                We couldn't find an offer with that info.
+                We couldn't find a transaction with that info.
               </p>
               <p className="text-sm text-foreground/65 leading-relaxed mb-5">
                 Double-check the email and phone — they need to match exactly
@@ -163,83 +252,61 @@ const CustomerLookup = () => {
               <Link
                 to="/"
                 onClick={() => window.scrollTo(0, 0)}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-[#4F46E5] underline-offset-4 hover:underline"
               >
-                Or start a new offer
+                Start a new offer
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           )}
 
-          {/* Results list — one card per matching submission. Same
-              card token as the form above so the page reads as one
-              continuous system. */}
+          {/* Results. */}
           {results.length > 0 && (
-            <div className="mt-8 space-y-3">
+            <div className="mt-6 space-y-3">
               <p className="text-xs uppercase tracking-[0.12em] font-semibold text-foreground/55 px-1 mb-1">
-                Your offers
+                Your transactions
               </p>
               {results.map((r) => {
                 const vehicleLine =
                   [r.vehicle_year, r.vehicle_make, r.vehicle_model]
-                    .filter(Boolean)
-                    .join(" ") || "Vehicle";
+                    .filter(Boolean).join(" ") || "Vehicle";
                 return (
                   <button
                     key={r.token}
                     type="button"
                     onClick={() => navigate(`/my-submission/${r.token}`)}
-                    className="w-full rounded-2xl border border-border/60 bg-white p-5 hover:border-primary/40 hover:shadow-[0_8px_24px_-12px_rgb(15_23_42_/_0.1)] transition-all text-left flex items-center gap-4 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="w-full rounded-2xl border border-border/60 bg-white p-5 hover:border-[#4F46E5]/40 hover:shadow-[0_12px_28px_-14px_rgba(79,70,229,0.25)] transition-all text-left flex items-center gap-4 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/30"
                   >
-                    <div
-                      className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
-                      style={{ background: "hsl(220 14% 96%)" }}
-                    >
-                      <Car
-                        className="w-5 h-5"
-                        strokeWidth={1.5}
-                        style={{ color: "hsl(220 13% 35%)" }}
-                      />
+                    <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center">
+                      <Car className="w-5 h-5 text-white" strokeWidth={2} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-base font-semibold text-foreground truncate">
                         {vehicleLine}
                       </p>
                       {r.name && (
-                        <p className="text-sm text-foreground/60 truncate">
-                          {r.name}
-                        </p>
+                        <p className="text-sm text-foreground/60 truncate">{r.name}</p>
                       )}
                     </div>
-                    <ChevronRight
-                      className="w-4 h-4 text-foreground/40 group-hover:text-primary transition-colors shrink-0"
-                      strokeWidth={2}
-                    />
+                    <ChevronRight className="w-4 h-4 text-foreground/40 group-hover:text-[#4F46E5] transition-colors shrink-0" strokeWidth={2} />
                   </button>
                 );
               })}
             </div>
           )}
-
-          {/* New-customer link — quiet text link to the form, not a
-              bright tinted CTA card. Matches the calm closing-slab
-              voice from the rest of the landing. */}
-          {!searched && (
-            <p className="text-center mt-10 text-sm text-foreground/60">
-              First time here?{" "}
-              <Link
-                to="/"
-                onClick={() => window.scrollTo(0, 0)}
-                className="font-semibold text-primary underline-offset-4 hover:underline"
-              >
-                Get an offer
-              </Link>
-            </p>
-          )}
         </div>
       </main>
 
-      <BrandFooter />
+      {/* Slim portal-style footer — no marketing CTA. */}
+      <footer className="border-t border-border/40 bg-white/60">
+        <div className="max-w-6xl mx-auto px-5 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-foreground/55">
+          <span>© {new Date().getFullYear()} {dealerName || "Customer Portal"}</span>
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Secure transaction access
+          </span>
+        </div>
+      </footer>
     </div>
   );
 };
