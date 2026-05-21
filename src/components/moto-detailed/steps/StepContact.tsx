@@ -10,6 +10,8 @@ const StepContact = ({ state, update, next }: StepContext) => {
 
   const onSubmit = () => {
     if (!valid) return;
+    trackCtaClicked("contact", "See My Offer");
+    trackContactSubmitted();
     update({ offerUnlocked: true });
     next();
   };
