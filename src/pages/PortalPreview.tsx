@@ -634,7 +634,6 @@ const PortalPreview = () => {
           Accept Offer
         </button>
       </Modal>
-        </div>
       </div>
     </div>
   );
