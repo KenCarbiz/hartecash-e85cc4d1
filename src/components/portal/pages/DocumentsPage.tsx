@@ -1,85 +1,124 @@
 import { useState } from "react";
-import { Upload, Eye, RefreshCw, ShieldCheck, Lock, FileText, AlertCircle, Check } from "lucide-react";
+import { Upload, Eye, RefreshCw, ShieldCheck, Lock, FileText, AlertCircle, Smartphone, Sparkles, Clock } from "lucide-react";
 import { PORTAL_MOCK as MOCK } from "../portalMock";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, StatusPill, SectionLabel } from "../PortalPageShell";
-import { SlideOver } from "../SlideOver";
-import { DocumentUploadDrawer } from "../DocumentUploadDrawer";
+import { DocumentUploadHub, type HubDoc, type HubDocStatus } from "../DocumentUploadHub";
 
-
-const STATUS_TONE = {
-  "Approved":     "green",
-  "Uploaded":     "indigo",
+const STATUS_TONE: Record<HubDocStatus, "green" | "indigo" | "orange" | "gray" | "red"> = {
+  Approved: "green",
+  Uploaded: "indigo",
   "Under Review": "orange",
-  "Needed":       "gray",
-  "Rejected":     "red",
-} as const;
-
-type DocStatus = keyof typeof STATUS_TONE;
+  Needed: "gray",
+  Rejected: "red",
+};
 
 export const DocumentsPage = () => {
-  const [upload, setUpload] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [hubOpen, setHubOpen] = useState(false);
+  const [focus, setFocus] = useState<string | null>(null);
 
-  // Inject one rejected example for realism
-  const docs = MOCK.docs.map((d, i) =>
-    i === 2 ? { ...d, status: "Rejected" as DocStatus, reason: "Image blurry — please retake in better light." } : d as typeof d & { reason?: string }
+  // Seed one rejected doc for realism
+  const docs: HubDoc[] = MOCK.docs.map((d, i) =>
+    i === 2
+      ? { ...d, status: "Rejected" as const, reason: "Image blurry — please retake in better light." }
+      : (d as HubDoc)
   );
 
   const completed = docs.filter((d) => d.status === "Approved" || d.status === "Uploaded").length;
   const total = docs.length;
   const pct = (completed / total) * 100;
+  const remaining = docs.filter((d) => d.status === "Needed" || d.status === "Rejected").length;
+
+  const openHub = (name?: string) => {
+    setFocus(name ?? null);
+    setHubOpen(true);
+  };
 
   return (
     <PortalPageShell
       title="Documents"
-      subtitle="Upload and verify required paperwork."
-      actions={<PrimaryButton onClick={() => setUpload("New document")}><Upload className="w-4 h-4" /> Upload</PrimaryButton>}
+      subtitle="One synced upload session — desktop or mobile."
+      actions={
+        <PrimaryButton onClick={() => openHub()}>
+          <Upload className="w-4 h-4" /> Open Upload Hub
+        </PrimaryButton>
+      }
     >
-      {/* Progress card */}
+      {/* Progress + cross-device CTA */}
       <Card className="p-5 mb-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
             <SectionLabel>Progress</SectionLabel>
-            <div className="text-[22px] font-extrabold text-[#06194A] mt-1">{completed} of {total} documents completed</div>
-            <p className="text-sm text-[#53627A] mt-1">All documents are encrypted and only shared with your dealer team.</p>
+            <div className="text-[22px] font-extrabold text-[#06194A] mt-1">
+              {completed} of {total} documents completed
+            </div>
+            <p className="text-sm text-[#53627A] mt-1">
+              Switch between devices anytime — your session stays in sync.
+            </p>
           </div>
-          <div className="hidden sm:flex items-center gap-3 text-[12px] text-[#53627A]">
+          <div className="flex items-center gap-3 text-[12px] text-[#53627A]">
             <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#16A34A]" /> SOC 2</span>
             <span className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-[#16A34A]" /> Encrypted</span>
+            <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-[#4F46E5]" /> AI verified</span>
           </div>
         </div>
         <div className="mt-4 h-2 rounded-full bg-[#F4F6FA] overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] transition-all" style={{ width: `${pct}%` }} />
+          <div
+            className="h-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] transition-all"
+            style={{ width: `${pct}%` }}
+          />
         </div>
+
+        {/* Cross-device launcher */}
+        <button
+          onClick={() => openHub()}
+          className="mt-4 w-full text-left rounded-2xl border border-[#C7D2FE] bg-gradient-to-r from-[#EEF0FF] via-white to-[#F5F3FF] p-4 hover:shadow-md transition group"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-xl bg-[#06194A] text-white grid place-items-center shrink-0">
+              <Smartphone className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[14px] font-extrabold text-[#06194A]">
+                Continue on your phone
+              </div>
+              <div className="text-[12px] text-[#53627A] mt-0.5 inline-flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" /> ~{Math.max(1, remaining * 2)} min</span>
+                <span>·</span>
+                <span>{remaining} document{remaining === 1 ? "" : "s"} remaining</span>
+                <span>·</span>
+                <span className="text-[#4F46E5] font-semibold">Scan once — full session transfers</span>
+              </div>
+            </div>
+            <div className="text-[11px] font-bold text-[#4F46E5] uppercase tracking-wider group-hover:translate-x-0.5 transition">
+              Open Hub →
+            </div>
+          </div>
+        </button>
       </Card>
 
-      {/* Drag-and-drop area */}
-      <button
-        onClick={() => setUpload("New document")}
-        className="w-full mb-6 border-2 border-dashed border-[#C7D2FE] bg-white hover:bg-[#EEF0FF]/40 rounded-2xl p-8 text-center transition group"
-      >
-        <Upload className="w-8 h-8 mx-auto text-[#4F46E5] mb-2 group-hover:scale-110 transition-transform" />
-        <div className="text-sm font-semibold text-[#06194A]">Drop a file or tap to upload</div>
-        <div className="text-[12px] text-[#53627A] mt-1">PDF, JPG, PNG, or HEIC up to 25MB · use your camera on mobile</div>
-      </button>
-
-      {/* Checklist */}
+      {/* Checklist preview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {docs.map((d) => {
-          const status = d.status as DocStatus;
-          const tone = STATUS_TONE[status];
-          const needed = status === "Needed";
-          const rejected = status === "Rejected";
+          const needed = d.status === "Needed";
+          const rejected = d.status === "Rejected";
           return (
             <Card key={d.name} className="p-4">
               <div className="flex items-start gap-3">
-                <div className={`w-11 h-11 rounded-2xl grid place-items-center shrink-0 ${needed ? "bg-[#F4F6FA] text-[#53627A]" : rejected ? "bg-[#FEE2E2] text-[#DC2626]" : "bg-[#EEF0FF] text-[#4F46E5]"}`}>
+                <div
+                  className={`w-11 h-11 rounded-2xl grid place-items-center shrink-0 ${
+                    needed
+                      ? "bg-[#F4F6FA] text-[#53627A]"
+                      : rejected
+                      ? "bg-[#FEE2E2] text-[#DC2626]"
+                      : "bg-[#EEF0FF] text-[#4F46E5]"
+                  }`}
+                >
                   <FileText className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-semibold text-[#06194A] truncate">{d.name}</span>
-                    <StatusPill tone={tone}>{status}</StatusPill>
+                    <StatusPill tone={STATUS_TONE[d.status]}>{d.status}</StatusPill>
                   </div>
                   <div className="text-[11px] text-[#53627A] mt-0.5">
                     {d.date ? `Uploaded ${d.date}` : "Not yet uploaded"}
@@ -91,13 +130,17 @@ export const DocumentsPage = () => {
                   )}
                   <div className="flex items-center gap-2 mt-3">
                     {needed || rejected ? (
-                      <PrimaryButton onClick={() => setUpload(d.name)} className="px-3 py-2">
+                      <PrimaryButton onClick={() => openHub(d.name)} className="px-3 py-2">
                         <Upload className="w-3.5 h-3.5" /> {rejected ? "Resubmit" : "Upload"}
                       </PrimaryButton>
                     ) : (
                       <>
-                        <SecondaryButton onClick={() => setPreview(d.name)} className="px-3 py-2"><Eye className="w-3.5 h-3.5" /> Preview</SecondaryButton>
-                        <SecondaryButton onClick={() => setUpload(d.name)} className="px-3 py-2"><RefreshCw className="w-3.5 h-3.5" /> Replace</SecondaryButton>
+                        <SecondaryButton onClick={() => openHub(d.name)} className="px-3 py-2">
+                          <Eye className="w-3.5 h-3.5" /> Preview
+                        </SecondaryButton>
+                        <SecondaryButton onClick={() => openHub(d.name)} className="px-3 py-2">
+                          <RefreshCw className="w-3.5 h-3.5" /> Replace
+                        </SecondaryButton>
                       </>
                     )}
                   </div>
@@ -108,26 +151,13 @@ export const DocumentsPage = () => {
         })}
       </div>
 
-      {/* Premium upload drawer with mobile handoff */}
-      <DocumentUploadDrawer
-        open={!!upload}
-        onClose={() => setUpload(null)}
-        docName={upload ?? "Document"}
+      {/* Centralized Upload Hub — single persistent cross-device experience */}
+      <DocumentUploadHub
+        open={hubOpen}
+        onClose={() => setHubOpen(false)}
+        docs={docs}
+        focusDoc={focus}
       />
-
-
-      {/* Preview modal (also slide-over for consistency) */}
-      <SlideOver open={!!preview} onClose={() => setPreview(null)} title={`${preview ?? ""} Preview`} width="lg"
-        footer={<div className="flex gap-2"><SecondaryButton onClick={() => setPreview(null)} className="flex-1">Close</SecondaryButton><PrimaryButton className="flex-1">Replace File</PrimaryButton></div>}>
-        <div className="rounded-2xl bg-[#F7F8FB] border border-[#E6EAF0] p-10 text-center">
-          <FileText className="w-12 h-12 mx-auto text-[#4F46E5] mb-2" />
-          <div className="text-sm font-semibold text-[#06194A]">{preview}</div>
-          <div className="text-[11px] text-[#53627A] mt-1">Preview rendering…</div>
-        </div>
-        <div className="mt-4 inline-flex items-center gap-2 text-[12px] text-[#0F7A3E] font-semibold">
-          <Check className="w-3.5 h-3.5" /> Verified by Liberty Automotive
-        </div>
-      </SlideOver>
     </PortalPageShell>
   );
 };
