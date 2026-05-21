@@ -328,39 +328,64 @@ export const OffersPage = ({ onNavigate }: Props) => {
             </div>
           </div>
 
-          {/* Countdown */}
-          <div className={`rounded-2xl bg-white border p-4 ${urgent ? "border-[#FECACA]" : "border-[#E6EAF0]"}`}>
+          {/* Countdown — soft amber urgency, animated digits */}
+          <div className={`rounded-2xl bg-white border p-4 transition-shadow ${urgent ? "border-[#FCD9A8] shadow-[0_0_0_4px_rgba(245,158,11,0.12),0_18px_36px_-22px_rgba(245,158,11,0.45)]" : "border-[#E6EAF0]"}`}>
             <div className="flex items-center justify-between">
               <div className="text-[11px] uppercase tracking-[0.14em] font-semibold text-[#53627A] inline-flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" /> Offer Expires
+                <Clock className={`w-3.5 h-3.5 ${urgent ? "text-[#B45309]" : ""}`} /> Offer Expires
               </div>
-              <motion.span
-                animate={urgent ? { opacity: [1, 0.5, 1] } : { opacity: 1 }}
-                transition={{ duration: 1.4, repeat: urgent ? Infinity : 0 }}
-                className={`w-2 h-2 rounded-full ${urgent ? "bg-[#EF4444]" : "bg-[#16A34A]"}`}
-              />
+              <span className="relative flex h-2 w-2">
+                {urgent && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F59E0B] opacity-70" />}
+                <span className={`relative inline-flex h-2 w-2 rounded-full ${urgent ? "bg-[#F59E0B]" : "bg-[#16A34A]"}`} />
+              </span>
             </div>
             <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-              {[{ n: days, l: "Days" }, { n: hours, l: "Hrs" }, { n: mins, l: "Min" }, { n: secs, l: "Sec" }].map((b) => (
-                <div key={b.l} className="rounded-xl bg-[#F7F8FB] py-2.5">
-                  <div className="text-[20px] font-extrabold text-[#06194A] leading-none tabular-nums">{String(b.n).padStart(2, "0")}</div>
-                  <div className="text-[9.5px] uppercase tracking-wide text-[#8893A8] mt-1 font-semibold">{b.l}</div>
+              {[
+                { n: days,  l: "Days",    k: "d" },
+                { n: hours, l: "Hours",   k: "h" },
+                { n: mins,  l: "Minutes", k: "m" },
+                { n: secs,  l: "Seconds", k: "s" },
+              ].map((b) => (
+                <div key={b.k} className={`rounded-xl py-3 ${urgent ? "bg-[#FEF8EE]" : "bg-[#F7F8FB]"}`}>
+                  <div className="h-[30px] overflow-hidden relative">
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      <motion.div
+                        key={String(b.n)}
+                        initial={{ y: -18, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 18, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                        className={`text-[26px] font-extrabold leading-none tabular-nums ${urgent ? "text-[#B45309]" : "text-[#06194A]"}`}
+                      >
+                        {String(b.n).padStart(2, "0")}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                  <div className="text-[9px] uppercase tracking-wide text-[#8893A8] mt-1 font-semibold">{b.l}</div>
                 </div>
               ))}
             </div>
             <div className="mt-3 h-1.5 rounded-full bg-[#F4F6FA] overflow-hidden">
               <motion.div
                 initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }}
-                className={`h-full ${urgent ? "bg-[#EF4444]" : "bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"}`}
+                className={`h-full ${urgent ? "bg-gradient-to-r from-[#F59E0B] to-[#D97706]" : "bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"}`}
               />
             </div>
-            <div className="text-[11px] text-[#53627A] text-center mt-2">{expired ? "Expired" : `Through ${MOCK.offerExpires}`}</div>
+            <div className="text-[11px] text-[#53627A] text-center mt-2">{expired ? "Expired" : `Held through ${MOCK.offerExpires}`}</div>
 
-            <div className="mt-3 flex items-center gap-2 text-[11.5px] text-[#0F7A3E] bg-[#E8F8EE] px-2.5 py-1.5 rounded-lg">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
-              <span className="font-semibold">Stable market</span>
-              <span className="text-[#53627A]">— offer likely stable through Friday</span>
-            </div>
+            {/* Rotating market intelligence */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={marketStatus.title}
+                initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.35 }}
+                className={`mt-3 flex items-center gap-2 text-[11.5px] px-2.5 py-1.5 rounded-lg ${MARKET_TONE[marketStatus.tone].bg} ${MARKET_TONE[marketStatus.tone].text}`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${MARKET_TONE[marketStatus.tone].dot}`} />
+                <span className="font-semibold">{marketStatus.title}</span>
+                <span className="text-[#53627A] truncate">— {marketStatus.sub}</span>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
