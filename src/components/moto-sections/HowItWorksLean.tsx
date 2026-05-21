@@ -17,7 +17,9 @@
 //
 // Per-tenant: pickup_offered still flips step 3 between "we pick up"
 // and "drop off" — same as the original.
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { DollarSign, TrendingUp, ShieldCheck } from "lucide-react";
+
 
 
 const scrollToForm = () => {
