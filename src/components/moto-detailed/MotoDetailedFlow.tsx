@@ -10,8 +10,7 @@ import type {
   JourneyVehicle,
   OfferDisplayMode,
 } from "./types";
-import type { MotoFlowState } from "@/components/moto/types";
-import type { BBVehicle } from "@/components/sell-form/types";
+import { emptyMotoFlowState, type MotoFlowState } from "@/components/moto/types";
 
 /**
  * Public entry for Moto Detailed.
