@@ -6,12 +6,14 @@ import {
   BarChart3, Sparkles, TrendingUp, Info, X, Zap, Lock, Award, Star,
   CheckCircle2, CalendarDays, Wallet,
   AlertTriangle, Users, FileText, HelpCircle, Paperclip,
+  Eye, ChevronRight,
 } from "lucide-react";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, SectionLabel } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
 
-type Props = { onNavigate: (k: "messages" | "pickup") => void };
+type NavTarget = "messages" | "pickup" | "documents" | "payments";
+type Props = { onNavigate: (k: NavTarget) => void };
 
 /* ─── Live countdown ─────────────────────────────────────────── */
 const useCountdown = (deadline: string) => {
@@ -68,9 +70,53 @@ const BREAKDOWN = [
 
 const MAX_BAR = Math.max(...BREAKDOWN.map((b) => Math.abs(b.value)));
 
+/* ─── Competitive advantage details for drawers ─────────────── */
+type AdvantageKey = "best" | "pickup" | "payment" | "fees";
+const ADVANTAGES: Record<AdvantageKey, { Icon: any; title: string; tagline: string; tone: "indigo" | "green"; body: string; bullets: string[] }> = {
+  best: {
+    Icon: Award, title: "Best Overall Offer", tagline: "Above wholesale baseline", tone: "indigo",
+    body: "Your offer sits above the regional wholesale average for similar vehicles. We pair Black Book comps with live local demand to make sure our number is genuinely competitive — not just an opening bid.",
+    bullets: ["Cross-checked against 30-day local sale comps", "Adjusted for current SUV demand in your ZIP", "Held firm — no surprises at pickup"],
+  },
+  pickup: {
+    Icon: Truck, title: "Free Pickup", tagline: "We come to you", tone: "indigo",
+    body: "No need to drive across town. A pickup coordinator will arrive at your home or office, perform a 5-minute confirmation walkaround, and take the keys.",
+    bullets: ["Choose any 30-minute window we have available", "Insured transport — fully covered in transit", "No drop-off, no rental, no rideshare needed"],
+  },
+  payment: {
+    Icon: Zap, title: "Fastest Payment", tagline: "ACH within 1 business day", tone: "green",
+    body: "Funds release automatically the same business day pickup is confirmed. Most customers see the deposit settle in their account within 2 hours.",
+    bullets: ["Secure ACH direct to your linked bank", "Encrypted transfer — no checks to deposit", "Confirmation email and SMS the moment funds clear"],
+  },
+  fees: {
+    Icon: Lock, title: "No Hidden Fees", tagline: "Number you see is what you get", tone: "green",
+    body: "The firm offer is the net payout. We don't subtract auction fees, prep fees, or surprise reconditioning at pickup — that's already baked into the number.",
+    bullets: ["No prep, doc, or transport deductions", "No last-minute price drops at inspection", "Same number in writing, by email, and at pickup"],
+  },
+};
+
+/* ─── Live market status messages — rotate every 6s ─────────── */
+type MarketTone = "green" | "orange" | "indigo";
+const MARKET_MESSAGES: { tone: MarketTone; title: string; sub: string }[] = [
+  { tone: "green",  title: "Stable market",          sub: "Offer likely stable through Friday" },
+  { tone: "indigo", title: "High demand window",     sub: "Regional SUV demand elevated this week" },
+  { tone: "orange", title: "Moderate volatility",    sub: "SUV values may shift this weekend" },
+];
+const MARKET_TONE: Record<MarketTone, { bg: string; text: string; dot: string }> = {
+  green:  { bg: "bg-[#E8F8EE]", text: "text-[#0F7A3E]", dot: "bg-[#16A34A]" },
+  orange: { bg: "bg-[#FEF3E2]", text: "text-[#B45309]", dot: "bg-[#F59E0B]" },
+  indigo: { bg: "bg-[#EEF0FF]", text: "text-[#4F46E5]", dot: "bg-[#4F46E5]" },
+};
+
+const useRotatingMarketStatus = () => {
+  const [i, setI] = useState(0);
+  useEffect(() => { const id = setInterval(() => setI((x) => (x + 1) % MARKET_MESSAGES.length), 6000); return () => clearInterval(id); }, []);
+  return MARKET_MESSAGES[i];
+};
+
 /* ─── Acceptance wizard ──────────────────────────────────────── */
 const ACCEPT_STEPS = ["Terms", "Ownership", "Pickup", "Signature", "Done"];
-const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () => void; onNavigate: (k: "pickup") => void }) => {
+const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () => void; onNavigate: (k: NavTarget) => void }) => {
   const [step, setStep] = useState(0);
   useEffect(() => { if (open) setStep(0); }, [open]);
   const next = () => setStep((s) => Math.min(ACCEPT_STEPS.length - 1, s + 1));
@@ -228,7 +274,9 @@ export const OffersPage = ({ onNavigate }: Props) => {
   const [counter, setCounter] = useState(false);
   const [ask, setAsk] = useState(false);
   const [breakdown, setBreakdown] = useState(false);
+  const [advantage, setAdvantage] = useState<AdvantageKey | null>(null);
   const { days, hours, mins, secs, pct, urgent, expired } = useCountdown(MOCK.offerExpires);
+  const marketStatus = useRotatingMarketStatus();
 
   const minCounter = MOCK.firmOffer + 500;
   const maxCounter = MOCK.firmOffer + 1200;
@@ -280,39 +328,64 @@ export const OffersPage = ({ onNavigate }: Props) => {
             </div>
           </div>
 
-          {/* Countdown */}
-          <div className={`rounded-2xl bg-white border p-4 ${urgent ? "border-[#FECACA]" : "border-[#E6EAF0]"}`}>
+          {/* Countdown — soft amber urgency, animated digits */}
+          <div className={`rounded-2xl bg-white border p-4 transition-shadow ${urgent ? "border-[#FCD9A8] shadow-[0_0_0_4px_rgba(245,158,11,0.12),0_18px_36px_-22px_rgba(245,158,11,0.45)]" : "border-[#E6EAF0]"}`}>
             <div className="flex items-center justify-between">
               <div className="text-[11px] uppercase tracking-[0.14em] font-semibold text-[#53627A] inline-flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" /> Offer Expires
+                <Clock className={`w-3.5 h-3.5 ${urgent ? "text-[#B45309]" : ""}`} /> Offer Expires
               </div>
-              <motion.span
-                animate={urgent ? { opacity: [1, 0.5, 1] } : { opacity: 1 }}
-                transition={{ duration: 1.4, repeat: urgent ? Infinity : 0 }}
-                className={`w-2 h-2 rounded-full ${urgent ? "bg-[#EF4444]" : "bg-[#16A34A]"}`}
-              />
+              <span className="relative flex h-2 w-2">
+                {urgent && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F59E0B] opacity-70" />}
+                <span className={`relative inline-flex h-2 w-2 rounded-full ${urgent ? "bg-[#F59E0B]" : "bg-[#16A34A]"}`} />
+              </span>
             </div>
             <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-              {[{ n: days, l: "Days" }, { n: hours, l: "Hrs" }, { n: mins, l: "Min" }, { n: secs, l: "Sec" }].map((b) => (
-                <div key={b.l} className="rounded-xl bg-[#F7F8FB] py-2.5">
-                  <div className="text-[20px] font-extrabold text-[#06194A] leading-none tabular-nums">{String(b.n).padStart(2, "0")}</div>
-                  <div className="text-[9.5px] uppercase tracking-wide text-[#8893A8] mt-1 font-semibold">{b.l}</div>
+              {[
+                { n: days,  l: "Days",    k: "d" },
+                { n: hours, l: "Hours",   k: "h" },
+                { n: mins,  l: "Minutes", k: "m" },
+                { n: secs,  l: "Seconds", k: "s" },
+              ].map((b) => (
+                <div key={b.k} className={`rounded-xl py-3 ${urgent ? "bg-[#FEF8EE]" : "bg-[#F7F8FB]"}`}>
+                  <div className="h-[30px] overflow-hidden relative">
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      <motion.div
+                        key={String(b.n)}
+                        initial={{ y: -18, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 18, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                        className={`text-[26px] font-extrabold leading-none tabular-nums ${urgent ? "text-[#B45309]" : "text-[#06194A]"}`}
+                      >
+                        {String(b.n).padStart(2, "0")}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                  <div className="text-[9px] uppercase tracking-wide text-[#8893A8] mt-1 font-semibold">{b.l}</div>
                 </div>
               ))}
             </div>
             <div className="mt-3 h-1.5 rounded-full bg-[#F4F6FA] overflow-hidden">
               <motion.div
                 initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }}
-                className={`h-full ${urgent ? "bg-[#EF4444]" : "bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"}`}
+                className={`h-full ${urgent ? "bg-gradient-to-r from-[#F59E0B] to-[#D97706]" : "bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"}`}
               />
             </div>
-            <div className="text-[11px] text-[#53627A] text-center mt-2">{expired ? "Expired" : `Through ${MOCK.offerExpires}`}</div>
+            <div className="text-[11px] text-[#53627A] text-center mt-2">{expired ? "Expired" : `Held through ${MOCK.offerExpires}`}</div>
 
-            <div className="mt-3 flex items-center gap-2 text-[11.5px] text-[#0F7A3E] bg-[#E8F8EE] px-2.5 py-1.5 rounded-lg">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
-              <span className="font-semibold">Stable market</span>
-              <span className="text-[#53627A]">— offer likely stable through Friday</span>
-            </div>
+            {/* Rotating market intelligence */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={marketStatus.title}
+                initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.35 }}
+                className={`mt-3 flex items-center gap-2 text-[11.5px] px-2.5 py-1.5 rounded-lg ${MARKET_TONE[marketStatus.tone].bg} ${MARKET_TONE[marketStatus.tone].text}`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${MARKET_TONE[marketStatus.tone].dot}`} />
+                <span className="font-semibold">{marketStatus.title}</span>
+                <span className="text-[#53627A] truncate">— {marketStatus.sub}</span>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
@@ -320,14 +393,40 @@ export const OffersPage = ({ onNavigate }: Props) => {
         <div className="relative grid grid-cols-1 sm:grid-cols-[1.4fr_1fr_1fr] gap-2 mt-5">
           <button
             onClick={() => setAccept(true)}
-            className="group relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl py-4 px-5 text-[15px] font-bold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] shadow-[0_14px_30px_-12px_rgba(79,70,229,0.65)] hover:shadow-[0_18px_36px_-12px_rgba(79,70,229,0.8)] active:scale-[0.98] transition-all"
+            className="group relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl py-4 px-5 text-[15px] font-bold text-white bg-gradient-to-r from-[#4F46E5] via-[#5B47EA] to-[#7C3AED] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_14px_30px_-12px_rgba(79,70,229,0.7)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_22px_40px_-12px_rgba(79,70,229,0.9)] active:scale-[0.98] transition-all"
           >
-            <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent group-hover:translate-x-full transition-transform duration-[900ms]" />
-            <Check className="w-[18px] h-[18px]" /> Accept Offer <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            {/* periodic shimmer every ~9s + faster hover sweep */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:via-white/55"
+              style={{ animation: "acceptShimmer 9s ease-in-out infinite" }}
+            />
+            <style>{`@keyframes acceptShimmer { 0%, 78%, 100% { transform: translateX(-120%) skewX(-20deg); opacity: 0; } 84% { opacity: 1; } 96% { transform: translateX(420%) skewX(-20deg); opacity: 0; } }`}</style>
+            <Check className="w-[18px] h-[18px] relative z-10" />
+            <span className="relative z-10">Accept Offer</span>
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 relative z-10" />
           </button>
           <SecondaryButton onClick={() => setCounter(true)} className="py-4">Counter Offer</SecondaryButton>
           <SecondaryButton onClick={() => setAsk(true)} className="py-4"><MessageSquare className="w-4 h-4" /> Ask Question</SecondaryButton>
         </div>
+
+        {/* Live activity strip — premium SaaS intelligence */}
+        <motion.div
+          initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="relative mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11.5px] text-[#53627A]"
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-70" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#16A34A]" /></span>
+            <Eye className="w-3.5 h-3.5 text-[#0F7A3E]" /> Dealer reviewed your offer <strong className="text-[#06194A] font-semibold">12 min ago</strong>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-[#4F46E5]" /> Regional SUV demand <strong className="text-[#06194A] font-semibold">+8%</strong> this week
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Truck className="w-3.5 h-3.5 text-[#B45309]" /> Pickup available <strong className="text-[#06194A] font-semibold">within 24 hrs</strong>
+          </span>
+        </motion.div>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -350,15 +449,15 @@ export const OffersPage = ({ onNavigate }: Props) => {
                         <Info className="w-3 h-3 text-[#B6BECC] hover:text-[#4F46E5] transition-colors" />
                       </InfoTip>
                     </span>
-                    <span className={`font-bold tabular-nums ${positive ? "text-[#0F7A3E]" : "text-[#B91C1C]"}`}>
+                    <span className={`font-bold tabular-nums ${positive ? "text-[#0F7A3E]" : "text-[#B45309]"}`}>
                       {positive ? "+" : "−"}{fmt(Math.abs(b.value))}
                     </span>
                   </div>
-                  <div className="mt-1.5 h-2 rounded-full bg-[#F4F6FA] overflow-hidden">
+                  <div className="mt-1.5 h-2 rounded-full bg-[#F4F6FA] overflow-hidden group-hover:bg-white transition-colors">
                     <motion.div
                       initial={{ width: 0 }} animate={{ width: `${w}%` }}
                       transition={{ duration: 0.7, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
-                      className={`h-full rounded-full ${positive ? "bg-gradient-to-r from-[#22C55E] to-[#16A34A]" : "bg-gradient-to-r from-[#FCA5A5] to-[#EF4444]"}`}
+                      className={`h-full rounded-full transition-shadow group-hover:shadow-[0_0_10px_currentColor] ${positive ? "bg-gradient-to-r from-[#22C55E] to-[#16A34A] text-[#16A34A]/60" : "bg-gradient-to-r from-[#FCD9A8] to-[#F59E0B] text-[#F59E0B]/60"}`}
                     />
                   </div>
                 </li>
@@ -375,55 +474,106 @@ export const OffersPage = ({ onNavigate }: Props) => {
         <Card className="p-5">
           <SectionLabel>Why Your Offer Is Competitive</SectionLabel>
           <div className="grid grid-cols-2 gap-2 mt-3">
-            {[
-              { Icon: Award, t: "Best Overall Offer", d: "Above wholesale baseline" },
-              { Icon: Truck, t: "Free Pickup",        d: "We come to you" },
-              { Icon: Zap,   t: "Fastest Payment",    d: "ACH within 1 day" },
-              { Icon: Lock,  t: "No Hidden Fees",     d: "Number you see is what you get" },
-            ].map((x) => (
-              <div key={x.t} className="rounded-xl border border-[#E6EAF0] p-3 hover:border-[#4F46E5]/40 hover:shadow-[0_10px_20px_-14px_rgba(79,70,229,0.5)] transition-all">
-                <div className="w-8 h-8 rounded-lg bg-[#EEF0FF] text-[#4F46E5] grid place-items-center"><x.Icon className="w-[14px] h-[14px]" /></div>
+            {([
+              { key: "best",    Icon: Award, t: "Best Overall Offer", d: "Above wholesale baseline" },
+              { key: "pickup",  Icon: Truck, t: "Free Pickup",        d: "We come to you" },
+              { key: "payment", Icon: Zap,   t: "Fastest Payment",    d: "ACH within 1 day" },
+              { key: "fees",    Icon: Lock,  t: "No Hidden Fees",     d: "Number you see is what you get" },
+            ] as { key: AdvantageKey; Icon: any; t: string; d: string }[]).map((x) => (
+              <button
+                key={x.key}
+                onClick={() => setAdvantage(x.key)}
+                className="group text-left rounded-xl border border-[#E6EAF0] p-3 hover:border-[#4F46E5]/40 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-16px_rgba(79,70,229,0.5)] transition-all active:scale-[0.98]"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-lg bg-[#EEF0FF] text-[#4F46E5] grid place-items-center transition-transform group-hover:scale-110 group-hover:rotate-[-4deg]">
+                    <x.Icon className="w-[14px] h-[14px]" />
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-[#B6BECC] opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
                 <div className="text-[12.5px] font-bold text-[#06194A] mt-2">{x.t}</div>
                 <div className="text-[11px] text-[#53627A]">{x.d}</div>
-              </div>
+              </button>
             ))}
           </div>
 
-          {/* Private party tradeoffs */}
+          {/* Private party tradeoffs — emphasize friction, de-emphasize upside */}
           <div className="mt-4 rounded-xl border border-[#E6EAF0] p-4 bg-[#FAFBFE]">
-            <div className="flex items-center justify-between">
-              <div className="text-[13px] font-semibold text-[#06194A]">Private sale estimate</div>
-              <div className="text-[13px] font-bold text-[#0F7A3E] tabular-nums">+{fmt(1950)} potential</div>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[13px] font-semibold text-[#06194A]">Selling it yourself instead?</div>
+                <div className="text-[11.5px] text-[#53627A] mt-0.5">
+                  Potentially higher resale value <span className="text-[#0F7A3E] font-semibold tabular-nums">(~+{fmt(1950)})</span> — but with real trade-offs.
+                </div>
+              </div>
+              <span className="shrink-0 text-[10px] uppercase tracking-wider font-semibold text-[#8893A8] bg-white border border-[#E6EAF0] px-2 py-0.5 rounded-full">
+                Private sale
+              </span>
             </div>
-            <ul className="mt-2.5 space-y-1.5 text-[11.5px] text-[#53627A]">
-              <li className="flex items-center gap-2"><Clock className="w-3.5 h-3.5 text-[#B45309]" /> 2–6 week average selling time</li>
-              <li className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-[#B45309]" /> Multiple buyer meetings</li>
-              <li className="flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-[#B45309]" /> Paperwork handled yourself</li>
-              <li className="flex items-center gap-2"><AlertTriangle className="w-3.5 h-3.5 text-[#B45309]" /> Risk of failed transactions</li>
+            <ul className="mt-3 space-y-2 text-[12px] text-[#53627A]">
+              <li className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-md bg-[#FEF3E2] text-[#B45309] grid place-items-center shrink-0"><Clock className="w-3.5 h-3.5" /></span>
+                <div><span className="font-semibold text-[#06194A]">Longer selling process</span> — 2 to 6 weeks on average</div>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-md bg-[#FEF3E2] text-[#B45309] grid place-items-center shrink-0"><Users className="w-3.5 h-3.5" /></span>
+                <div><span className="font-semibold text-[#06194A]">Multiple buyer meetings</span> — test drives, negotiations, no-shows</div>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-md bg-[#FEF3E2] text-[#B45309] grid place-items-center shrink-0"><AlertTriangle className="w-3.5 h-3.5" /></span>
+                <div><span className="font-semibold text-[#06194A]">Payment uncertainty</span> — bounced checks, fraud, chargebacks</div>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-md bg-[#FEF3E2] text-[#B45309] grid place-items-center shrink-0"><FileText className="w-3.5 h-3.5" /></span>
+                <div><span className="font-semibold text-[#06194A]">Self-managed paperwork</span> — title transfer, DMV, release of liability</div>
+              </li>
             </ul>
           </div>
         </Card>
       </div>
 
-      {/* What happens next */}
+      {/* What happens next — clickable steps with animated connectors */}
       <Card className="p-5 mt-6">
         <SectionLabel>What Happens Next</SectionLabel>
         <ol className="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-3 relative">
-          {[
-            { Icon: Check,         t: "Accept Offer",     d: "Lock in your firm number", time: "1 min" },
-            { Icon: FileText,      t: "Final Documents",  d: "Upload or sign at pickup", time: "5 min" },
-            { Icon: CalendarDays,  t: "Schedule Pickup",  d: "We come to you",           time: "Free" },
-            { Icon: Wallet,        t: "Receive Payment",  d: "Secure ACH transfer",      time: "1 business day" },
-          ].map((s, i) => (
-            <li key={s.t} className="relative rounded-xl border border-[#E6EAF0] p-4 hover:border-[#4F46E5]/40 transition-all">
-              <div className="flex items-center justify-between">
-                <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#E9E2FF] text-[#4F46E5] grid place-items-center"><s.Icon className="w-4 h-4" /></span>
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8893A8]">Step {i + 1}</span>
-              </div>
-              <div className="text-[13.5px] font-bold text-[#06194A] mt-3">{s.t}</div>
-              <div className="text-[11.5px] text-[#53627A] mt-0.5">{s.d}</div>
-              <div className="text-[10.5px] text-[#4F46E5] font-semibold mt-2">{s.time}</div>
-            </li>
+          {/* Connector line (desktop only) */}
+          <span aria-hidden className="hidden sm:block absolute top-[34px] left-[8%] right-[8%] h-[2px] bg-[#EEF0F4] rounded-full" />
+          <motion.span
+            aria-hidden initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
+            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+            style={{ transformOrigin: "left" }}
+            className="hidden sm:block absolute top-[34px] left-[8%] right-[8%] h-[2px] bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#4F46E5]/30 rounded-full"
+          />
+          {([
+            { key: "accept",   Icon: Check,         t: "Accept Offer",    d: "Lock in your firm number", time: "1 min",          onClick: () => setAccept(true) },
+            { key: "docs",     Icon: FileText,      t: "Final Documents", d: "Upload or sign at pickup", time: "5 min",          onClick: () => onNavigate("documents") },
+            { key: "pickup",   Icon: CalendarDays,  t: "Schedule Pickup", d: "We come to you",           time: "Free",           onClick: () => onNavigate("pickup") },
+            { key: "payment",  Icon: Wallet,        t: "Receive Payment", d: "Secure ACH transfer",      time: "1 business day", onClick: () => onNavigate("payments") },
+          ] as { key: string; Icon: any; t: string; d: string; time: string; onClick: () => void }[]).map((s, i) => (
+            <motion.li
+              key={s.key}
+              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.1 + i * 0.07 }}
+              className="relative"
+            >
+              <button
+                onClick={s.onClick}
+                className="group w-full text-left rounded-xl border border-[#E6EAF0] bg-white p-4 hover:border-[#4F46E5]/40 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-16px_rgba(79,70,229,0.5)] transition-all active:scale-[0.98]"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#E9E2FF] text-[#4F46E5] grid place-items-center transition-transform group-hover:scale-110">
+                    <s.Icon className="w-4 h-4" />
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8893A8]">Step {i + 1}</span>
+                </div>
+                <div className="text-[13.5px] font-bold text-[#06194A] mt-3 flex items-center gap-1">
+                  {s.t}
+                  <ChevronRight className="w-3.5 h-3.5 text-[#B6BECC] opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <div className="text-[11.5px] text-[#53627A] mt-0.5">{s.d}</div>
+                <div className="text-[10.5px] text-[#4F46E5] font-semibold mt-2">{s.time}</div>
+              </button>
+            </motion.li>
           ))}
         </ol>
       </Card>
@@ -582,10 +732,10 @@ export const OffersPage = ({ onNavigate }: Props) => {
               <li key={b.label}>
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-[#06194A] font-medium">{b.label}</span>
-                  <span className={`font-bold tabular-nums ${positive ? "text-[#0F7A3E]" : "text-[#B91C1C]"}`}>{positive ? "+" : "−"}{fmt(Math.abs(b.value))}</span>
+                  <span className={`font-bold tabular-nums ${positive ? "text-[#0F7A3E]" : "text-[#B45309]"}`}>{positive ? "+" : "−"}{fmt(Math.abs(b.value))}</span>
                 </div>
                 <div className="mt-1.5 h-2 rounded-full bg-[#F4F6FA] overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${w}%` }} transition={{ duration: 0.6 }} className={`h-full rounded-full ${positive ? "bg-gradient-to-r from-[#22C55E] to-[#16A34A]" : "bg-gradient-to-r from-[#FCA5A5] to-[#EF4444]"}`} />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${w}%` }} transition={{ duration: 0.6 }} className={`h-full rounded-full ${positive ? "bg-gradient-to-r from-[#22C55E] to-[#16A34A]" : "bg-gradient-to-r from-[#FCD9A8] to-[#F59E0B]"}`} />
                 </div>
                 <p className="text-[11.5px] text-[#53627A] mt-1.5">{b.why}</p>
               </li>
@@ -596,6 +746,48 @@ export const OffersPage = ({ onNavigate }: Props) => {
           <BarChart3 className="w-4 h-4 text-[#4F46E5]" />
           Adjustments derived from local sale data and your submitted condition.
         </div>
+      </SlideOver>
+
+      {/* Competitive advantage detail drawer */}
+      <SlideOver
+        open={!!advantage} onClose={() => setAdvantage(null)}
+        title={advantage ? ADVANTAGES[advantage].title : ""}
+        subtitle={advantage ? ADVANTAGES[advantage].tagline : ""}
+        width="md"
+        footer={
+          <PrimaryButton onClick={() => setAdvantage(null)} className="w-full">
+            <Check className="w-4 h-4" /> Got it
+          </PrimaryButton>
+        }
+      >
+        {advantage && (() => {
+          const a = ADVANTAGES[advantage];
+          const tone = a.tone === "green"
+            ? { bg: "from-[#E8F8EE] to-white", border: "border-[#BBE5C6]", icon: "bg-white text-[#0F7A3E]" }
+            : { bg: "from-[#EEF0FF] to-white", border: "border-[#C7D2FE]", icon: "bg-white text-[#4F46E5]" };
+          return (
+            <div className="space-y-4">
+              <div className={`rounded-2xl bg-gradient-to-br ${tone.bg} border ${tone.border} p-4 flex items-center gap-3`}>
+                <span className={`w-11 h-11 rounded-xl grid place-items-center shadow-sm ${tone.icon}`}>
+                  <a.Icon className="w-5 h-5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[14px] font-bold text-[#06194A]">{a.title}</div>
+                  <div className="text-[11.5px] text-[#53627A]">{a.tagline}</div>
+                </div>
+              </div>
+              <p className="text-sm text-[#53627A] leading-relaxed">{a.body}</p>
+              <ul className="space-y-2">
+                {a.bullets.map((b) => (
+                  <li key={b} className="flex items-start gap-2.5 text-[13px] text-[#06194A]">
+                    <CheckCircle2 className="w-4 h-4 text-[#16A34A] mt-0.5 shrink-0" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })()}
       </SlideOver>
 
       <AcceptFlow open={accept} onClose={() => setAccept(false)} onNavigate={onNavigate} />
