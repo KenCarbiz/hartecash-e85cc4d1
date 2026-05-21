@@ -7,6 +7,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import harteLogo from "@/assets/harte-logo.png";
+import { AccountMenu } from "./AccountMenu";
 
 /* ─────────────────────────────────────────────────────────────────
    PortalSidebar — premium customer-portal navigation.
