@@ -17,13 +17,8 @@
 //
 // Per-tenant: pickup_offered still flips step 3 between "we pick up"
 // and "drop off" — same as the original.
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { DollarSign, TrendingUp, ShieldCheck } from "lucide-react";
 
-const STEP_ICONS = {
-  valuation: "/brand/autocurb/how-it-works-step-1-valuation.png",
-  trackValue: "/brand/autocurb/how-it-works-step-2-track-value.png",
-  getPaid: "/brand/autocurb/how-it-works-step-3-get-paid.png",
-} as const;
 
 const scrollToForm = () => {
   const form = document.getElementById("sell-car-form");
