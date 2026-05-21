@@ -11,6 +11,7 @@ import type {
   OfferDisplayMode,
 } from "./types";
 import { emptyMotoFlowState, type MotoFlowState } from "@/components/moto/types";
+import type { BBVehicle } from "@/components/sell-form/types";
 
 /**
  * Public entry for Moto Detailed.
