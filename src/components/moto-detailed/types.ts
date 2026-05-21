@@ -42,6 +42,40 @@ export interface JourneyContact {
 export type JourneyCondition = "excellent" | "very_good" | "good" | "fair";
 export type JourneyUsage = "trade" | "sell";
 
+/** Which post-offer branch the customer chose. */
+export type JourneyBranch = "accept" | "boost" | null;
+
+export interface JourneyTodo {
+  id: string;
+  label: string;
+  done: boolean;
+  required?: boolean;
+}
+
+export interface JourneyAppointment {
+  mode: "appointment" | "pickup";
+  date?: string;
+  timeSlot?: string;
+}
+
+export interface JourneyBoost {
+  /** Photo category keys the customer has uploaded. */
+  uploadedCategories: string[];
+  /** AI-derived confidence 0..1. */
+  aiConfidence: number | null;
+  /** Boosted firm offer. */
+  boostedFirm: number | null;
+  /** Diff between boosted firm and original firm. */
+  delta: number | null;
+}
+
+export const emptyBoost: JourneyBoost = {
+  uploadedCategories: [],
+  aiConfidence: null,
+  boostedFirm: null,
+  delta: null,
+};
+
 export interface JourneyState {
   vehicle: JourneyVehicle | null;
   valuation: JourneyValuation | null;
@@ -52,7 +86,27 @@ export interface JourneyState {
   custom: Record<string, unknown>;
   /** True once the final firm offer has been unlocked. */
   offerUnlocked: boolean;
+  /** Which post-offer path the customer chose. */
+  branch: JourneyBranch;
+  /** Acceptance / scheduling state. */
+  appointment: JourneyAppointment | null;
+  todos: JourneyTodo[];
+  /** AI Boost flow state. */
+  boost: JourneyBoost;
+  /** True once the customer has finalized (accept original or accept enhanced). */
+  finalized: boolean;
+  /** True if the customer chose Save My Offer (and may return later). */
+  saved: boolean;
 }
+
+const defaultTodos: JourneyTodo[] = [
+  { id: "registration", label: "Upload registration", done: false, required: true },
+  { id: "payoff", label: "Upload payoff information", done: false },
+  { id: "title", label: "Bring title to appointment", done: false, required: true },
+  { id: "belongings", label: "Remove personal belongings", done: false },
+  { id: "id", label: "Complete ID verification", done: false, required: true },
+  { id: "payment", label: "Select payment method", done: false, required: true },
+];
 
 export const emptyJourneyState: JourneyState = {
   vehicle: null,
@@ -62,6 +116,12 @@ export const emptyJourneyState: JourneyState = {
   contact: { firstName: "", lastName: "", email: "", phone: "", zip: "" },
   custom: {},
   offerUnlocked: false,
+  branch: null,
+  appointment: null,
+  todos: defaultTodos,
+  boost: emptyBoost,
+  finalized: false,
+  saved: false,
 };
 
 export interface StepContext {
