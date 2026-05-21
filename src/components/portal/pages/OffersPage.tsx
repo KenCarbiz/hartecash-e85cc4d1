@@ -70,6 +70,50 @@ const BREAKDOWN = [
 
 const MAX_BAR = Math.max(...BREAKDOWN.map((b) => Math.abs(b.value)));
 
+/* ─── Competitive advantage details for drawers ─────────────── */
+type AdvantageKey = "best" | "pickup" | "payment" | "fees";
+const ADVANTAGES: Record<AdvantageKey, { Icon: any; title: string; tagline: string; tone: "indigo" | "green"; body: string; bullets: string[] }> = {
+  best: {
+    Icon: Award, title: "Best Overall Offer", tagline: "Above wholesale baseline", tone: "indigo",
+    body: "Your offer sits above the regional wholesale average for similar vehicles. We pair Black Book comps with live local demand to make sure our number is genuinely competitive — not just an opening bid.",
+    bullets: ["Cross-checked against 30-day local sale comps", "Adjusted for current SUV demand in your ZIP", "Held firm — no surprises at pickup"],
+  },
+  pickup: {
+    Icon: Truck, title: "Free Pickup", tagline: "We come to you", tone: "indigo",
+    body: "No need to drive across town. A pickup coordinator will arrive at your home or office, perform a 5-minute confirmation walkaround, and take the keys.",
+    bullets: ["Choose any 30-minute window we have available", "Insured transport — fully covered in transit", "No drop-off, no rental, no rideshare needed"],
+  },
+  payment: {
+    Icon: Zap, title: "Fastest Payment", tagline: "ACH within 1 business day", tone: "green",
+    body: "Funds release automatically the same business day pickup is confirmed. Most customers see the deposit settle in their account within 2 hours.",
+    bullets: ["Secure ACH direct to your linked bank", "Encrypted transfer — no checks to deposit", "Confirmation email and SMS the moment funds clear"],
+  },
+  fees: {
+    Icon: Lock, title: "No Hidden Fees", tagline: "Number you see is what you get", tone: "green",
+    body: "The firm offer is the net payout. We don't subtract auction fees, prep fees, or surprise reconditioning at pickup — that's already baked into the number.",
+    bullets: ["No prep, doc, or transport deductions", "No last-minute price drops at inspection", "Same number in writing, by email, and at pickup"],
+  },
+};
+
+/* ─── Live market status messages — rotate every 6s ─────────── */
+type MarketTone = "green" | "orange" | "indigo";
+const MARKET_MESSAGES: { tone: MarketTone; title: string; sub: string }[] = [
+  { tone: "green",  title: "Stable market",          sub: "Offer likely stable through Friday" },
+  { tone: "indigo", title: "High demand window",     sub: "Regional SUV demand elevated this week" },
+  { tone: "orange", title: "Moderate volatility",    sub: "SUV values may shift this weekend" },
+];
+const MARKET_TONE: Record<MarketTone, { bg: string; text: string; dot: string }> = {
+  green:  { bg: "bg-[#E8F8EE]", text: "text-[#0F7A3E]", dot: "bg-[#16A34A]" },
+  orange: { bg: "bg-[#FEF3E2]", text: "text-[#B45309]", dot: "bg-[#F59E0B]" },
+  indigo: { bg: "bg-[#EEF0FF]", text: "text-[#4F46E5]", dot: "bg-[#4F46E5]" },
+};
+
+const useRotatingMarketStatus = () => {
+  const [i, setI] = useState(0);
+  useEffect(() => { const id = setInterval(() => setI((x) => (x + 1) % MARKET_MESSAGES.length), 6000); return () => clearInterval(id); }, []);
+  return MARKET_MESSAGES[i];
+};
+
 /* ─── Acceptance wizard ──────────────────────────────────────── */
 const ACCEPT_STEPS = ["Terms", "Ownership", "Pickup", "Signature", "Done"];
 const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () => void; onNavigate: (k: NavTarget) => void }) => {
