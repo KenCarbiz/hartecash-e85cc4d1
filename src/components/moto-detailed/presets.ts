@@ -48,6 +48,10 @@ const vehicle = (): StepDefinition => ({
   pageTitle: "Get an instant vehicle valuation",
   pageSubtitle: "Enter a few details about your vehicle and see your estimated value.",
   Component: StepVehicle,
+  // Phase-1 landing (MotoStepVehicleSearch via MotoDetailedFlow) handles
+  // vehicle identification before the engine mounts. Skip the engine's
+  // own vehicle step when the vehicle is already known.
+  shouldRender: (state) => !state.vehicle,
 });
 const condition = (): StepDefinition => ({
   id: "condition", title: "Condition", helper: "Rate your vehicle",
