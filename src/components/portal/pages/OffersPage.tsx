@@ -449,15 +449,15 @@ export const OffersPage = ({ onNavigate }: Props) => {
                         <Info className="w-3 h-3 text-[#B6BECC] hover:text-[#4F46E5] transition-colors" />
                       </InfoTip>
                     </span>
-                    <span className={`font-bold tabular-nums ${positive ? "text-[#0F7A3E]" : "text-[#B91C1C]"}`}>
+                    <span className={`font-bold tabular-nums ${positive ? "text-[#0F7A3E]" : "text-[#B45309]"}`}>
                       {positive ? "+" : "−"}{fmt(Math.abs(b.value))}
                     </span>
                   </div>
-                  <div className="mt-1.5 h-2 rounded-full bg-[#F4F6FA] overflow-hidden">
+                  <div className="mt-1.5 h-2 rounded-full bg-[#F4F6FA] overflow-hidden group-hover:bg-white transition-colors">
                     <motion.div
                       initial={{ width: 0 }} animate={{ width: `${w}%` }}
                       transition={{ duration: 0.7, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
-                      className={`h-full rounded-full ${positive ? "bg-gradient-to-r from-[#22C55E] to-[#16A34A]" : "bg-gradient-to-r from-[#FCA5A5] to-[#EF4444]"}`}
+                      className={`h-full rounded-full transition-shadow group-hover:shadow-[0_0_10px_currentColor] ${positive ? "bg-gradient-to-r from-[#22C55E] to-[#16A34A] text-[#16A34A]/60" : "bg-gradient-to-r from-[#FCD9A8] to-[#F59E0B] text-[#F59E0B]/60"}`}
                     />
                   </div>
                 </li>
