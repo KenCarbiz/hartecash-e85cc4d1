@@ -1,6 +1,7 @@
 import { Lock } from "lucide-react";
 import PrimaryCTA from "../PrimaryCTA";
 import type { StepContext } from "../types";
+import { trackContactSubmitted, trackCtaClicked } from "../analytics";
 
 const StepContact = ({ state, update, next }: StepContext) => {
   const c = state.contact;
@@ -9,6 +10,8 @@ const StepContact = ({ state, update, next }: StepContext) => {
 
   const onSubmit = () => {
     if (!valid) return;
+    trackCtaClicked("contact", "See My Offer");
+    trackContactSubmitted();
     update({ offerUnlocked: true });
     next();
   };

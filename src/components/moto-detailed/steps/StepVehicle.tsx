@@ -1,25 +1,17 @@
 import { useState } from "react";
 import { Search, Loader2 } from "lucide-react";
 import PrimaryCTA from "../PrimaryCTA";
-import type { StepContext, JourneyValuation } from "../types";
+import type { StepContext } from "../types";
+import { defaultBlackBookAdapter, buildVehicleFromInput, type ValuationAdapter } from "../blackbookAdapter";
+import { trackCtaClicked } from "../analytics";
 
 /**
- * Stub: in production, replace with the bb-lookup edge function call.
- * Returns a believable range so the customer sees momentum immediately.
+ * Vehicle Search step. Calls a pluggable valuation adapter (default:
+ * stub; production: bb-lookup edge function via blackbookAdapter).
+ * Once a range returns it is written to state.valuation and surfaces
+ * immediately in SummaryPanel + later steps.
  */
-const fakeLookup = async (year: string, make: string, model: string): Promise<JourneyValuation> => {
-  await new Promise((r) => setTimeout(r, 900));
-  const base = 18000 + (parseInt(year || "2020", 10) - 2015) * 600;
-  return {
-    low: Math.round(base * 0.92),
-    high: Math.round(base * 1.08),
-    confidence: "medium",
-    marketStrength: "balanced",
-    trend: [0.45, 0.5, 0.48, 0.55, 0.6, 0.58, 0.65, 0.7],
-  };
-};
-
-const StepVehicle = ({ state, update, next }: StepContext) => {
+const StepVehicle = ({ state, update, next, lookup = defaultBlackBookAdapter }: StepContext & { lookup?: ValuationAdapter }) => {
   const [year, setYear] = useState(state.vehicle?.year ?? "");
   const [make, setMake] = useState(state.vehicle?.make ?? "");
   const [model, setModel] = useState(state.vehicle?.model ?? "");
@@ -30,9 +22,11 @@ const StepVehicle = ({ state, update, next }: StepContext) => {
 
   const submit = async () => {
     if (!valid) return;
+    trackCtaClicked("vehicle", "Next");
     setBusy(true);
-    update({ vehicle: { year, make, model, trim } });
-    const valuation = await fakeLookup(year, make, model);
+    const input = { year, make, model, trim };
+    update({ vehicle: buildVehicleFromInput(input) });
+    const valuation = await lookup(input);
     update({ valuation });
     setBusy(false);
     next();
