@@ -4,15 +4,6 @@ import StepCondition from "./steps/StepCondition";
 import StepUsage from "./steps/StepUsage";
 import StepContact from "./steps/StepContact";
 import StepOfferReady from "./steps/StepOfferReady";
-import {
-  StepPhotos,
-  StepPayoff,
-  StepTradeSell,
-  StepDealerQuestions,
-  StepDocuments,
-  StepSchedule,
-  StepComplete,
-} from "./steps/StepPlaceholder";
 
 
 /**
