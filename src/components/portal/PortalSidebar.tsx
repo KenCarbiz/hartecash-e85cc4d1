@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Home, Car, Tag, Activity, MessageCircle, FileText, BarChart3,
-  CreditCard, Truck, Settings, ChevronLeft, ChevronRight, ChevronDown,
-  Menu, X, Bell, MessageSquare, Upload, HelpCircle,
+  CreditCard, Truck, Settings, ChevronLeft, ChevronRight,
+  Menu, X, Bell, MessageSquare, Upload, HelpCircle, Bot, ShieldCheck, Lock,
   type LucideIcon,
 } from "lucide-react";
 import harteLogo from "@/assets/harte-logo.png";
