@@ -52,7 +52,58 @@ const TemplateThumbnail = ({ template, className = "" }: Props) => {
         </div>
       );
 
-    // CLARITY: Apple-minimal white. Just the form, massive negative space.
+    // MOTO DETAILED: 3-column guided journey — left rail, center step card, right value summary.
+    case "moto_detailed":
+      return (
+        <div className={wrapClass}>
+          <svg {...common}>
+            <rect x="0" y="0" width="160" height="100" fill="#FFFFFF" />
+            {/* dealer wordmark */}
+            <rect x="6" y="6" width="18" height="3" rx="0.5" fill="#0A0A0A" />
+            {/* mobile stepper bar */}
+            <rect x="6" y="14" width="148" height="1.4" rx="0.7" fill="#F1F3F5" />
+            <rect x="6" y="14" width="60" height="1.4" rx="0.7" fill="#7C3AED" />
+
+            {/* LEFT — journey rail */}
+            <circle cx="12" cy="26" r="2.4" fill="#22C55E" />
+            <rect x="17" y="25" width="22" height="2" rx="0.4" fill="#0A0A0A" />
+            <rect x="17" y="28" width="16" height="1.4" rx="0.3" fill="#A1A1AA" />
+            <circle cx="12" cy="38" r="2.4" fill="#7C3AED" />
+            <rect x="17" y="37" width="22" height="2" rx="0.4" fill="#0A0A0A" />
+            <rect x="17" y="40" width="14" height="1.4" rx="0.3" fill="#A1A1AA" />
+            <circle cx="12" cy="50" r="2.4" fill="#E5E7EB" />
+            <rect x="17" y="49" width="20" height="2" rx="0.4" fill="#9CA3AF" />
+            <circle cx="12" cy="62" r="2.4" fill="#E5E7EB" />
+            <rect x="17" y="61" width="22" height="2" rx="0.4" fill="#9CA3AF" />
+            <circle cx="12" cy="74" r="2.4" fill="#E5E7EB" />
+            <rect x="17" y="73" width="18" height="2" rx="0.4" fill="#9CA3AF" />
+
+            {/* CENTER — active step card */}
+            <rect x="48" y="22" width="68" height="58" rx="2.5" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="0.4" />
+            <rect x="53" y="28" width="44" height="3" rx="0.5" fill="#0A0A0A" />
+            <rect x="53" y="33" width="56" height="1.6" rx="0.3" fill="#A1A1AA" />
+            {/* option cards */}
+            <rect x="53" y="40" width="27" height="14" rx="1.5" fill="#F5F3FF" stroke="#7C3AED" strokeWidth="0.5" />
+            <rect x="84" y="40" width="27" height="14" rx="1.5" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="0.4" />
+            <rect x="53" y="57" width="27" height="14" rx="1.5" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="0.4" />
+            <rect x="84" y="57" width="27" height="14" rx="1.5" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="0.4" />
+            {/* purple CTA */}
+            <rect x="53" y="74" width="58" height="4" rx="1.5" fill="#7C3AED" />
+
+            {/* RIGHT — vehicle + value summary */}
+            <rect x="120" y="22" width="34" height="22" rx="2" fill="#E5E7EB" />
+            <rect x="120" y="48" width="34" height="32" rx="2" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="0.4" />
+            <rect x="123" y="52" width="16" height="1.6" rx="0.3" fill="#A1A1AA" />
+            <rect x="123" y="56" width="24" height="2.6" rx="0.4" fill="#0A0A0A" />
+            {/* gold range accent */}
+            <rect x="123" y="62" width="28" height="1.2" rx="0.3" fill="#FCD34D" />
+            <rect x="123" y="65" width="20" height="1.2" rx="0.3" fill="#E5E7EB" />
+            {/* trust badges */}
+            <rect x="123" y="71" width="28" height="2.2" rx="0.4" fill="#DCFCE7" />
+            <rect x="123" y="75" width="28" height="2.2" rx="0.4" fill="#F5F3FF" />
+          </svg>
+        </div>
+      );
     case "clarity":
       return (
         <div className={wrapClass}>
