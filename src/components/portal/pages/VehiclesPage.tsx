@@ -423,12 +423,15 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
   const [edit, setEdit] = useState(false);
   const [upload, setUpload] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [verify, setVerify] = useState(false);
   const [gallery, setGallery] = useState<{ open: boolean; idx: number }>({ open: false, idx: 0 });
   const [history, setHistory] = useState<null | { y: number; mk: string; mdl: string; mi: string; amount?: number; date: string; outcome: "sold" | "declined" }>(null);
   const [wizard, setWizard] = useState(false);
   const v = MOCK.vehicle;
 
   const pendingDocs = MOCK.docs.filter((d) => d.status !== "Approved").length;
+  const exterior = PHOTO_BUCKETS.find((b) => b.label === "Exterior")!;
+  const remainingExterior = Math.max(0, exterior.target - exterior.count);
 
   return (
     <PortalPageShell
@@ -441,28 +444,47 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
       }
     >
       {/* Header summary chips */}
-      <div className="flex flex-wrap items-center gap-2 mb-5">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         <SummaryChip label="Active Vehicles" value={1} Icon={Car} tone="indigo" />
         <SummaryChip label="Pending Docs" value={pendingDocs} Icon={FileText} tone="orange" />
         <SummaryChip label="Current Offer" value={MOCK.firmOffer} prefix="$" Icon={DollarSign} tone="green" />
       </div>
 
+      {/* Smart next-step guidance — adapts to vehicle state */}
+      {remainingExterior > 0 ? (
+        <SmartGuidanceBanner
+          tone="orange" Icon={Lightbulb}
+          title="Action needed"
+          description={`Upload ${remainingExterior} more exterior photo${remainingExterior > 1 ? "s" : ""} to finalize your firm offer.`}
+          ctaLabel="Upload now" onCta={() => setUpload(true)}
+        />
+      ) : (
+        <SmartGuidanceBanner
+          tone="green" Icon={Sparkles}
+          title="Great progress"
+          description="Your vehicle is ready — schedule pickup to lock in your offer."
+          ctaLabel="Schedule pickup" onCta={() => onNavigate("pickup")}
+        />
+      )}
+
       {/* Active vehicle hero */}
       <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
         <Card className="p-5 mb-6 hover:shadow-[0_18px_40px_-24px_rgba(15,23,42,0.25)] transition-shadow">
           <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] gap-5 items-center">
-            {/* Image area */}
+            {/* Image area — better framed, centered, slightly elevated */}
             <button
               onClick={() => setGallery({ open: true, idx: 0 })}
-              className="group relative h-[220px] rounded-2xl overflow-hidden bg-gradient-to-br from-white via-[#EEF0FF] to-[#E9E2FF] border border-[#E6EAF0] grid place-items-center cursor-pointer"
+              className="group relative h-[240px] rounded-2xl overflow-hidden bg-gradient-to-br from-white via-[#EEF0FF] to-[#E9E2FF] border border-[#E6EAF0] cursor-pointer"
               aria-label="Open photo gallery"
             >
-              {/* ambient shadow */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[70%] h-6 bg-[#06194A]/20 blur-2xl rounded-full" />
-              <img
-                src={vehicleHero} alt={`${v.year} ${v.make} ${v.model}`}
-                className="relative w-auto h-full object-contain scale-[1.12] drop-shadow-[0_18px_14px_rgba(15,23,42,0.18)] transition-transform duration-500 group-hover:scale-[1.18]"
-              />
+              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[68%] h-7 bg-[#06194A]/22 blur-2xl rounded-full pointer-events-none" />
+              <div className="absolute inset-0 flex items-center justify-center px-6 pt-2 pb-6">
+                <img
+                  src={vehicleHero} alt={`${v.year} ${v.make} ${v.model}`}
+                  className="max-h-full max-w-full object-contain drop-shadow-[0_18px_14px_rgba(15,23,42,0.18)] transition-transform duration-500 ease-out group-hover:scale-[1.05] -translate-y-1"
+                />
+              </div>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_45%,rgba(79,70,229,0.18),transparent_60%)] pointer-events-none" />
               <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/85 backdrop-blur text-[#06194A] border border-white/60 shadow-sm">
                 <ImageIcon className="w-3.5 h-3.5" /> {GALLERY.length} Photos
               </span>
@@ -475,9 +497,12 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
             <div>
               <div className="flex items-center gap-2">
                 <SectionLabel>Active Vehicle</SectionLabel>
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E8F8EE] text-[#0F7A3E]">
+                <button
+                  onClick={() => setVerify(true)}
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E8F8EE] text-[#0F7A3E] hover:bg-[#D6F0DF] transition"
+                >
                   <ShieldCheck className="w-3 h-3" /> Verified VIN
-                </span>
+                </button>
               </div>
               <h2 className="text-[22px] font-bold mt-1 leading-tight text-[#06194A]">
                 {v.year} {v.make} {v.model} {v.trim}
@@ -487,25 +512,35 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
 
               <div className="flex flex-wrap items-center gap-2 mt-3">
                 <ActionPill tone="green"  Icon={DollarSign}  onClick={() => onNavigate("offers")}>Firm Offer Ready</ActionPill>
-                <ActionPill tone="orange" Icon={FileText}    onClick={() => onNavigate("documents")}>{pendingDocs} docs pending</ActionPill>
-                <ActionPill tone="gray"   Icon={CalendarDays} onClick={() => onNavigate("pickup")}>Pickup not scheduled</ActionPill>
+                <ActionPill tone="orange" Icon={FileText}    onClick={() => onNavigate("documents")} pulse>{pendingDocs} docs pending</ActionPill>
+                <ActionPill tone="gray"   Icon={CalendarDays} onClick={() => onNavigate("pickup")} pulse>Pickup not scheduled</ActionPill>
+                <ActionPill tone="indigo" Icon={ShieldCheck}  onClick={() => setVerify(true)}>Verified VIN</ActionPill>
               </div>
 
               {/* Action hierarchy */}
               <div className="mt-5 flex flex-wrap items-center gap-2">
-                <PrimaryButton onClick={() => onNavigate("offers")} className="group px-5 py-3 text-[14px]">
-                  View Offer <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                <PrimaryButton onClick={() => onNavigate("offers")} className="group relative overflow-hidden px-5 py-3 text-[14px]">
+                  <span className="relative z-10 inline-flex items-center gap-2">
+                    View Offer <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/35 to-transparent"
+                    style={{ animation: "viewOfferShimmer 9s ease-in-out infinite" }}
+                  />
+                  <style>{`@keyframes viewOfferShimmer { 0%, 80%, 100% { transform: translateX(-120%) skewX(-20deg); opacity: 0; } 85% { opacity: 1; } 95% { transform: translateX(420%) skewX(-20deg); opacity: 0; } }`}</style>
                 </PrimaryButton>
-                <SecondaryButton onClick={() => setEdit(true)}><Edit3 className="w-4 h-4" /> Edit Vehicle</SecondaryButton>
+                <SecondaryButton onClick={() => setEdit(true)} className="group">
+                  <Edit3 className="w-4 h-4 transition-transform group-hover:rotate-[-8deg]" /> Edit Vehicle
+                </SecondaryButton>
                 <SecondaryButton onClick={() => setUpload(true)} className="group">
                   <Camera className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" /> Upload Photos
                 </SecondaryButton>
-                <button
-                  onClick={() => setConfirmRemove(true)}
-                  className="ml-auto inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[#8893A8] hover:text-[#B91C1C] px-2 py-1.5 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Remove
-                </button>
+                <OverflowMenu
+                  onRemove={() => setConfirmRemove(true)}
+                  onArchive={() => toast.success("Vehicle archived")}
+                  onDownload={() => toast.success("Vehicle data export started")}
+                />
               </div>
             </div>
           </div>
