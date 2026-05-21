@@ -1,0 +1,541 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, type PanInfo } from "framer-motion";
+import {
+  ChevronLeft, ChevronRight, Copy, Check, TrendingUp, Sparkles, Camera,
+  ShieldCheck, Gauge, Star, Image as ImageIcon, Wrench, AlertCircle,
+  Activity, Flame, Zap, MapPin, Clock, FileText, Truck, Wallet, Trophy,
+  CircleDot, Plus, Brain,
+} from "lucide-react";
+import vehicleHero from "@/assets/portal-vehicle-rav4.png";
+import { PORTAL_MOCK as MOCK, fmt } from "./portalMock";
+
+/* ============================================================== */
+/*  Slide data — single source of truth                            */
+/* ============================================================== */
+
+const PHOTO_CATEGORIES = [
+  { id: "ext",  label: "Exterior",  count: 8,  ai: "Excellent Lighting",   tone: "green"  as const },
+  { id: "int",  label: "Interior",  count: 6,  ai: "Dealer Ready",          tone: "green"  as const },
+  { id: "whl",  label: "Wheels",    count: 4,  ai: "Sharp Focus",           tone: "green"  as const },
+  { id: "odo",  label: "Odometer",  count: 1,  ai: "Minor Glare",           tone: "orange" as const },
+  { id: "dmg",  label: "Damage",    count: 2,  ai: "Reviewed",              tone: "indigo" as const },
+  { id: "doc",  label: "Documents", count: 3,  ai: "All Legible",           tone: "green"  as const },
+];
+
+const CONDITION = [
+  { label: "Exterior",       tone: "green"  as const, status: "Excellent",          note: "Paint and panels in great shape." },
+  { label: "Interior",       tone: "orange" as const, status: "Minor wear",         note: "Light driver-seat bolster wear." },
+  { label: "Tires",          tone: "green"  as const, status: "Above average tread", note: "6/32\" remaining on all four." },
+  { label: "Windshield",     tone: "green"  as const, status: "No cracks",          note: "Clean, no chips reported." },
+  { label: "Mechanical",     tone: "green"  as const, status: "Healthy",            note: "No active codes detected." },
+  { label: "Warning lights", tone: "green"  as const, status: "None active",        note: "Clean cluster on scan." },
+  { label: "Accident history", tone: "green" as const, status: "Clean record",      note: "No reported incidents on file." },
+];
+
+const CONDITION_SCORE = 8.7;
+
+const OFFER_FACTORS = [
+  { label: "Base market value",       value:  19200, pct:  92, tone: "green"  as const, tip: "Wholesale baseline for your trim & year." },
+  { label: "Low mileage adjustment",  value:    420, pct:  20, tone: "green"  as const, tip: "Under 30k miles increases dealer demand." },
+  { label: "Condition adjustment",    value:    180, pct:   9, tone: "green"  as const, tip: "Above-average inspection grade." },
+  { label: "Regional demand bonus",   value:    310, pct:  15, tone: "green"  as const, tip: "Hartford metro inventory down 18%." },
+  { label: "Trim premium (XLE)",      value:    260, pct:  12, tone: "green"  as const, tip: "XLE attracts CPO buyers." },
+  { label: "Seasonal adjustment",     value:    100, pct:   5, tone: "green"  as const, tip: "Spring SUV demand uplift." },
+  { label: "Reconditioning estimate", value:   -320, pct:  15, tone: "red"    as const, tip: "Light detail and one tire rotation." },
+];
+
+const MARKET_TICKER = [
+  { icon: TrendingUp, text: "SUVs under 30k miles trending upward",     tone: "green"  as const },
+  { icon: Flame,      text: "Hartford inventory down 8% this week",      tone: "indigo" as const },
+  { icon: Zap,        text: "High demand for clean-title RAV4 XLE",      tone: "indigo" as const },
+  { icon: Activity,   text: "Pricing model refreshed 2 hours ago",       tone: "gray"   as const },
+];
+
+const TIMELINE = [
+  { id: 1, label: "Vehicle Submitted",     state: "done"    as const, when: "May 11",            icon: FileText },
+  { id: 2, label: "Offer Generated",       state: "done"    as const, when: "May 11",            icon: Wallet },
+  { id: 3, label: "Documents Verified",    state: "done"    as const, when: "May 13",            icon: ShieldCheck },
+  { id: 4, label: "Inspection Scheduled",  state: "active"  as const, when: "Awaiting",          icon: Gauge },
+  { id: 5, label: "Pickup / Drop-Off",     state: "pending" as const, when: "Est. May 18",       icon: Truck },
+  { id: 6, label: "Payment Released",      state: "pending" as const, when: "Within 2 hrs",      icon: Wallet },
+  { id: 7, label: "Transaction Complete",  state: "pending" as const, when: "Final",             icon: Trophy },
+];
+
+/* ============================================================== */
+/*  Slides                                                         */
+/* ============================================================== */
+
+const SLIDE_TITLES = [
+  "Vehicle Overview", "Photo Gallery", "Condition Report",
+  "Offer Breakdown", "Market Intelligence", "Transaction Progress",
+];
+
+const SLIDE_HEIGHT = "min-h-[380px]";
+
+/* ---------- 1. Vehicle Overview --------------------------------- */
+const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () => void }) => (
+  <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-5 items-center">
+    <div className="relative h-[180px] md:h-[230px] flex items-center justify-center overflow-hidden group">
+      <div className="absolute inset-0 grid place-items-center pointer-events-none">
+        <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
+      </div>
+      <img
+        src={vehicleHero}
+        alt={`${MOCK.vehicle.year} ${MOCK.vehicle.make} ${MOCK.vehicle.model}`}
+        loading="lazy"
+        className="relative z-10 max-h-full w-auto object-contain scale-[1.28] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.35]"
+      />
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[68%] h-[12px] rounded-[50%] bg-black/25 blur-md z-0" />
+    </div>
+
+    <div>
+      <h2 className="text-[22px] font-bold leading-tight tracking-tight text-[#06194A]">
+        {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
+      </h2>
+      <p className="text-sm text-[#53627A] mt-1">
+        {MOCK.vehicle.miles} mi · {MOCK.vehicle.engine} · {MOCK.vehicle.body} · {MOCK.vehicle.drivetrain}
+      </p>
+      <div className="mt-2 flex items-center gap-2 text-xs text-[#53627A]">
+        <span className="font-mono tracking-tight">{MOCK.vehicle.vin}</span>
+        <button onClick={onCopy} aria-label="Copy VIN" className="p-1 rounded-md hover:bg-[#F4F6FA] transition">
+          {copied ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
+        </button>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] via-[#F2FBF6] to-[#F0FAF4] px-4 py-3">
+        <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#53627A]">Estimated Value Range</div>
+        <div className="text-[24px] font-extrabold leading-none text-[#06194A] mt-1 whitespace-nowrap tracking-tight">
+          {fmt(MOCK.range.low)} <span className="text-[#94A3B8] font-bold">–</span> {fmt(MOCK.range.high)}
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2 py-0.5 rounded-full">
+            <TrendingUp className="w-3 h-3" /> Strong Market
+          </span>
+          <span className="text-[10px] text-[#8893A8] inline-flex items-center gap-1">
+            <Activity className="w-3 h-3" /> Updated 14 min ago
+          </span>
+        </div>
+        <Mini />
+      </div>
+    </div>
+  </div>
+);
+
+const Mini = () => {
+  const pts = [10, 16, 14, 22, 26, 24, 32, 30, 38, 42, 46, 52];
+  const w = 520, h = 56, pad = 4;
+  const max = Math.max(...pts), min = Math.min(...pts);
+  const x = (i: number) => pad + (i * (w - pad * 2)) / (pts.length - 1);
+  const y = (v: number) => h - pad - ((v - min) / (max - min)) * (h - pad * 2);
+  const d = pts.map((v, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(v)}`).join(" ");
+  const area = `${d} L${x(pts.length - 1)},${h} L${x(0)},${h} Z`;
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[56px] mt-2" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="vhcMini" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%"  stopColor="#16A34A" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="#16A34A" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill="url(#vhcMini)" />
+      <path d={d} fill="none" stroke="#16A34A" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+};
+
+/* ---------- 2. Photo Gallery ------------------------------------ */
+const PhotoGallerySlide = () => {
+  const [active, setActive] = useState(0);
+  const cat = PHOTO_CATEGORIES[active];
+  const TONE: Record<string, string> = {
+    green:  "bg-[#E8F8EE] text-[#0F7A3E]",
+    orange: "bg-[#FEF3E2] text-[#B45309]",
+    indigo: "bg-[#EEF0FF] text-[#4F46E5]",
+  };
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-5">
+      <div>
+        <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] grid place-items-center group">
+          <img src={vehicleHero} alt={cat.label} loading="lazy"
+               className="w-[80%] object-contain drop-shadow-[0_22px_22px_rgba(15,23,42,0.18)] transition-transform duration-500 group-hover:scale-105" />
+          <span className={`absolute top-3 left-3 inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded-full ${TONE[cat.tone]}`}>
+            <Sparkles className="w-3 h-3" /> {cat.ai}
+          </span>
+          <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 text-[10px] font-semibold text-white bg-black/55 backdrop-blur px-2 py-1 rounded-full">
+            <ImageIcon className="w-3 h-3" /> {cat.count} photos
+          </span>
+        </div>
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {PHOTO_CATEGORIES.slice(0, 6).map((p, i) => (
+            <button key={p.id} onClick={() => setActive(i)}
+              className={`w-14 h-14 rounded-xl shrink-0 grid place-items-center text-[10px] font-semibold transition ${
+                i === active
+                  ? "bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white shadow-[0_8px_16px_-8px_rgba(79,70,229,0.6)]"
+                  : "bg-[#F4F6FA] text-[#53627A] hover:bg-[#EEF0FF]"
+              }`}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Photo Sets</div>
+        <ul className="mt-2 space-y-2">
+          {PHOTO_CATEGORIES.map((p, i) => (
+            <li key={p.id}>
+              <button onClick={() => setActive(i)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left ${
+                  i === active ? "bg-[#EEF0FF] ring-1 ring-[#C7D2FE]" : "hover:bg-[#F7F8FB]"
+                }`}>
+                <span className="flex items-center gap-2 min-w-0">
+                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg ${TONE[p.tone]}`}>
+                    <Camera className="w-3 h-3" />
+                  </span>
+                  <span className="text-[13px] font-semibold text-[#06194A] truncate">{p.label}</span>
+                </span>
+                <span className="text-[11px] text-[#8893A8] tabular-nums">{p.count}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button className="mt-3 w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-white border border-dashed border-[#C7D2FE] hover:bg-[#EEF0FF] rounded-xl py-2 transition">
+          <Plus className="w-3.5 h-3.5" /> Upload More Photos
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* ---------- 3. Condition Report --------------------------------- */
+const ConditionSlide = () => {
+  const TONE: Record<string, string> = {
+    green:  "bg-[#E8F8EE] text-[#0F7A3E] border-[#BBF7D0]",
+    orange: "bg-[#FEF3E2] text-[#B45309] border-[#FED7AA]",
+  };
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-5">
+      <div className="rounded-2xl bg-gradient-to-br from-[#F5F3FF] via-white to-[#EEF0FF] border border-[#E0E7FF] p-4 flex flex-col items-center text-center">
+        <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Condition Score</div>
+        <div className="relative w-[120px] h-[120px] mt-3">
+          <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+            <circle cx="60" cy="60" r="50" stroke="#EEF0F4" strokeWidth="9" fill="none" />
+            <motion.circle cx="60" cy="60" r="50" stroke="url(#cond)" strokeWidth="9" fill="none" strokeLinecap="round"
+              strokeDasharray={2 * Math.PI * 50}
+              initial={{ strokeDashoffset: 2 * Math.PI * 50 }}
+              animate={{ strokeDashoffset: 2 * Math.PI * 50 * (1 - CONDITION_SCORE / 10) }}
+              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }} />
+            <defs>
+              <linearGradient id="cond" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#4F46E5" />
+                <stop offset="100%" stopColor="#16A34A" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div className="absolute inset-0 grid place-items-center">
+            <div className="text-center">
+              <div className="text-[28px] font-extrabold text-[#06194A] tabular-nums leading-none">{CONDITION_SCORE}</div>
+              <div className="text-[10px] text-[#8893A8] mt-0.5">out of 10</div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#4F46E5] bg-[#EEF0FF] px-2.5 py-1 rounded-full">
+          <Brain className="w-3 h-3" /> AI confidence 94%
+        </div>
+        <div className="mt-3 text-[11px] text-[#53627A] leading-snug">
+          Multi-source review of photos, scan reports, and customer notes.
+        </div>
+      </div>
+
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 content-start">
+        {CONDITION.map((c) => (
+          <li key={c.label} className={`rounded-xl border p-3 ${TONE[c.tone]}`}>
+            <div className="flex items-center justify-between">
+              <span className="text-[12px] font-bold text-[#06194A]">{c.label}</span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold">
+                {c.tone === "green" ? <CircleDot className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                {c.status}
+              </span>
+            </div>
+            <div className="text-[11px] text-[#53627A] mt-1 leading-snug">{c.note}</div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+/* ---------- 4. Offer Breakdown --------------------------------- */
+const OfferBreakdownSlide = () => {
+  const maxAbs = Math.max(...OFFER_FACTORS.map((f) => Math.abs(f.value)));
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-5">
+      <ul className="space-y-2">
+        {OFFER_FACTORS.map((f, i) => {
+          const pct = (Math.abs(f.value) / maxAbs) * 100;
+          const positive = f.value >= 0;
+          return (
+            <li key={f.label} className="group" title={f.tip}>
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="font-semibold text-[#06194A] truncate">{f.label}</span>
+                <span className={`tabular-nums font-bold ${positive ? "text-[#0F7A3E]" : "text-[#B91C1C]"}`}>
+                  {positive ? "+" : "−"}${Math.abs(f.value).toLocaleString()}
+                </span>
+              </div>
+              <div className="h-2 mt-1 rounded-full bg-[#F4F6FA] overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 0.6, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                  className={`h-full rounded-full ${positive ? "bg-gradient-to-r from-[#16A34A] to-[#22C55E]" : "bg-gradient-to-r from-[#F87171] to-[#DC2626]"}`}
+                />
+              </div>
+              <div className="text-[10.5px] text-[#8893A8] mt-1 truncate opacity-0 group-hover:opacity-100 transition">
+                {f.tip}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="rounded-2xl bg-gradient-to-br from-[#06194A] to-[#1E1B4B] text-white p-4 flex flex-col">
+        <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A5B4FC]">Final Firm Offer</div>
+        <div className="text-[34px] font-extrabold leading-none mt-1 tabular-nums">{fmt(MOCK.firmOffer)}</div>
+        <div className="text-[11px] text-[#CBD5F5] mt-1">Held by {MOCK.customer.dealer}</div>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+          <span className="inline-flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1"><ShieldCheck className="w-3 h-3" /> No obligation</span>
+          <span className="inline-flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1"><Truck className="w-3 h-3" /> Free pickup</span>
+        </div>
+        <div className="mt-auto pt-3 text-[10px] text-[#CBD5F5]">Expires {MOCK.offerExpires}</div>
+      </div>
+    </div>
+  );
+};
+
+/* ---------- 5. Market Intelligence ------------------------------ */
+const MarketSlide = () => {
+  const [t, setT] = useState(0);
+  useEffect(() => { const id = setInterval(() => setT((i) => (i + 1) % MARKET_TICKER.length), 3200); return () => clearInterval(id); }, []);
+  const item = MARKET_TICKER[t];
+  const Icon = item.icon;
+  const TONE_BG: Record<string, string> = {
+    green:  "bg-[#E8F8EE] text-[#0F7A3E]",
+    indigo: "bg-[#EEF0FF] text-[#4F46E5]",
+    gray:   "bg-[#F4F6FA] text-[#53627A]",
+  };
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-5">
+      <div>
+        <div className="rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] to-white p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">30-Day Trend</div>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2 py-0.5 rounded-full">
+              <TrendingUp className="w-3 h-3" /> +$550
+            </span>
+          </div>
+          <Mini />
+          <div className="mt-2 flex items-center gap-2 text-[10px] text-[#8893A8]">
+            <Activity className="w-3 h-3" /> Pricing refreshed 2 hrs ago
+          </div>
+        </div>
+
+        <div className="mt-3 rounded-2xl border border-[#EEF0F4] bg-white px-3 py-2.5 flex items-center gap-3 overflow-hidden">
+          <span className="relative flex w-2 h-2 shrink-0">
+            <span className="absolute inset-0 rounded-full bg-[#16A34A] opacity-60 animate-ping" />
+            <span className="relative rounded-full w-2 h-2 bg-[#16A34A]" />
+          </span>
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] shrink-0">Live</div>
+          <div className="h-5 flex-1 relative overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div key={t}
+                initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -14, opacity: 0 }}
+                transition={{ duration: 0.35 }}
+                className="absolute inset-0 flex items-center gap-2 text-[12.5px] text-[#06194A]">
+                <span className={`inline-flex items-center justify-center w-5 h-5 rounded-md ${TONE_BG[item.tone]}`}>
+                  <Icon className="w-3 h-3" />
+                </span>
+                <span className="truncate">{item.text}</span>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#E0E7FF] p-4">
+        <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
+          <Sparkles className="w-3 h-3" /> Best selling window
+        </div>
+        <div className="text-[18px] font-bold text-[#06194A] mt-1 leading-snug">Next 7–14 days</div>
+        <div className="text-[11px] text-[#53627A] mt-1">May maximize your payout potential.</div>
+        <ul className="mt-3 space-y-1.5 text-[11.5px]">
+          <li className="flex items-start gap-1.5 text-[#06194A]"><MapPin className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Hartford metro — high demand</li>
+          <li className="flex items-start gap-1.5 text-[#06194A]"><Star className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Top 12% offer regionally</li>
+          <li className="flex items-start gap-1.5 text-[#06194A]"><Clock className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Avg. days on market: 11</li>
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+/* ---------- 6. Transaction Process ------------------------------ */
+const TimelineSlide = () => (
+  <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-5">
+    <ol className="space-y-2.5">
+      {TIMELINE.map((step, i) => {
+        const Icon = step.icon;
+        const done = step.state === "done";
+        const active = step.state === "active";
+        return (
+          <li key={step.id} className="flex items-start gap-3">
+            <div className="relative">
+              <div className={`w-8 h-8 rounded-full grid place-items-center shrink-0 ${
+                done ? "bg-[#16A34A] text-white" :
+                active ? "bg-[#EEF0FF] text-[#4F46E5] ring-2 ring-[#4F46E5]/30" :
+                "bg-[#F4F6FA] text-[#94A3B8]"
+              }`}>
+                {done ? <Check className="w-4 h-4" /> : <Icon className="w-3.5 h-3.5" />}
+              </div>
+              {i < TIMELINE.length - 1 && (
+                <span className={`absolute left-1/2 -translate-x-1/2 top-8 h-[18px] w-px ${done ? "bg-[#16A34A]/50" : "bg-[#E6EAF0]"}`} />
+              )}
+            </div>
+            <div className="flex-1 min-w-0 pt-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[12.5px] font-semibold text-[#06194A] truncate">{step.label}</span>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${
+                  done ? "bg-[#E8F8EE] text-[#0F7A3E]" :
+                  active ? "bg-[#EEF0FF] text-[#4F46E5]" :
+                  "bg-[#F4F6FA] text-[#8893A8]"
+                }`}>
+                  {done ? "Complete" : active ? "In progress" : step.when}
+                </span>
+              </div>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+    <div className="rounded-2xl border border-[#E0E7FF] bg-gradient-to-br from-[#F5F3FF] to-white p-4">
+      <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
+        <Zap className="w-3 h-3" /> What happens next?
+      </div>
+      <p className="text-[12.5px] text-[#06194A] mt-2 leading-snug">
+        Your dealer is reviewing the documents. Once approved, you'll select a pickup time and inspection slot.
+      </p>
+      <ul className="mt-3 space-y-1.5 text-[11.5px] text-[#06194A]">
+        <li className="flex items-start gap-1.5"><Wrench className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> AI-assisted inspection in minutes</li>
+        <li className="flex items-start gap-1.5"><Truck className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Free pickup, scheduled around you</li>
+        <li className="flex items-start gap-1.5"><Wallet className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> ACH released within 2 hrs of verification</li>
+      </ul>
+    </div>
+  </div>
+);
+
+/* ============================================================== */
+/*  Carousel shell                                                 */
+/* ============================================================== */
+
+export const VehicleHeroCarousel = () => {
+  const [slide, setSlide] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [copied, setCopied] = useState(false);
+
+  const go = useCallback((d: 1 | -1) => {
+    setDirection(d);
+    setSlide((s) => (s + d + SLIDE_TITLES.length) % SLIDE_TITLES.length);
+  }, []);
+
+  const copyVin = async () => {
+    try {
+      await navigator.clipboard.writeText(MOCK.vehicle.vin);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* noop */ }
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft")  go(-1);
+      if (e.key === "ArrowRight") go(1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [go]);
+
+  const onDragEnd = (_: unknown, info: PanInfo) => {
+    if (info.offset.x < -60) go(1);
+    else if (info.offset.x > 60) go(-1);
+  };
+
+  const slideEl = useMemo(() => {
+    switch (slide) {
+      case 0: return <VehicleOverviewSlide copied={copied} onCopy={copyVin} />;
+      case 1: return <PhotoGallerySlide />;
+      case 2: return <ConditionSlide />;
+      case 3: return <OfferBreakdownSlide />;
+      case 4: return <MarketSlide />;
+      case 5: return <TimelineSlide />;
+      default: return null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slide, copied]);
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5 relative overflow-hidden">
+      {/* Header strip */}
+      <div className="flex items-center justify-between mb-3 gap-3">
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
+            {SLIDE_TITLES[slide]}
+          </div>
+          <div className="text-[12px] text-[#53627A] mt-0.5 truncate">
+            {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim} · {MOCK.vehicle.miles} mi
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={() => go(-1)} aria-label="Previous slide"
+            className="w-9 h-9 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#EEF0FF] hover:text-[#4F46E5] hover:border-[#C7D2FE] hover:scale-105 active:scale-95 transition">
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button onClick={() => go(1)} aria-label="Next slide"
+            className="w-9 h-9 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#EEF0FF] hover:text-[#4F46E5] hover:border-[#C7D2FE] hover:scale-105 active:scale-95 transition">
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          <span className="text-[11px] font-semibold text-[#53627A] tabular-nums ml-1">{slide + 1} / {SLIDE_TITLES.length}</span>
+        </div>
+      </div>
+
+      {/* Swipeable slide area with consistent height */}
+      <div className={`relative ${SLIDE_HEIGHT}`}>
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={slide}
+            custom={direction}
+            initial={{ opacity: 0, x: direction * 32, scale: 0.985 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -direction * 32, scale: 0.985 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.18}
+            onDragEnd={onDragEnd}
+            className="absolute inset-0 touch-pan-y cursor-grab active:cursor-grabbing"
+          >
+            {slideEl}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Dot pagination */}
+      <div className="flex items-center justify-center gap-1.5 mt-4">
+        {SLIDE_TITLES.map((_, i) => (
+          <button key={i} onClick={() => { setDirection(i > slide ? 1 : -1); setSlide(i); }}
+            aria-label={`Go to slide ${i + 1}`}
+            className={`h-1.5 rounded-full transition-all ${
+              i === slide ? "w-6 bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]" : "w-1.5 bg-[#E6EAF0] hover:bg-[#C7D2FE]"
+            }`} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default VehicleHeroCarousel;
