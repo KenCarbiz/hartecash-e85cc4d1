@@ -1,335 +1,41 @@
-import { useState, useEffect, useRef } from "react";
-import {
-  Home, Car, Tag, Activity, MessageCircle, FileText, BarChart3, Settings,
-  Search, Bell, ChevronDown, ChevronLeft, ChevronRight, Copy, Check,
-  TrendingUp, Clock, Shield, ShieldCheck, Truck, Handshake,
-  Upload, MessageSquare, LineChart as LineIcon, ArrowRight, X,
-} from "lucide-react";
-import vehicleHero from "@/assets/portal-vehicle-rav4.png";
-import harteLogo from "@/assets/harte-logo.png";
+import { useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import { Search, Bell, ChevronDown } from "lucide-react";
 import { PortalSidebar, PortalMobileTopBar, type NavKey } from "@/components/portal/PortalSidebar";
+import { PORTAL_MOCK as MOCK } from "@/components/portal/portalMock";
+import DashboardPage from "@/components/portal/pages/DashboardPage";
+import VehiclesPage from "@/components/portal/pages/VehiclesPage";
+import OffersPage from "@/components/portal/pages/OffersPage";
+import ActivityPage from "@/components/portal/pages/ActivityPage";
+import MessagesPage from "@/components/portal/pages/MessagesPage";
+import DocumentsPage from "@/components/portal/pages/DocumentsPage";
+import AnalyticsPage from "@/components/portal/pages/AnalyticsPage";
+import PaymentsPage from "@/components/portal/pages/PaymentsPage";
+import PickupPage from "@/components/portal/pages/PickupPage";
+import SettingsPage from "@/components/portal/pages/SettingsPage";
 
-/* ──────────────────────────────────────────────────────────────────
-   Premium customer portal dashboard (preview / mock).
-   Route: /portal-preview
-   All data is static; meant to match the supplied reference image.
-   ────────────────────────────────────────────────────────────────── */
+/* /portal-preview shell:
+   • Sidebar + mobile top bar stay mounted across navigation.
+   • Main content swaps in via Framer Motion AnimatePresence keyed by activeNav.
+   • Sidebar links never open right-side drawers — drawers are reserved for
+     secondary actions inside each page (edit, upload, accept, etc). */
 
-const MOCK = {
-  customer: { name: "Alex Morgan", initials: "AM", dealer: "Liberty Automotive" },
-  vehicle: {
-    year: 2021, make: "Toyota", model: "RAV4", trim: "XLE",
-    miles: "26,540", engine: "2.5L", body: "SUV",
-    vin: "2T3P1RFVXMW123456",
-  },
-  range: { low: 19250, high: 21450 },
-  firmOffer: 20150,
-  offerExpires: "May 17, 2025",
-  marketDemand: "High" as "High" | "Medium" | "Low" | "Minimal" | "Poor",
-  responseTime: "2.4 hrs",
-  lastUpdate: "2 min ago",
-  dealerMessage:
-    "Thanks! Your vehicle details look great. We're excited to make you a firm offer.",
-  docs: [
-    { name: "Registration", status: "Uploaded" },
-    { name: "Title", status: "Uploaded" },
-    { name: "Odometer Photo", status: "Uploaded" },
-    { name: "Inspection Report", status: "Uploaded" },
-  ],
-};
-
-const fmt = (n: number) => `$${n.toLocaleString()}`;
-
-/* ── Sidebar ─────────────────────────────────────────────────────── */
-const NAV = [
-  { key: "dashboard", label: "Dashboard", Icon: Home, active: true },
-  { key: "vehicle", label: "Vehicle", Icon: Car },
-  { key: "offers", label: "Offers", Icon: Tag },
-  { key: "activity", label: "Activity", Icon: Activity },
-  { key: "messages", label: "Messages", Icon: MessageCircle },
-  { key: "documents", label: "Documents", Icon: FileText },
-  { key: "analytics", label: "Analytics", Icon: BarChart3 },
-  { key: "settings", label: "Settings", Icon: Settings },
-];
-
-const Sidebar = () => (
-  <aside className="hidden lg:flex flex-col w-[220px] shrink-0 bg-white border-r border-[#E6EAF0] py-6 px-3">
-    <div className="px-2 mb-8 flex items-center gap-3">
-      <div className="w-11 h-11 rounded-xl bg-white border border-[#E6EAF0] shadow-[0_2px_6px_-2px_rgba(15,23,42,0.08)] grid place-items-center overflow-hidden p-1.5">
-        <img src={harteLogo} alt="Harte Auto Group" className="w-full h-full object-contain" />
-      </div>
-      <div className="leading-tight">
-        <div className="text-[14px] font-extrabold tracking-tight text-[#06194A]">Harte Auto</div>
-        <div className="text-[9px] uppercase tracking-[0.24em] text-[#8893A8] font-semibold mt-0.5">Group</div>
-      </div>
-    </div>
-    <nav className="flex-1 flex flex-col gap-1">
-      {NAV.map(({ key, label, Icon, active }) => (
-        <button
-          key={key}
-          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors text-left ${
-            active
-              ? "bg-[#EEF0FF] text-[#4F46E5] font-semibold"
-              : "text-[#53627A] hover:bg-[#F4F6FA]"
-          }`}
-        >
-          <Icon className="w-[18px] h-[18px]" strokeWidth={active ? 2.25 : 1.8} />
-          <span>{label}</span>
-        </button>
-      ))}
-    </nav>
-    <div className="mt-6 rounded-2xl border border-[#E6EAF0] bg-white p-4">
-      <div className="text-sm font-semibold text-[#06194A]">Need Help?</div>
-      <p className="text-xs text-[#53627A] mt-1 mb-3 leading-snug">
-        Our team is here to help you every step of the way.
-      </p>
-      <button className="w-full rounded-xl bg-[#4F46E5] hover:bg-[#3F37CC] text-white text-xs font-semibold py-2.5 inline-flex items-center justify-center gap-1.5 transition-colors">
-        <MessageCircle className="w-3.5 h-3.5" />
-        Contact Support
-      </button>
-    </div>
-  </aside>
-);
-
-/* ── Header ──────────────────────────────────────────────────────── */
-const Header = () => (
-  <header className="flex items-start justify-between gap-4 mb-6">
-    <div>
-      <h1 className="text-[22px] sm:text-[26px] font-bold text-[#06194A] leading-tight">
-        Hi, {MOCK.customer.name.split(" ")[0]} <span aria-hidden>👋</span>
-      </h1>
-      <p className="text-sm text-[#53627A] mt-1">Here's your acquisition overview.</p>
-    </div>
-    <div className="flex items-center gap-3">
-      <button aria-label="Search" className="w-9 h-9 rounded-full hover:bg-white grid place-items-center text-[#53627A]">
-        <Search className="w-[18px] h-[18px]" />
-      </button>
-      <button aria-label="Notifications" className="w-9 h-9 rounded-full hover:bg-white grid place-items-center text-[#53627A] relative">
-        <Bell className="w-[18px] h-[18px]" />
-        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#EF4444] ring-2 ring-[#F7F8FB]" />
-      </button>
-      <div className="flex items-center gap-2.5 pl-3 border-l border-[#E6EAF0]">
-        <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#4F46E5] grid place-items-center text-xs font-semibold">
-          {MOCK.customer.initials}
-        </div>
-        <div className="hidden sm:block leading-tight">
-          <div className="text-sm font-semibold text-[#06194A]">{MOCK.customer.name}</div>
-          <div className="text-[11px] text-[#53627A]">{MOCK.customer.dealer}</div>
-        </div>
-        <ChevronDown className="w-4 h-4 text-[#53627A]" />
-      </div>
-    </div>
-  </header>
-);
-
-/* ── Summary metric ───────────────────────────────────────────────── */
-type MetricProps = {
-  label: string;
-  value: React.ReactNode;
-  sub?: React.ReactNode;
-  Icon: React.ComponentType<{ className?: string }>;
-  tint: "indigo" | "green" | "emerald" | "orange";
-};
-const TINTS: Record<MetricProps["tint"], string> = {
-  indigo: "bg-[#EEF0FF] text-[#4F46E5]",
-  green: "bg-[#E8F8EE] text-[#16A34A]",
-  emerald: "bg-[#E6F7F1] text-[#0E9F6E]",
-  orange: "bg-[#FEF3E2] text-[#F59E0B]",
-};
-const Metric = ({ label, value, sub, Icon, tint }: MetricProps) => (
-  <div className="flex items-center gap-4 px-5 py-[18px]">
-    <div className={`w-12 h-12 rounded-2xl grid place-items-center shrink-0 ring-1 ring-inset ring-black/[0.03] shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${TINTS[tint]}`}>
-      <Icon className="w-[22px] h-[22px]" />
-    </div>
-    <div className="min-w-0">
-      <div className="text-[10.5px] uppercase tracking-[0.16em] text-[#53627A] font-semibold">{label}</div>
-      <div className="text-[19px] font-extrabold text-[#06194A] leading-tight truncate mt-1 tracking-tight">{value}</div>
-      {sub && <div className="text-[12px] text-[#53627A] mt-1">{sub}</div>}
-    </div>
-  </div>
-);
-
-/* ── SVG line charts ─────────────────────────────────────────────── */
-const MiniTrend = () => {
-  const pts = [10, 18, 14, 22, 26, 24, 32, 36, 34, 42, 46, 52];
-  const w = 520, h = 84, pad = 6;
-  const max = Math.max(...pts), min = Math.min(...pts);
-  const x = (i: number) => pad + (i * (w - pad * 2)) / (pts.length - 1);
-  const y = (v: number) => h - pad - ((v - min) / (max - min)) * (h - pad * 2);
-  const d = pts.map((v, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(v)}`).join(" ");
-  const area = `${d} L${x(pts.length - 1)},${h} L${x(0)},${h} Z`;
-  const lastX = x(pts.length - 1);
-  const lastY = y(pts[pts.length - 1]);
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[84px]" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="miniFill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#16A34A" stopOpacity="0.28" />
-          <stop offset="100%" stopColor="#16A34A" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {[0.33, 0.66].map((t) => (
-        <line key={t} x1={pad} x2={w - pad} y1={pad + (h - pad * 2) * t} y2={pad + (h - pad * 2) * t}
-          stroke="#CBD5E1" strokeDasharray="2 4" strokeOpacity="0.5" strokeWidth="0.75" />
-      ))}
-      <path d={area} fill="url(#miniFill)" />
-      <path d={d} fill="none" stroke="#16A34A" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-      {pts.map((v, i) => (
-        <circle key={i} cx={x(i)} cy={y(v)} r="2.25" fill="#16A34A" />
-      ))}
-      <circle cx={lastX} cy={lastY} r="5" fill="#fff" stroke="#16A34A" strokeWidth="2.25" />
-    </svg>
-  );
-};
-
-const MarketChart = () => {
-  const pts = [22, 28, 24, 33, 38, 44, 52];
-  const labels = ["May 9", "May 10", "May 11", "May 12", "May 13", "May 14", "May 15"];
-  const w = 620, h = 170, padX = 28, padY = 14;
-  const max = Math.max(...pts), min = Math.min(...pts);
-  const x = (i: number) => padX + (i * (w - padX * 2)) / (pts.length - 1);
-  const y = (v: number) => h - padY - ((v - min) / (max - min)) * (h - padY * 2);
-  const d = pts.map((v, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(v)}`).join(" ");
-  const area = `${d} L${x(pts.length - 1)},${h - padY} L${x(0)},${h - padY} Z`;
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[110px]">
-      <defs>
-        <linearGradient id="mktFill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#16A34A" stopOpacity="0.28" />
-          <stop offset="100%" stopColor="#16A34A" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {[0.25, 0.5, 0.75].map((t) => (
-        <line key={t} x1={padX} x2={w - padX} y1={padY + (h - padY * 2) * t} y2={padY + (h - padY * 2) * t}
-          stroke="#EEF0F4" strokeDasharray="3 4" />
-      ))}
-      <path d={area} fill="url(#mktFill)" />
-      <path d={d} fill="none" stroke="#16A34A" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-      {pts.map((v, i) => (
-        <circle key={i} cx={x(i)} cy={y(v)} r="2.75" fill="#fff" stroke="#16A34A" strokeWidth="1.75" />
-      ))}
-      {labels.map((l, i) => (
-        <text key={l} x={x(i)} y={h - 1} textAnchor="middle" fontSize="9" fill="#8893A8">{l}</text>
-      ))}
-    </svg>
-  );
-};
-
-/* ── Market indicator pill ─────────────────────────────────────────── */
-const MARKET_PILL_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  "High":    { label: "Strong Market", color: "text-[#16A34A]", bg: "bg-[#E8F8EE]" },
-  "Medium":  { label: "Soft Market",   color: "text-[#D97706]", bg: "bg-[#FEF3E2]" },
-  "Low":     { label: "Weak Market",   color: "text-[#DC2626]", bg: "bg-[#FEE2E2]" },
-  "Minimal": { label: "Little Market", color: "text-[#DC2626]", bg: "bg-[#FEE2E2]" },
-  "Poor":    { label: "Poor Market",   color: "text-[#DC2626]", bg: "bg-[#FEE2E2]" },
-};
-const MarketPill = ({ demand }: { demand: string }) => {
-  const cfg = MARKET_PILL_CONFIG[demand] ?? MARKET_PILL_CONFIG["Low"];
-  return (
-    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${cfg.color} ${cfg.bg} px-2.5 py-1 rounded-full w-fit`}>
-      <TrendingUp className="w-3 h-3" /> {cfg.label}
-    </span>
-  );
-};
-
-/* ── Vehicle illustration (SVG SUV w/ shadow) ─────────────────────── */
-const VehicleSVG = () => (
-  <svg viewBox="0 0 360 220" className="w-full h-full" aria-label="Vehicle preview">
-    <defs>
-      <radialGradient id="halo" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stopColor="#C7D2FE" stopOpacity="0.55" />
-        <stop offset="65%" stopColor="#E0E7FF" stopOpacity="0.25" />
-        <stop offset="100%" stopColor="#E0E7FF" stopOpacity="0" />
-      </radialGradient>
-      <linearGradient id="body" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stopColor="#FFFFFF" />
-        <stop offset="100%" stopColor="#D9DEE8" />
-      </linearGradient>
-      <linearGradient id="window" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stopColor="#2A3550" />
-        <stop offset="100%" stopColor="#0F1A33" />
-      </linearGradient>
-      <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stopColor="#000" stopOpacity="0.35" />
-        <stop offset="100%" stopColor="#000" stopOpacity="0" />
-      </radialGradient>
-    </defs>
-    <circle cx="180" cy="110" r="115" fill="url(#halo)" />
-    {/* shadow */}
-    <ellipse cx="190" cy="185" rx="125" ry="10" fill="url(#shadow)" />
-    {/* body */}
-    <path d="M55 150 Q60 110 100 100 L150 85 Q180 75 215 78 L260 84 Q295 90 318 115 L335 132 Q340 138 338 150 L335 162 Q333 168 325 168 L295 168 Q290 150 272 150 Q254 150 250 168 L145 168 Q140 150 122 150 Q104 150 100 168 L70 168 Q60 168 58 162 Z"
-      fill="url(#body)" stroke="#B7BFCE" strokeWidth="0.75" />
-    {/* windows */}
-    <path d="M125 102 L155 90 Q180 82 210 85 L245 92 Q260 95 268 110 L255 118 L140 118 Z"
-      fill="url(#window)" opacity="0.92" />
-    <path d="M188 90 L188 118" stroke="#0B1530" strokeWidth="1.25" opacity="0.6" />
-    {/* trim */}
-    <path d="M60 150 L335 150" stroke="#9AA4B8" strokeWidth="0.5" opacity="0.6" />
-    {/* headlight */}
-    <path d="M320 128 L335 132 L334 142 L318 140 Z" fill="#F4F7FF" />
-    {/* wheels */}
-    <g>
-      <circle cx="122" cy="170" r="22" fill="#1B2336" />
-      <circle cx="122" cy="170" r="14" fill="#2A3550" />
-      <circle cx="122" cy="170" r="6" fill="#0B1530" />
-    </g>
-    <g>
-      <circle cx="272" cy="170" r="22" fill="#1B2336" />
-      <circle cx="272" cy="170" r="14" fill="#2A3550" />
-      <circle cx="272" cy="170" r="6" fill="#0B1530" />
-    </g>
-  </svg>
-);
-
-/* ── Modal ────────────────────────────────────────────────────────── */
-const Modal = ({
-  open, onClose, title, children, width = "max-w-md",
-}: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; width?: string }) => {
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-  if (!open) return null;
-  return (
-    <div
-      role="dialog" aria-modal="true" aria-label={title}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1530]/55 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className={`w-full ${width} bg-white rounded-2xl shadow-2xl border border-[#E6EAF0] overflow-hidden`}
-      >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E6EAF0]">
-          <h3 className="text-sm font-semibold text-[#06194A]">{title}</h3>
-          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-[#F4F6FA] text-[#53627A]">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="p-5">{children}</div>
-      </div>
-    </div>
-  );
-};
-
-/* ── Page ─────────────────────────────────────────────────────────── */
 const PortalPreview = () => {
-  const [copied, setCopied] = useState(false);
-  const [showConv, setShowConv] = useState(false);
-  const [showDocs, setShowDocs] = useState(false);
-  const [showOffer, setShowOffer] = useState(false);
   const [activeNav, setActiveNav] = useState<NavKey>("dashboard");
-  const offerRef = useRef<HTMLDivElement>(null);
 
-  const copyVin = async () => {
-    try {
-      await navigator.clipboard.writeText(MOCK.vehicle.vin);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch { /* noop */ }
+  const renderPage = () => {
+    switch (activeNav) {
+      case "dashboard": return <DashboardPage key="dashboard" onNavigate={setActiveNav} />;
+      case "vehicles":  return <VehiclesPage  key="vehicles"  onNavigate={setActiveNav} />;
+      case "offers":    return <OffersPage    key="offers"    onNavigate={setActiveNav} />;
+      case "activity":  return <ActivityPage  key="activity"  />;
+      case "messages":  return <MessagesPage  key="messages"  />;
+      case "documents": return <DocumentsPage key="documents" />;
+      case "analytics": return <AnalyticsPage key="analytics" />;
+      case "payments":  return <PaymentsPage  key="payments"  />;
+      case "pickup":    return <PickupPage    key="pickup"    />;
+      case "settings":  return <SettingsPage  key="settings"  />;
+    }
   };
 
   return (
@@ -338,302 +44,36 @@ const PortalPreview = () => {
 
       <div className="flex-1 min-w-0 flex flex-col">
         <PortalMobileTopBar active={activeNav} onChange={setActiveNav} customer={MOCK.customer} />
+
+        {/* Desktop persistent user bar (search + bell + profile).
+            Lives outside the page so it stays put across transitions. */}
+        <div className="hidden lg:flex items-center justify-end gap-3 px-8 pt-5 pb-1">
+          <button aria-label="Search" className="w-9 h-9 rounded-full hover:bg-white grid place-items-center text-[#53627A]">
+            <Search className="w-[18px] h-[18px]" />
+          </button>
+          <button aria-label="Notifications" className="w-9 h-9 rounded-full hover:bg-white grid place-items-center text-[#53627A] relative">
+            <Bell className="w-[18px] h-[18px]" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#EF4444] ring-2 ring-[#F7F8FB]" />
+          </button>
+          <div className="flex items-center gap-2.5 pl-3 border-l border-[#E6EAF0]">
+            <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#4F46E5] grid place-items-center text-xs font-semibold">
+              {MOCK.customer.initials}
+            </div>
+            <div className="hidden sm:block leading-tight">
+              <div className="text-sm font-semibold text-[#06194A]">{MOCK.customer.name}</div>
+              <div className="text-[11px] text-[#53627A]">{MOCK.customer.dealer}</div>
+            </div>
+            <ChevronDown className="w-4 h-4 text-[#53627A]" />
+          </div>
+        </div>
+
         <div className="flex-1 flex justify-center">
-        <div className="w-full max-w-[1320px] p-5 sm:p-7 lg:p-8">
-          <Header />
-
-        {/* TOP — four-metric strip */}
-        <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-6 grid grid-cols-2 lg:grid-cols-4">
-          {[
-            <Metric key="ev" label="Estimated Value" value={`${fmt(MOCK.range.low)} – ${fmt(MOCK.range.high)}`}
-              sub={<span className="text-[#16A34A] font-medium inline-flex items-center gap-1"><TrendingUp className="w-3 h-3" />Strong Market</span>}
-              Icon={BarChart3} tint="indigo" />,
-            <Metric key="fo" label="Firm Offer" value={fmt(MOCK.firmOffer)} sub={MOCK.customer.dealer}
-              Icon={Tag} tint="emerald" />,
-            <Metric key="md" label="Market Demand" value={MOCK.marketDemand} sub="vs last 30 days"
-              Icon={TrendingUp} tint="green" />,
-            <Metric key="rt" label="Response Time" value={MOCK.responseTime} sub="Dealer average"
-              Icon={Clock} tint="orange" />,
-          ].map((m, i) => (
-            <div
-              key={i}
-              className={`relative ${i > 0 ? "lg:before:content-[''] lg:before:absolute lg:before:left-0 lg:before:top-1/2 lg:before:-translate-y-1/2 lg:before:h-[45%] lg:before:w-px lg:before:bg-[#E6EAF0]" : ""} ${i === 2 ? "before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[45%] before:w-px before:bg-[#E6EAF0] lg:before:hidden" : ""}`}
-            >
-              {m}
-            </div>
-          ))}
-        </div>
-
-        {/* MAIN ROW */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Vehicle card */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
-            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] gap-4 items-center">
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Your Vehicle</div>
-                <h2 className="text-[22px] font-bold leading-tight tracking-tight">
-                  {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
-                </h2>
-                <p className="text-sm text-[#53627A] mt-1">
-                  {MOCK.vehicle.miles} mi • {MOCK.vehicle.engine} • {MOCK.vehicle.body}
-                </p>
-                <div className="mt-2 flex items-center gap-2 text-xs text-[#53627A]">
-                  <span className="font-mono tracking-tight">{MOCK.vehicle.vin}</span>
-                  <button onClick={copyVin} aria-label="Copy VIN"
-                    className="p-1 rounded-md hover:bg-[#F4F6FA] text-[#53627A]">
-                    {copied ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
-                  {copied && <span className="text-[10px] text-[#16A34A] font-medium">Copied</span>}
-                </div>
-                <div className="flex items-center gap-2 mt-4">
-                  <button aria-label="Previous" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA] transition">
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button aria-label="Next" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA] transition">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <div className="relative h-[180px] md:h-[210px] flex items-center justify-center overflow-hidden">
-                {/* Soft pale blue/purple halo glow */}
-                <div className="absolute inset-0 grid place-items-center pointer-events-none">
-                  <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
-                </div>
-                <div className="absolute inset-0 grid place-items-center pointer-events-none">
-                  <div className="w-[62%] h-[62%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(199,210,254,0.55)_0%,_transparent_70%)]" />
-                </div>
-                {/* Vehicle photo */}
-                <img
-                  src={vehicleHero}
-                  alt={`${MOCK.vehicle.year} ${MOCK.vehicle.make} ${MOCK.vehicle.model} ${MOCK.vehicle.trim}`}
-                  width={1024}
-                  height={1024}
-                  loading="lazy"
-                  className="relative z-10 max-h-full w-auto object-contain scale-[1.28] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)]"
-                />
-                {/* Ground shadow ellipse */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[68%] h-[12px] rounded-[50%] bg-black/25 blur-md z-0" />
-              </div>
-            </div>
-
-            {/* Estimated value range + full-width trend chart — shaded panel */}
-            <div className="mt-3 rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] via-[#F2FBF6] to-[#F0FAF4] px-4 py-3 flex items-end gap-5">
-              <div className="flex flex-col gap-1.5 shrink-0">
-                <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#53627A]">Estimated Value Range</span>
-                <span className="text-[26px] font-extrabold leading-none text-[#06194A] whitespace-nowrap tracking-tight">
-                  {fmt(MOCK.range.low)} <span className="text-[#94A3B8] font-bold">–</span> {fmt(MOCK.range.high)}
-                </span>
-                <div className="mt-1"><MarketPill demand={MOCK.marketDemand} /></div>
-              </div>
-              <div className="flex-1 min-w-0 self-stretch flex items-end">
-                <div className="w-full"><MiniTrend /></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Next Step card */}
-          <div ref={offerRef} className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-6 flex flex-col">
-            <div className="flex items-start justify-between">
-              <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Your Next Step</div>
-              <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#4F46E5] grid place-items-center">
-                <Tag className="w-4 h-4" />
-              </div>
-            </div>
-            <h3 className="text-[18px] font-bold mt-2 leading-snug">Your firm offer is ready!</h3>
-            <p className="text-sm text-[#53627A] mt-1">Review your offer from {MOCK.customer.dealer}.</p>
-
-            <div className="mt-4 rounded-2xl p-4 bg-gradient-to-br from-[#EEF0FF] to-[#F5F3FF] border border-[#E0E7FF]">
-              <div className="text-[10px] uppercase tracking-wide text-[#4F46E5] font-semibold">Firm Offer</div>
-              <div className="text-[24px] font-extrabold leading-tight">{fmt(MOCK.firmOffer)}</div>
-              <div className="text-[11px] text-[#53627A] mt-0.5">Offer Expires {MOCK.offerExpires}</div>
-
-              <div className="grid grid-cols-2 gap-y-2 gap-x-3 mt-3 text-[12px] text-[#06194A]">
-                <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#16A34A]" />No Obligation</span>
-                <span className="inline-flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-[#16A34A]" />Free Pickup</span>
-                <span className="inline-flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-[#16A34A]" />Secure &amp; Private</span>
-              </div>
-            </div>
-
-            {/* Deal status */}
-            <div className="mt-3 flex items-center justify-between rounded-xl border border-[#BBF0D0] bg-[#E8F8EE] px-3 py-2">
-              <span className="text-[11px] uppercase tracking-[0.14em] font-semibold text-[#0F7A3E]">Deal Status</span>
-              <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#0F7A3E]">
-                <span className="w-4 h-4 rounded-full bg-[#16A34A] grid place-items-center">
-                  <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                </span>
-                Ready to Move Forward
-              </span>
-            </div>
-
-            <button
-              onClick={() => setShowOffer(true)}
-              className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-95 transition shadow-[0_8px_20px_-8px_rgba(79,70,229,0.55)]"
-            >
-              View Firm Offer <ArrowRight className="w-4 h-4" />
-            </button>
+          <div className="w-full max-w-[1320px] p-5 sm:p-7 lg:px-8 lg:pt-4 lg:pb-10">
+            <AnimatePresence mode="wait">
+              {renderPage()}
+            </AnimatePresence>
           </div>
         </div>
-
-        {/* BOTTOM ROW */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.6fr_1fr] gap-6 items-stretch">
-          {/* Dealer Communication */}
-          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Dealer Communication</div>
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#FEF3E2] text-[#F59E0B] grid place-items-center">
-                <Handshake className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold truncate">{MOCK.customer.dealer}</span>
-                  <span className="text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-1.5 py-0.5 rounded-full">Active</span>
-                </div>
-                <div className="text-[11px] text-[#53627A]">Last update: {MOCK.lastUpdate}</div>
-              </div>
-            </div>
-            <div className="mt-2 rounded-xl bg-[#F4F6FA] border border-[#EAEDF3] p-2.5 text-[12.5px] text-[#0B1F4A] leading-snug font-medium">
-              {MOCK.dealerMessage}
-            </div>
-            <button onClick={() => setShowConv(true)}
-              className="group mt-2 w-full inline-flex items-center justify-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-95 rounded-xl py-2.5 transition shadow-[0_8px_20px_-10px_rgba(79,70,229,0.6)]">
-              <MessageCircle className="w-4 h-4" /> View Conversation
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
-            </button>
-          </div>
-
-          {/* Document Status */}
-          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Documents Status</div>
-            <ul className="space-y-2">
-              {MOCK.docs.map((d) => (
-                <li key={d.name} className="flex items-center justify-between text-sm">
-                  <span className="text-[#0B1F4A] font-medium">{d.name}</span>
-                  <span className="inline-flex items-center gap-1.5 text-[12px] text-[#0F7A3E] font-semibold">
-                    Uploaded <span className="w-4 h-4 rounded-full bg-[#16A34A] grid place-items-center"><Check className="w-2.5 h-2.5 text-white" strokeWidth={3} /></span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <button onClick={() => setShowDocs(true)}
-              className="mt-2 w-full text-sm font-semibold text-[#16A34A] bg-[#E8F8EE] hover:bg-[#D4F0E0] rounded-xl py-2 transition">
-              Manage Documents
-            </button>
-          </div>
-
-          {/* Market Insights */}
-          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Market Insights</div>
-              <button className="text-[11px] text-[#53627A] inline-flex items-center gap-1 border border-[#E6EAF0] rounded-lg px-2 py-0.5 hover:bg-[#F4F6FA]">
-                7 Days <ChevronDown className="w-3 h-3" />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mb-1">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><TrendingUp className="w-3.5 h-3.5" /></div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wide text-[#53627A]">Market Trend</div>
-                  <div className="text-[13px] font-bold text-[#0B1F4A]">Strong</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><LineIcon className="w-3.5 h-3.5" /></div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wide text-[#53627A]">Market Demand</div>
-                  <div className="text-[13px] font-bold text-[#0B1F4A]">High</div>
-                </div>
-              </div>
-            </div>
-            <MarketChart />
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Quick Actions</div>
-            <ul className="divide-y divide-[#EEF0F4]">
-              {[
-                { title: "Upload Documents", desc: "Upload and manage documents safely.", Icon: Upload, tint: "green" as const, onClick: () => setShowDocs(true) },
-                { title: "Message Dealer", desc: "Chat securely with your dealer.", Icon: MessageSquare, tint: "orange" as const, onClick: () => setShowConv(true) },
-                { title: "Track Offer", desc: "Monitor your offer status and next steps.", Icon: BarChart3, tint: "indigo" as const, onClick: () => setShowOffer(true) },
-              ].map(({ title, desc, Icon, tint, onClick }) => (
-                <li key={title}>
-                  <button onClick={onClick}
-                    className="group w-full flex items-center gap-3.5 px-3 py-3.5 rounded-xl hover:bg-[#F7F8FB] hover:shadow-[inset_0_0_0_1px_rgba(79,70,229,0.1)] active:bg-[#EEF0FF] transition text-left">
-                    <div className={`w-10 h-10 rounded-2xl grid place-items-center shrink-0 ${TINTS[tint]} ring-1 ring-inset ring-black/[0.03] group-hover:scale-[1.06] transition-transform`}>
-                      <Icon className="w-[18px] h-[18px]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[13.5px] font-semibold text-[#06194A] leading-tight group-hover:text-[#4F46E5] transition-colors">{title}</div>
-                      <div className="text-[11.5px] text-[#53627A] truncate mt-1">{desc}</div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-        </div>
-      </div>
-
-      {/* Conversation modal */}
-      <Modal open={showConv} onClose={() => setShowConv(false)} title={`Conversation with ${MOCK.customer.dealer}`}>
-        <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
-          {[
-            { who: "dealer", text: MOCK.dealerMessage, time: "2 min ago" },
-            { who: "you", text: "Great, thank you. What happens next?", time: "1 min ago" },
-            { who: "dealer", text: "We'll review your documents and keep you updated here.", time: "Just now" },
-          ].map((m, i) => (
-            <div key={i} className={`flex ${m.who === "you" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-[13px] leading-snug ${
-                m.who === "you" ? "bg-[#4F46E5] text-white" : "bg-[#F4F6FA] text-[#06194A]"
-              }`}>
-                {m.text}
-                <div className={`text-[10px] mt-1 ${m.who === "you" ? "text-white/70" : "text-[#53627A]"}`}>{m.time}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 flex items-center gap-2">
-          <input disabled placeholder="Type a message…" className="flex-1 rounded-xl border border-[#E6EAF0] bg-[#F4F6FA] px-3 py-2 text-sm text-[#53627A]" />
-          <button disabled className="rounded-xl bg-[#4F46E5]/70 text-white text-sm font-semibold px-4 py-2">Send</button>
-        </div>
-      </Modal>
-
-      {/* Documents modal */}
-      <Modal open={showDocs} onClose={() => setShowDocs(false)} title="Manage Documents">
-        <ul className="space-y-2.5">
-          {MOCK.docs.map((d) => (
-            <li key={d.name} className="flex items-center justify-between border border-[#E6EAF0] rounded-xl px-3 py-2.5">
-              <div>
-                <div className="text-sm font-semibold text-[#06194A]">{d.name}</div>
-                <div className="text-[11px] text-[#16A34A] font-medium inline-flex items-center gap-1">
-                  <Check className="w-3 h-3" /> {d.status}
-                </div>
-              </div>
-              <button className="text-xs font-semibold text-[#4F46E5] hover:bg-[#EEF0FF] rounded-lg px-3 py-1.5">Replace</button>
-            </li>
-          ))}
-        </ul>
-        <button className="mt-4 w-full rounded-xl bg-[#4F46E5] hover:bg-[#3F37CC] text-white text-sm font-semibold py-2.5 inline-flex items-center justify-center gap-2">
-          <Upload className="w-4 h-4" /> Upload New Document
-        </button>
-      </Modal>
-
-      {/* Offer modal */}
-      <Modal open={showOffer} onClose={() => setShowOffer(false)} title="Firm Offer Details">
-        <div className="rounded-2xl p-4 bg-gradient-to-br from-[#EEF0FF] to-[#F5F3FF] border border-[#E0E7FF]">
-          <div className="text-[10px] uppercase tracking-wide text-[#4F46E5] font-semibold">Firm Offer</div>
-          <div className="text-[28px] font-extrabold leading-tight">{fmt(MOCK.firmOffer)}</div>
-          <div className="text-xs text-[#53627A]">Offer Expires {MOCK.offerExpires}</div>
-        </div>
-        <p className="text-sm text-[#53627A] mt-3 leading-snug">
-          This firm cash offer is held for you by {MOCK.customer.dealer}. No obligation, secure &amp; private, and free pickup included.
-        </p>
-        <button className="mt-4 w-full rounded-xl bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white text-sm font-semibold py-2.5">
-          Accept Offer
-        </button>
-      </Modal>
       </div>
     </div>
   );
