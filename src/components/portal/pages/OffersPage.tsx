@@ -474,31 +474,59 @@ export const OffersPage = ({ onNavigate }: Props) => {
         <Card className="p-5">
           <SectionLabel>Why Your Offer Is Competitive</SectionLabel>
           <div className="grid grid-cols-2 gap-2 mt-3">
-            {[
-              { Icon: Award, t: "Best Overall Offer", d: "Above wholesale baseline" },
-              { Icon: Truck, t: "Free Pickup",        d: "We come to you" },
-              { Icon: Zap,   t: "Fastest Payment",    d: "ACH within 1 day" },
-              { Icon: Lock,  t: "No Hidden Fees",     d: "Number you see is what you get" },
-            ].map((x) => (
-              <div key={x.t} className="rounded-xl border border-[#E6EAF0] p-3 hover:border-[#4F46E5]/40 hover:shadow-[0_10px_20px_-14px_rgba(79,70,229,0.5)] transition-all">
-                <div className="w-8 h-8 rounded-lg bg-[#EEF0FF] text-[#4F46E5] grid place-items-center"><x.Icon className="w-[14px] h-[14px]" /></div>
+            {([
+              { key: "best",    Icon: Award, t: "Best Overall Offer", d: "Above wholesale baseline" },
+              { key: "pickup",  Icon: Truck, t: "Free Pickup",        d: "We come to you" },
+              { key: "payment", Icon: Zap,   t: "Fastest Payment",    d: "ACH within 1 day" },
+              { key: "fees",    Icon: Lock,  t: "No Hidden Fees",     d: "Number you see is what you get" },
+            ] as { key: AdvantageKey; Icon: any; t: string; d: string }[]).map((x) => (
+              <button
+                key={x.key}
+                onClick={() => setAdvantage(x.key)}
+                className="group text-left rounded-xl border border-[#E6EAF0] p-3 hover:border-[#4F46E5]/40 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-16px_rgba(79,70,229,0.5)] transition-all active:scale-[0.98]"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-lg bg-[#EEF0FF] text-[#4F46E5] grid place-items-center transition-transform group-hover:scale-110 group-hover:rotate-[-4deg]">
+                    <x.Icon className="w-[14px] h-[14px]" />
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-[#B6BECC] opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
                 <div className="text-[12.5px] font-bold text-[#06194A] mt-2">{x.t}</div>
                 <div className="text-[11px] text-[#53627A]">{x.d}</div>
-              </div>
+              </button>
             ))}
           </div>
 
-          {/* Private party tradeoffs */}
+          {/* Private party tradeoffs — emphasize friction, de-emphasize upside */}
           <div className="mt-4 rounded-xl border border-[#E6EAF0] p-4 bg-[#FAFBFE]">
-            <div className="flex items-center justify-between">
-              <div className="text-[13px] font-semibold text-[#06194A]">Private sale estimate</div>
-              <div className="text-[13px] font-bold text-[#0F7A3E] tabular-nums">+{fmt(1950)} potential</div>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[13px] font-semibold text-[#06194A]">Selling it yourself instead?</div>
+                <div className="text-[11.5px] text-[#53627A] mt-0.5">
+                  Potentially higher resale value <span className="text-[#0F7A3E] font-semibold tabular-nums">(~+{fmt(1950)})</span> — but with real trade-offs.
+                </div>
+              </div>
+              <span className="shrink-0 text-[10px] uppercase tracking-wider font-semibold text-[#8893A8] bg-white border border-[#E6EAF0] px-2 py-0.5 rounded-full">
+                Private sale
+              </span>
             </div>
-            <ul className="mt-2.5 space-y-1.5 text-[11.5px] text-[#53627A]">
-              <li className="flex items-center gap-2"><Clock className="w-3.5 h-3.5 text-[#B45309]" /> 2–6 week average selling time</li>
-              <li className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-[#B45309]" /> Multiple buyer meetings</li>
-              <li className="flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-[#B45309]" /> Paperwork handled yourself</li>
-              <li className="flex items-center gap-2"><AlertTriangle className="w-3.5 h-3.5 text-[#B45309]" /> Risk of failed transactions</li>
+            <ul className="mt-3 space-y-2 text-[12px] text-[#53627A]">
+              <li className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-md bg-[#FEF3E2] text-[#B45309] grid place-items-center shrink-0"><Clock className="w-3.5 h-3.5" /></span>
+                <div><span className="font-semibold text-[#06194A]">Longer selling process</span> — 2 to 6 weeks on average</div>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-md bg-[#FEF3E2] text-[#B45309] grid place-items-center shrink-0"><Users className="w-3.5 h-3.5" /></span>
+                <div><span className="font-semibold text-[#06194A]">Multiple buyer meetings</span> — test drives, negotiations, no-shows</div>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-md bg-[#FEF3E2] text-[#B45309] grid place-items-center shrink-0"><AlertTriangle className="w-3.5 h-3.5" /></span>
+                <div><span className="font-semibold text-[#06194A]">Payment uncertainty</span> — bounced checks, fraud, chargebacks</div>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-md bg-[#FEF3E2] text-[#B45309] grid place-items-center shrink-0"><FileText className="w-3.5 h-3.5" /></span>
+                <div><span className="font-semibold text-[#06194A]">Self-managed paperwork</span> — title transfer, DMV, release of liability</div>
+              </li>
             </ul>
           </div>
         </Card>
