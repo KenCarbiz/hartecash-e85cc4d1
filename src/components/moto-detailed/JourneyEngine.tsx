@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import JourneyRail from "./JourneyRail";
@@ -10,21 +10,32 @@ import {
   type JourneyState,
   type StepContext,
 } from "./types";
+import {
+  trackOfferSeen,
+  trackStepAbandoned,
+  trackStepCompleted,
+  trackStepViewed,
+} from "./analytics";
+
+interface Props {
+  config: JourneyConfig;
+  /** Preview mode disables analytics + uses an initial preview state. */
+  preview?: boolean;
+  initialState?: Partial<JourneyState>;
+}
 
 /**
  * Modular Moto Detailed engine.
  *
- * The engine is fully driven by a JourneyConfig — steps, order, and
- * offer placement are configuration, not code. To inject a custom
- * dealer question, pass a new StepDefinition in `config.steps` at
- * the desired index. Steps can also opt out at runtime via
- * `shouldRender(state)`.
+ * Fully driven by a JourneyConfig — steps, order, and offer placement
+ * are configuration, not code. Analytics events flow through
+ * `./analytics` so dealers can hook into PostHog / Segment / a
+ * Supabase insert without touching any step component.
  */
-const JourneyEngine = ({ config }: { config: JourneyConfig }) => {
-  const [state, setState] = useState<JourneyState>(emptyJourneyState);
+const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
+  const [state, setState] = useState<JourneyState>({ ...emptyJourneyState, ...initialState });
   const [cursor, setCursor] = useState(0);
 
-  // Filter out steps whose runtime predicate says "skip".
   const activeSteps = useMemo(
     () => config.steps.filter((s) => (s.shouldRender ? s.shouldRender(state) : true)),
     [config.steps, state],
@@ -32,6 +43,37 @@ const JourneyEngine = ({ config }: { config: JourneyConfig }) => {
 
   const safeCursor = Math.min(cursor, activeSteps.length - 1);
   const current = activeSteps[safeCursor];
+
+  // ── Analytics: per-step view + dwell time ─────────────────────────
+  const stepEnteredAtRef = useRef<number>(Date.now());
+  useEffect(() => {
+    if (preview || !current) return;
+    stepEnteredAtRef.current = Date.now();
+    trackStepViewed(current.id, safeCursor);
+    return () => {
+      const ms = Date.now() - stepEnteredAtRef.current;
+      trackStepCompleted(current.id, safeCursor, ms);
+    };
+  }, [current?.id, safeCursor, preview]);
+
+  // Unmount = true abandonment (tab close / nav away).
+  useEffect(() => {
+    if (preview) return;
+    return () => {
+      if (!current) return;
+      const ms = Date.now() - stepEnteredAtRef.current;
+      trackStepAbandoned(current.id, safeCursor, ms);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fire offer_seen the first time a valuation appears.
+  const offerSeenRef = useRef(false);
+  useEffect(() => {
+    if (preview || offerSeenRef.current || !state.valuation) return;
+    offerSeenRef.current = true;
+    trackOfferSeen(state.valuation.firm ?? Math.round((state.valuation.low + state.valuation.high) / 2));
+  }, [state.valuation, preview]);
 
   const update = useCallback((patch: Partial<JourneyState>) => {
     setState((prev) => ({ ...prev, ...patch }));
