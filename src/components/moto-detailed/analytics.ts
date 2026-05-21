@@ -9,6 +9,8 @@
 
 export type JourneyDevice = "desktop" | "mobile";
 
+export type ImageQuality = "green" | "yellow" | "red";
+
 export type JourneyAnalyticsEvent =
   | { type: "step_viewed"; stepId: string; index: number; device: JourneyDevice; at: number }
   | { type: "step_completed"; stepId: string; index: number; msOnStep: number; device: JourneyDevice; at: number }
@@ -18,8 +20,15 @@ export type JourneyAnalyticsEvent =
   | { type: "offer_saved"; amount: number; device: JourneyDevice; at: number }
   | { type: "ai_boost_started"; device: JourneyDevice; at: number }
   | { type: "ai_boost_completed"; uploadedCount: number; device: JourneyDevice; at: number }
+  | { type: "ai_analysis_started"; device: JourneyDevice; at: number }
+  | { type: "ai_analysis_completed"; durationMs: number; device: JourneyDevice; at: number }
+  | { type: "image_quality"; quality: ImageQuality; category: string; reason?: string; device: JourneyDevice; at: number }
   | { type: "enhanced_offer_viewed"; original: number; boosted: number; delta: number; device: JourneyDevice; at: number }
   | { type: "enhanced_offer_accepted"; original: number; boosted: number; device: JourneyDevice; at: number }
+  | { type: "enhancement_generated"; original: number; boosted: number; device: JourneyDevice; at: number }
+  | { type: "enhancement_not_generated"; reason: string; device: JourneyDevice; at: number }
+  | { type: "appraiser_queue_triggered"; reason: string; confidence: number; device: JourneyDevice; at: number }
+  | { type: "upload_retry"; category: string; device: JourneyDevice; at: number }
   | { type: "upload_abandoned"; uploadedCount: number; device: JourneyDevice; at: number }
   | { type: "contact_submitted"; device: JourneyDevice; at: number }
   | { type: "cta_clicked"; stepId: string; label: string; device: JourneyDevice; at: number };
