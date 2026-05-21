@@ -9,6 +9,8 @@ import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
 import { SlideOver } from "../SlideOver";
 import { PrimaryButton, SecondaryButton } from "../PortalPageShell";
+import { VehicleHeroCarousel } from "../VehicleHeroCarousel";
+
 
 /* ── small visuals (kept inline so the dashboard page is portable) ── */
 const TINTS = {
@@ -158,58 +160,11 @@ export const DashboardPage = ({ onNavigate }: Props) => {
 
       {/* MAIN ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Vehicle hero card */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
-          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] gap-4 items-center">
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">
-                {SLIDES[slide]}
-              </div>
-              <h2 className="text-[22px] font-bold leading-tight tracking-tight">
-                {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
-              </h2>
-              <p className="text-sm text-[#53627A] mt-1">
-                {MOCK.vehicle.miles} mi • {MOCK.vehicle.engine} • {MOCK.vehicle.body}
-              </p>
-              <div className="mt-2 flex items-center gap-2 text-xs text-[#53627A]">
-                <span className="font-mono tracking-tight">{MOCK.vehicle.vin}</span>
-                <button onClick={copyVin} aria-label="Copy VIN" className="p-1 rounded-md hover:bg-[#F4F6FA]">
-                  {copied ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-              <div className="flex items-center gap-2 mt-4">
-                <button onClick={prevSlide} aria-label="Previous" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA] transition">
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button onClick={nextSlide} aria-label="Next" className="w-8 h-8 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#F4F6FA] transition">
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-                <span className="text-[11px] text-[#8893A8] ml-1">{slide + 1} / {SLIDES.length}</span>
-              </div>
-            </div>
-            <div className="relative h-[180px] md:h-[210px] flex items-center justify-center overflow-hidden">
-              <div className="absolute inset-0 grid place-items-center pointer-events-none">
-                <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
-              </div>
-              <img src={vehicleHero} alt="" loading="lazy"
-                className="relative z-10 max-h-full w-auto object-contain scale-[1.28] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)]" />
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[68%] h-[12px] rounded-[50%] bg-black/25 blur-md z-0" />
-            </div>
-          </div>
-
-          <div className="mt-3 rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] via-[#F2FBF6] to-[#F0FAF4] px-4 py-3 flex items-end gap-5">
-            <div className="flex flex-col gap-1.5 shrink-0">
-              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#53627A]">Estimated Value Range</span>
-              <span className="text-[26px] font-extrabold leading-none text-[#06194A] whitespace-nowrap tracking-tight">
-                {fmt(MOCK.range.low)} <span className="text-[#94A3B8] font-bold">–</span> {fmt(MOCK.range.high)}
-              </span>
-              <div className="mt-1"><MarketPill /></div>
-            </div>
-            <div className="flex-1 min-w-0 self-stretch flex items-end">
-              <div className="w-full"><MiniTrend /></div>
-            </div>
-          </div>
+        {/* Vehicle hero carousel — 6-slide intelligent transaction center */}
+        <div className="lg:col-span-2">
+          <VehicleHeroCarousel />
         </div>
+
 
         {/* Next Step card */}
         <div ref={offerRef} className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-6 flex flex-col">
