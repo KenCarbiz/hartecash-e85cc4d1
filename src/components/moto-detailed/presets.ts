@@ -135,7 +135,10 @@ export const PRESETS: Record<JourneyPresetId, JourneyPreset> = {
     estimatedSeconds: 120,
     build: () => ({
       offerDisplayMode: "after_contact_info",
-      steps: [vehicle(), condition(), usage(), contact(), offer()],
+      steps: [
+        vehicle(), condition(), usage(), contact(), offer(),
+        accepted(), boostIntro(), boostUpload(), boostResult(),
+      ],
     }),
   },
   instant_offer: {
@@ -147,7 +150,10 @@ export const PRESETS: Record<JourneyPresetId, JourneyPreset> = {
     estimatedSeconds: 75,
     build: () => ({
       offerDisplayMode: "before_contact_info",
-      steps: [vehicle(), condition(), usage(), offer(), contact()],
+      steps: [
+        vehicle(), condition(), usage(), offer(), contact(),
+        accepted(), boostIntro(), boostUpload(), boostResult(),
+      ],
     }),
   },
   high_qualification: {
