@@ -29,7 +29,7 @@ const PortalPreview = () => {
       case "dashboard": return <DashboardPage key="dashboard" onNavigate={setActiveNav} />;
       case "vehicles":  return <VehiclesPage  key="vehicles"  onNavigate={setActiveNav} />;
       case "offers":    return <OffersPage    key="offers"    onNavigate={setActiveNav} />;
-      case "activity":  return <ActivityPage  key="activity"  />;
+      case "activity":  return <ActivityPage  key="activity"  onNavigate={setActiveNav} />;
       case "messages":  return <MessagesPage  key="messages"  />;
       case "documents": return <DocumentsPage key="documents" />;
       case "analytics": return <AnalyticsPage key="analytics" />;
