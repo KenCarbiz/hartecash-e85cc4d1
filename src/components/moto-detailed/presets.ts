@@ -4,15 +4,6 @@ import StepCondition from "./steps/StepCondition";
 import StepUsage from "./steps/StepUsage";
 import StepContact from "./steps/StepContact";
 import StepOfferReady from "./steps/StepOfferReady";
-import {
-  StepPhotos,
-  StepPayoff,
-  StepTradeSell,
-  StepDealerQuestions,
-  StepDocuments,
-  StepSchedule,
-  StepComplete,
-} from "./steps/StepPlaceholder";
 
 
 /**
@@ -44,7 +35,7 @@ export interface JourneyPreset {
 
 // ── Step factories ──────────────────────────────────────────────────
 const vehicle = (): StepDefinition => ({
-  id: "vehicle", title: "Vehicle", helper: "Find your vehicle",
+  id: "vehicle", title: "Vehicle Search", helper: "Find your vehicle and get an estimate",
   pageTitle: "Get an instant vehicle valuation",
   pageSubtitle: "Enter a few details about your vehicle and see your estimated value.",
   Component: StepVehicle,
@@ -54,24 +45,24 @@ const vehicle = (): StepDefinition => ({
   shouldRender: (state) => !state.vehicle,
 });
 const condition = (): StepDefinition => ({
-  id: "condition", title: "Condition", helper: "Rate your vehicle",
+  id: "condition", title: "Condition", helper: "Rate your vehicle's condition",
   pageTitle: "How would you rate your vehicle's condition?",
   pageSubtitle: "Pick the option that best describes how your car looks and drives today.",
   Component: StepCondition,
 });
 const usage = (): StepDefinition => ({
-  id: "usage", title: "Usage", helper: "Tell us your plans",
+  id: "usage", title: "Usage", helper: "Tell us how you plan to use or sell",
   pageTitle: "Are you trading in or selling outright?",
   Component: StepUsage,
 });
 const contact = (): StepDefinition => ({
-  id: "contact", title: "Contact", helper: "Unlock your offer",
-  pageTitle: "Let's send your offer details",
+  id: "contact", title: "Contact Info", helper: "Share your details so we can reach you",
+  pageTitle: "Where should we send your offer?",
   pageSubtitle: "We'll use this to send your full offer breakdown and reach out about pickup.",
   Component: StepContact,
 });
 const offer = (): StepDefinition => ({
-  id: "offer", title: "Offer", helper: "Review next steps",
+  id: "offer", title: "Offer Ready", helper: "Review your offer and choose next step",
   pageTitle: "Your offer is ready",
   pageSubtitle: "Here's what your vehicle is worth today.",
   Component: StepOfferReady,
@@ -100,23 +91,10 @@ export const PRESETS: Record<JourneyPresetId, JourneyPreset> = {
     tagline: "Premium guided acquisition flow",
     description:
       "Two-phase national-brand journey: ultra-minimal landing, then a guided multi-step transaction experience with desktop rail, live valuation, and trust badges.",
-    estimatedSeconds: 240,
+    estimatedSeconds: 120,
     build: () => ({
       offerDisplayMode: "after_contact_info",
-      steps: [
-        vehicle(),
-        condition(),
-        usage(),
-        { id: "photos", title: "Photos", helper: "Quick walk-around", pageTitle: "Add a few photos", Component: StepPhotos },
-        { id: "payoff", title: "Payoff", helper: "Loan or lease", pageTitle: "Loan or lease payoff", Component: StepPayoff },
-        { id: "trade_sell", title: "Trade/Sell", helper: "How to complete", pageTitle: "Trade-in or sell outright?", Component: StepTradeSell },
-        { id: "dealer_questions", title: "Dealer Questions", helper: "Optional", pageTitle: "A few quick questions", Component: StepDealerQuestions },
-        contact(),
-        offer(),
-        { id: "documents", title: "Documents", helper: "Licence + title", pageTitle: "Upload your documents", Component: StepDocuments },
-        { id: "schedule", title: "Schedule", helper: "Pick a time", pageTitle: "Schedule your appointment", Component: StepSchedule },
-        { id: "complete", title: "Complete", helper: "You're all set", pageTitle: "All done", Component: StepComplete },
-      ],
+      steps: [vehicle(), condition(), usage(), contact(), offer()],
     }),
   },
   instant_offer: {

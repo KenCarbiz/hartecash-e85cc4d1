@@ -162,9 +162,13 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-          {/* LEFT — desktop journey rail */}
+          {/* LEFT — desktop journey rail (shows full step list so skipped
+              Phase-1 vehicle step still appears as completed) */}
           <div className="lg:col-span-3">
-            <JourneyRail steps={activeSteps} activeIndex={safeCursor} />
+            <JourneyRail
+              steps={config.steps}
+              activeIndex={Math.max(0, config.steps.findIndex((s) => s.id === current.id))}
+            />
           </div>
 
           {/* CENTER — active step */}
