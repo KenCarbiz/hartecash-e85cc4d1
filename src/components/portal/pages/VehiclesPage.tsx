@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   Plus, Car, Upload, Edit3, Trash2, ArrowRight, Camera, ChevronLeft,
   ChevronRight, X, ImageIcon, Gauge, Cog, Palette, ShieldCheck, FileText,
   CalendarDays, MessageSquare, DollarSign, Check, CheckCircle2, AlertCircle,
-  Clock, Search, Sparkles, Settings2, ZoomIn,
+  Clock, Search, Sparkles, Settings2, ZoomIn, MoreHorizontal, Archive, Download,
+  Pencil, Lightbulb, Fingerprint, History, FileCheck2,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
@@ -88,25 +89,110 @@ const SummaryChip = ({
   );
 };
 
-/* Clickable status pill with hover lift + glow. */
+/* Clickable status pill with hover lift + glow. Pending states subtly pulse. */
 const ActionPill = ({
-  tone, Icon, children, onClick,
-}: { tone: "green" | "orange" | "gray" | "indigo"; Icon: any; children: React.ReactNode; onClick: () => void }) => {
+  tone, Icon, children, onClick, pulse = false,
+}: { tone: "green" | "orange" | "gray" | "indigo"; Icon: any; children: React.ReactNode; onClick: () => void; pulse?: boolean }) => {
   const tones: Record<string, string> = {
     green:  "text-[#0F7A3E] bg-[#E8F8EE] hover:shadow-[0_8px_18px_-10px_rgba(15,122,62,0.55)]",
     orange: "text-[#B45309] bg-[#FEF3E2] hover:shadow-[0_8px_18px_-10px_rgba(180,83,9,0.5)]",
     gray:   "text-[#53627A] bg-[#F4F6FA] hover:shadow-[0_8px_18px_-10px_rgba(83,98,122,0.4)]",
     indigo: "text-[#4F46E5] bg-[#EEF0FF] hover:shadow-[0_8px_18px_-10px_rgba(79,70,229,0.55)]",
   };
+  const dotTone: Record<string, string> = {
+    green: "bg-[#16A34A]", orange: "bg-[#F59E0B]", gray: "bg-[#94A3B8]", indigo: "bg-[#4F46E5]",
+  };
   return (
     <button
       onClick={onClick}
-      className={`group inline-flex items-center gap-1.5 text-[11.5px] font-semibold pl-2 pr-2.5 py-1.5 rounded-full transition-all hover:-translate-y-0.5 active:scale-[0.97] ${tones[tone]}`}
+      className={`group relative inline-flex items-center gap-1.5 text-[11.5px] font-semibold pl-2 pr-2.5 py-1.5 rounded-full transition-all hover:-translate-y-0.5 active:scale-[0.97] ${tones[tone]}`}
     >
       <Icon className="w-3.5 h-3.5" />
       <span>{children}</span>
+      {pulse && (
+        <span className="relative flex h-1.5 w-1.5 ml-0.5">
+          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${dotTone[tone]}`} />
+          <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${dotTone[tone]}`} />
+        </span>
+      )}
       <ChevronRight className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all" />
     </button>
+  );
+};
+
+/* Smart contextual guidance banner. Adapts CTA + tone to vehicle state. */
+const SmartGuidanceBanner = ({
+  tone, Icon, title, description, ctaLabel, onCta,
+}: { tone: "indigo" | "orange" | "green"; Icon: any; title: string; description: string; ctaLabel: string; onCta: () => void }) => {
+  const tones = {
+    indigo: { bg: "from-[#EEF0FF] to-white", border: "border-[#C7D2FE]", icon: "bg-white text-[#4F46E5]", btn: "bg-[#4F46E5] hover:bg-[#4338CA] text-white" },
+    orange: { bg: "from-[#FEF3E2] to-white", border: "border-[#FCD9A8]", icon: "bg-white text-[#B45309]", btn: "bg-[#B45309] hover:bg-[#92400E] text-white" },
+    green:  { bg: "from-[#E8F8EE] to-white", border: "border-[#BBE5C6]", icon: "bg-white text-[#0F7A3E]", btn: "bg-[#0F7A3E] hover:bg-[#0B5C2F] text-white" },
+  }[tone];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+      className={`mb-5 rounded-2xl border ${tones.border} bg-gradient-to-r ${tones.bg} p-3.5 sm:p-4 flex items-start sm:items-center gap-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]`}
+    >
+      <span className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 ${tones.icon} shadow-sm`}>
+        <Icon className="w-[18px] h-[18px]" />
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-bold text-[#06194A]">{title}</div>
+        <div className="text-[12px] text-[#53627A] mt-0.5">{description}</div>
+      </div>
+      <button
+        onClick={onCta}
+        className={`shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-3.5 py-2 rounded-xl transition ${tones.btn}`}
+      >
+        {ctaLabel} <ArrowRight className="w-3.5 h-3.5" />
+      </button>
+    </motion.div>
+  );
+};
+
+/* Overflow menu — danger actions live here so they don't compete with primary CTA. */
+const OverflowMenu = ({
+  onRemove, onArchive, onDownload,
+}: { onRemove: () => void; onArchive: () => void; onDownload: () => void }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+  return (
+    <div ref={ref} className="ml-auto relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label="More actions"
+        className="w-9 h-9 rounded-xl text-[#53627A] hover:text-[#06194A] hover:bg-[#F4F6FA] grid place-items-center transition"
+      >
+        <MoreHorizontal className="w-[18px] h-[18px]" />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 mt-1 w-56 rounded-xl bg-white border border-[#E6EAF0] shadow-[0_18px_40px_-14px_rgba(15,23,42,0.18)] p-1.5 z-20"
+          >
+            <button onClick={() => { setOpen(false); onDownload(); }} className="w-full flex items-center gap-2.5 text-left text-[13px] font-medium text-[#06194A] px-2.5 py-2 rounded-lg hover:bg-[#F4F6FA] transition">
+              <Download className="w-4 h-4 text-[#53627A]" /> Download Vehicle Data
+            </button>
+            <button onClick={() => { setOpen(false); onArchive(); }} className="w-full flex items-center gap-2.5 text-left text-[13px] font-medium text-[#06194A] px-2.5 py-2 rounded-lg hover:bg-[#F4F6FA] transition">
+              <Archive className="w-4 h-4 text-[#53627A]" /> Archive Vehicle
+            </button>
+            <div className="h-px bg-[#E6EAF0] my-1" />
+            <button onClick={() => { setOpen(false); onRemove(); }} className="w-full flex items-center gap-2.5 text-left text-[13px] font-medium text-[#53627A] hover:text-[#B91C1C] px-2.5 py-2 rounded-lg hover:bg-[#FEF2F2] transition">
+              <Trash2 className="w-4 h-4" /> Remove Vehicle
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
@@ -337,12 +423,15 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
   const [edit, setEdit] = useState(false);
   const [upload, setUpload] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [verify, setVerify] = useState(false);
   const [gallery, setGallery] = useState<{ open: boolean; idx: number }>({ open: false, idx: 0 });
   const [history, setHistory] = useState<null | { y: number; mk: string; mdl: string; mi: string; amount?: number; date: string; outcome: "sold" | "declined" }>(null);
   const [wizard, setWizard] = useState(false);
   const v = MOCK.vehicle;
 
   const pendingDocs = MOCK.docs.filter((d) => d.status !== "Approved").length;
+  const exterior = PHOTO_BUCKETS.find((b) => b.label === "Exterior")!;
+  const remainingExterior = Math.max(0, exterior.target - exterior.count);
 
   return (
     <PortalPageShell
@@ -355,28 +444,47 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
       }
     >
       {/* Header summary chips */}
-      <div className="flex flex-wrap items-center gap-2 mb-5">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         <SummaryChip label="Active Vehicles" value={1} Icon={Car} tone="indigo" />
         <SummaryChip label="Pending Docs" value={pendingDocs} Icon={FileText} tone="orange" />
         <SummaryChip label="Current Offer" value={MOCK.firmOffer} prefix="$" Icon={DollarSign} tone="green" />
       </div>
 
+      {/* Smart next-step guidance — adapts to vehicle state */}
+      {remainingExterior > 0 ? (
+        <SmartGuidanceBanner
+          tone="orange" Icon={Lightbulb}
+          title="Action needed"
+          description={`Upload ${remainingExterior} more exterior photo${remainingExterior > 1 ? "s" : ""} to finalize your firm offer.`}
+          ctaLabel="Upload now" onCta={() => setUpload(true)}
+        />
+      ) : (
+        <SmartGuidanceBanner
+          tone="green" Icon={Sparkles}
+          title="Great progress"
+          description="Your vehicle is ready — schedule pickup to lock in your offer."
+          ctaLabel="Schedule pickup" onCta={() => onNavigate("pickup")}
+        />
+      )}
+
       {/* Active vehicle hero */}
       <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
         <Card className="p-5 mb-6 hover:shadow-[0_18px_40px_-24px_rgba(15,23,42,0.25)] transition-shadow">
           <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] gap-5 items-center">
-            {/* Image area */}
+            {/* Image area — better framed, centered, slightly elevated */}
             <button
               onClick={() => setGallery({ open: true, idx: 0 })}
-              className="group relative h-[220px] rounded-2xl overflow-hidden bg-gradient-to-br from-white via-[#EEF0FF] to-[#E9E2FF] border border-[#E6EAF0] grid place-items-center cursor-pointer"
+              className="group relative h-[240px] rounded-2xl overflow-hidden bg-gradient-to-br from-white via-[#EEF0FF] to-[#E9E2FF] border border-[#E6EAF0] cursor-pointer"
               aria-label="Open photo gallery"
             >
-              {/* ambient shadow */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[70%] h-6 bg-[#06194A]/20 blur-2xl rounded-full" />
-              <img
-                src={vehicleHero} alt={`${v.year} ${v.make} ${v.model}`}
-                className="relative w-auto h-full object-contain scale-[1.12] drop-shadow-[0_18px_14px_rgba(15,23,42,0.18)] transition-transform duration-500 group-hover:scale-[1.18]"
-              />
+              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[68%] h-7 bg-[#06194A]/22 blur-2xl rounded-full pointer-events-none" />
+              <div className="absolute inset-0 flex items-center justify-center px-6 pt-2 pb-6">
+                <img
+                  src={vehicleHero} alt={`${v.year} ${v.make} ${v.model}`}
+                  className="max-h-full max-w-full object-contain drop-shadow-[0_18px_14px_rgba(15,23,42,0.18)] transition-transform duration-500 ease-out group-hover:scale-[1.05] -translate-y-1"
+                />
+              </div>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_45%,rgba(79,70,229,0.18),transparent_60%)] pointer-events-none" />
               <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/85 backdrop-blur text-[#06194A] border border-white/60 shadow-sm">
                 <ImageIcon className="w-3.5 h-3.5" /> {GALLERY.length} Photos
               </span>
@@ -389,9 +497,12 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
             <div>
               <div className="flex items-center gap-2">
                 <SectionLabel>Active Vehicle</SectionLabel>
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E8F8EE] text-[#0F7A3E]">
+                <button
+                  onClick={() => setVerify(true)}
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E8F8EE] text-[#0F7A3E] hover:bg-[#D6F0DF] transition"
+                >
                   <ShieldCheck className="w-3 h-3" /> Verified VIN
-                </span>
+                </button>
               </div>
               <h2 className="text-[22px] font-bold mt-1 leading-tight text-[#06194A]">
                 {v.year} {v.make} {v.model} {v.trim}
@@ -401,25 +512,35 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
 
               <div className="flex flex-wrap items-center gap-2 mt-3">
                 <ActionPill tone="green"  Icon={DollarSign}  onClick={() => onNavigate("offers")}>Firm Offer Ready</ActionPill>
-                <ActionPill tone="orange" Icon={FileText}    onClick={() => onNavigate("documents")}>{pendingDocs} docs pending</ActionPill>
-                <ActionPill tone="gray"   Icon={CalendarDays} onClick={() => onNavigate("pickup")}>Pickup not scheduled</ActionPill>
+                <ActionPill tone="orange" Icon={FileText}    onClick={() => onNavigate("documents")} pulse>{pendingDocs} docs pending</ActionPill>
+                <ActionPill tone="gray"   Icon={CalendarDays} onClick={() => onNavigate("pickup")} pulse>Pickup not scheduled</ActionPill>
+                <ActionPill tone="indigo" Icon={ShieldCheck}  onClick={() => setVerify(true)}>Verified VIN</ActionPill>
               </div>
 
               {/* Action hierarchy */}
               <div className="mt-5 flex flex-wrap items-center gap-2">
-                <PrimaryButton onClick={() => onNavigate("offers")} className="group px-5 py-3 text-[14px]">
-                  View Offer <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                <PrimaryButton onClick={() => onNavigate("offers")} className="group relative overflow-hidden px-5 py-3 text-[14px]">
+                  <span className="relative z-10 inline-flex items-center gap-2">
+                    View Offer <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/35 to-transparent"
+                    style={{ animation: "viewOfferShimmer 9s ease-in-out infinite" }}
+                  />
+                  <style>{`@keyframes viewOfferShimmer { 0%, 80%, 100% { transform: translateX(-120%) skewX(-20deg); opacity: 0; } 85% { opacity: 1; } 95% { transform: translateX(420%) skewX(-20deg); opacity: 0; } }`}</style>
                 </PrimaryButton>
-                <SecondaryButton onClick={() => setEdit(true)}><Edit3 className="w-4 h-4" /> Edit Vehicle</SecondaryButton>
+                <SecondaryButton onClick={() => setEdit(true)} className="group">
+                  <Edit3 className="w-4 h-4 transition-transform group-hover:rotate-[-8deg]" /> Edit Vehicle
+                </SecondaryButton>
                 <SecondaryButton onClick={() => setUpload(true)} className="group">
                   <Camera className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" /> Upload Photos
                 </SecondaryButton>
-                <button
-                  onClick={() => setConfirmRemove(true)}
-                  className="ml-auto inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[#8893A8] hover:text-[#B91C1C] px-2 py-1.5 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Remove
-                </button>
+                <OverflowMenu
+                  onRemove={() => setConfirmRemove(true)}
+                  onArchive={() => toast.success("Vehicle archived")}
+                  onDownload={() => toast.success("Vehicle data export started")}
+                />
               </div>
             </div>
           </div>
@@ -431,30 +552,41 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <SectionLabel>Vehicle Details</SectionLabel>
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EEF0FF] text-[#4F46E5]">
+            <button
+              onClick={() => setVerify(true)}
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EEF0FF] text-[#4F46E5] hover:bg-[#E0E4FF] transition"
+            >
               <ShieldCheck className="w-3 h-3" /> Verified Vehicle Data
-            </span>
+            </button>
           </div>
           <dl className="mt-3 grid grid-cols-2 gap-y-1 text-sm">
             {([
-              ["Trim",       v.trim,       Settings2],
-              ["Drivetrain", v.drivetrain, Cog],
-              ["Engine",     v.engine,     Gauge],
-              ["Body",       v.body,       Car],
-              ["Exterior",   v.exterior,   Palette],
-              ["Interior",   v.interior,   Palette],
-              ["Ownership",  v.ownership,  ShieldCheck],
-              ["Payoff",     v.payoff ? fmt(v.payoff) : "None", DollarSign],
-            ] as [string, string, any][]).map(([k, val, Icon]) => (
-              <div key={k} className="rounded-lg px-2 py-2 hover:bg-[#F4F6FA] transition-colors flex items-start gap-2.5">
+              ["Engine",     v.engine,     Gauge,      true],
+              ["Drivetrain", v.drivetrain, Cog,        false],
+              ["Trim",       v.trim,       Settings2,  false],
+              ["Body",       v.body,       Car,        false],
+              ["Exterior",   v.exterior,   Palette,    true],
+              ["Interior",   v.interior,   Palette,    true],
+              ["Ownership",  v.ownership,  ShieldCheck, true],
+              ["Payoff",     v.payoff ? fmt(v.payoff) : "None", DollarSign, true],
+            ] as [string, string, any, boolean][]).map(([k, val, Icon, editable]) => (
+              <button
+                key={k}
+                onClick={() => editable && setEdit(true)}
+                disabled={!editable}
+                className={`group rounded-lg px-2 py-2 transition-colors flex items-start gap-2.5 text-left ${editable ? "hover:bg-[#F4F6FA] cursor-pointer" : "cursor-default"}`}
+              >
                 <span className="w-7 h-7 rounded-md bg-[#F4F6FA] text-[#4F46E5] grid place-items-center shrink-0">
                   <Icon className="w-[13px] h-[13px]" />
                 </span>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <dt className="text-[10.5px] uppercase tracking-wide text-[#8893A8] font-semibold">{k}</dt>
-                  <dd className="text-[#06194A] font-semibold text-[13px] mt-0.5 truncate">{val}</dd>
+                  <dd className="text-[#06194A] font-semibold text-[13px] mt-0.5 truncate flex items-center gap-1.5">
+                    <span className="truncate">{val}</span>
+                    {editable && <Pencil className="w-3 h-3 text-[#8893A8] opacity-0 group-hover:opacity-100 transition-opacity" />}
+                  </dd>
                 </div>
-              </div>
+              </button>
             ))}
           </dl>
         </Card>
@@ -667,6 +799,64 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
         <p className="text-sm text-[#53627A]">
           Removing this vehicle will cancel your active offer from {MOCK.customer.dealer} and delete uploaded photos and documents. This cannot be undone.
         </p>
+      </SlideOver>
+
+      {/* VIN Verification drawer — secure, data-driven */}
+      <SlideOver
+        open={verify} onClose={() => setVerify(false)}
+        title="Vehicle Verification" subtitle={`${v.year} ${v.make} ${v.model} • ${v.vin}`} width="lg"
+        footer={
+          <PrimaryButton onClick={() => setVerify(false)} className="w-full">
+            <CheckCircle2 className="w-4 h-4" /> Looks good
+          </PrimaryButton>
+        }
+      >
+        <div className="space-y-4">
+          <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#C7D2FE] p-4 flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-white text-[#4F46E5] grid place-items-center shadow-sm">
+              <Fingerprint className="w-[18px] h-[18px]" />
+            </span>
+            <div className="min-w-0">
+              <div className="text-[10.5px] uppercase tracking-wide font-semibold text-[#8893A8]">VIN</div>
+              <div className="text-[13px] font-mono font-semibold text-[#06194A] truncate">{v.vin}</div>
+            </div>
+            <span className="ml-auto inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-0.5 rounded-full bg-[#E8F8EE] text-[#0F7A3E]">
+              <CheckCircle2 className="w-3 h-3" /> Verified
+            </span>
+          </div>
+
+          <ul className="space-y-2">
+            {([
+              ["Trim confirmation",  `${v.trim} • ${v.drivetrain} • ${v.engine}`, "approved", ShieldCheck],
+              ["Ownership history",  "1 owner • Registered in CA since 2021",      "approved", History],
+              ["Title status",       "Clean title on file",                         "approved", FileCheck2],
+              ["Registration",       "Active • Expires 03/2026",                    "approved", FileText],
+              ["Accident report",    "No reported incidents",                       "approved", ShieldCheck],
+              ["Lien / Payoff",      v.payoff ? `Outstanding: ${fmt(v.payoff)}` : "No active lien", v.payoff ? "review" : "approved", DollarSign],
+            ] as [string, string, PhotoStatus, any][]).map(([title, sub, status, Icon]) => {
+              const meta = STATUS_META[status];
+              return (
+                <li key={title} className="flex items-center gap-3 p-3 rounded-xl border border-[#E6EAF0] bg-white hover:border-[#4F46E5]/30 transition">
+                  <span className="w-9 h-9 rounded-lg bg-[#F4F6FA] text-[#4F46E5] grid place-items-center shrink-0">
+                    <Icon className="w-4 h-4" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-semibold text-[#06194A]">{title}</div>
+                    <div className="text-[11.5px] text-[#53627A] truncate">{sub}</div>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${meta.cls}`}>
+                    <meta.Icon className="w-2.5 h-2.5" /> {meta.label}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="text-[11.5px] text-[#8893A8] flex items-start gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+            All data is verified against state DMV records and the NMVTIS national title database.
+          </p>
+        </div>
       </SlideOver>
 
       <GalleryModal open={gallery.open} onClose={() => setGallery({ open: false, idx: 0 })} startIndex={gallery.idx} />
