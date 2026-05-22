@@ -50,6 +50,14 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
     if (preview || !current) return;
     stepEnteredAtRef.current = Date.now();
     trackStepViewed(current.id, safeCursor);
+    // Snap to the top of the page on every step transition so the
+    // next page never starts mid-scroll. Per PO direction: "no lazy
+    // pages in the customer flow." Instant (not smooth) — the step
+    // animation itself handles the visual transition; a smooth
+    // scroll on top of it feels janky.
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
     return () => {
       const ms = Date.now() - stepEnteredAtRef.current;
       trackStepCompleted(current.id, safeCursor, ms);
