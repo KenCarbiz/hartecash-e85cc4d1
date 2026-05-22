@@ -60,7 +60,7 @@ const WatchMyCarLegacy = () => {
     if (!token) return;
     (async () => {
       const { data: w } = await supabase.rpc("watched_vehicle_get" as never, { p_token: token } as never);
-      const row = Array.isArray(w) ? (w[0] as Watched | undefined) : (w as Watched | null);
+      const row = (Array.isArray(w) ? (w[0] as Watched | undefined) : (w as Watched | null)) ?? null;
       setWatched(row || null);
       if (row) {
         const { data: h } = await supabase.rpc("watched_vehicle_history_for_token" as never, { p_token: token } as never);
