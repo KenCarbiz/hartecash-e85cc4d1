@@ -260,17 +260,41 @@ const Sparkline = ({ data }: { data: number[] }) => {
   );
 };
 
-const ProfileChecklist = ({ state, inline = false }: { state: JourneyState; inline?: boolean }) => {
+const ProfileChecklist = ({
+  state,
+  currentStepId,
+  inline = false,
+}: {
+  state: JourneyState;
+  currentStepId?: string;
+  inline?: boolean;
+}) => {
   const items = [
-    { label: "Vehicle identified", done: !!state.vehicle },
-    { label: "Market data connected", done: !!state.valuation },
-    { label: "Condition", done: !!state.condition },
-    { label: "Usage selected", done: !!state.usage },
-    { label: "Mileage added", done: !!state.contact.mileage },
-    { label: "Ownership status", done: !!state.contact.ownership },
-    { label: "Contact info", done: !!(state.contact.firstName && state.contact.email && state.contact.phone) },
+    { id: "vehicle",   label: "Vehicle identified",    done: !!state.vehicle },
+    { id: "market",    label: "Market data connected", done: !!state.valuation },
+    { id: "condition", label: "Condition",             done: !!state.condition },
+    { id: "usage",     label: "Usage selected",        done: !!state.usage },
+    { id: "mileage",   label: "Mileage added",         done: !!state.contact.mileage },
+    { id: "ownership", label: "Ownership status",      done: !!state.contact.ownership },
+    { id: "contact",   label: "Contact info",          done: !!(state.contact.firstName && state.contact.email && state.contact.phone) },
   ];
-  const activeIdx = items.findIndex((i) => !i.done);
+
+  // Map the live step id from the engine to the checklist item that
+  // should be highlighted purple. Falls back to the first incomplete
+  // item so the indicator never disappears between steps.
+  const stepToItem: Record<string, string> = {
+    vehicle: "vehicle",
+    condition: "condition",
+    usage: "usage",
+    contact: "contact",
+    ownership: "ownership",
+    timeline: "usage",
+    offer: "contact",
+  };
+  const mappedId = currentStepId ? stepToItem[currentStepId] : undefined;
+  let activeIdx = mappedId ? items.findIndex((i) => i.id === mappedId) : -1;
+  if (activeIdx < 0) activeIdx = items.findIndex((i) => !i.done);
+
   const list = (
     <ul className={`${inline ? "mt-2.5" : "mt-3"} space-y-2`}>
       {items.map((it, i) => {
