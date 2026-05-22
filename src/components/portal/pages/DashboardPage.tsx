@@ -159,36 +159,36 @@ export const DashboardPage = ({ onNavigate }: Props) => {
       </div>
 
       {/* MAIN ROW */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4 items-stretch">
         {/* Vehicle hero carousel — 6-slide intelligent transaction center */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 min-h-0">
           <VehicleHeroCarousel />
         </div>
 
 
         {/* Next Step card */}
-        <div ref={offerRef} className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-6 flex flex-col">
+        <div ref={offerRef} className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5 flex flex-col">
           <div className="flex items-start justify-between">
             <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Your Next Step</div>
             <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#4F46E5] grid place-items-center">
               <Tag className="w-4 h-4" />
             </div>
           </div>
-          <h3 className="text-[18px] font-bold mt-2 leading-snug">Your firm offer is ready!</h3>
-          <p className="text-sm text-[#53627A] mt-1">Review your offer from {MOCK.customer.dealer}.</p>
+          <h3 className="text-[17px] font-bold mt-2 leading-snug">Your firm offer is ready!</h3>
+          <p className="text-[12.5px] text-[#53627A] mt-0.5">Review your offer from {MOCK.customer.dealer}.</p>
 
-          <div className="mt-4 rounded-2xl p-4 bg-gradient-to-br from-[#EEF0FF] to-[#F5F3FF] border border-[#E0E7FF]">
+          <div className="mt-3 rounded-2xl p-3.5 bg-gradient-to-br from-[#EEF0FF] to-[#F5F3FF] border border-[#E0E7FF]">
             <div className="text-[10px] uppercase tracking-wide text-[#4F46E5] font-semibold">Firm Offer</div>
-            <div className="text-[24px] font-extrabold leading-tight">{fmt(MOCK.firmOffer)}</div>
+            <div className="text-[22px] font-extrabold leading-tight">{fmt(MOCK.firmOffer)}</div>
             <div className="text-[11px] text-[#53627A] mt-0.5">Offer Expires {MOCK.offerExpires}</div>
-            <div className="grid grid-cols-2 gap-y-2 gap-x-3 mt-3 text-[12px] text-[#06194A]">
+            <div className="grid grid-cols-2 gap-y-1.5 gap-x-3 mt-2.5 text-[11.5px] text-[#06194A]">
               <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#16A34A]" />No Obligation</span>
               <span className="inline-flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-[#16A34A]" />Free Pickup</span>
               <span className="inline-flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-[#16A34A]" />Secure &amp; Private</span>
             </div>
           </div>
 
-          <div className="mt-3 flex items-center justify-between rounded-xl border border-[#BBF0D0] bg-[#E8F8EE] px-3 py-2">
+          <div className="mt-2.5 flex items-center justify-between rounded-xl border border-[#BBF0D0] bg-[#E8F8EE] px-3 py-2">
             <span className="text-[11px] uppercase tracking-[0.14em] font-semibold text-[#0F7A3E]">Deal Status</span>
             <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#0F7A3E]">
               <span className="w-4 h-4 rounded-full bg-[#16A34A] grid place-items-center">
@@ -198,14 +198,14 @@ export const DashboardPage = ({ onNavigate }: Props) => {
             </span>
           </div>
 
-          <PrimaryButton onClick={() => setShowOffer(true)} className="mt-3 w-full py-3">
+          <PrimaryButton onClick={() => setShowOffer(true)} className="mt-auto pt-3 w-full py-3">
             View Firm Offer <ArrowRight className="w-4 h-4" />
           </PrimaryButton>
         </div>
       </div>
 
       {/* BOTTOM ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.6fr_1fr] gap-6 items-stretch">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.6fr_1fr] gap-4 items-stretch">
         {/* Dealer Communication */}
         <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
           <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Dealer Communication</div>
