@@ -143,9 +143,6 @@ const Fallback = ({ bodyStyle }: { bodyStyle: VehicleBodyStyle }) => (
     <div className="absolute left-1/2 top-1/2 h-32 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[hsl(262_83%_58%/0.18)] blur-2xl" />
     <div className="relative flex h-full flex-col items-center justify-center">
       <Silhouette body={bodyStyle} />
-      <p className="mt-2 text-[11px] font-medium text-slate-400">
-        Vehicle image pending
-      </p>
     </div>
     <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-white to-transparent" />
   </>
