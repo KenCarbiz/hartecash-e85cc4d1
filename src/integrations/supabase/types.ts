@@ -7353,6 +7353,17 @@ export type Database = {
         Args: { _dealership_id?: string }
         Returns: string
       }
+      get_submission_activity: {
+        Args: { _token: string }
+        Returns: {
+          body: string
+          event_type: string
+          id: string
+          nav_target: string
+          occurred_at: string
+          title: string
+        }[]
+      }
       get_submission_by_token: {
         Args: { _token: string }
         Returns: {
@@ -7374,21 +7385,27 @@ export type Database = {
           brake_lr: number
           brake_rf: number
           brake_rr: number
+          check_ready_at: string
           created_at: string
+          dealership_id: string
           docs_uploaded: boolean
           email: string
           estimated_offer_high: number
           estimated_offer_low: number
           exterior_color: string
           id: string
+          inspection_started_notified_at: string
           loan_status: string
           mileage: string
           name: string
+          offer_locked_at: string
           offered_price: number
           overall_condition: string
           phone: string
           photos_uploaded: boolean
+          portal_view_count: number
           progress_status: string
+          state: string
           tire_lf: number
           tire_lr: number
           tire_rf: number
