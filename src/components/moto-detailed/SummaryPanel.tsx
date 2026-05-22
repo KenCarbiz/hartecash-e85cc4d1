@@ -20,8 +20,8 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
   const { vehicle, valuation } = state;
   if (!vehicle) {
     return (
-      <aside className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-500">
-        <p className="font-medium text-zinc-700">Your vehicle</p>
+      <aside className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <p className="font-semibold text-slate-800">Your vehicle</p>
         <p className="mt-1">We'll show your estimated value here as soon as you find your car.</p>
       </aside>
     );
