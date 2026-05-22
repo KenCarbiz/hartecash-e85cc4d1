@@ -162,7 +162,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4 items-stretch">
         {/* Vehicle hero carousel — 6-slide intelligent transaction center */}
         <div className="lg:col-span-2 min-h-0">
-          <VehicleHeroCarousel />
+          <VehicleHeroCarousel onViewOfferDetails={() => onNavigate("offers")} />
         </div>
 
 
