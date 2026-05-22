@@ -49,7 +49,21 @@ import SettingsPage from "@/components/portal/pages/SettingsPage";
 import SEO from "@/components/SEO";
 
 const PortalPreview = () => {
-  const [activeNav, setActiveNav] = useState<NavKey>("dashboard");
+  const [activeNav, setActiveNavRaw] = useState<NavKey>("dashboard");
+
+  // Wrap setActiveNav so every in-body navigation (sidebar links,
+  // mobile top-bar, AccountMenu, per-page Quick Actions / chevron
+  // CTAs) snaps the viewport to the top before the new page mounts.
+  // Per PO direction: "no lazy pages." Side slide-overs / drawers
+  // never change activeNav so they never trigger the scroll.
+  const setActiveNav = (next: NavKey) => {
+    setActiveNavRaw(next);
+    if (typeof window !== "undefined") {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "auto" });
+      });
+    }
+  };
 
   // Plumbed for the data-wire PR. When real data lands every page
   // below this shell will switch from `PORTAL_MOCK` to a token-scoped
