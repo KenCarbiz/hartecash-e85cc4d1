@@ -101,7 +101,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
         <motion.button
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.995 }}
-          onClick={() => acceptAt(firm, "original")}
+          onClick={acceptOriginal}
           className="w-full rounded-xl bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] px-6 py-4 text-base font-semibold text-white shadow-[0_8px_24px_-10px_hsl(262_83%_58%/0.6)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
         >
           Accept Offer
