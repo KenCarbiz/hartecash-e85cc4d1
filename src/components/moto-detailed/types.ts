@@ -128,7 +128,7 @@ export const emptyJourneyState: JourneyState = {
   valuation: null,
   condition: "good",
   usage: null,
-  contact: { firstName: "", lastName: "", email: "", phone: "", zip: "" },
+  contact: { firstName: "", lastName: "", email: "", phone: "", zip: "", mileage: "" },
   custom: {},
   offerUnlocked: false,
   branch: null,
