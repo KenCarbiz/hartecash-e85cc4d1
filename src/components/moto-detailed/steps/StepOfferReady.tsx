@@ -95,11 +95,15 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
           <Row label="Offer expires" value={expiresLabel} />
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Trust icon={<BadgeCheck className="h-3.5 w-3.5" />} label="No obligation" />
-          <Trust icon={<Lock className="h-3.5 w-3.5" />} label="Secure & private" />
-          <Trust icon={<Truck className="h-3.5 w-3.5" />} label="Free pickup" />
-          <Trust icon={<ShieldCheck className="h-3.5 w-3.5" />} label="Dealer verified" />
+        {/* Premium trust strip */}
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-y-2 rounded-[14px] border border-emerald-100/80 bg-[hsl(150_60%_97%)] px-4 py-2.5">
+          <TrustItem icon={<ShieldCheck className="h-[14px] w-[14px]" />} label="No obligation" />
+          <span className="hidden h-3 w-px bg-emerald-200/60 sm:block" aria-hidden="true" />
+          <TrustItem icon={<LockKeyhole className="h-[14px] w-[14px]" />} label="Secure & private" />
+          <span className="hidden h-3 w-px bg-emerald-200/60 sm:block" aria-hidden="true" />
+          <TrustItem icon={<Truck className="h-[14px] w-[14px]" />} label="Free pickup" />
+          <span className="hidden h-3 w-px bg-emerald-200/60 sm:block" aria-hidden="true" />
+          <TrustItem icon={<BadgeCheck className="h-[14px] w-[14px]" />} label="Dealer verified" />
         </div>
       </motion.div>
 
