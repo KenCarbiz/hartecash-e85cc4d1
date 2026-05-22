@@ -215,10 +215,10 @@ const ConditionSlide = () => {
     orange: "bg-[#FEF3E2] text-[#B45309] border-[#FED7AA]",
   };
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-5">
-      <div className="rounded-2xl bg-gradient-to-br from-[#F5F3FF] via-white to-[#EEF0FF] border border-[#E0E7FF] p-4 flex flex-col items-center text-center">
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] gap-4 h-full">
+      <div className="rounded-2xl bg-gradient-to-br from-[#F5F3FF] via-white to-[#EEF0FF] border border-[#E0E7FF] p-3 flex flex-col items-center text-center min-h-0">
         <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Condition Score</div>
-        <div className="relative w-[120px] h-[120px] mt-3">
+        <div className="relative w-[96px] h-[96px] mt-2">
           <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
             <circle cx="60" cy="60" r="50" stroke="#EEF0F4" strokeWidth="9" fill="none" />
             <motion.circle cx="60" cy="60" r="50" stroke="url(#cond)" strokeWidth="9" fill="none" strokeLinecap="round"
@@ -235,30 +235,30 @@ const ConditionSlide = () => {
           </svg>
           <div className="absolute inset-0 grid place-items-center">
             <div className="text-center">
-              <div className="text-[28px] font-extrabold text-[#06194A] tabular-nums leading-none">{CONDITION_SCORE}</div>
+              <div className="text-[22px] font-extrabold text-[#06194A] tabular-nums leading-none">{CONDITION_SCORE}</div>
               <div className="text-[10px] text-[#8893A8] mt-0.5">out of 10</div>
             </div>
           </div>
         </div>
-        <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#4F46E5] bg-[#EEF0FF] px-2.5 py-1 rounded-full">
+        <div className="mt-2 inline-flex items-center gap-1.5 text-[10.5px] font-semibold text-[#4F46E5] bg-[#EEF0FF] px-2 py-0.5 rounded-full">
           <Brain className="w-3 h-3" /> AI confidence 94%
         </div>
-        <div className="mt-3 text-[11px] text-[#53627A] leading-snug">
-          Multi-source review of photos, scan reports, and customer notes.
+        <div className="mt-2 text-[10.5px] text-[#53627A] leading-snug">
+          Multi-source review of photos, scans, and notes.
         </div>
       </div>
 
-      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 content-start">
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 content-start overflow-y-auto pr-0.5">
         {CONDITION.map((c) => (
-          <li key={c.label} className={`rounded-xl border p-3 ${TONE[c.tone]}`}>
+          <li key={c.label} className={`rounded-xl border p-2.5 ${TONE[c.tone]}`}>
             <div className="flex items-center justify-between">
-              <span className="text-[12px] font-bold text-[#06194A]">{c.label}</span>
+              <span className="text-[11.5px] font-bold text-[#06194A]">{c.label}</span>
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold">
                 {c.tone === "green" ? <CircleDot className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
                 {c.status}
               </span>
             </div>
-            <div className="text-[11px] text-[#53627A] mt-1 leading-snug">{c.note}</div>
+            <div className="text-[10.5px] text-[#53627A] mt-0.5 leading-snug">{c.note}</div>
           </li>
         ))}
       </ul>
