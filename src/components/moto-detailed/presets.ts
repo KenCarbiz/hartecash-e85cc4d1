@@ -57,6 +57,7 @@ const condition = (): StepDefinition => ({
 const usage = (): StepDefinition => ({
   id: "usage", title: "Usage", helper: "Tell us how you plan to use or sell",
   pageTitle: "Are you trading in or selling outright?",
+  pageSubtitle: "Choose the option that best matches your plan. You can still review your offer before making a final decision.",
   Component: StepUsage,
 });
 const contact = (): StepDefinition => ({
