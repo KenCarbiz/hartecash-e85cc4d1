@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { parse } from "date-fns";
 import { toast } from "sonner";
 import {
   ShieldCheck, Truck, Shield, Check, Clock, ArrowRight, MessageSquare,
@@ -16,11 +17,25 @@ type NavTarget = "messages" | "pickup" | "documents" | "payments";
 type Props = { onNavigate: (k: NavTarget) => void };
 
 /* ─── Live countdown ─────────────────────────────────────────── */
+// Parse the deadline using date-fns rather than `new Date(str + " 17:00:00")`.
+// The string-concat path happens to work in V8 with US-format inputs
+// ("May 17, 2025") but returns NaN for ISO strings ("2025-05-17") or any
+// locale that doesn't accept that format — leaving the countdown
+// rendering "NaN days, NaN hours". date-fns parse with an explicit format
+// is locale- and format-stable.
+const COUNTDOWN_DEADLINE_FORMAT = "MMMM d, yyyy";
 const useCountdown = (deadline: string) => {
   const [now, setNow] = useState(Date.now());
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
-  const target = new Date(deadline + " 17:00:00").getTime();
-  const diff = Math.max(0, target - now);
+  const parsed = parse(deadline, COUNTDOWN_DEADLINE_FORMAT, new Date());
+  // 5pm cutoff on the deadline day. If parse failed we get an Invalid
+  // Date — guard so the countdown shows 0s/expired instead of NaN.
+  let target = NaN;
+  if (!Number.isNaN(parsed.getTime())) {
+    parsed.setHours(17, 0, 0, 0);
+    target = parsed.getTime();
+  }
+  const diff = Number.isNaN(target) ? 0 : Math.max(0, target - now);
   const totalWindowMs = 8 * 86400000;
   return {
     days:  Math.floor(diff / 86400000),

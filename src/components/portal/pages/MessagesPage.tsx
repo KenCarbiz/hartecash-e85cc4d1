@@ -203,7 +203,37 @@ export const MessagesPage = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
-  const conv = MOCK.conversations.find((c) => c.id === active)!;
+  // Track every setTimeout this component schedules so we can clear
+  // them on unmount or thread switch. Without this, the 1200/3800ms
+  // dealer-reply chain (sendText) and the 1600/2800/3400ms upload
+  // chain (sendAttachment) keep firing setState after the user
+  // navigates away → React warning + state corruption in dev,
+  // memory leaks + ghost updates in prod.
+  const pendingTimers = useRef<number[]>([]);
+  const queueTimer = (cb: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      // Drop the id from the queue as it fires so the array doesn't
+      // grow unbounded across the session.
+      pendingTimers.current = pendingTimers.current.filter((x) => x !== id);
+      cb();
+    }, ms);
+    pendingTimers.current.push(id);
+    return id;
+  };
+  const clearAllTimers = () => {
+    pendingTimers.current.forEach((id) => clearTimeout(id));
+    pendingTimers.current = [];
+  };
+  useEffect(() => () => clearAllTimers(), []);
+
+  // Selected conversation. find() can return undefined when `active`
+  // points at a stale id (e.g., the active thread got archived in
+  // another tab). Without a guard the non-null assertion throws on
+  // the next `.name` deref. Fall back to the first conversation so
+  // the rest of the render is always safe — callers can switch to
+  // a different thread via the sidebar.
+  const conv =
+    MOCK.conversations.find((c) => c.id === active) ?? MOCK.conversations[0];
   const msgs = threads[active] ?? [];
 
   // Periodic dealer typing simulation on liberty thread
@@ -211,7 +241,8 @@ export const MessagesPage = () => {
     if (active !== "liberty") return;
     const id = setInterval(() => {
       setDealerTyping(true);
-      setTimeout(() => setDealerTyping(false), 2600);
+      const offId = window.setTimeout(() => setDealerTyping(false), 2600);
+      pendingTimers.current.push(offId);
     }, 14000);
     return () => clearInterval(id);
   }, [active]);
@@ -239,15 +270,16 @@ export const MessagesPage = () => {
     };
     setThreads((p) => ({ ...p, [active]: [...(p[active] ?? []), newMsg] }));
     setDraft("");
-    // Optimistic seen + dealer typing reply
-    setTimeout(() => {
+    // Optimistic seen + dealer typing reply — both timers tracked
+    // in pendingTimers so they cancel on unmount.
+    queueTimer(() => {
       setThreads((p) => ({
         ...p,
         [active]: (p[active] ?? []).map((m) => m.id === newMsg.id ? { ...m, read: "seen", seenAgo: "just now" } : m),
       }));
       setDealerTyping(true);
     }, 1200);
-    setTimeout(() => {
+    queueTimer(() => {
       setDealerTyping(false);
       const reply: Msg = {
         id: `d-${Date.now()}`, who: "dealer", kind: "text",
@@ -266,13 +298,13 @@ export const MessagesPage = () => {
     };
     setThreads((p) => ({ ...p, [active]: [...(p[active] ?? []), fileMsg] }));
     setAttach(false);
-    setTimeout(() => {
+    queueTimer(() => {
       setThreads((p) => ({
         ...p,
         [active]: (p[active] ?? []).map((m) => m.id === fileMsg.id && m.file ? { ...m, file: { ...m.file, status: "review" } } : m),
       }));
     }, 1600);
-    setTimeout(() => {
+    queueTimer(() => {
       const sysMsg: Msg = {
         id: `sys-${Date.now()}`, who: "system", kind: "system", time: "Just now",
         system: { icon: CheckCircle2, tone: "green", title: `${label} received — under review` },

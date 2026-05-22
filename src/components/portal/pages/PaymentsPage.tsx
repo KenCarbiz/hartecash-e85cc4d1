@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, FileText, Check, CheckCircle2, Zap, Building2, Eye, Banknote,
@@ -268,6 +268,21 @@ const MethodDetail = ({
 const BankConnectionDrawer = ({
   open, onClose, onConnected,
 }: { open: boolean; onClose: () => void; onConnected: (c: AchConn) => void }) => {
+  // Timer cleanup — the "instant bank link" simulation schedules a
+  // setInterval + two nested setTimeouts. If the user closes the
+  // drawer mid-link (or unmounts the page), all three keep firing
+  // setState on an unmounted form panel. Track every id and cancel
+  // them on close + unmount.
+  const linkTimers = useRef<{ interval?: number; t1?: number; t2?: number }>({});
+  const cancelLinkTimers = () => {
+    const t = linkTimers.current;
+    if (t.interval !== undefined) clearInterval(t.interval);
+    if (t.t1 !== undefined) clearTimeout(t.t1);
+    if (t.t2 !== undefined) clearTimeout(t.t2);
+    linkTimers.current = {};
+  };
+  useEffect(() => () => cancelLinkTimers(), []);
+
   const [mode, setMode] = useState<"instant" | "manual">("instant");
   const [linking, setLinking] = useState<string | null>(null);
   const [linkProgress, setLinkProgress] = useState(0);
@@ -284,17 +299,29 @@ const BankConnectionDrawer = ({
 
   useEffect(() => {
     if (!open) {
+      // Drawer closed mid-link → cancel any in-flight timers AND
+      // reset the form. Without the cancel, the interval kept firing
+      // setLinkProgress on an unmounted form panel.
+      cancelLinkTimers();
       setMode("instant"); setLinking(null); setLinkProgress(0);
       setRouting(""); setAccount(""); setName(MOCK.customer.name); setConsent(false);
     }
   }, [open]);
 
   const startInstant = (bank: typeof BANKS[number]) => {
+    cancelLinkTimers();
     setLinking(bank.id); setLinkProgress(0);
-    const id = setInterval(() => setLinkProgress((p) => Math.min(100, p + 12)), 220);
-    setTimeout(() => {
-      clearInterval(id); setLinkProgress(100);
-      setTimeout(() => {
+    linkTimers.current.interval = window.setInterval(
+      () => setLinkProgress((p) => Math.min(100, p + 12)),
+      220,
+    );
+    linkTimers.current.t1 = window.setTimeout(() => {
+      if (linkTimers.current.interval !== undefined) {
+        clearInterval(linkTimers.current.interval);
+        linkTimers.current.interval = undefined;
+      }
+      setLinkProgress(100);
+      linkTimers.current.t2 = window.setTimeout(() => {
         onConnected({ status: "verified", bankName: bank.name, mask: "4127", mode: "instant" });
         toast.success(`${bank.name} verified`, { description: "Ready to receive your payout." });
         onClose();

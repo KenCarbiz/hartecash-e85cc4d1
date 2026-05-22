@@ -430,7 +430,12 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
   const v = MOCK.vehicle;
 
   const pendingDocs = MOCK.docs.filter((d) => d.status !== "Approved").length;
-  const exterior = PHOTO_BUCKETS.find((b) => b.label === "Exterior")!;
+  // find() is non-undefined today because PHOTO_BUCKETS is a static
+  // local with a guaranteed "Exterior" entry, but the `!` assertion
+  // silently breaks the moment someone renames/removes the bucket.
+  // Use a safe default so refactors don't crash this page.
+  const exterior =
+    PHOTO_BUCKETS.find((b) => b.label === "Exterior") ?? { count: 0, target: 0 };
   const remainingExterior = Math.max(0, exterior.target - exterior.count);
 
   return (
