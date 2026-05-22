@@ -89,7 +89,7 @@ const StepContact = ({ state, update, next }: StepContext) => {
 
 
 const Field = ({
-  label, value, onChange, onBlur, type = "text", className, error, autoComplete, placeholder,
+  label, value, onChange, onBlur, type = "text", className, error, autoComplete, placeholder, inputMode, helper,
 }: {
   label: string;
   value: string;
@@ -100,6 +100,8 @@ const Field = ({
   error?: string;
   autoComplete?: string;
   placeholder?: string;
+  inputMode?: "text" | "numeric" | "tel" | "email" | "decimal" | "search" | "url" | "none";
+  helper?: string;
 }) => (
   <label className={`block ${className ?? ""}`}>
     <span className="mb-1.5 block text-sm font-medium text-slate-800">{label}</span>
@@ -110,14 +112,20 @@ const Field = ({
       onBlur={onBlur}
       autoComplete={autoComplete}
       placeholder={placeholder}
+      inputMode={inputMode}
       className={`h-[52px] w-full rounded-xl border bg-white px-4 text-base text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
         error
           ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
           : "border-[#E6EAF0] focus:border-[hsl(262_83%_58%)] focus:ring-4 focus:ring-[hsl(262_83%_58%/0.12)]"
       }`}
     />
-    {error && <span className="mt-1 block text-xs font-medium text-red-600">{error}</span>}
+    {error
+      ? <span className="mt-1 block text-xs font-medium text-red-600">{error}</span>
+      : helper
+        ? <span className="mt-1 block text-xs text-slate-500">{helper}</span>
+        : null}
   </label>
 );
+
 
 export default StepContact;
