@@ -1,4 +1,36 @@
+// /portal-preview AND /my-submission/:token shell — the new premium
+// customer portal experience.
+//
+// SAME COMPONENT serves two routes:
+//
+//   /portal-preview               → unauthenticated demo (no token in URL)
+//   /my-submission/:token         → live customer portal after Sign In
+//                                   lookup or Accept-Offer redirect
+//
+// Both render identical mock-driven UI today. The token is read from
+// useParams and stashed (currently unused) so that when the data-wire
+// PR lands, every page below this shell receives the token via context
+// without a structural refactor.
+//
+// • Sidebar + mobile top bar stay mounted across navigation.
+// • Main content swaps in via Framer Motion AnimatePresence keyed by activeNav.
+// • Sidebar links never open right-side drawers — drawers are reserved for
+//   secondary actions inside each page (edit, upload, accept, etc).
+//
+// IMPORTANT (mock data warning):
+// This route renders fully static mock customer data (Alex Morgan /
+// Liberty Automotive / fake VIN + bank details from
+// src/components/portal/portalMock.ts). The technical review's P0 #1
+// flagged this — the product owner accepted the trade-off and chose
+// to ship the new portal experience for all tenants while real data
+// wiring is in flight. Per CustomerPortal.tsx the route is already
+// `noindex`'d so it doesn't leak via search.
+//
+// The legacy submission-aware portal stays available at
+// /my-submission-legacy/:token (renders the same `CustomerPortalLegacy`
+// component this file replaces in the live dispatch).
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Search, Bell } from "lucide-react";
 import { AccountMenu } from "@/components/portal/AccountMenu";
@@ -14,15 +46,17 @@ import AnalyticsPage from "@/components/portal/pages/AnalyticsPage";
 import PaymentsPage from "@/components/portal/pages/PaymentsPage";
 import PickupPage from "@/components/portal/pages/PickupPage";
 import SettingsPage from "@/components/portal/pages/SettingsPage";
-
-/* /portal-preview shell:
-   • Sidebar + mobile top bar stay mounted across navigation.
-   • Main content swaps in via Framer Motion AnimatePresence keyed by activeNav.
-   • Sidebar links never open right-side drawers — drawers are reserved for
-     secondary actions inside each page (edit, upload, accept, etc). */
+import SEO from "@/components/SEO";
 
 const PortalPreview = () => {
   const [activeNav, setActiveNav] = useState<NavKey>("dashboard");
+
+  // Plumbed for the data-wire PR. When real data lands every page
+  // below this shell will switch from `PORTAL_MOCK` to a token-scoped
+  // query (`useSubmissionPortal(token)` etc.). For now the token is
+  // read here so that route changes always re-render the shell and
+  // the React tree stays consistent between demo and live routes.
+  const { token } = useParams<{ token: string }>();
 
   const renderPage = () => {
     switch (activeNav) {
@@ -41,6 +75,12 @@ const PortalPreview = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F8FB] text-[#06194A] flex">
+      <SEO
+        title="Customer portal"
+        description="Internal portal experience — not indexed."
+        path={token ? `/my-submission/${token}` : "/portal-preview"}
+        noindex
+      />
       <PortalSidebar active={activeNav} onChange={setActiveNav} customer={MOCK.customer} />
 
       <div className="flex-1 min-w-0 flex flex-col">
