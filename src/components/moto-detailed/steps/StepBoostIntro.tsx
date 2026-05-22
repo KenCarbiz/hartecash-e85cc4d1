@@ -5,6 +5,8 @@ import {
   Camera,
   ShieldCheck,
   ArrowRight,
+  ArrowUpRight,
+  Clock,
   X,
 } from "lucide-react";
 import type { StepContext } from "../types";
@@ -44,18 +46,31 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
       icon: Zap,
       title: "Fast AI review",
       body: "We analyze your photos in seconds.",
+      tint: "violet",
     },
     {
       icon: Camera,
       title: "Guided photo capture",
       body: "We'll show you exactly what to snap.",
+      tint: "indigo",
     },
     {
       icon: ShieldCheck,
       title: "Current offer protected",
       body: "Your current offer stays safe while we review.",
+      tint: "emerald",
     },
   ];
+
+  const tintClasses: Record<string, string> = {
+    violet:
+      "bg-[hsl(262_83%_62%/0.10)] text-[hsl(262_70%_48%)] ring-[hsl(262_83%_58%/0.18)]",
+    indigo:
+      "bg-[hsl(232_83%_62%/0.10)] text-[hsl(232_70%_50%)] ring-[hsl(232_83%_58%/0.18)]",
+    emerald:
+      "bg-emerald-50 text-emerald-600 ring-emerald-200/70",
+  };
+
 
   return (
     <div className="relative flex w-full justify-center px-4 py-6 sm:py-10">
@@ -90,7 +105,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
             <X className="h-4 w-4" />
           </button>
 
-          {/* Glowing AI icon */}
+          {/* Glowing AI icon — white circle with purple sparkle */}
           <div className="flex justify-center">
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }}
@@ -100,23 +115,29 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
             >
               <div
                 aria-hidden
-                className="absolute inset-0 -m-3 rounded-full bg-[hsl(262_83%_62%/0.35)] blur-xl"
+                className="absolute inset-0 -m-4 rounded-full bg-[hsl(262_83%_62%/0.30)] blur-2xl"
               />
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(262_83%_62%)] to-[hsl(262_83%_48%)] text-white shadow-[0_8px_24px_-6px_hsl(262_83%_58%/0.6)] ring-1 ring-white/40">
-                <Sparkles className="h-6 w-6" />
+              {/* tiny decorative sparkles */}
+              <span aria-hidden className="absolute -left-6 top-1 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.55)]" />
+              <span aria-hidden className="absolute -right-5 top-3 h-1.5 w-1.5 rounded-full bg-[hsl(262_83%_62%/0.45)]" />
+              <span aria-hidden className="absolute -right-7 bottom-2 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.45)]" />
+              <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-[0_10px_30px_-10px_hsl(262_83%_58%/0.55)] ring-1 ring-[hsl(262_83%_62%/0.20)]">
+                <Sparkles className="h-7 w-7" strokeWidth={2.2} />
               </div>
             </motion.div>
           </div>
 
           {/* Eyebrow */}
-          <p className="mt-6 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[hsl(262_60%_45%)]">
+          <p className="mt-6 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(262_70%_48%)]">
             AI Photo Appraisal
           </p>
 
           {/* Headline */}
-          <h2 className="mt-3 text-center text-[26px] font-semibold leading-[1.15] tracking-tight text-slate-900 sm:text-[30px]">
-            Get your strongest offer with a photo review.
+          <h2 className="mt-3 text-center text-[26px] font-bold leading-[1.15] tracking-tight text-slate-900 sm:text-[32px]">
+            Get your strongest offer with a{" "}
+            <span className="text-[hsl(262_83%_55%)]">photo review.</span>
           </h2>
+
 
           {/* Subheadline */}
           <p className="mx-auto mt-3 max-w-[520px] text-center text-[15px] leading-relaxed text-slate-500">
@@ -128,37 +149,48 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.18, duration: 0.4 }}
-            className="mx-auto mt-7 max-w-[520px] overflow-hidden rounded-2xl border border-[hsl(262_83%_58%/0.18)] bg-gradient-to-br from-[hsl(262_83%_62%/0.06)] via-white to-[hsl(262_83%_62%/0.04)] px-5 py-5 text-center"
+            className="mx-auto mt-7 flex max-w-[540px] items-center gap-4 rounded-2xl border border-[hsl(262_83%_58%/0.18)] bg-gradient-to-br from-[hsl(262_83%_62%/0.08)] via-[hsl(262_83%_62%/0.04)] to-white px-5 py-4 text-left sm:px-6 sm:py-5"
           >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-              Photo-reviewed offers may increase by
-            </p>
-            <p className="mt-2 bg-gradient-to-r from-[hsl(262_83%_50%)] to-[hsl(262_83%_38%)] bg-clip-text text-[28px] font-semibold tracking-tight text-transparent sm:text-[32px]">
-              {hasOffer ? `${fmt(minIncrease)} – ${fmt(maxIncrease)}` : "Up to 12% more"}
-            </p>
-
-            <div className="mt-3 flex justify-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200/70">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Takes about 2 minutes
-              </span>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-sm ring-1 ring-[hsl(262_83%_62%/0.25)]">
+              <ArrowUpRight className="h-5 w-5" strokeWidth={2.4} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[12.5px] font-medium text-slate-600">
+                Photo-reviewed offers may increase by
+              </p>
+              <p className="mt-0.5 bg-gradient-to-r from-[hsl(262_83%_55%)] to-[hsl(262_83%_42%)] bg-clip-text text-[26px] font-bold tracking-tight text-transparent sm:text-[30px]">
+                {hasOffer ? `${fmt(minIncrease)} – ${fmt(maxIncrease)}` : "Up to 12% more"}
+              </p>
+              <p className="mt-0.5 text-[11.5px] text-slate-500">
+                Based on 2%–12% increase range
+              </p>
             </div>
           </motion.div>
 
+          {/* Time pill */}
+          <div className="mt-4 flex justify-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5 text-[12px] font-semibold text-emerald-700 ring-1 ring-emerald-200/70">
+              <Clock className="h-3.5 w-3.5" />
+              Takes about 2 minutes
+            </span>
+          </div>
+
           {/* Benefit columns */}
-          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+          <div className="mt-6 grid gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/40 p-3 sm:grid-cols-3">
             {benefits.map((b, i) => (
               <motion.div
                 key={b.title}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.22 + i * 0.05, duration: 0.35 }}
-                className="rounded-xl border border-slate-200/80 bg-white px-4 py-4 text-center"
+                className="rounded-xl bg-white px-3 py-4 text-center"
               >
-                <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg bg-[hsl(262_83%_58%/0.08)] text-[hsl(262_60%_45%)] ring-1 ring-[hsl(262_83%_58%/0.15)]">
-                  <b.icon className="h-4 w-4" />
+                <div
+                  className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ring-1 ${tintClasses[b.tint]}`}
+                >
+                  <b.icon className="h-5 w-5" strokeWidth={2.2} />
                 </div>
-                <p className="mt-2.5 text-[13px] font-semibold text-slate-900">
+                <p className="mt-3 text-[13px] font-semibold text-slate-900">
                   {b.title}
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
@@ -167,6 +199,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
               </motion.div>
             ))}
           </div>
+
 
           {/* CTA */}
           <div className="mt-8 space-y-3">
@@ -198,9 +231,11 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           </div>
 
           {/* Reassurance */}
-          <p className="mt-5 text-center text-[11.5px] text-slate-400">
+          <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[12px] text-slate-500">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
             Your current offer remains available while you decide.
           </p>
+
         </div>
       </motion.div>
     </div>
