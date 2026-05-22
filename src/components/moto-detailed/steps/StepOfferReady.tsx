@@ -98,32 +98,35 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
       </motion.div>
 
       {/* Primary + secondary actions */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <motion.button
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.995 }}
           onClick={acceptOriginal}
-          className="w-full rounded-xl bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] px-6 py-4 text-base font-semibold text-white shadow-[0_8px_24px_-10px_hsl(262_83%_58%/0.6)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] px-6 py-4 text-base font-semibold text-white shadow-[0_8px_24px_-10px_hsl(262_83%_58%/0.6)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
         >
-          Accept Offer
+          Accept Offer · {fmt(firm)} <ArrowRight className="h-4 w-4" />
         </motion.button>
         <button
-          onClick={onNotReady}
-          className="block w-full rounded-xl px-4 py-3 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+          onClick={onSaveOffer}
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
         >
-          I'm not ready
+          <BookmarkCheck className="h-4 w-4" /> Save My Offer
         </button>
+        <p className="pt-1 text-center text-[12px] leading-relaxed text-slate-500">
+          Your offer will be saved to your customer portal and available until it expires.
+        </p>
       </div>
 
-      {/* Retention modal — photo review invitation only, no offer increase shown */}
+      {/* Save confirmation modal */}
       <AnimatePresence>
-        {showRetention && (
+        {showSaved && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/55 p-4 backdrop-blur-sm sm:items-center"
-            onClick={() => setShowRetention(false)}
+            onClick={() => setShowSaved(false)}
           >
             <motion.div
               initial={{ opacity: 0, y: 24, scale: 0.98 }}
@@ -134,46 +137,43 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
               className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
             >
               <button
-                onClick={() => setShowRetention(false)}
+                onClick={() => setShowSaved(false)}
                 className="absolute right-3 top-3 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
                 aria-label="Close"
               >
                 <X className="h-4 w-4" />
               </button>
 
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(262_83%_58%/0.1)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)]">
-                <Camera className="h-3 w-3" /> PHOTO REVIEW OPTION
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                <BookmarkCheck className="h-5 w-5" />
               </div>
               <h2 className="mt-3 text-xl font-semibold tracking-tight text-slate-900">
-                Want us to review your photos before you decide?
+                Your offer has been saved.
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                A few quick photos can help us verify your vehicle's condition and check whether an updated market adjustment is available.
+                You can return to your customer portal anytime to review your offer, upload documents, message the dealer, or continue when you're ready.
               </p>
 
               <div className="mt-5 space-y-2">
                 <motion.button
                   whileTap={{ scale: 0.995 }}
-                  onClick={onAddPhotos}
-                  className="w-full rounded-xl bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_8px_24px_-10px_hsl(262_83%_58%/0.6)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
+                  onClick={onGoToPortal}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_8px_24px_-10px_hsl(262_83%_58%/0.6)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
                 >
-                  Add Photos &amp; Review Offer →
+                  Go to My Offer Portal <ArrowRight className="h-4 w-4" />
                 </motion.button>
                 <button
-                  onClick={() => setShowRetention(false)}
+                  onClick={() => setShowSaved(false)}
                   className="w-full rounded-xl px-4 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
                 >
-                  Keep Current Offer
+                  Back to Offer
                 </button>
               </div>
-
-              <p className="mt-3 text-center text-[11px] text-slate-400">
-                Your current offer is still available. No obligation.
-              </p>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 };
