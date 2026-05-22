@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Lock, Check, ShieldCheck, FileText, FileSignature } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { Lock, Check, ShieldCheck, FileText, FileSignature, User, Mail, Phone, MapPin, Gauge, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import PrimaryCTA from "../PrimaryCTA";
 import type { JourneyOwnership, StepContext } from "../types";
@@ -10,10 +10,8 @@ type FieldKey = "firstName" | "lastName" | "email" | "phone" | "zip" | "mileage"
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 const isPhone = (v: string) => v.replace(/\D/g, "").length >= 10;
 const digitsOnly = (v: string) => v.replace(/\D/g, "");
-const formatMiles = (digits: string) =>
-  digits ? Number(digits).toLocaleString("en-US") : "";
-const formatMoney = (digits: string) =>
-  digits ? Number(digits).toLocaleString("en-US") : "";
+const formatMiles = (digits: string) => (digits ? Number(digits).toLocaleString("en-US") : "");
+const formatMoney = (digits: string) => (digits ? Number(digits).toLocaleString("en-US") : "");
 
 const OWNERSHIP_OPTIONS: {
   value: JourneyOwnership;
@@ -21,9 +19,9 @@ const OWNERSHIP_OPTIONS: {
   desc: string;
   Icon: typeof ShieldCheck;
 }[] = [
-  { value: "own", title: "I own it outright", desc: "No loan or lease on the vehicle.", Icon: ShieldCheck },
-  { value: "loan", title: "I have a loan or lien", desc: "There is still a payoff balance.", Icon: FileText },
-  { value: "lease", title: "It's leased", desc: "The vehicle is currently leased.", Icon: FileSignature },
+  { value: "own",   title: "I own it outright",     desc: "No loan or lease on the vehicle.", Icon: ShieldCheck },
+  { value: "loan",  title: "I have a loan or lien", desc: "There is still a payoff balance.", Icon: FileText },
+  { value: "lease", title: "It's leased",           desc: "The vehicle is currently leased.", Icon: FileSignature },
 ];
 
 const StepContact = ({ state, update, next }: StepContext) => {
@@ -63,20 +61,29 @@ const StepContact = ({ state, update, next }: StepContext) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="First name" value={c.firstName} onChange={(v) => set({ firstName: v })}
-          onBlur={() => touch("firstName")} error={touched.firstName ? errors.firstName : undefined} autoComplete="given-name" />
-        <Field label="Last name" value={c.lastName} onChange={(v) => set({ lastName: v })}
-          onBlur={() => touch("lastName")} error={touched.lastName ? errors.lastName : undefined} autoComplete="family-name" />
-        <Field label="Email" type="email" value={c.email} onChange={(v) => set({ email: v })}
-          onBlur={() => touch("email")} error={touched.email ? errors.email : undefined}
-          className="sm:col-span-2" autoComplete="email" placeholder="you@example.com" />
-        <Field label="Phone" type="tel" value={c.phone} onChange={(v) => set({ phone: v })}
-          onBlur={() => touch("phone")} error={touched.phone ? errors.phone : undefined}
-          autoComplete="tel" placeholder="(555) 555-5555" />
-        <Field label="ZIP (optional)" value={c.zip} onChange={(v) => set({ zip: v })}
-          onBlur={() => touch("zip")} autoComplete="postal-code" placeholder="90210" />
+    <div className="space-y-8">
+      {/* ── Section 1 — Contact details ─────────────────────────── */}
+      <Section title="Contact details" subtitle="So we can deliver your offer and follow up if needed.">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="First name" value={c.firstName} onChange={(v) => set({ firstName: v })}
+            onBlur={() => touch("firstName")} error={touched.firstName ? errors.firstName : undefined}
+            autoComplete="given-name" Icon={User} placeholder="Jane" />
+          <Field label="Last name" value={c.lastName} onChange={(v) => set({ lastName: v })}
+            onBlur={() => touch("lastName")} error={touched.lastName ? errors.lastName : undefined}
+            autoComplete="family-name" Icon={User} placeholder="Doe" />
+          <Field label="Email" type="email" value={c.email} onChange={(v) => set({ email: v })}
+            onBlur={() => touch("email")} error={touched.email ? errors.email : undefined}
+            className="sm:col-span-2" autoComplete="email" placeholder="you@example.com" Icon={Mail} />
+          <Field label="Phone" type="tel" value={c.phone} onChange={(v) => set({ phone: v })}
+            onBlur={() => touch("phone")} error={touched.phone ? errors.phone : undefined}
+            autoComplete="tel" placeholder="(555) 555-5555" Icon={Phone} />
+          <Field label="ZIP (optional)" value={c.zip} onChange={(v) => set({ zip: v })}
+            onBlur={() => touch("zip")} autoComplete="postal-code" placeholder="90210" Icon={MapPin} />
+        </div>
+      </Section>
+
+      {/* ── Section 2 — Vehicle details ─────────────────────────── */}
+      <Section title="Vehicle details" subtitle="Accurate mileage helps us calculate your best available offer.">
         <Field
           label="Current mileage"
           value={formatMiles(c.mileage)}
@@ -85,53 +92,49 @@ const StepContact = ({ state, update, next }: StepContext) => {
           error={touched.mileage ? errors.mileage : undefined}
           inputMode="numeric"
           placeholder="Enter current mileage"
-          className="sm:col-span-2"
-          helper="Accurate mileage helps us calculate your best available offer."
+          Icon={Gauge}
         />
-      </div>
+      </Section>
 
-      {/* Ownership status — required */}
-      <div>
-        <div className="mb-1.5 flex items-baseline justify-between">
-          <span className="block text-sm font-medium text-slate-800">Vehicle ownership status</span>
-          <span className="text-[11px] font-medium text-slate-400">Required</span>
-        </div>
-        <p className="mb-3 text-xs text-slate-500">
-          This helps us understand payoff, title, or lease details before finalizing your offer.
-        </p>
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+      {/* ── Section 3 — Ownership status ────────────────────────── */}
+      <Section
+        title="How is this vehicle currently owned?"
+        subtitle="This helps us understand title, payoff, or lease details before finalizing your offer."
+        required
+      >
+        <div className="space-y-2.5">
           {OWNERSHIP_OPTIONS.map(({ value, title, desc, Icon }) => {
             const active = c.ownership === value;
             return (
               <motion.button
                 key={value}
                 type="button"
-                whileTap={{ scale: 0.99 }}
+                whileTap={{ scale: 0.995 }}
                 onClick={() => { set({ ownership: value }); touch("ownership"); }}
-                className={`group relative flex h-full min-h-[120px] flex-col rounded-2xl border p-4 text-left transition-all ${
+                className={`group relative flex w-full items-center gap-4 rounded-2xl border px-4 py-4 text-left transition-all ${
                   active
-                    ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%/0.05)] shadow-[0_8px_24px_-12px_hsl(262_83%_58%/0.45),0_0_0_4px_hsl(262_83%_58%/0.08)]"
+                    ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%/0.05)] shadow-[0_10px_28px_-14px_hsl(262_83%_58%/0.45),0_0_0_4px_hsl(262_83%_58%/0.08)]"
                     : "border-slate-200 bg-white hover:border-[hsl(262_83%_58%/0.55)] hover:bg-[hsl(262_83%_58%/0.035)]"
                 }`}
               >
-                <div className="flex items-start justify-between">
-                  <div
-                    className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
-                      active ? "bg-[hsl(262_83%_58%)] text-white" : "bg-[hsl(262_83%_58%/0.08)] text-[hsl(262_60%_45%)]"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" strokeWidth={2.25} />
-                  </div>
-                  <span
-                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                      active ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%)] text-white" : "border-slate-300 bg-white"
-                    }`}
-                  >
-                    {active && <Check className="h-3 w-3" strokeWidth={3} />}
-                  </span>
+                <div
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors ${
+                    active ? "bg-[hsl(262_83%_58%)] text-white" : "bg-[hsl(262_83%_58%/0.08)] text-[hsl(262_60%_45%)]"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" strokeWidth={2.25} />
                 </div>
-                <p className="mt-3 text-sm font-semibold text-slate-900">{title}</p>
-                <p className="mt-0.5 text-[12px] leading-relaxed text-slate-500">{desc}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold text-slate-900">{title}</p>
+                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-slate-500">{desc}</p>
+                </div>
+                <span
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                    active ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%)] text-white" : "border-slate-300 bg-white"
+                  }`}
+                >
+                  {active && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+                </span>
               </motion.button>
             );
           })}
@@ -141,52 +144,75 @@ const StepContact = ({ state, update, next }: StepContext) => {
         )}
 
         {/* Conditional follow-ups */}
+        {c.ownership === "own" && (
+          <motion.p
+            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[hsl(262_83%_58%/0.06)] px-3.5 py-2.5 text-[12.5px] text-[hsl(262_60%_38%)]"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Great — please have your title available when completing the transaction.
+          </motion.p>
+        )}
+
         {c.ownership === "loan" && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-4"
+            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+            className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4"
           >
-            <Field
-              label="Estimated payoff amount"
-              value={formatMoney(c.payoffAmount || "")}
-              onChange={(v) => set({ payoffAmount: digitsOnly(v) })}
-              inputMode="numeric"
-              placeholder="Enter estimated payoff"
-              helper="If you're not sure, you can leave this blank and we'll help verify it."
-            />
+            <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">Payoff details</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field
+                label="Lender name (optional)"
+                value={c.lender || ""}
+                onChange={(v) => set({ lender: v })}
+                placeholder="e.g. Chase Auto"
+              />
+              <Field
+                label="Estimated payoff amount (optional)"
+                value={formatMoney(c.payoffAmount || "")}
+                onChange={(v) => set({ payoffAmount: digitsOnly(v) })}
+                inputMode="numeric"
+                placeholder="$0"
+              />
+              <p className="text-xs text-slate-500 sm:col-span-2">
+                If you're not sure, you can leave this blank and we'll help verify it.
+              </p>
+            </div>
           </motion.div>
         )}
 
         {c.ownership === "lease" && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2"
+            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+            className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4"
           >
-            <Field
-              label="Leasing company"
-              value={c.leaseCompany || ""}
-              onChange={(v) => set({ leaseCompany: v })}
-              placeholder="e.g. Toyota Financial"
-            />
-            <Field
-              label="Monthly payment (optional)"
-              value={formatMoney(c.leaseMonthly || "")}
-              onChange={(v) => set({ leaseMonthly: digitsOnly(v) })}
-              inputMode="numeric"
-              placeholder="Enter monthly payment"
-            />
-            <p className="text-xs text-slate-500 sm:col-span-2">
-              Lease details help us understand your next steps.
-            </p>
+            <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">Lease details</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field
+                label="Leasing company (optional)"
+                value={c.leaseCompany || ""}
+                onChange={(v) => set({ leaseCompany: v })}
+                placeholder="e.g. Toyota Financial"
+              />
+              <Field
+                label="Monthly payment (optional)"
+                value={formatMoney(c.leaseMonthly || "")}
+                onChange={(v) => set({ leaseMonthly: digitsOnly(v) })}
+                inputMode="numeric"
+                placeholder="$0"
+              />
+              <p className="text-xs text-slate-500 sm:col-span-2">
+                Lease details help us understand your next steps.
+              </p>
+            </div>
           </motion.div>
         )}
-      </div>
+      </Section>
 
-      <div className="flex items-start gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/70 p-4 text-sm text-emerald-900">
-        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-          <Lock className="h-3.5 w-3.5" />
+      {/* Privacy strip */}
+      <div className="flex items-start gap-3 rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-4 text-sm text-emerald-900">
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+          <Lock className="h-4 w-4" />
         </div>
         <span className="leading-relaxed">
           Your information stays secure. We'll only use it to send your offer and help with next steps.
@@ -198,9 +224,21 @@ const StepContact = ({ state, update, next }: StepContext) => {
   );
 };
 
+const Section = ({
+  title, subtitle, required, children,
+}: { title: string; subtitle?: string; required?: boolean; children: ReactNode }) => (
+  <section>
+    <div className="mb-3 flex items-baseline justify-between">
+      <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">{title}</h3>
+      {required && <span className="text-[11px] font-medium text-slate-400">Required</span>}
+    </div>
+    {subtitle && <p className="mb-4 text-[12.5px] text-slate-500">{subtitle}</p>}
+    {children}
+  </section>
+);
 
 const Field = ({
-  label, value, onChange, onBlur, type = "text", className, error, autoComplete, placeholder, inputMode, helper,
+  label, value, onChange, onBlur, type = "text", className, error, autoComplete, placeholder, inputMode, helper, Icon,
 }: {
   label: string;
   value: string;
@@ -213,30 +251,35 @@ const Field = ({
   placeholder?: string;
   inputMode?: "text" | "numeric" | "tel" | "email" | "decimal" | "search" | "url" | "none";
   helper?: string;
+  Icon?: typeof User;
 }) => (
   <label className={`block ${className ?? ""}`}>
-    <span className="mb-1.5 block text-sm font-medium text-slate-800">{label}</span>
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      onBlur={onBlur}
-      autoComplete={autoComplete}
-      placeholder={placeholder}
-      inputMode={inputMode}
-      className={`h-[52px] w-full rounded-xl border bg-white px-4 text-base text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
-        error
-          ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
-          : "border-[#E6EAF0] focus:border-[hsl(262_83%_58%)] focus:ring-4 focus:ring-[hsl(262_83%_58%/0.12)]"
-      }`}
-    />
+    <span className="mb-1.5 block text-[13px] font-medium text-slate-700">{label}</span>
+    <div className="relative">
+      {Icon && (
+        <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={2} />
+      )}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
+        autoComplete={autoComplete}
+        placeholder={placeholder}
+        inputMode={inputMode}
+        className={`h-[54px] w-full rounded-[14px] border bg-white ${Icon ? "pl-10" : "pl-4"} pr-4 text-[15px] text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
+          error
+            ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
+            : "border-[#E6EAF0] focus:border-[hsl(262_83%_58%)] focus:ring-4 focus:ring-[hsl(262_83%_58%/0.12)]"
+        }`}
+      />
+    </div>
     {error
-      ? <span className="mt-1 block text-xs font-medium text-red-600">{error}</span>
+      ? <span className="mt-1.5 block text-xs font-medium text-red-600">{error}</span>
       : helper
-        ? <span className="mt-1 block text-xs text-slate-500">{helper}</span>
+        ? <span className="mt-1.5 block text-xs text-slate-500">{helper}</span>
         : null}
   </label>
 );
-
 
 export default StepContact;

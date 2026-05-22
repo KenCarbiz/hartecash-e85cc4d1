@@ -45,6 +45,8 @@ export interface JourneyContact {
   ownership: JourneyOwnership | null;
   /** Optional payoff if ownership === "loan". Digits-only string. */
   payoffAmount?: string;
+  /** Optional lienholder / lender name if ownership === "loan". */
+  lender?: string;
   /** Optional lease details if ownership === "lease". */
   leaseCompany?: string;
   leaseMonthly?: string;
