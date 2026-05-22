@@ -38,15 +38,11 @@ const OPTIONAL: Category[] = [
 ];
 const ALL = [...REQUIRED, ...OPTIONAL];
 
-const ANALYZING_MESSAGES = [
-  "Reviewing exterior condition…",
-  "Checking body panel consistency…",
-  "Reviewing wheel and tire condition…",
-  "Reviewing interior wear patterns…",
-  "Comparing against live market data…",
-  "Detecting trim and package options…",
-  "Calculating market adjustment…",
-  "Finalizing updated valuation…",
+const REVIEW_STEPS = [
+  "Checking photo clarity",
+  "Reviewing vehicle condition",
+  "Comparing live market data",
+  "Preparing your updated offer",
 ];
 
 const YELLOW_REASONS = [
@@ -97,10 +93,10 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
   const hasReds = uploaded.some((id) => quality[id]?.status === "red");
   const enoughRequired = requiredOk >= REQUIRED.length;
 
-  // Rotate analysis messages.
+  // Advance stages during review (4 stages over ~5.4s).
   useEffect(() => {
     if (!analyzing) return;
-    const t = setInterval(() => setStatusIdx((i) => (i + 1) % ANALYZING_MESSAGES.length), 1100);
+    const t = setInterval(() => setStatusIdx((i) => Math.min(i + 1, REVIEW_STEPS.length - 1)), 1300);
     return () => clearInterval(t);
   }, [analyzing]);
 
@@ -108,6 +104,7 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
   useEffect(() => {
     if (!analyzing) {
       setProgress(0);
+      setStatusIdx(0);
       return;
     }
     const start = Date.now();
@@ -238,7 +235,14 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
       : `Add ${REQUIRED.length - requiredOk} more required photo${REQUIRED.length - requiredOk === 1 ? "" : "s"} →`;
 
   if (analyzing) {
-    return <AnalysisStage statusIdx={statusIdx} progress={progress} photoCount={uploaded.length} />;
+    return (
+      <AnalysisStage
+        statusIdx={statusIdx}
+        progress={progress}
+        previews={previews}
+        categories={REQUIRED}
+      />
+    );
   }
 
   return (
@@ -584,47 +588,117 @@ const PhoneHandoffModal = ({
 const AnalysisStage = ({
   statusIdx,
   progress,
-  photoCount,
+  previews,
+  categories,
 }: {
   statusIdx: number;
   progress: number;
-  photoCount: number;
-}) => (
-  <motion.div
-    key="analyzing"
-    initial={{ opacity: 0, y: 8 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0 }}
-    className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-[hsl(262_83%_58%/0.05)] via-white to-slate-50 p-8 sm:p-10"
-  >
+  previews: Record<string, string>;
+  categories: Category[];
+}) => {
+  // Determine which tiles have been "verified" by the current stage.
+  // Reveal the first N green checks evenly across the 4 stages.
+  const tilesPerStage = Math.ceil(categories.length / REVIEW_STEPS.length);
+  const verifiedCount = Math.min(categories.length, (statusIdx + 1) * tilesPerStage);
+
+  return (
     <motion.div
-      className="absolute inset-x-0 h-32 bg-gradient-to-b from-transparent via-[hsl(262_83%_58%/0.15)] to-transparent"
-      initial={{ top: -64 }}
-      animate={{ top: ["-15%", "115%"] }}
-      transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-    />
-    <div className="relative">
-      <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_8px_30px_-8px_hsl(262_83%_58%/0.5)]">
-        <Loader2 className="h-7 w-7 animate-spin text-[hsl(262_83%_58%)]" />
+      key="analyzing"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-[hsl(262_83%_58%/0.05)] via-white to-slate-50 p-6 sm:p-8 min-h-[460px] flex flex-col"
+    >
+      <motion.div
+        className="pointer-events-none absolute inset-x-0 h-32 bg-gradient-to-b from-transparent via-[hsl(262_83%_58%/0.12)] to-transparent"
+        initial={{ top: -64 }}
+        animate={{ top: ["-15%", "115%"] }}
+        transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <div className="relative text-center">
+        <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-[0_8px_30px_-8px_hsl(262_83%_58%/0.5)]">
+          <Loader2 className="h-5 w-5 animate-spin text-[hsl(262_83%_58%)]" />
+        </div>
+        <h2 className="mt-4 text-xl font-semibold text-slate-900 sm:text-2xl">
+          Reviewing your photos
+        </h2>
+        <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+          We're checking your vehicle photos for clarity, condition, and market adjustment opportunities.
+        </p>
       </div>
-      <h2 className="mt-5 text-center text-xl font-semibold text-slate-900">
-        Reviewing your photos
-      </h2>
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={statusIdx}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.35 }}
-          className="mt-2 text-center text-sm text-slate-500"
-        >
-          {ANALYZING_MESSAGES[statusIdx]}
-        </motion.p>
-      </AnimatePresence>
-      <div className="mx-auto mt-6 max-w-sm">
+
+      {/* Ghost photo review grid */}
+      <div className="relative mt-6 grid grid-cols-3 gap-2.5 sm:gap-3">
+        {categories.map((cat, i) => {
+          const verified = i < verifiedCount;
+          const url = previews[cat.id];
+          return (
+            <div
+              key={cat.id}
+              className="relative aspect-[4/3] overflow-hidden rounded-lg border border-slate-200 bg-slate-100"
+            >
+              {url ? (
+                <img
+                  src={url}
+                  alt={cat.label}
+                  className={`h-full w-full object-cover transition ${verified ? "" : "opacity-60 saturate-50"}`}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <Camera className="h-5 w-5 text-slate-400" />
+                </div>
+              )}
+              {!verified && (
+                <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+              )}
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent px-1.5 py-1">
+                <p className="truncate text-[10px] font-medium text-white">{cat.label}</p>
+              </div>
+              {verified && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 shadow"
+                >
+                  <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                </motion.div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Step checklist */}
+      <ul className="relative mt-6 space-y-2">
+        {REVIEW_STEPS.map((label, i) => {
+          const done = i < statusIdx;
+          const active = i === statusIdx;
+          return (
+            <li key={label} className="flex items-center gap-3 text-sm">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+                {done ? (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500">
+                    <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                  </span>
+                ) : active ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-[hsl(262_83%_58%)]" />
+                ) : (
+                  <span className="h-2 w-2 rounded-full bg-slate-300" />
+                )}
+              </span>
+              <span className={done ? "text-slate-500" : active ? "font-medium text-slate-900" : "text-slate-400"}>
+                {label}{active ? "…" : ""}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Progress */}
+      <div className="relative mt-auto pt-6">
         <div className="flex items-center justify-between text-[11px] text-slate-500">
-          <span>Reviewing photos</span>
+          <span>Review progress</span>
           <span className="font-medium text-slate-700">{Math.round(progress * 100)}%</span>
         </div>
         <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
@@ -634,11 +708,8 @@ const AnalysisStage = ({
           />
         </div>
       </div>
-      <p className="mt-5 text-center text-xs text-slate-400">
-        {photoCount} photos reviewed · cross-referencing live market data
-      </p>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 export default StepBoostUpload;
