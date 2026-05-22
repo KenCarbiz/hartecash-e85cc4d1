@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { StepContext, JourneyAppointment } from "../types";
+import VehicleImageCard from "../VehicleImageCard";
 import { trackCtaClicked } from "../analytics";
 
 const fmt = (n: number) =>
