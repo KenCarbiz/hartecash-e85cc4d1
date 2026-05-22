@@ -183,18 +183,18 @@ const PhotoGallerySlide = () => {
             className="relative flex-1 min-h-0 rounded-2xl overflow-hidden bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] grid place-items-center group cursor-pointer text-left"
             aria-label={`View ${cat.label} gallery`}
           >
-            {/* Soft floor glow */}
-            <div className="absolute inset-0 grid place-items-center pointer-events-none">
-              <div className="w-[80%] h-[80%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.28)_0%,_rgba(199,210,254,0.32)_40%,_transparent_72%)] blur-[2px]" />
+            {/* Soft lavender hero glow — slightly above center */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 w-[88%] h-[78%] rounded-full bg-[radial-gradient(ellipse_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.28)_42%,_transparent_72%)] blur-[2px]" />
             </div>
-            {/* Vehicle — vertically centered, with ground shadow */}
+            {/* Vehicle — sits slightly above center, larger hero presence */}
             <img
               src={vehicleHero}
               alt={cat.label}
               loading="lazy"
-              className="relative z-10 max-h-[86%] w-auto object-contain scale-[1.06] drop-shadow-[0_18px_14px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.12]"
+              className="relative z-10 max-h-[92%] max-w-[94%] w-auto object-contain scale-[1.26] -translate-y-[6%] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.32]"
             />
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-[58%] h-[10px] rounded-[50%] bg-black/25 blur-md z-0" />
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[58%] h-[10px] rounded-[50%] bg-black/22 blur-md z-0" />
 
             {/* AI lighting chip */}
             <span className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${TONE[cat.tone]} z-20`}>
@@ -213,10 +213,10 @@ const PhotoGallerySlide = () => {
           </button>
 
           {/* Tabs */}
-          <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 shrink-0">
+          <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 shrink-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {PHOTO_CATEGORIES.map((p, i) => (
               <button key={p.id} onClick={() => setActive(i)}
-                className={`px-3 h-8 rounded-lg shrink-0 text-[10.5px] font-semibold transition ${
+                className={`px-2.5 h-7 rounded-lg shrink-0 text-[10.5px] font-semibold transition ${
                   i === active
                     ? "bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white shadow-[0_6px_14px_-8px_rgba(79,70,229,0.6)]"
                     : "bg-white text-[#53627A] border border-[#E6EEFB] hover:bg-[#EEF0FF] hover:text-[#4F46E5]"
