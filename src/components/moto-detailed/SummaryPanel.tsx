@@ -39,6 +39,16 @@ const SummaryPanel = ({ state, currentStepId }: { state: JourneyState; currentSt
   const isAccepted = state.branch === "accept";
   const todosDone = state.todos.filter((t) => t.done).length;
 
+  // Step → high-level offer-progress percentage shown in the pill.
+  const STEP_PROGRESS: Record<string, number> = {
+    vehicle: 10, condition: 25, usage: 50, ownership: 60, timeline: 65,
+    contact: 75, offer: 100, accepted: 100,
+    boost_intro: 100, boost_upload: 100, boost_result: 100,
+  };
+  const progressPct = currentStepId && STEP_PROGRESS[currentStepId] != null
+    ? STEP_PROGRESS[currentStepId]
+    : state.valuation ? 25 : 10;
+
   return (
     <motion.aside
       initial={{ opacity: 0, y: 8 }}
