@@ -176,82 +176,53 @@ export const FullBelowFold = () => (
 );
 
 /**
- * Mobile counterpart to MotoBelowFold (below).
+ * Moto-template marketing chrome — final tightened iteration per
+ * product-owner direction (May 2026): "get rid of all the links at
+ * the bottom and tighten that space up — only ones left are the
+ * Privacy, Terms, and other disclosures. And customer testimonials."
  *
- * Per product-owner direction: "very watered down version for mobile."
- * The Moto form is the priority on small screens — the marketing
- * chrome exists below it ONLY for the SEO weight (mobile-first
- * indexing means whatever's in the mobile DOM is what Google sees
- * primarily). Heavy promo cards (ValueTrackerCard with its inline
- * SVG illustration) are skipped on mobile because they double the
- * vertical scroll on small viewports without commensurate value —
- * the value-tracker opt-in already lives on the form's contact
- * step via MotoTrackValueBlock.
+ * What that means in practice:
+ *   * KEPT: TestimonialsLean (the customer-testimonials grid the PO
+ *     called out as the only marketing block that stays).
+ *   * DROPPED: HowItWorksLean — moved to a "Learn more" footer link
+ *     if customers want it. Was creating multi-screen scroll.
+ *   * DROPPED: ValueTrackerCard — the value-tracker opt-in still
+ *     lives inside the form's contact step via MotoTrackValueBlock,
+ *     so dropping the below-fold promo doesn't lose the entry point.
+ *   * DROPPED: FAQLean — full FAQ lives at /faq and the JSON-LD
+ *     FAQPage schema still emits via BrandStructuredData for SEO.
  *
- * Mobile scroll order:
- *   1. HowItWorksLean — three steps stack vertically; per-step CTAs
- *      anchor to #sell-car-form
- *   2. FAQLean — five questions collapse to single-column accordion
- *   3. CTABannerLean — compact closer
+ * Privacy / Terms / Offer disclosure / Customer reviews links all
+ * remain in BrandFooter's legal row (mounted once by Index.tsx),
+ * which is the only "links at the bottom" surface that survives.
  *
- * All three sections are the same lean variants used on desktop, so
- * the SEO payload (process content, FAQ schema-eligible Q&As, dealer
- * mission via CTA copy) is preserved. Just no Value Tracker promo
- * card and no Trust Badges / Comparison / Testimonials grids (the
- * three-agent benchmark cut those on desktop too).
+ * Same set for desktop AND mobile — there's no longer a reason to
+ * vary by viewport.
+ *
+ * Earlier iterations stacked HowItWorks, ValueTracker, FAQ between
+ * the form and the footer. Removed per PO direction to tighten
+ * landing-page length and keep below-fold focused on social proof
+ * (testimonials) + legal (footer).
  */
-export const MotoMobileBelowFold = () => (
+export const MotoBelowFold = () => (
   <>
-    <HowItWorksLeanSection />
-    {/* ValueTrackerCard is responsive (left/right cols stack on mobile)
-        so it lands on small viewports too. The premium SVG-based
-        chart degrades gracefully — no horizontal scroll, no heavy
-        image bytes. */}
-    <ValueTrackerCardSection />
+    <TestimonialsLeanSection />
+    {/* Privacy, Terms, Offer disclosure, Customer reviews all live
+        in BrandFooter's legal row (mounted once by Index.tsx). The
+        closing CTA is also part of that same slab so there's no
+        tonal seam between the testimonials and the footer. */}
   </>
 );
 
 /**
- * Moto-template marketing chrome — third iteration per the
- * three-agent benchmark vs sellyourcar.online (MotoAcquire's own
- * consumer site).
- *
- * Strip-down from the prior version (which was already lean):
- *
- *   * DROPPED: TrustBadgesLean — national-tier valuation sites
- *     don't stack stat strips below the form. AggregateRating
- *     already lives in JSON-LD via BrandStructuredData.
- *   * DROPPED: CompetitorComparison — defensive/analytical mindset
- *     too early. Objections are handled by FAQ instead.
- *   * DROPPED: TestimonialsLean — DTC/Trustpilot-era. Moves to
- *     /reviews subpage (PR 3c) with Review/AggregateRating JSON-LD.
- *   * KEPT (rebuilt): HowItWorksLean with semantic Lucide icons in
- *     soft-gray circles + per-step CTA links anchoring to the form
- *     — each step is a micro-conversion ramp instead of inert copy.
- *   * NEW: ValueTrackerCard — MotoAcquire's signature secondary
- *     conversion. "Track your vehicle value for free!" with a
- *     value-curve illustration. Routes to the form's track-value
- *     toggle (already wired via MotoTrackValueBlock).
- *   * REPLACED: FAQ → FAQLean. Two-column asymmetric layout (title
- *     left, accordion right). 5 curated questions instead of 7
- *     (drops the most generic).
- *   * KEPT (simplified): CTABannerLean. Soft-gray bg, single line,
- *     single navy pill button.
- *
- * Final scroll order:
- *   1. HowItWorksLean       three-step process with per-step CTAs
- *   2. ValueTrackerCard     value-tracking opt-in promo
- *   3. FAQLean              5-question 2-column accordion
- *   4. CTABannerLean        single-line centered finisher
+ * Mobile counterpart to MotoBelowFold. Same tight set — testimonials
+ * only. The previous mobile variant skipped TestimonialsLean to
+ * shorten scroll length, but with everything else stripped out
+ * (HowItWorks, ValueTracker, FAQ) the testimonials section is now
+ * the entire below-fold and earns its place on both viewports.
  */
-export const MotoBelowFold = () => (
+export const MotoMobileBelowFold = () => (
   <>
-    <HowItWorksLeanSection />
-    <ValueTrackerCardSection />
     <TestimonialsLeanSection />
-    <FAQLeanSection />
-    {/* Closing CTA is now part of BrandFooter (mounted by Index.tsx)
-        — folded in to eliminate the tonal seam between the prior
-        standalone CTABannerLean section and the footer block. */}
   </>
 );
