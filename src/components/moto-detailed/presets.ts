@@ -88,12 +88,13 @@ const accepted = (): StepDefinition => ({
 });
 
 const boostIntro = (): StepDefinition => ({
-  id: "boost_intro", title: "Boost", helper: "Get a higher offer with AI",
-  pageTitle: "Want to increase your offer?",
-  pageSubtitle: "Our AI can review your vehicle photos and instantly refine your appraisal.",
+  id: "boost_intro", title: "Photo Review", helper: "Add photos to verify your vehicle",
+  pageTitle: "Unlock your strongest offer with photos.",
+  pageSubtitle: "Add a few quick photos so we can verify your vehicle's condition and look for any available market adjustment.",
   Component: StepBoostIntro,
   shouldRender: (state) => state.branch === "boost",
 });
+
 
 const boostUpload = (): StepDefinition => ({
   id: "boost_upload", title: "Photos", helper: "Capture key angles",
