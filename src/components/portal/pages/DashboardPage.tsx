@@ -25,14 +25,14 @@ const Metric = ({ label, value, sub, Icon, tint }: {
   label: string; value: React.ReactNode; sub?: React.ReactNode;
   Icon: React.ComponentType<{ className?: string }>; tint: Tint;
 }) => (
-  <div className="flex items-center gap-4 px-5 py-[18px]">
-    <div className={`w-12 h-12 rounded-2xl grid place-items-center shrink-0 ring-1 ring-inset ring-black/[0.03] shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${TINTS[tint]}`}>
-      <Icon className="w-[22px] h-[22px]" />
+  <div className="flex items-center gap-3.5 px-4 py-3">
+    <div className={`w-11 h-11 rounded-2xl grid place-items-center shrink-0 ring-1 ring-inset ring-black/[0.03] shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${TINTS[tint]}`}>
+      <Icon className="w-5 h-5" />
     </div>
     <div className="min-w-0">
       <div className="text-[10.5px] uppercase tracking-[0.16em] text-[#53627A] font-semibold">{label}</div>
-      <div className="text-[19px] font-extrabold text-[#06194A] leading-tight truncate mt-1 tracking-tight">{value}</div>
-      {sub && <div className="text-[12px] text-[#53627A] mt-1">{sub}</div>}
+      <div className="text-[17px] font-extrabold text-[#06194A] leading-tight truncate mt-0.5 tracking-tight">{value}</div>
+      {sub && <div className="text-[11.5px] text-[#53627A] mt-0.5">{sub}</div>}
     </div>
   </div>
 );
