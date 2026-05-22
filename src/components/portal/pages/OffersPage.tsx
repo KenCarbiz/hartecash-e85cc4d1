@@ -66,14 +66,28 @@ const Counter = ({ value, duration = 1100, prefix = "$" }: { value: number; dura
 };
 
 /* ─── Hover info tooltip ─────────────────────────────────────── */
+/* ─── Hover info tooltip (portal-based, never clipped) ───────── */
 const InfoTip = ({ text, children }: { text: string; children: React.ReactNode }) => (
-  <span className="relative inline-flex items-center group">
-    {children}
-    <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+6px)] z-30 w-[220px] rounded-xl bg-[#06194A] text-white text-[11.5px] leading-snug px-3 py-2 shadow-lg opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all">
-      {text}
-    </span>
-  </span>
+  <TooltipProvider delayDuration={150}>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button type="button" className="inline-flex items-center cursor-help focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5] rounded-full">
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        align="center"
+        sideOffset={8}
+        collisionPadding={12}
+        className="z-[100] max-w-[280px] rounded-xl bg-[#06194A] text-white border-[#06194A] px-3 py-2 text-[11.5px] leading-snug shadow-xl"
+      >
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
 );
+
 
 /* ─── Breakdown data with copy ───────────────────────────────── */
 const BREAKDOWN = [
