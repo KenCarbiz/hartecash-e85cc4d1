@@ -32,27 +32,27 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
     ? `${Number(state.contact.mileage).toLocaleString("en-US")} mi`
     : null;
 
-  const [showRetention, setShowRetention] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
 
   const acceptOriginal = () => {
     trackCtaClicked("offer", "Accept Offer");
     trackOfferAccepted(firm);
     update({ branch: "accept" });
-    setShowRetention(false);
+    setShowSaved(false);
     setTimeout(() => goTo("accepted"), 0);
   };
 
-  const onNotReady = () => {
-    trackCtaClicked("offer", "I'm not ready");
-    setShowRetention(true);
+  const onSaveOffer = () => {
+    trackCtaClicked("offer", "Save My Offer");
+    setShowSaved(true);
   };
 
-  const onAddPhotos = () => {
-    trackCtaClicked("offer", "Add Photos & Review Offer");
-    update({ branch: "boost" });
-    setShowRetention(false);
-    setTimeout(() => goTo("boost_intro"), 0);
+  const onGoToPortal = () => {
+    trackCtaClicked("offer", "Go to My Offer Portal");
+    setShowSaved(false);
+    window.location.href = "/portal-preview";
   };
+
 
   return (
     <div className="space-y-5">
