@@ -220,7 +220,7 @@ const CustomerLookup = () => {
             </button>
 
             <p className="flex items-center justify-center gap-1.5 text-xs text-foreground/55">
-              <ShieldCheck className="w-3.5 h-3.5" />
+              <LockKeyhole className="w-3.5 h-3.5 text-[#4F46E5]" strokeWidth={2} />
               Secure access · Your info is never shared
             </p>
           </form>
