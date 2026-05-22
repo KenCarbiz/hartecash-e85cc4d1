@@ -565,7 +565,7 @@ const TimelineSlide = () => (
 /*  Carousel shell                                                 */
 /* ============================================================== */
 
-export const VehicleHeroCarousel = () => {
+export const VehicleHeroCarousel = ({ onViewOfferDetails }: { onViewOfferDetails?: () => void }) => {
   const [slide, setSlide] = useState(0);
   const [direction, setDirection] = useState(1);
   const [copied, setCopied] = useState(false);
