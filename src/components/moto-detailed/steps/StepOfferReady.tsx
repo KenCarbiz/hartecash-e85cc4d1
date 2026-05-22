@@ -114,7 +114,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
         </button>
       </div>
 
-      {/* Retention modal — hidden Updated Market Offer */}
+      {/* Retention modal — photo review invitation only, no offer increase shown */}
       <AnimatePresence>
         {showRetention && (
           <motion.div
@@ -141,7 +141,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
               </button>
 
               <div className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(262_83%_58%/0.1)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)]">
-                <Camera className="h-3 w-3" /> Photo Review Option
+                <Camera className="h-3 w-3" /> PHOTO REVIEW OPTION
               </div>
               <h2 className="mt-3 text-xl font-semibold tracking-tight text-slate-900">
                 Want us to review your photos before you decide?
