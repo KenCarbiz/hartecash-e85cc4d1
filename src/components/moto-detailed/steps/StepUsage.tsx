@@ -6,7 +6,7 @@ import type { StepContext } from "../types";
 const StepUsage = ({ state, update, next }: StepContext) => {
   const sel = state.usage;
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Card
           active={sel === "trade"}
