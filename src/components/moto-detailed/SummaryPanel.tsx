@@ -40,36 +40,61 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-        <div className="aspect-[16/10] w-full bg-gradient-to-br from-zinc-100 to-zinc-200">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.12)]">
+        <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-[hsl(262_83%_58%/0.08)]">
           {vehicle.imageUrl ? (
-            <img src={vehicle.imageUrl} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="h-full w-full object-cover" />
+            <img
+              src={vehicle.imageUrl}
+              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+              className="h-full w-full object-cover"
+            />
           ) : (
-            <div className="flex h-full items-center justify-center text-zinc-400 text-sm">Vehicle photo</div>
+            <>
+              {/* Subtle dot grid for premium feel */}
+              <div
+                className="absolute inset-0 opacity-[0.35]"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(hsl(215 20% 65% / 0.35) 1px, transparent 1px)",
+                  backgroundSize: "14px 14px",
+                }}
+              />
+              <div className="relative flex h-full items-center justify-center">
+                <Car
+                  className="h-20 w-20 text-[hsl(262_60%_45%)] opacity-70"
+                  strokeWidth={1.25}
+                />
+              </div>
+              <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-white to-transparent" />
+            </>
           )}
         </div>
         <div className="p-5">
-          <p className="text-xs uppercase tracking-wide text-zinc-500">Your vehicle</p>
-          <p className="mt-1 text-lg font-semibold text-zinc-900">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Your Vehicle
+          </p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">
             {vehicle.year} {vehicle.make} {vehicle.model}
           </p>
-          {vehicle.trim && <p className="text-sm text-zinc-500">{vehicle.trim}</p>}
+          {vehicle.trim && <p className="text-sm text-slate-500">{vehicle.trim}</p>}
         </div>
       </div>
 
       {/* Pre-offer estimated range */}
       {valuation && !showFirm && (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.12)]">
           <div className="flex items-center justify-between">
-            <p className="text-xs uppercase tracking-wide text-zinc-500">Estimated range</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Estimated Range
+            </p>
             {strength && (
-              <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${strength.className}`}>
+              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${strength.className}`}>
                 {strength.text}
               </span>
             )}
           </div>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900">
-            {fmt(valuation.low)} <span className="text-zinc-400">–</span> {fmt(valuation.high)}
+          <p className="mt-2 text-2xl font-semibold text-slate-900">
+            {fmt(valuation.low)} <span className="text-slate-300">–</span> {fmt(valuation.high)}
           </p>
 
           <Sparkline data={valuation.trend} />
@@ -79,15 +104,20 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
               <ShieldCheck className="h-4 w-4" />
               <span>Secure & private</span>
             </div>
-            <div className="flex items-center gap-2 text-zinc-600">
-              <TrendingUp className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-slate-600">
+              <TrendingUp className="h-4 w-4 text-[hsl(262_60%_45%)]" />
               <span>Live market data</span>
             </div>
-            <div className="flex items-center gap-2 text-amber-700">
-              <Sparkles className="h-4 w-4" />
-              <span>{valuation.confidence === "high" ? "High" : valuation.confidence === "medium" ? "Medium" : "Building"} confidence</span>
+            <div className="flex items-center gap-2 text-slate-600">
+              <BadgeCheck className="h-4 w-4 text-emerald-600" />
+              <span>No obligation</span>
             </div>
           </div>
+
+          <p className="mt-4 border-t border-slate-100 pt-3 text-[12px] leading-relaxed text-slate-500">
+            <Lock className="mr-1 inline h-3 w-3 align-[-2px] text-slate-400" />
+            Estimate improves as you continue.
+          </p>
         </div>
       )}
 
