@@ -146,67 +146,178 @@ const Mini = () => {
 };
 
 /* ---------- 2. Photo Gallery ------------------------------------ */
+const PHOTO_STATUS: Record<string, { label: string; cls: string }> = {
+  ext: { label: "Approved",     cls: "bg-[#E8F8EE] text-[#0F7A3E]" },
+  int: { label: "Approved",     cls: "bg-[#E8F8EE] text-[#0F7A3E]" },
+  whl: { label: "Approved",     cls: "bg-[#E8F8EE] text-[#0F7A3E]" },
+  odo: { label: "Under Review", cls: "bg-[#FEF3E2] text-[#B45309]" },
+  dmg: { label: "Optional",     cls: "bg-[#F4F6FA] text-[#53627A]" },
+  doc: { label: "Uploaded",     cls: "bg-[#EEF0FF] text-[#4F46E5]" },
+};
+
 const PhotoGallerySlide = () => {
   const [active, setActive] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
   const cat = PHOTO_CATEGORIES[active];
   const TONE: Record<string, string> = {
     green:  "bg-[#E8F8EE] text-[#0F7A3E]",
     orange: "bg-[#FEF3E2] text-[#B45309]",
     indigo: "bg-[#EEF0FF] text-[#4F46E5]",
   };
+  const totalPhotos = PHOTO_CATEGORIES.reduce((s, p) => s + p.count, 0);
+  const approvedCount = PHOTO_CATEGORIES.filter((p) => PHOTO_STATUS[p.id].label === "Approved")
+    .reduce((s, p) => s + p.count, 0);
+  const reviewCount = PHOTO_CATEGORIES.filter((p) => PHOTO_STATUS[p.id].label === "Under Review")
+    .reduce((s, p) => s + p.count, 0);
+
+  const next = () => setActive((i) => (i + 1) % PHOTO_CATEGORIES.length);
+  const prev = () => setActive((i) => (i - 1 + PHOTO_CATEGORIES.length) % PHOTO_CATEGORIES.length);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-4 h-full">
-      <div className="flex flex-col min-h-0">
-        <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] grid place-items-center group">
-          <img src={vehicleHero} alt={cat.label} loading="lazy"
-               className="max-h-[88%] w-auto object-contain drop-shadow-[0_18px_18px_rgba(15,23,42,0.18)] transition-transform duration-500 group-hover:scale-105" />
-          <span className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${TONE[cat.tone]}`}>
-            <Sparkles className="w-3 h-3" /> {cat.ai}
-          </span>
-          <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 text-[10px] font-semibold text-white bg-black/55 backdrop-blur px-2 py-0.5 rounded-full">
-            <ImageIcon className="w-3 h-3" /> {cat.count} photos
-          </span>
-        </div>
-        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 shrink-0">
-          {PHOTO_CATEGORIES.slice(0, 6).map((p, i) => (
-            <button key={p.id} onClick={() => setActive(i)}
-              className={`px-2.5 h-8 rounded-lg shrink-0 text-[10.5px] font-semibold transition ${
-                i === active
-                  ? "bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white shadow-[0_6px_14px_-8px_rgba(79,70,229,0.6)]"
-                  : "bg-[#F4F6FA] text-[#53627A] hover:bg-[#EEF0FF]"
-              }`}>
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="flex flex-col min-h-0">
-        <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Photo Sets</div>
-        <ul className="mt-1.5 space-y-1 flex-1 min-h-0 overflow-y-auto pr-0.5">
-          {PHOTO_CATEGORIES.map((p, i) => (
-            <li key={p.id}>
-              <button onClick={() => setActive(i)}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition text-left ${
-                  i === active ? "bg-[#EEF0FF] ring-1 ring-[#C7D2FE]" : "hover:bg-[#F7F8FB]"
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-4 h-full">
+        {/* Left: preview + tabs */}
+        <div className="flex flex-col min-h-0">
+          <button
+            onClick={() => setLightbox(true)}
+            className="relative flex-1 min-h-0 rounded-2xl overflow-hidden bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] grid place-items-center group cursor-pointer text-left"
+            aria-label={`View ${cat.label} gallery`}
+          >
+            {/* Soft floor glow */}
+            <div className="absolute inset-0 grid place-items-center pointer-events-none">
+              <div className="w-[80%] h-[80%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.28)_0%,_rgba(199,210,254,0.32)_40%,_transparent_72%)] blur-[2px]" />
+            </div>
+            {/* Vehicle — vertically centered, with ground shadow */}
+            <img
+              src={vehicleHero}
+              alt={cat.label}
+              loading="lazy"
+              className="relative z-10 max-h-[86%] w-auto object-contain scale-[1.06] drop-shadow-[0_18px_14px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.12]"
+            />
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-[58%] h-[10px] rounded-[50%] bg-black/25 blur-md z-0" />
+
+            {/* AI lighting chip */}
+            <span className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${TONE[cat.tone]} z-20`}>
+              <Sparkles className="w-3 h-3" /> {cat.ai}
+            </span>
+            {/* Photo count */}
+            <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 text-[10px] font-semibold text-white bg-black/55 backdrop-blur px-2 py-0.5 rounded-full z-20">
+              <ImageIcon className="w-3 h-3" /> {cat.count} {cat.label.toLowerCase()} photos
+            </span>
+            {/* Hover overlay */}
+            <span className="absolute inset-0 bg-[#06194A]/0 group-hover:bg-[#06194A]/35 transition-colors z-10 flex items-center justify-center">
+              <span className="opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all inline-flex items-center gap-1.5 text-[11px] font-bold text-white bg-[#06194A]/85 backdrop-blur px-3 py-1.5 rounded-full">
+                <ImageIcon className="w-3.5 h-3.5" /> View gallery
+              </span>
+            </span>
+          </button>
+
+          {/* Tabs */}
+          <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 shrink-0">
+            {PHOTO_CATEGORIES.map((p, i) => (
+              <button key={p.id} onClick={() => setActive(i)}
+                className={`px-3 h-8 rounded-lg shrink-0 text-[10.5px] font-semibold transition ${
+                  i === active
+                    ? "bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white shadow-[0_6px_14px_-8px_rgba(79,70,229,0.6)]"
+                    : "bg-white text-[#53627A] border border-[#E6EEFB] hover:bg-[#EEF0FF] hover:text-[#4F46E5]"
                 }`}>
-                <span className="flex items-center gap-2 min-w-0">
-                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg ${TONE[p.tone]}`}>
-                    <Camera className="w-3 h-3" />
-                  </span>
-                  <span className="text-[12.5px] font-semibold text-[#06194A] truncate">{p.label}</span>
-                </span>
-                <span className="text-[11px] text-[#8893A8] tabular-nums">{p.count}</span>
+                {p.label}
               </button>
-            </li>
-          ))}
-        </ul>
-        <button className="mt-2 w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-white border border-dashed border-[#C7D2FE] hover:bg-[#EEF0FF] rounded-xl py-1.5 transition shrink-0">
-          <Plus className="w-3.5 h-3.5" /> Upload More Photos
-        </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: list + summary + upload */}
+        <div className="flex flex-col min-h-0">
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Photo Sets</div>
+            <div className="text-[10px] text-[#8893A8]">
+              {totalPhotos} added · <span className="text-[#0F7A3E] font-semibold">{approvedCount} approved</span>
+              {reviewCount > 0 && <> · <span className="text-[#B45309] font-semibold">{reviewCount} in review</span></>}
+            </div>
+          </div>
+          <ul className="mt-1.5 space-y-1 flex-1 min-h-0 overflow-y-auto pr-0.5">
+            {PHOTO_CATEGORIES.map((p, i) => {
+              const status = PHOTO_STATUS[p.id];
+              return (
+                <li key={p.id}>
+                  <button onClick={() => setActive(i)}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition text-left ${
+                      i === active ? "bg-[#EEF0FF] ring-1 ring-[#C7D2FE]" : "hover:bg-[#F7F8FB]"
+                    }`}>
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg ${TONE[p.tone]}`}>
+                        <Camera className="w-3 h-3" />
+                      </span>
+                      <span className="text-[12.5px] font-semibold text-[#06194A] truncate">{p.label}</span>
+                      <span className={`hidden sm:inline-flex items-center text-[9.5px] font-semibold px-1.5 py-0.5 rounded-full ${status.cls}`}>
+                        {status.label}
+                      </span>
+                    </span>
+                    <span className="text-[11px] text-[#8893A8] tabular-nums shrink-0">{p.count}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          <button className="mt-2 w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-[#FAFBFF] border border-dashed border-[#C7D2FE] hover:bg-[#EEF0FF] hover:border-[#A5B4FC] rounded-xl py-2 transition shrink-0">
+            <Plus className="w-3.5 h-3.5" /> Add More Photos
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] bg-[#06194A]/85 backdrop-blur-sm grid place-items-center p-4"
+            onClick={() => setLightbox(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              className="relative w-full max-w-3xl rounded-3xl bg-white shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[#E6EEFB]">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${TONE[cat.tone]}`}>
+                    {cat.label}
+                  </span>
+                  <span className="text-[12px] text-[#53627A] truncate">{cat.ai}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] text-[#8893A8] tabular-nums">{active + 1} / {PHOTO_CATEGORIES.length}</span>
+                  <button onClick={() => setLightbox(false)} aria-label="Close gallery"
+                    className="w-8 h-8 rounded-full bg-[#F4F6FA] hover:bg-[#EEF0FF] grid place-items-center text-[#06194A]">
+                    ✕
+                  </button>
+                </div>
+              </div>
+              <div className="relative bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] grid place-items-center h-[420px]">
+                <img src={vehicleHero} alt={cat.label}
+                  className="max-h-[88%] w-auto object-contain drop-shadow-[0_24px_24px_rgba(15,23,42,0.22)]" />
+                <button onClick={prev} aria-label="Previous"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg grid place-items-center text-[#06194A]">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button onClick={next} aria-label="Next"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg grid place-items-center text-[#06194A]">
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+                <span className="absolute bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[11px] font-semibold text-white bg-black/55 backdrop-blur px-2.5 py-1 rounded-full">
+                  <ImageIcon className="w-3 h-3" /> {cat.count} {cat.label.toLowerCase()} photos
+                </span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
+
 
 /* ---------- 3. Condition Report --------------------------------- */
 const ConditionSlide = () => {
