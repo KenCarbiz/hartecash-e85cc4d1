@@ -29,6 +29,12 @@ const UploadPhotos = lazy(() => import("./pages/UploadPhotos"));
 const UploadDocs = lazy(() => import("./pages/UploadDocs"));
 const BoostOfferClarity = lazy(() => import("./pages/BoostOfferClarity"));
 const CustomerPortal = lazy(() => import("./pages/CustomerPortal"));
+// Legacy submission-aware portal (the maximalist "real data" portal that
+// reads get_submission_portal). Preserved at /my-submission-legacy/:token
+// for rollback + reference per the May 2026 portal-promotion directive.
+const LegacyPortalRoute = lazy(() =>
+  import("./pages/CustomerPortal").then((m) => ({ default: m.LegacyPortalRoute })),
+);
 const PortalPreview = lazy(() => import("./pages/PortalPreview"));
 const CustomerLookup = lazy(() => import("./pages/CustomerLookup"));
 const ScheduleVisit = lazy(() => import("./pages/ScheduleVisit"));
@@ -241,6 +247,10 @@ const AnimatedRoutes = () => {
         <Route path="/boost-offer/:token" element={<BoostOfferClarity />} />
         <Route path="/my-submission" element={<CustomerLookup />} />
         <Route path="/my-submission/:token" element={<CustomerPortal />} />
+        {/* Rollback route — keeps the legacy submission-aware portal
+            reachable while the new portal at /my-submission/:token is
+            mock-driven. Not linked from any public nav. */}
+        <Route path="/my-submission-legacy/:token" element={<LegacyPortalRoute />} />
         <Route path="/portal-preview" element={<PortalPreview />} />
         <Route path="/reschedule/:token" element={<RescheduleAppointment />} />
         <Route path="/call-feedback/:token" element={<CallFeedback />} />

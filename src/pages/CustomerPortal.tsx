@@ -114,16 +114,33 @@ const ACCEPTED_PORTAL_STATUSES = new Set([
   "purchase_complete",
 ]);
 
-import CustomerPortalClarity from "./CustomerPortalClarity";
-import CustomerPortalMoto from "./CustomerPortalMoto";
+// Template-aware dispatch retired — promotion to live, May 2026.
+//
+// Per the product owner's "make the new portal live" directive, all
+// landing_template values now route to the new premium portal
+// (rendered by ./PortalPreview), not the legacy or template-specific
+// portals below.
+//
+// • The new portal is mock-driven for now ("Alex Morgan" / fake VIN
+//   from src/components/portal/portalMock.ts). The technical review's
+//   P0 #1 flagged this; the PO accepted the trade-off to ship the new
+//   experience while real-data wiring is in flight.
+// • The legacy portal (CustomerPortalLegacy, exported below) is
+//   preserved verbatim and mounted at /my-submission-legacy/:token
+//   for rollback / reference. Do NOT delete it.
+// • The Clarity and Moto template-specific portals stay imported but
+//   are no longer dispatched — they were intermediate iterations and
+//   the new portal supersedes both. Remove the imports in a follow-up
+//   cleanup PR once we're confident the new portal is sticky.
+import CustomerPortalClarity from "./CustomerPortalClarity"; // legacy template variant — no longer dispatched, kept for rollback
+import CustomerPortalMoto from "./CustomerPortalMoto"; // legacy template variant — no longer dispatched, kept for rollback
+import PortalPreview from "./PortalPreview"; // new live customer portal — same component as /portal-preview
+
+void CustomerPortalClarity;
+void CustomerPortalMoto;
 
 const CustomerPortal = () => {
   const { config: rootConfig } = useSiteConfig();
-  // Template-aware dispatch — Moto dealers get the new
-  // "national-brand clean contemporary" portal that matches the
-  // MotoAcquire reference; Clarity dealers stay on the Apple-minimal
-  // zinc scaffold; everyone else falls through to the maximalist
-  // legacy portal below.
   return (
     <>
       <SEO
@@ -132,16 +149,16 @@ const CustomerPortal = () => {
         path="/my-submission"
         noindex
       />
-      {rootConfig.landing_template === "moto" ? (
-        <CustomerPortalMoto />
-      ) : rootConfig.landing_template === "clarity" ? (
-        <CustomerPortalClarity />
-      ) : (
-        <CustomerPortalLegacy />
-      )}
+      <PortalPreview />
     </>
   );
 };
+
+// Exported so App.tsx can mount it directly at /my-submission-legacy/:token
+// as the rollback route. NOT removed even though the live `/my-submission/:token`
+// no longer reaches it — the legacy portal is the only branch currently
+// reading real submission data via get_submission_portal.
+export const LegacyPortalRoute = () => <CustomerPortalLegacy />;
 
 const CustomerPortalLegacy = () => {
   const { token } = useParams<{ token: string }>();
