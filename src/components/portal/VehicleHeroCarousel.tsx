@@ -539,7 +539,7 @@ export const VehicleHeroCarousel = () => {
       </div>
 
       {/* Dot pagination */}
-      <div className="flex items-center justify-center gap-1.5 mt-4">
+      <div className="flex items-center justify-center gap-1.5 mt-3 mt-auto pt-3">
         {SLIDE_TITLES.map((_, i) => (
           <button key={i} onClick={() => { setDirection(i > slide ? 1 : -1); setSlide(i); }}
             aria-label={`Go to slide ${i + 1}`}
