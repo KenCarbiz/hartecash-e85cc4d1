@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
-import { ShieldCheck, TrendingUp, Sparkles, CheckCircle2, Calendar, Camera } from "lucide-react";
+import { ShieldCheck, TrendingUp, Sparkles, CheckCircle2, Calendar, Camera, Car, Lock, BadgeCheck } from "lucide-react";
 import type { JourneyState } from "./types";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
 const strengthLabel = {
-  soft: { text: "Soft demand", className: "bg-zinc-100 text-zinc-700" },
-  balanced: { text: "Balanced market", className: "bg-amber-50 text-amber-700" },
-  hot: { text: "Hot market", className: "bg-emerald-50 text-emerald-700" },
+  soft: { text: "Soft Market", className: "bg-slate-100 text-slate-700" },
+  balanced: { text: "Balanced Market", className: "bg-[hsl(262_83%_58%/0.1)] text-[hsl(262_60%_45%)]" },
+  hot: { text: "Hot Market", className: "bg-emerald-50 text-emerald-700" },
 } as const;
 
 /**
@@ -20,8 +20,8 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
   const { vehicle, valuation } = state;
   if (!vehicle) {
     return (
-      <aside className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-500">
-        <p className="font-medium text-zinc-700">Your vehicle</p>
+      <aside className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <p className="font-semibold text-slate-800">Your vehicle</p>
         <p className="mt-1">We'll show your estimated value here as soon as you find your car.</p>
       </aside>
     );
@@ -40,36 +40,61 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-        <div className="aspect-[16/10] w-full bg-gradient-to-br from-zinc-100 to-zinc-200">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.12)]">
+        <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-[hsl(262_83%_58%/0.08)]">
           {vehicle.imageUrl ? (
-            <img src={vehicle.imageUrl} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} className="h-full w-full object-cover" />
+            <img
+              src={vehicle.imageUrl}
+              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+              className="h-full w-full object-cover"
+            />
           ) : (
-            <div className="flex h-full items-center justify-center text-zinc-400 text-sm">Vehicle photo</div>
+            <>
+              {/* Subtle dot grid for premium feel */}
+              <div
+                className="absolute inset-0 opacity-[0.35]"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(hsl(215 20% 65% / 0.35) 1px, transparent 1px)",
+                  backgroundSize: "14px 14px",
+                }}
+              />
+              <div className="relative flex h-full items-center justify-center">
+                <Car
+                  className="h-20 w-20 text-[hsl(262_60%_45%)] opacity-70"
+                  strokeWidth={1.25}
+                />
+              </div>
+              <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-white to-transparent" />
+            </>
           )}
         </div>
         <div className="p-5">
-          <p className="text-xs uppercase tracking-wide text-zinc-500">Your vehicle</p>
-          <p className="mt-1 text-lg font-semibold text-zinc-900">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Your Vehicle
+          </p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">
             {vehicle.year} {vehicle.make} {vehicle.model}
           </p>
-          {vehicle.trim && <p className="text-sm text-zinc-500">{vehicle.trim}</p>}
+          {vehicle.trim && <p className="text-sm text-slate-500">{vehicle.trim}</p>}
         </div>
       </div>
 
       {/* Pre-offer estimated range */}
       {valuation && !showFirm && (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.12)]">
           <div className="flex items-center justify-between">
-            <p className="text-xs uppercase tracking-wide text-zinc-500">Estimated range</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Estimated Range
+            </p>
             {strength && (
-              <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${strength.className}`}>
+              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${strength.className}`}>
                 {strength.text}
               </span>
             )}
           </div>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900">
-            {fmt(valuation.low)} <span className="text-zinc-400">–</span> {fmt(valuation.high)}
+          <p className="mt-2 text-2xl font-semibold text-slate-900">
+            {fmt(valuation.low)} <span className="text-slate-300">–</span> {fmt(valuation.high)}
           </p>
 
           <Sparkline data={valuation.trend} />
@@ -79,15 +104,20 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
               <ShieldCheck className="h-4 w-4" />
               <span>Secure & private</span>
             </div>
-            <div className="flex items-center gap-2 text-zinc-600">
-              <TrendingUp className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-slate-600">
+              <TrendingUp className="h-4 w-4 text-[hsl(262_60%_45%)]" />
               <span>Live market data</span>
             </div>
-            <div className="flex items-center gap-2 text-amber-700">
-              <Sparkles className="h-4 w-4" />
-              <span>{valuation.confidence === "high" ? "High" : valuation.confidence === "medium" ? "Medium" : "Building"} confidence</span>
+            <div className="flex items-center gap-2 text-slate-600">
+              <BadgeCheck className="h-4 w-4 text-emerald-600" />
+              <span>No obligation</span>
             </div>
           </div>
+
+          <p className="mt-4 border-t border-slate-100 pt-3 text-[12px] leading-relaxed text-slate-500">
+            <Lock className="mr-1 inline h-3 w-3 align-[-2px] text-slate-400" />
+            Estimate improves as you continue.
+          </p>
         </div>
       )}
 
@@ -168,26 +198,36 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
 const Sparkline = ({ data }: { data: number[] }) => {
   if (!data?.length) return null;
   const w = 240;
-  const h = 48;
+  const h = 56;
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
-  const pts = data
-    .map((v, i) => {
-      const x = (i / (data.length - 1)) * w;
-      const y = h - ((v - min) / range) * h;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
+  const points = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 6) - 3;
+    return { x, y };
+  });
+  const linePts = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const areaPts = `0,${h} ${linePts} ${w},${h}`;
+  const gradId = "spark-fill";
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="mt-3 h-12 w-full">
+    <svg viewBox={`0 0 ${w} ${h}`} className="mt-3 h-14 w-full" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="hsl(262 83% 58%)" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="hsl(262 83% 58%)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {/* Faint baseline grid */}
+      <line x1="0" x2={w} y1={h - 1} y2={h - 1} stroke="hsl(215 20% 92%)" strokeWidth="1" />
+      <polygon points={areaPts} fill={`url(#${gradId})`} />
       <polyline
         fill="none"
         stroke="hsl(262 83% 58%)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        points={pts}
+        points={linePts}
       />
     </svg>
   );

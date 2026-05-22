@@ -162,9 +162,9 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="min-h-screen bg-white"
+      className="min-h-screen bg-gradient-to-b from-white via-white to-slate-50"
     >
-      <div className="mx-auto max-w-7xl px-4 pb-24 pt-8 lg:px-8 lg:pt-16">
+      <div className="mx-auto w-full max-w-[1180px] px-4 pb-16 pt-8 lg:px-8 lg:pt-12">
         {/* Mobile stepper */}
         <div className="mb-6 lg:hidden">
           <MobileStepper
@@ -174,9 +174,8 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-          {/* LEFT — desktop journey rail (shows full step list so skipped
-              Phase-1 vehicle step still appears as completed) */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
+          {/* LEFT — desktop journey rail */}
           <div className="lg:col-span-3">
             <JourneyRail
               steps={activeSteps}
@@ -185,11 +184,11 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
           </div>
 
           {/* CENTER — active step */}
-          <div className="lg:col-span-6">
+          <div className="lg:col-span-5">
             {safeCursor > 0 && (
               <button
                 onClick={back}
-                className="mb-4 inline-flex items-center gap-1 text-sm text-zinc-500 transition-colors hover:text-zinc-900"
+                className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-900"
               >
                 <ArrowLeft className="h-4 w-4" /> Back
               </button>
@@ -204,11 +203,11 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
                 transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
               >
                 <header className="mb-6">
-                  <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">
+                  <h1 className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-[28px]">
                     {current.pageTitle}
                   </h1>
                   {current.pageSubtitle && (
-                    <p className="mt-2 text-base text-zinc-500">{current.pageSubtitle}</p>
+                    <p className="mt-2 text-[15px] leading-relaxed text-slate-500">{current.pageSubtitle}</p>
                   )}
                 </header>
 
@@ -218,7 +217,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
           </div>
 
           {/* RIGHT — summary panel */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-4">
             <SummaryPanel state={state} />
           </div>
         </div>
