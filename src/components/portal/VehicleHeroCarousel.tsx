@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { PORTAL_MOCK as MOCK, fmt } from "./portalMock";
+import { useSubmissionPortal, type PortalVehicle, type PortalRange } from "@/hooks/portal/useSubmissionPortal";
 
 /* ============================================================== */
 /*  Slide data — single source of truth                            */
@@ -75,7 +76,27 @@ const SLIDE_TITLES = [
 const SLIDE_HEIGHT = "h-[280px] md:h-[300px]";
 
 /* ---------- 1. Vehicle Overview --------------------------------- */
-const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () => void }) => (
+interface OverviewProps {
+  copied: boolean;
+  onCopy: () => void;
+  vehicle: PortalVehicle;
+  range: PortalRange;
+}
+
+// Subline merges YMM-adjacent fields, omitting empties so the layout
+// degrades gracefully when submissions don't have trim/engine/body
+// columns populated yet (the Phase 1.5 follow-up will add them).
+function vehicleSubline(v: PortalVehicle): string {
+  const parts: string[] = [];
+  if (v.miles) parts.push(`${v.miles} mi`);
+  if (v.engine) parts.push(v.engine);
+  if (v.body) parts.push(v.body);
+  if (v.drivetrain) parts.push(v.drivetrain);
+  if (v.exterior) parts.push(v.exterior);
+  return parts.join(" · ");
+}
+
+const VehicleOverviewSlide = ({ copied, onCopy, vehicle, range }: OverviewProps) => (
   <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-4 items-center h-full">
     <div className="relative h-[140px] md:h-[200px] flex items-center justify-center overflow-hidden group">
       <div className="absolute inset-0 grid place-items-center pointer-events-none">
@@ -83,7 +104,7 @@ const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () 
       </div>
       <img
         src={vehicleHero}
-        alt={`${MOCK.vehicle.year} ${MOCK.vehicle.make} ${MOCK.vehicle.model}`}
+        alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
         loading="lazy"
         className="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_18px_14px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.24]"
       />
@@ -92,22 +113,24 @@ const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () 
 
     <div className="min-w-0">
       <h2 className="text-[19px] font-bold leading-tight tracking-tight text-[#06194A] truncate">
-        {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
+        {vehicle.year} {vehicle.make} {vehicle.model}{vehicle.trim ? ` ${vehicle.trim}` : ""}
       </h2>
       <p className="text-[12px] text-[#53627A] mt-0.5 truncate">
-        {MOCK.vehicle.miles} mi · {MOCK.vehicle.engine} · {MOCK.vehicle.body} · {MOCK.vehicle.drivetrain}
+        {vehicleSubline(vehicle) || "Vehicle details on file"}
       </p>
       <div className="mt-1 flex items-center gap-2 text-[11px] text-[#53627A]">
-        <span className="font-mono tracking-tight truncate">{MOCK.vehicle.vin}</span>
-        <button onClick={onCopy} aria-label="Copy VIN" className="p-1 rounded-md hover:bg-[#F4F6FA] transition shrink-0">
-          {copied ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
-        </button>
+        <span className="font-mono tracking-tight truncate">{vehicle.vin || "VIN unavailable"}</span>
+        {vehicle.vin ? (
+          <button onClick={onCopy} aria-label="Copy VIN" className="p-1 rounded-md hover:bg-[#F4F6FA] transition shrink-0">
+            {copied ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+        ) : null}
       </div>
 
       <div className="mt-2.5 rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] via-[#F2FBF6] to-[#F0FAF4] px-3.5 py-2.5">
         <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#53627A]">Estimated Value Range</div>
         <div className="text-[20px] font-extrabold leading-none text-[#06194A] mt-1 whitespace-nowrap tracking-tight">
-          {fmt(MOCK.range.low)} <span className="text-[#94A3B8] font-bold">–</span> {fmt(MOCK.range.high)}
+          {fmt(range.low)} <span className="text-[#94A3B8] font-bold">–</span> {fmt(range.high)}
         </div>
         <div className="mt-1.5 flex items-center gap-2">
           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2 py-0.5 rounded-full">
@@ -378,7 +401,7 @@ const ConditionSlide = () => {
 };
 
 /* ---------- 4. Offer Breakdown --------------------------------- */
-const OfferBreakdownSlide = () => {
+const OfferBreakdownSlide = ({ firmOffer, dealerLabel, offerExpires }: OfferSlideProps) => {
   const maxAbs = Math.max(...OFFER_FACTORS.map((f) => Math.abs(f.value)));
   return (
     <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-4 h-full">
@@ -408,17 +431,23 @@ const OfferBreakdownSlide = () => {
       </ul>
       <div className="rounded-2xl bg-gradient-to-br from-[#06194A] to-[#1E1B4B] text-white p-3.5 flex flex-col min-h-0">
         <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A5B4FC]">Final Firm Offer</div>
-        <div className="text-[26px] font-extrabold leading-none mt-1 tabular-nums">{fmt(MOCK.firmOffer)}</div>
-        <div className="text-[11px] text-[#CBD5F5] mt-1">Held by {MOCK.customer.dealer}</div>
+        <div className="text-[26px] font-extrabold leading-none mt-1 tabular-nums">{firmOffer != null ? fmt(firmOffer) : "Pending"}</div>
+        <div className="text-[11px] text-[#CBD5F5] mt-1">Held by {dealerLabel}</div>
         <div className="mt-2.5 grid grid-cols-1 gap-1.5 text-[10px]">
           <span className="inline-flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1"><ShieldCheck className="w-3 h-3" /> No obligation</span>
           <span className="inline-flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1"><Truck className="w-3 h-3" /> Free pickup</span>
         </div>
-        <div className="mt-auto pt-2 text-[10px] text-[#CBD5F5]">Expires {MOCK.offerExpires}</div>
+        <div className="mt-auto pt-2 text-[10px] text-[#CBD5F5]">{offerExpires ? `Expires ${offerExpires}` : "Expiration pending"}</div>
       </div>
     </div>
   );
 };
+
+interface OfferSlideProps {
+  firmOffer: number | null;
+  dealerLabel: string;
+  offerExpires: string | null;
+}
 
 /* ---------- 5. Market Intelligence ------------------------------ */
 const MarketSlide = () => {
@@ -559,6 +588,16 @@ const TimelineSlide = () => (
 /* ============================================================== */
 
 export const VehicleHeroCarousel = () => {
+  const { data } = useSubmissionPortal();
+  // Use real submission data when available, MOCK during loading so
+  // the chrome never flashes empty. The hook is cached for 60s so
+  // any sibling page that already mounted it just hits the cache.
+  const vehicle = data?.vehicle ?? MOCK.vehicle;
+  const range = data?.range ?? MOCK.range;
+  const firmOffer = data?.firmOffer ?? MOCK.firmOffer;
+  const dealerLabel = data?.customer.dealer ?? MOCK.customer.dealer;
+  const offerExpires = data?.offerExpires ?? MOCK.offerExpires;
+
   const [slide, setSlide] = useState(0);
   const [direction, setDirection] = useState(1);
   const [copied, setCopied] = useState(false);
@@ -570,7 +609,7 @@ export const VehicleHeroCarousel = () => {
 
   const copyVin = async () => {
     try {
-      await navigator.clipboard.writeText(MOCK.vehicle.vin);
+      await navigator.clipboard.writeText(vehicle.vin || "");
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch { /* noop */ }
@@ -592,16 +631,16 @@ export const VehicleHeroCarousel = () => {
 
   const slideEl = useMemo(() => {
     switch (slide) {
-      case 0: return <VehicleOverviewSlide copied={copied} onCopy={copyVin} />;
+      case 0: return <VehicleOverviewSlide copied={copied} onCopy={copyVin} vehicle={vehicle} range={range} />;
       case 1: return <PhotoGallerySlide />;
       case 2: return <ConditionSlide />;
-      case 3: return <OfferBreakdownSlide />;
+      case 3: return <OfferBreakdownSlide firmOffer={firmOffer} dealerLabel={dealerLabel} offerExpires={offerExpires} />;
       case 4: return <MarketSlide />;
       case 5: return <TimelineSlide />;
       default: return null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slide, copied]);
+  }, [slide, copied, vehicle, range, firmOffer, dealerLabel, offerExpires]);
 
   return (
     <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 relative overflow-hidden h-full flex flex-col">
@@ -612,7 +651,7 @@ export const VehicleHeroCarousel = () => {
             {SLIDE_TITLES[slide]}
           </div>
           <div className="text-[12px] text-[#53627A] mt-0.5 truncate">
-            {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim} · {MOCK.vehicle.miles} mi
+            {vehicle.year} {vehicle.make} {vehicle.model}{vehicle.trim ? ` ${vehicle.trim}` : ""}{vehicle.miles ? ` · ${vehicle.miles} mi` : ""}
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">

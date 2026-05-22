@@ -5,11 +5,12 @@ import {
   ArrowRight, Upload, MessageSquare, LineChart as LineIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
 import { SlideOver } from "../SlideOver";
 import { PrimaryButton, SecondaryButton } from "../PortalPageShell";
 import { VehicleHeroCarousel } from "../VehicleHeroCarousel";
+import { useSubmissionPortal } from "@/hooks/portal/useSubmissionPortal";
+import PortalDataBoundary from "../PortalDataBoundary";
 
 
 /* ── small visuals (kept inline so the dashboard page is portable) ── */
@@ -104,16 +105,41 @@ type Props = {
   onNavigate: (k: "offers" | "documents" | "messages" | "pickup" | "payments") => void;
 };
 
+const DashboardSkeleton = () => (
+  <div className="animate-pulse">
+    <div className="h-7 w-48 bg-[#E6EAF0] rounded mb-2" />
+    <div className="h-4 w-72 bg-[#E6EAF0] rounded mb-5" />
+    <div className="h-24 bg-white border border-[#E6EAF0] rounded-2xl mb-4" />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="lg:col-span-2 h-72 bg-white border border-[#E6EAF0] rounded-2xl" />
+      <div className="h-72 bg-white border border-[#E6EAF0] rounded-2xl" />
+    </div>
+  </div>
+);
+
 export const DashboardPage = ({ onNavigate }: Props) => {
+  const portal = useSubmissionPortal();
+  const data = portal.data;
+
   const [copied, setCopied] = useState(false);
   const [slide, setSlide] = useState(0);
   const [showConv, setShowConv] = useState(false);
   const [showOffer, setShowOffer] = useState(false);
   const offerRef = useRef<HTMLDivElement>(null);
 
+  // Effective customer / vehicle / offer — real submission data when
+  // available, mock during the loading branch (handled by boundary
+  // below but we still need a safe fallback for the render path).
+  const customer = data?.customer ?? MOCK.customer;
+  const vehicle = data?.vehicle ?? MOCK.vehicle;
+  const range = data?.range ?? MOCK.range;
+  const firmOffer = data?.firmOffer ?? MOCK.firmOffer;
+  const offerExpires = data?.offerExpires ?? MOCK.offerExpires;
+  const dealerLabel = customer.dealer || MOCK.customer.dealer;
+
   const copyVin = async () => {
     try {
-      await navigator.clipboard.writeText(MOCK.vehicle.vin);
+      await navigator.clipboard.writeText(vehicle.vin || "");
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch { /* noop */ }
@@ -123,6 +149,12 @@ export const DashboardPage = ({ onNavigate }: Props) => {
   const prevSlide = () => setSlide((s) => (s - 1 + SLIDES.length) % SLIDES.length);
 
   return (
+    <PortalDataBoundary
+      status={portal.status}
+      skeleton={<DashboardSkeleton />}
+      error={portal.error}
+      onRetry={portal.refetch}
+    >
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -133,7 +165,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
           <h1 className="text-[22px] sm:text-[26px] font-bold text-[#06194A] leading-tight">
-            Hi, {MOCK.customer.name.split(" ")[0]} <span aria-hidden>👋</span>
+            Hi, {customer.firstName || customer.name.split(" ")[0]} <span aria-hidden>👋</span>
           </h1>
           <p className="text-sm text-[#53627A] mt-1">Here's your acquisition overview.</p>
         </div>
@@ -142,10 +174,10 @@ export const DashboardPage = ({ onNavigate }: Props) => {
       {/* TOP — four-metric strip */}
       <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-4 grid grid-cols-2 lg:grid-cols-4">
         {[
-          <Metric key="ev" label="Estimated Value" value={`${fmt(MOCK.range.low)} – ${fmt(MOCK.range.high)}`}
+          <Metric key="ev" label="Estimated Value" value={`${fmt(range.low)} – ${fmt(range.high)}`}
             sub={<span className="text-[#16A34A] font-medium inline-flex items-center gap-1"><TrendingUp className="w-3 h-3" />Strong Market</span>}
             Icon={BarChart3} tint="indigo" />,
-          <Metric key="fo" label="Firm Offer" value={fmt(MOCK.firmOffer)} sub={MOCK.customer.dealer}
+          <Metric key="fo" label="Firm Offer" value={firmOffer != null ? fmt(firmOffer) : "—"} sub={dealerLabel}
             Icon={Tag} tint="emerald" />,
           <Metric key="md" label="Market Demand" value={MOCK.marketDemand} sub="vs last 30 days"
             Icon={TrendingUp} tint="green" />,
@@ -175,12 +207,12 @@ export const DashboardPage = ({ onNavigate }: Props) => {
             </div>
           </div>
           <h3 className="text-[17px] font-bold mt-2 leading-snug">Your firm offer is ready!</h3>
-          <p className="text-[12.5px] text-[#53627A] mt-0.5">Review your offer from {MOCK.customer.dealer}.</p>
+          <p className="text-[12.5px] text-[#53627A] mt-0.5">Review your offer from {dealerLabel}.</p>
 
           <div className="mt-3 rounded-2xl p-3.5 bg-gradient-to-br from-[#EEF0FF] to-[#F5F3FF] border border-[#E0E7FF]">
             <div className="text-[10px] uppercase tracking-wide text-[#4F46E5] font-semibold">Firm Offer</div>
-            <div className="text-[22px] font-extrabold leading-tight">{fmt(MOCK.firmOffer)}</div>
-            <div className="text-[11px] text-[#53627A] mt-0.5">Offer Expires {MOCK.offerExpires}</div>
+            <div className="text-[22px] font-extrabold leading-tight">{firmOffer != null ? fmt(firmOffer) : "Pending"}</div>
+            <div className="text-[11px] text-[#53627A] mt-0.5">{offerExpires ? `Offer Expires ${offerExpires}` : "Awaiting firm offer"}</div>
             <div className="grid grid-cols-2 gap-y-1.5 gap-x-3 mt-2.5 text-[11.5px] text-[#06194A]">
               <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#16A34A]" />No Obligation</span>
               <span className="inline-flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-[#16A34A]" />Free Pickup</span>
@@ -215,7 +247,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold truncate">{MOCK.customer.dealer}</span>
+                <span className="text-sm font-semibold truncate">{dealerLabel}</span>
                 <span className="text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-1.5 py-0.5 rounded-full">Active</span>
               </div>
               <div className="text-[11px] text-[#53627A]">Last update: {MOCK.lastUpdate}</div>
@@ -304,7 +336,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
 
       {/* Slide-overs */}
       <SlideOver open={showConv} onClose={() => setShowConv(false)}
-        title={`Conversation with ${MOCK.customer.dealer}`}
+        title={`Conversation with ${dealerLabel}`}
         subtitle="Secure messaging with your dealer team"
         footer={
           <div className="flex items-center gap-2">
@@ -331,7 +363,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
       </SlideOver>
 
       <SlideOver open={showOffer} onClose={() => setShowOffer(false)}
-        title="Firm Offer Details" subtitle={MOCK.customer.dealer} width="lg"
+        title="Firm Offer Details" subtitle={dealerLabel} width="lg"
         footer={
           <div className="grid grid-cols-2 gap-2">
             <SecondaryButton onClick={() => setShowOffer(false)}>Close</SecondaryButton>
@@ -342,14 +374,15 @@ export const DashboardPage = ({ onNavigate }: Props) => {
         }>
         <div className="rounded-2xl p-4 bg-gradient-to-br from-[#EEF0FF] to-[#F5F3FF] border border-[#E0E7FF]">
           <div className="text-[10px] uppercase tracking-wide text-[#4F46E5] font-semibold">Firm Offer</div>
-          <div className="text-[28px] font-extrabold leading-tight">{fmt(MOCK.firmOffer)}</div>
-          <div className="text-xs text-[#53627A]">Offer Expires {MOCK.offerExpires}</div>
+          <div className="text-[28px] font-extrabold leading-tight">{firmOffer != null ? fmt(firmOffer) : "Pending"}</div>
+          <div className="text-xs text-[#53627A]">{offerExpires ? `Offer Expires ${offerExpires}` : "Awaiting firm offer"}</div>
         </div>
         <p className="text-sm text-[#53627A] mt-3 leading-snug">
-          This firm cash offer is held for you by {MOCK.customer.dealer}. No obligation, secure &amp; private, and free pickup included.
+          This firm cash offer is held for you by {dealerLabel}. No obligation, secure &amp; private, and free pickup included.
         </p>
       </SlideOver>
     </motion.div>
+    </PortalDataBoundary>
   );
 };
 
