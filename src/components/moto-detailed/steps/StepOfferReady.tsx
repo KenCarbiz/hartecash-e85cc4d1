@@ -128,92 +128,192 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
         </p>
       </div>
 
-      {/* AI Appraisal modal */}
+      {/* AI Photo Appraisal modal — premium upsell shown when customer
+          chooses "Save My Offer" instead of "Accept Offer". */}
       <AnimatePresence>
-        {showAiModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-4 backdrop-blur-md sm:items-center"
-            onClick={() => setShowAiModal(false)}
-          >
+        {showAiModal && (() => {
+          const minIncrease = Math.max(0, Math.round(firm * 0.02));
+          const maxIncrease = Math.max(0, Math.round(firm * 0.12));
+          const hasOffer = firm > 0;
+          const benefits = [
+            { icon: Zap, title: "Fast AI review", body: "We analyze your photos in seconds.", tint: "violet" },
+            { icon: Camera, title: "Guided photo capture", body: "We'll show you exactly what to snap.", tint: "indigo" },
+            { icon: ShieldCheck, title: "Current offer protected", body: "Your offer stays safe while we review.", tint: "emerald" },
+          ] as const;
+          const tintClasses: Record<string, string> = {
+            violet: "bg-[hsl(262_83%_62%/0.10)] text-[hsl(262_70%_48%)] ring-[hsl(262_83%_58%/0.20)]",
+            indigo: "bg-[hsl(232_83%_62%/0.10)] text-[hsl(232_70%_50%)] ring-[hsl(232_83%_58%/0.20)]",
+            emerald: "bg-emerald-50 text-emerald-600 ring-emerald-200/70",
+          };
+
+          return (
             <motion.div
-              initial={{ opacity: 0, y: 28, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 1.01 }}
-              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-white p-8 shadow-[0_24px_60px_-16px_rgba(15,23,42,0.35)] sm:p-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/55 p-4 backdrop-blur-md sm:items-center"
+              onClick={() => setShowAiModal(false)}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="ai-appraisal-title"
             >
-              {/* Close */}
-              <button
-                onClick={() => setShowAiModal(false)}
-                className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-                aria-label="Close"
+              <motion.div
+                initial={{ opacity: 0, y: 24, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 12, scale: 0.99 }}
+                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-[90%] max-w-[660px]"
               >
-                <X className="h-5 w-5" strokeWidth={1.5} />
-              </button>
+                {/* Soft ambient purple glow */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -inset-6 -z-10 rounded-[40px] bg-[radial-gradient(closest-side,hsl(262_83%_62%/0.28),hsl(262_83%_62%/0.08)_55%,transparent_75%)] blur-2xl"
+                />
 
-              {/* Decorative top gradient line */}
-              <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-[hsl(262_83%_60%)] via-[hsl(262_70%_55%)] to-[hsl(190_80%_55%)]" />
-
-              <div className="flex flex-col items-center text-center">
-                {/* Icon badge */}
-                <motion.div
-                  initial={{ scale: 1 }}
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ delay: 0.5, duration: 0.5, ease: "easeInOut" }}
-                  className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(262_83%_96%)] to-[hsl(262_60%_94%)] text-[hsl(262_60%_45%)] shadow-[0_4px_16px_-6px_hsl(262_60%_45%/0.35)]"
+                <div
+                  className="relative rounded-[28px] bg-white px-6 pb-8 pt-10 ring-1 ring-[hsl(262_30%_92%)] sm:px-9 sm:pb-8 sm:pt-10"
+                  style={{
+                    boxShadow:
+                      "0 1px 2px rgba(15,23,42,0.04), 0 20px 50px -20px rgba(124,58,237,0.35), 0 40px 90px -30px rgba(15,23,42,0.25)",
+                  }}
                 >
-                  <Sparkles className="h-6 w-6" strokeWidth={1.8} />
-                </motion.div>
+                  {/* Close X */}
+                  <button
+                    onClick={() => setShowAiModal(false)}
+                    aria-label="Close"
+                    className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
 
-                {/* Eyebrow */}
-                <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[hsl(262_60%_45%)]">
-                  AI Appraisal Option
-                </p>
+                  {/* AI icon — white circle, purple sparkle, diffused halo */}
+                  <div className="flex justify-center">
+                    <motion.div
+                      initial={{ scale: 0.88, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      className="relative"
+                    >
+                      <div aria-hidden className="absolute inset-0 -m-4 rounded-full bg-[hsl(262_83%_62%/0.30)] blur-2xl" />
+                      <span aria-hidden className="absolute -left-6 top-1 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.55)]" />
+                      <span aria-hidden className="absolute -right-5 top-3 h-1.5 w-1.5 rounded-full bg-[hsl(262_83%_62%/0.45)]" />
+                      <span aria-hidden className="absolute -right-7 bottom-2 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.45)]" />
+                      <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-[0_10px_30px_-10px_hsl(262_83%_58%/0.55)] ring-1 ring-[hsl(262_83%_62%/0.20)]">
+                        <Sparkles className="h-7 w-7" strokeWidth={2.2} />
+                      </div>
+                    </motion.div>
+                  </div>
 
-                {/* Headline */}
-                <h2 className="mt-2 text-[26px] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[28px]">
-                  Want to get more<br className="hidden sm:block" /> for your vehicle?
-                </h2>
+                  {/* Eyebrow */}
+                  <p className="mt-6 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(262_70%_48%)]">
+                    AI Photo Appraisal
+                  </p>
 
-                {/* Body */}
-                <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-slate-500">
-                  Let our AI agent appraise it.<br className="hidden sm:block" />
-                  Upload a few quick photos and we’ll review your vehicle’s condition and check whether you qualify for a better offer.
-                </p>
-              </div>
+                  {/* Headline */}
+                  <h2
+                    id="ai-appraisal-title"
+                    className="mt-3 text-center text-[26px] font-bold leading-[1.15] tracking-tight text-slate-900 sm:text-[32px]"
+                  >
+                    Get your strongest offer with a{" "}
+                    <span className="text-[hsl(262_83%_55%)]">photo review.</span>
+                  </h2>
 
-              {/* CTAs */}
-              <div className="mt-8 space-y-3">
-                <motion.button
-                  whileHover={{ y: -1 }}
-                  whileTap={{ scale: 0.995 }}
-                  onClick={onAddPhotos}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] px-6 py-4 text-base font-semibold text-white shadow-[0_10px_32px_-10px_hsl(262_83%_58%/0.55)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
-                >
-                  Add Photos for a Better Offer <ArrowRight className="h-4 w-4" />
-                </motion.button>
+                  {/* Body */}
+                  <p className="mx-auto mt-3 max-w-[520px] text-center text-[15px] leading-relaxed text-slate-500">
+                    Our AI agent reviews your vehicle photos to check whether your offer can improve.
+                  </p>
 
-                <button
-                  onClick={onSaveOfferFromModal}
-                  className="w-full rounded-xl px-4 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
-                >
-                  Save Your Offer
-                </button>
-              </div>
+                  {/* Value callout */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.18, duration: 0.4 }}
+                    className="mx-auto mt-6 flex max-w-[540px] items-center gap-4 rounded-2xl border border-[hsl(262_83%_58%/0.18)] bg-gradient-to-br from-[hsl(262_83%_62%/0.08)] via-[hsl(262_83%_62%/0.04)] to-white px-5 py-4 text-left sm:px-6 sm:py-5"
+                  >
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-sm ring-1 ring-[hsl(262_83%_62%/0.25)]">
+                      <ArrowUpRight className="h-5 w-5" strokeWidth={2.4} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12.5px] font-medium text-slate-600">
+                        Photo-reviewed offers may increase by
+                      </p>
+                      <p className="mt-0.5 bg-gradient-to-r from-[hsl(262_83%_55%)] to-[hsl(262_83%_42%)] bg-clip-text text-[26px] font-bold tracking-tight text-transparent sm:text-[30px]">
+                        {hasOffer ? `${fmt(minIncrease)} – ${fmt(maxIncrease)}` : "Up to 12% more"}
+                      </p>
+                      <p className="mt-0.5 text-[11.5px] text-slate-500">
+                        Based on 2%–12% increase range
+                      </p>
+                    </div>
+                  </motion.div>
 
-              {/* Reassurance */}
-              <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400">
-                Your current offer is still available. No obligation.
-              </p>
+                  {/* Time pill */}
+                  <div className="mt-4 flex justify-center">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5 text-[12px] font-semibold text-emerald-700 ring-1 ring-emerald-200/70">
+                      <Clock className="h-3.5 w-3.5" />
+                      Takes about 2 minutes
+                    </span>
+                  </div>
+
+                  {/* Benefits */}
+                  <div className="mt-6 grid gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/40 p-3 sm:grid-cols-3">
+                    {benefits.map((b, i) => (
+                      <motion.div
+                        key={b.title}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.22 + i * 0.05, duration: 0.35 }}
+                        className="rounded-xl bg-white px-3 py-4 text-center"
+                      >
+                        <div className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ring-1 ${tintClasses[b.tint]}`}>
+                          <b.icon className="h-5 w-5" strokeWidth={2.2} />
+                        </div>
+                        <p className="mt-3 text-[13px] font-semibold text-slate-900">{b.title}</p>
+                        <p className="mt-1 text-[12px] leading-relaxed text-slate-500">{b.body}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* CTAs */}
+                  <div className="mt-7 space-y-3">
+                    <motion.button
+                      whileHover={{ y: -1 }}
+                      whileTap={{ scale: 0.995 }}
+                      onClick={onAddPhotos}
+                      className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[hsl(262_83%_62%)] to-[hsl(262_83%_48%)] px-6 py-4 text-[15px] font-semibold text-white shadow-[0_14px_32px_-12px_hsl(262_83%_58%/0.65)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_44%)]"
+                      style={{ minHeight: 56 }}
+                    >
+                      <span aria-hidden className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 transition-opacity group-hover:opacity-100" />
+                      <span className="relative inline-flex items-center justify-center gap-2">
+                        <Sparkles className="h-4 w-4" />
+                        Add Photos for a Better Offer
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      </span>
+                    </motion.button>
+
+                    <div className="text-center">
+                      <button
+                        onClick={onSaveOfferFromModal}
+                        className="text-[13px] font-medium text-[hsl(262_60%_45%)] underline-offset-4 transition-colors hover:text-[hsl(262_83%_40%)] hover:underline"
+                      >
+                        Save Your Offer
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Reassurance */}
+                  <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[12px] text-slate-500">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                    Your current offer remains available while you decide.
+                  </p>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
+
 
     </div>
   );
