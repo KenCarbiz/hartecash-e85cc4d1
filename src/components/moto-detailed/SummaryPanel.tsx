@@ -19,7 +19,7 @@ const strengthLabel = {
  * progresses: pre-offer = range + market signal; post-offer =
  * firm number + accepted/boost state + checklist progress.
  */
-const SummaryPanel = ({ state }: { state: JourneyState }) => {
+const SummaryPanel = ({ state, currentStepId }: { state: JourneyState; currentStepId?: string }) => {
   const { vehicle, valuation } = state;
   if (!vehicle) {
     return (
