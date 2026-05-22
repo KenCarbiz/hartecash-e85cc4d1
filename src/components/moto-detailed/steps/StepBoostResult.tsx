@@ -10,6 +10,7 @@ const fmt = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
 const DEALER_NAME = "Harte Auto Group";
+const REQUIRED_PHOTO_IDS = ["front", "rear", "driver", "passenger", "interior", "odometer"];
 
 /**
  * Updated Offer reveal — customer-facing copy only (no AI/boost/algorithm).
@@ -19,7 +20,8 @@ const DEALER_NAME = "Harte Auto Group";
 const StepBoostResult = ({ state, update }: StepContext) => {
   const navigate = useNavigate();
   const original = state.valuation?.firm ?? 0;
-  const requiredPhotoReviewComplete = state.boost.analyzed && state.boost.uploadedCategories.length >= 6;
+  const requiredPhotoReviewComplete =
+    state.boost.analyzed && REQUIRED_PHOTO_IDS.every((id) => state.boost.uploadedCategories.includes(id));
   const boosted = state.boost.boostedFirm;
   const enhanced = requiredPhotoReviewComplete && boosted != null && boosted > original;
   const delta = enhanced ? boosted! - original : 0;
