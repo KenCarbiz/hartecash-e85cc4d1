@@ -106,9 +106,9 @@ const boostUpload = (): StepDefinition => ({
 
 
 const boostResult = (): StepDefinition => ({
-  id: "boost_result", title: "AI Result", helper: "See your refined valuation",
-  pageTitle: "Your AI valuation is ready",
-  pageSubtitle: "Here's what our analysis found.",
+  id: "boost_result", title: "Updated Offer", helper: "Review your improved offer",
+  pageTitle: "Your updated offer is ready",
+  pageSubtitle: "We reviewed your photos and found an updated market offer.",
   Component: StepBoostResult,
   shouldRender: (state) => state.branch === "boost" && state.boost.analyzed,
 });
