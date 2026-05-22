@@ -65,6 +65,7 @@ const contact = (): StepDefinition => ({
   pageTitle: "Confirm your details to receive your firm offer.",
   pageSubtitle: "We'll use this to send your offer breakdown and help with title, payoff, or lease details if needed.",
   Component: StepContact,
+  stepBadge: { current: 3, total: 4 },
 });
 const offer = (): StepDefinition => ({
   id: "offer", title: "Offer Ready", helper: "Review your offer and choose next step",
