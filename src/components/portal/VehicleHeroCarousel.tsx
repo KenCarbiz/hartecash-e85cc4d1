@@ -493,7 +493,7 @@ export const VehicleHeroCarousel = () => {
   }, [slide, copied]);
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5 relative overflow-hidden">
+    <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 relative overflow-hidden h-full flex flex-col">
       {/* Header strip */}
       <div className="flex items-center justify-between mb-3 gap-3">
         <div className="min-w-0">
