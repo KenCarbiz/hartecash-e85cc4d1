@@ -7534,6 +7534,30 @@ export type Database = {
         }
         Returns: number
       }
+      ocr_jobs_for_token: {
+        Args: { p_token: string }
+        Returns: {
+          created_at: string
+          doc_id: string
+          error_message: string
+          id: string
+          status: string
+          updated_at: string
+        }[]
+      }
+      ocr_jobs_upsert_for_token: {
+        Args: {
+          p_doc_id: string
+          p_error?: string
+          p_job_id?: string
+          p_pipeline: string
+          p_status: string
+          p_storage_bucket: string
+          p_storage_path: string
+          p_token: string
+        }
+        Returns: string
+      }
       pickup_customer_data_purge_jobs: {
         Args: { _limit?: number }
         Returns: {
@@ -7720,6 +7744,57 @@ export type Database = {
         Returns: boolean
       }
       verify_my_manager_pin: { Args: { _pin: string }; Returns: boolean }
+      watched_vehicle_get: {
+        Args: { p_token: string }
+        Returns: {
+          baseline_value: number
+          created_at: string
+          current_value: number
+          customer_name: string | null
+          dealership_id: string
+          delta_since_baseline: number
+          email: string | null
+          id: string
+          is_active: boolean
+          last_checked_at: string | null
+          last_notified_at: string | null
+          mileage_at_save: number
+          monthly_mileage_estimate: number
+          next_check_at: string
+          notify_email: boolean
+          notify_sms: boolean
+          notify_threshold_dollars: number
+          overall_condition: string | null
+          phone: string | null
+          submission_id: string | null
+          token: string
+          updated_at: string
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_trim: string | null
+          vehicle_year: number | null
+          vin: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "watched_vehicles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      watched_vehicle_history_for_token: {
+        Args: { p_token: string }
+        Returns: {
+          checked_at: string
+          delta_from_previous: number
+          id: string
+          snapshot_value: number
+        }[]
+      }
+      watched_vehicle_update_pref: {
+        Args: { p_field: string; p_token: string; p_value: boolean }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
