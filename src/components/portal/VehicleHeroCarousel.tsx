@@ -4,7 +4,7 @@ import {
   ChevronLeft, ChevronRight, Copy, Check, TrendingUp, Sparkles, Camera,
   ShieldCheck, Gauge, Star, Image as ImageIcon, Wrench, AlertCircle,
   Activity, Flame, Zap, MapPin, Clock, FileText, Truck, Wallet, Trophy,
-  CircleDot, Plus, Brain,
+  CircleDot, Plus, Brain, ArrowRight,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { PORTAL_MOCK as MOCK, fmt } from "./portalMock";
