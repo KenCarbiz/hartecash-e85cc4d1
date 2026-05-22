@@ -1,5 +1,6 @@
 // @jwt-required — admin/cron only; default verify_jwt=true is correct.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { paidApiGuard } from "../_shared/paidApiGuard.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,7 +25,15 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { vin, uvc, zipcode, radius_miles = 100, include_listings = false } = body;
+    const { vin, uvc, zipcode, radius_miles = 100, include_listings = false, submission_token } = body;
+
+    const blocked = await paidApiGuard(req, corsHeaders, {
+      submissionToken: submission_token,
+      anonMaxPerHour: 40,
+      scope: "bb-retail-listings",
+    });
+    if (blocked) return blocked;
+
 
     if (!vin && !uvc) {
       return new Response(JSON.stringify({ error: "VIN or UVC is required" }), {

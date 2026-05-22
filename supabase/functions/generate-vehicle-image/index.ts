@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { paidApiGuard } from "../_shared/paidApiGuard.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -76,7 +77,14 @@ serve(async (req) => {
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
   try {
-    const { year, make, model, style, color, uvc, angle, studio_only } = await req.json();
+    const { year, make, model, style, color, uvc, angle, studio_only, submission_token } = await req.json();
+
+    const blocked = await paidApiGuard(req, corsHeaders, {
+      submissionToken: submission_token,
+      anonMaxPerHour: 20,
+      scope: "generate-vehicle-image",
+    });
+    if (blocked) return blocked;
 
     if (!year || !make || !model) {
       return new Response(JSON.stringify({ error: "year, make, and model are required" }), {

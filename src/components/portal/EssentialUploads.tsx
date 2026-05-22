@@ -82,19 +82,15 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
     return () => { cancelled = true; };
   }, [token, customerAllDocs]);
 
-  // Live OCR status: subscribe to ocr_jobs for this submission so the
-  // tile flips queued -> running -> completed/failed as the edge
-  // function progresses. Also seed from the latest job per doc on
-  // mount so a returning customer sees the last result.
+  // Live OCR status: poll the token-gated SECURITY DEFINER RPC every
+  // few seconds so the tile flips queued -> running -> completed/failed.
+  // (Realtime on ocr_jobs is locked to staff/service-role now that the
+  // table holds DL/title PII; anon customers read via this RPC.)
   useEffect(() => {
-    if (!submissionId) return;
+    if (!submissionId || !token) return;
     let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from("ocr_jobs" as never)
-        .select("doc_id,status,error_message,created_at")
-        .eq("submission_id", submissionId)
-        .order("created_at", { ascending: false });
+    const load = async () => {
+      const { data } = await supabase.rpc("ocr_jobs_for_token" as never, { p_token: token } as never);
       if (cancelled || !data) return;
       const latest: Record<string, { status: "queued" | "running" | "completed" | "failed"; error?: string | null }> = {};
       for (const row of data as unknown as Array<{ doc_id: string; status: string; error_message: string | null }>) {
@@ -103,26 +99,12 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
         }
       }
       setOcrStates((prev) => ({ ...latest, ...prev }));
-    })();
+    };
+    load();
+    const interval = setInterval(load, 4000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [submissionId, token]);
 
-    const channel = supabase
-      .channel(`ocr-jobs-${submissionId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "ocr_jobs", filter: `submission_id=eq.${submissionId}` },
-        (payload) => {
-          const row = (payload.new || payload.old) as { doc_id?: string; status?: string; error_message?: string | null } | null;
-          if (!row?.doc_id || !row.status) return;
-          setOcrStates((prev) => ({
-            ...prev,
-            [row.doc_id!]: { status: row.status as never, error: row.error_message ?? null },
-          }));
-        },
-      )
-      .subscribe();
-
-    return () => { cancelled = true; supabase.removeChannel(channel); };
-  }, [submissionId]);
 
 
   const triggerForSlot = (docId: string) => {
@@ -176,28 +158,25 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
         let jobId: string | null = null;
         try {
           setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "queued" } }));
-          const { data: jobRow } = await supabase
-            .from("ocr_jobs" as never)
-            .insert({
-              submission_id: submissionId,
-              submission_token: token,
-              dealership_id: dealershipId || null,
-              doc_id: doc.doc_id,
-              pipeline: doc.ocr_pipeline,
-              storage_bucket: bucket,
-              storage_path: path,
-              status: "queued",
-            } as never)
-            .select("id")
-            .single();
-          jobId = (jobRow as { id?: string } | null)?.id ?? null;
+          const { data: jobIdRaw } = await supabase.rpc("ocr_jobs_upsert_for_token" as never, {
+            p_token: token,
+            p_doc_id: doc.doc_id,
+            p_pipeline: doc.ocr_pipeline,
+            p_storage_bucket: bucket,
+            p_storage_path: path,
+            p_status: "queued",
+          } as never);
+          jobId = (jobIdRaw as string | null) ?? null;
 
           const { data: signedData } = await supabase.storage
             .from(bucket)
             .createSignedUrl(path, 300);
 
           if (jobId) {
-            await supabase.from("ocr_jobs" as never).update({ status: "running" } as never).eq("id", jobId);
+            await supabase.rpc("ocr_jobs_upsert_for_token" as never, {
+              p_token: token, p_doc_id: doc.doc_id, p_pipeline: doc.ocr_pipeline,
+              p_storage_bucket: bucket, p_storage_path: path, p_status: "running", p_job_id: jobId,
+            } as never);
           }
           setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "running" } }));
 
@@ -211,17 +190,20 @@ const EssentialUploads = ({ token, submissionId, loanStatus, dealershipId }: Ess
           }
 
           if (jobId) {
-            await supabase.from("ocr_jobs" as never).update({ status: "completed" } as never).eq("id", jobId);
+            await supabase.rpc("ocr_jobs_upsert_for_token" as never, {
+              p_token: token, p_doc_id: doc.doc_id, p_pipeline: doc.ocr_pipeline,
+              p_storage_bucket: bucket, p_storage_path: path, p_status: "completed", p_job_id: jobId,
+            } as never);
           }
           setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "completed" } }));
         } catch (ocrErr) {
           const msg = ocrErr instanceof Error ? ocrErr.message : "OCR failed";
           console.warn(`OCR auto-fill skipped (${doc.ocr_pipeline}):`, ocrErr);
           if (jobId) {
-            await supabase
-              .from("ocr_jobs" as never)
-              .update({ status: "failed", error_message: msg } as never)
-              .eq("id", jobId);
+            await supabase.rpc("ocr_jobs_upsert_for_token" as never, {
+              p_token: token, p_doc_id: doc.doc_id, p_pipeline: doc.ocr_pipeline,
+              p_storage_bucket: bucket, p_storage_path: path, p_status: "failed", p_error: msg, p_job_id: jobId,
+            } as never);
           }
           setOcrStates((prev) => ({ ...prev, [doc.doc_id]: { status: "failed", error: msg } }));
         }

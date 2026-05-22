@@ -59,19 +59,12 @@ const WatchMyCarLegacy = () => {
   useEffect(() => {
     if (!token) return;
     (async () => {
-      const { data: w } = await supabase
-        .from("watched_vehicles" as any)
-        .select("*")
-        .eq("token", token)
-        .maybeSingle();
-      setWatched(((w as unknown) as Watched) || null);
-      if (w) {
-        const { data: h } = await supabase
-          .from("watched_vehicle_history" as any)
-          .select("id, snapshot_value, delta_from_previous, checked_at")
-          .eq("watched_vehicle_id", (w as any).id)
-          .order("checked_at", { ascending: false })
-          .limit(12);
+      const { data: w } = await supabase.rpc("watched_vehicle_get" as never, { p_token: token } as never);
+      const wAny = w as unknown as Watched | Watched[] | null;
+      const row: Watched | null = Array.isArray(wAny) ? (wAny[0] ?? null) : (wAny ?? null);
+      setWatched(row || null);
+      if (row) {
+        const { data: h } = await supabase.rpc("watched_vehicle_history_for_token" as never, { p_token: token } as never);
         setHistory(((h as unknown) as HistoryRow[]) || []);
       }
       setLoading(false);
@@ -81,10 +74,9 @@ const WatchMyCarLegacy = () => {
   const togglePref = async (field: "notify_email" | "notify_sms" | "is_active", value: boolean) => {
     if (!watched) return;
     setSaving(true);
-    const { error } = await supabase
-      .from("watched_vehicles" as any)
-      .update({ [field]: value, updated_at: new Date().toISOString() } as any)
-      .eq("token", watched.token);
+    const { error } = await supabase.rpc("watched_vehicle_update_pref" as never, {
+      p_token: watched.token, p_field: field, p_value: value,
+    } as never);
     setSaving(false);
     if (error) {
       toast({ title: "Couldn't save", description: error.message, variant: "destructive" });
