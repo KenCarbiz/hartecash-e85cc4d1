@@ -262,7 +262,7 @@ const Field = ({
     <span className="mb-1.5 block text-[13px] font-medium text-slate-700">{label}</span>
     <div className="relative">
       {Icon && (
-        <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={2} />
+        <Icon className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400 transition-colors peer-focus:text-[hsl(262_83%_58%)]" strokeWidth={2} />
       )}
       <input
         type={type}
@@ -272,10 +272,10 @@ const Field = ({
         autoComplete={autoComplete}
         placeholder={placeholder}
         inputMode={inputMode}
-        className={`h-[54px] w-full rounded-[14px] border bg-white ${Icon ? "pl-10" : "pl-4"} pr-4 text-[15px] text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
+        className={`peer h-[56px] w-full rounded-[14px] border bg-[#FAFBFF] ${Icon ? "pl-11" : "pl-4"} pr-4 text-[15px] font-medium text-slate-900 outline-none transition-all placeholder:font-normal placeholder:text-slate-400 hover:bg-white focus:bg-white ${
           error
             ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
-            : "border-[#E6EAF0] focus:border-[hsl(262_83%_58%)] focus:ring-4 focus:ring-[hsl(262_83%_58%/0.12)]"
+            : "border-[#E4E8F0] focus:border-[hsl(262_83%_58%)] focus:ring-4 focus:ring-[hsl(262_83%_58%/0.15)]"
         }`}
       />
     </div>
