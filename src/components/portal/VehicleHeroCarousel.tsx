@@ -391,29 +391,29 @@ const MarketSlide = () => {
 
 /* ---------- 6. Transaction Process ------------------------------ */
 const TimelineSlide = () => (
-  <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-5">
-    <ol className="space-y-2.5">
+  <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-4 h-full">
+    <ol className="space-y-1.5 overflow-y-auto pr-1">
       {TIMELINE.map((step, i) => {
         const Icon = step.icon;
         const done = step.state === "done";
         const active = step.state === "active";
         return (
-          <li key={step.id} className="flex items-start gap-3">
+          <li key={step.id} className="flex items-start gap-2.5">
             <div className="relative">
-              <div className={`w-8 h-8 rounded-full grid place-items-center shrink-0 ${
+              <div className={`w-7 h-7 rounded-full grid place-items-center shrink-0 ${
                 done ? "bg-[#16A34A] text-white" :
                 active ? "bg-[#EEF0FF] text-[#4F46E5] ring-2 ring-[#4F46E5]/30" :
                 "bg-[#F4F6FA] text-[#94A3B8]"
               }`}>
-                {done ? <Check className="w-4 h-4" /> : <Icon className="w-3.5 h-3.5" />}
+                {done ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3 h-3" />}
               </div>
               {i < TIMELINE.length - 1 && (
-                <span className={`absolute left-1/2 -translate-x-1/2 top-8 h-[18px] w-px ${done ? "bg-[#16A34A]/50" : "bg-[#E6EAF0]"}`} />
+                <span className={`absolute left-1/2 -translate-x-1/2 top-7 h-[10px] w-px ${done ? "bg-[#16A34A]/50" : "bg-[#E6EAF0]"}`} />
               )}
             </div>
-            <div className="flex-1 min-w-0 pt-1">
+            <div className="flex-1 min-w-0 pt-0.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[12.5px] font-semibold text-[#06194A] truncate">{step.label}</span>
+                <span className="text-[12px] font-semibold text-[#06194A] truncate">{step.label}</span>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${
                   done ? "bg-[#E8F8EE] text-[#0F7A3E]" :
                   active ? "bg-[#EEF0FF] text-[#4F46E5]" :
@@ -427,14 +427,14 @@ const TimelineSlide = () => (
         );
       })}
     </ol>
-    <div className="rounded-2xl border border-[#E0E7FF] bg-gradient-to-br from-[#F5F3FF] to-white p-4">
+    <div className="rounded-2xl border border-[#E0E7FF] bg-gradient-to-br from-[#F5F3FF] to-white p-3.5 min-h-0">
       <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
         <Zap className="w-3 h-3" /> What happens next?
       </div>
-      <p className="text-[12.5px] text-[#06194A] mt-2 leading-snug">
+      <p className="text-[12px] text-[#06194A] mt-1.5 leading-snug">
         Your dealer is reviewing the documents. Once approved, you'll select a pickup time and inspection slot.
       </p>
-      <ul className="mt-3 space-y-1.5 text-[11.5px] text-[#06194A]">
+      <ul className="mt-2 space-y-1 text-[11px] text-[#06194A]">
         <li className="flex items-start gap-1.5"><Wrench className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> AI-assisted inspection in minutes</li>
         <li className="flex items-start gap-1.5"><Truck className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Free pickup, scheduled around you</li>
         <li className="flex items-start gap-1.5"><Wallet className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> ACH released within 2 hrs of verification</li>
