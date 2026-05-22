@@ -270,20 +270,20 @@ const ConditionSlide = () => {
 const OfferBreakdownSlide = () => {
   const maxAbs = Math.max(...OFFER_FACTORS.map((f) => Math.abs(f.value)));
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-5">
-      <ul className="space-y-2">
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-4 h-full">
+      <ul className="space-y-1.5 overflow-y-auto pr-1">
         {OFFER_FACTORS.map((f, i) => {
           const pct = (Math.abs(f.value) / maxAbs) * 100;
           const positive = f.value >= 0;
           return (
             <li key={f.label} className="group" title={f.tip}>
-              <div className="flex items-center justify-between text-[12px]">
+              <div className="flex items-center justify-between text-[11.5px]">
                 <span className="font-semibold text-[#06194A] truncate">{f.label}</span>
                 <span className={`tabular-nums font-bold ${positive ? "text-[#0F7A3E]" : "text-[#B91C1C]"}`}>
                   {positive ? "+" : "−"}${Math.abs(f.value).toLocaleString()}
                 </span>
               </div>
-              <div className="h-2 mt-1 rounded-full bg-[#F4F6FA] overflow-hidden">
+              <div className="h-1.5 mt-1 rounded-full bg-[#F4F6FA] overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${pct}%` }}
@@ -291,22 +291,19 @@ const OfferBreakdownSlide = () => {
                   className={`h-full rounded-full ${positive ? "bg-gradient-to-r from-[#16A34A] to-[#22C55E]" : "bg-gradient-to-r from-[#F87171] to-[#DC2626]"}`}
                 />
               </div>
-              <div className="text-[10.5px] text-[#8893A8] mt-1 truncate opacity-0 group-hover:opacity-100 transition">
-                {f.tip}
-              </div>
             </li>
           );
         })}
       </ul>
-      <div className="rounded-2xl bg-gradient-to-br from-[#06194A] to-[#1E1B4B] text-white p-4 flex flex-col">
+      <div className="rounded-2xl bg-gradient-to-br from-[#06194A] to-[#1E1B4B] text-white p-3.5 flex flex-col min-h-0">
         <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A5B4FC]">Final Firm Offer</div>
-        <div className="text-[34px] font-extrabold leading-none mt-1 tabular-nums">{fmt(MOCK.firmOffer)}</div>
+        <div className="text-[26px] font-extrabold leading-none mt-1 tabular-nums">{fmt(MOCK.firmOffer)}</div>
         <div className="text-[11px] text-[#CBD5F5] mt-1">Held by {MOCK.customer.dealer}</div>
-        <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+        <div className="mt-2.5 grid grid-cols-1 gap-1.5 text-[10px]">
           <span className="inline-flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1"><ShieldCheck className="w-3 h-3" /> No obligation</span>
           <span className="inline-flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1"><Truck className="w-3 h-3" /> Free pickup</span>
         </div>
-        <div className="mt-auto pt-3 text-[10px] text-[#CBD5F5]">Expires {MOCK.offerExpires}</div>
+        <div className="mt-auto pt-2 text-[10px] text-[#CBD5F5]">Expires {MOCK.offerExpires}</div>
       </div>
     </div>
   );
