@@ -46,18 +46,31 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
       icon: Zap,
       title: "Fast AI review",
       body: "We analyze your photos in seconds.",
+      tint: "violet",
     },
     {
       icon: Camera,
       title: "Guided photo capture",
       body: "We'll show you exactly what to snap.",
+      tint: "indigo",
     },
     {
       icon: ShieldCheck,
       title: "Current offer protected",
       body: "Your current offer stays safe while we review.",
+      tint: "emerald",
     },
   ];
+
+  const tintClasses: Record<string, string> = {
+    violet:
+      "bg-[hsl(262_83%_62%/0.10)] text-[hsl(262_70%_48%)] ring-[hsl(262_83%_58%/0.18)]",
+    indigo:
+      "bg-[hsl(232_83%_62%/0.10)] text-[hsl(232_70%_50%)] ring-[hsl(232_83%_58%/0.18)]",
+    emerald:
+      "bg-emerald-50 text-emerald-600 ring-emerald-200/70",
+  };
+
 
   return (
     <div className="relative flex w-full justify-center px-4 py-6 sm:py-10">
