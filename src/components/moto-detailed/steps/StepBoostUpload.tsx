@@ -247,15 +247,61 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
   }
 
   return (
-    <div className="space-y-5">
-      {/* Progress */}
+    <div className="space-y-6">
+      {/* ── HERO ─────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_24px_60px_-28px_rgba(15,23,42,0.2)] sm:p-9"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-gradient-to-br from-[hsl(262_83%_70%/0.18)] via-[hsl(262_83%_60%/0.10)] to-transparent blur-2xl"
+        />
+        <div className="relative">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(262_83%_58%/0.1)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)] ring-1 ring-[hsl(262_83%_58%/0.18)]">
+            <Sparkles className="h-3 w-3" /> AI Photo Appraisal
+          </div>
+          <h2 className="mt-4 max-w-2xl text-[26px] font-semibold leading-[1.1] tracking-tight text-slate-900 sm:text-[32px]">
+            Add photos to check for a better offer.
+          </h2>
+          <p className="mt-2.5 max-w-xl text-[15px] leading-relaxed text-slate-500">
+            Our AI agent reviews your vehicle photos for condition, options, and market signals that may improve your offer.
+          </p>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15, duration: 0.4 }}
+            className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 to-white px-5 py-3.5 shadow-[0_8px_24px_-14px_rgba(16,185,129,0.45)]"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+              <ArrowUpRight className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700/80">Average uplift</p>
+              <p className="text-lg font-semibold tracking-tight text-emerald-800">
+                $250 – $2,375 after photo review
+              </p>
+            </div>
+          </motion.div>
+
+          <p className="mt-3.5 flex items-center gap-1.5 text-xs text-slate-500">
+            <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
+            Your current offer remains available. No obligation.
+          </p>
+        </div>
+      </motion.div>
+
+      {/* ── PROGRESS ─────────────────────────────────────────── */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
         <div className="flex items-center justify-between text-sm">
           <span className="font-semibold text-slate-900">
             {requiredOk} of {REQUIRED.length} required photos added
           </span>
           <span className="text-xs text-slate-500">
-            {hasReds ? "Action needed" : enoughRequired ? "Ready to continue" : "Keep going"}
+            {hasReds ? "Action needed" : enoughRequired ? "Ready for AI review" : "Keep going"}
           </span>
         </div>
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
@@ -268,30 +314,43 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
         </div>
       </div>
 
-      {/* Desktop-to-phone handoff */}
-      <button
+      {/* ── PHONE HANDOFF (prominent) ────────────────────────── */}
+      <motion.button
+        whileHover={{ y: -1 }}
         onClick={() => setShowPhone(true)}
-        className="group flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-[hsl(262_83%_58%/0.04)] to-white p-4 text-left transition-all hover:border-[hsl(262_83%_58%/0.4)] hover:shadow-md"
+        className="group relative w-full overflow-hidden rounded-2xl border border-[hsl(262_83%_58%/0.25)] bg-gradient-to-br from-[hsl(262_83%_58%/0.06)] via-white to-white p-5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:border-[hsl(262_83%_58%/0.5)] hover:shadow-[0_12px_32px_-20px_hsl(262_83%_58%/0.6)] sm:p-6"
       >
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[hsl(262_83%_58%/0.12)] text-[hsl(262_60%_45%)]">
-          <Smartphone className="h-5 w-5" />
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[hsl(262_83%_58%/0.12)] text-[hsl(262_60%_45%)] ring-1 ring-[hsl(262_83%_58%/0.2)]">
+            <Smartphone className="h-6 w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-semibold text-slate-900">
+              Use your phone for the fastest photo capture
+            </p>
+            <p className="mt-1 text-sm text-slate-500">
+              Scan once and finish the upload from your phone camera.
+            </p>
+          </div>
+          <span className="hidden items-center gap-1.5 rounded-xl bg-[hsl(262_83%_58%)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all group-hover:bg-[hsl(262_83%_52%)] sm:inline-flex">
+            <Send className="h-4 w-4" /> Send Link to My Phone
+          </span>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-900">Prefer to take photos on your phone?</p>
-          <p className="mt-0.5 text-xs text-slate-500">
-            We'll text you a secure link or show a QR code to capture photos from your phone camera.
-          </p>
-        </div>
-        <span className="hidden text-xs font-semibold text-[hsl(262_60%_45%)] sm:inline">Use my phone →</span>
-      </button>
+        <p className="mt-3 text-xs text-slate-400 sm:hidden">Tap to open phone capture →</p>
+      </motion.button>
 
-      {/* Required photos */}
+      {/* ── REQUIRED PHOTOS ──────────────────────────────────── */}
       <section>
-        <header className="mb-2 flex items-baseline justify-between">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Required photos
-          </h3>
-          <span className="text-[11px] text-slate-400">{requiredOk}/{REQUIRED.length}</span>
+        <header className="mb-3 flex items-baseline justify-between gap-3">
+          <div>
+            <h3 className="text-base font-semibold tracking-tight text-slate-900">Required photos</h3>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Start with these six photos so our AI agent can review your vehicle.
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+            {requiredOk}/{REQUIRED.length}
+          </span>
         </header>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {REQUIRED.map((c) => (
@@ -309,13 +368,15 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
         </div>
       </section>
 
-      {/* Optional photos */}
+      {/* ── OPTIONAL PHOTOS ──────────────────────────────────── */}
       <section>
-        <header className="mb-2 flex items-baseline justify-between">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Optional photos
-          </h3>
-          <span className="text-[11px] text-slate-400">Helps finalize your offer</span>
+        <header className="mb-3 flex items-baseline justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-700">Optional photos</h3>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Add these if you want a more complete review.
+            </p>
+          </div>
         </header>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {OPTIONAL.map((c) => (
@@ -333,45 +394,84 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
         </div>
       </section>
 
-      {/* Tips */}
-      <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-xs text-slate-600">
-        <p className="mb-1 font-semibold text-slate-800">Tips for better photos</p>
-        <ul className="grid gap-0.5 sm:grid-cols-2">
-          <li>· Take photos in good lighting</li>
-          <li>· Keep the full vehicle in frame</li>
-          <li>· Avoid blurry images</li>
-          <li>· Include any damage if visible</li>
-        </ul>
-      </div>
+      {/* ── WHAT HAPPENS NEXT ────────────────────────────────── */}
+      <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50/60 to-white p-5 sm:p-6">
+        <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+          What happens after upload?
+        </p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[
+            { icon: ScanSearch, title: "Photos checked for clarity" },
+            { icon: Sparkles, title: "AI reviews vehicle condition" },
+            { icon: TrendingUp, title: "We check for a stronger offer" },
+          ].map((s, i) => (
+            <div
+              key={s.title}
+              className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[hsl(262_83%_58%/0.1)] text-[hsl(262_60%_45%)] ring-1 ring-[hsl(262_83%_58%/0.15)]">
+                <s.icon className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold tracking-wider text-slate-400">0{i + 1}</p>
+                <p className="text-sm font-semibold leading-tight text-slate-900">{s.title}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      {/* Trust */}
+      {/* ── TRUST ────────────────────────────────────────────── */}
       <div className="flex items-start gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 p-3 text-xs text-emerald-800">
         <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         <span>Secure upload. Photos are used only to review your vehicle and finalize your offer.</span>
       </div>
 
-      {/* CTAs */}
-      <div className="space-y-2">
-        <button
+      {/* ── CTAs ─────────────────────────────────────────────── */}
+      <div className="space-y-3">
+        <motion.button
+          whileHover={enoughRequired && !hasReds ? { y: -1 } : undefined}
+          whileTap={enoughRequired && !hasReds ? { scale: 0.995 } : undefined}
           onClick={runAi}
           disabled={!enoughRequired || hasReds}
-          className={`w-full rounded-xl px-6 py-4 text-base font-semibold transition-all ${
+          className={`group relative w-full overflow-hidden rounded-2xl px-6 py-5 text-base font-semibold transition-all ${
             !enoughRequired || hasReds
               ? "cursor-not-allowed bg-slate-100 text-slate-400"
-              : "bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] text-white shadow-[0_8px_24px_-10px_hsl(262_83%_58%/0.6)] hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
+              : "bg-gradient-to-b from-[hsl(262_83%_62%)] to-[hsl(262_83%_50%)] text-white shadow-[0_12px_32px_-12px_hsl(262_83%_58%/0.7)] hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_46%)]"
           }`}
         >
-          {ctaLabel}
-        </button>
-        <button
-          onClick={onSkip}
-          className="block w-full rounded-xl px-4 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
-        >
-          Skip for now
-        </button>
-        <p className="text-center text-[11px] text-slate-400">
-          You can continue with your current offer, but photos may help finalize or improve it.
-        </p>
+          {enoughRequired && !hasReds && (
+            <span
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 transition-opacity group-hover:opacity-100"
+            />
+          )}
+          <span className="relative inline-flex items-center justify-center gap-2">
+            {hasReds ? (
+              <>Please retake highlighted photos</>
+            ) : enoughRequired ? (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Submit Photos for AI Appraisal
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </>
+            ) : (
+              <>Add {REQUIRED.length - requiredOk} required photo{REQUIRED.length - requiredOk === 1 ? "" : "s"} to continue</>
+            )}
+          </span>
+        </motion.button>
+
+        <div className="text-center">
+          <button
+            onClick={onSkip}
+            className="text-sm font-medium text-slate-600 underline-offset-4 transition-colors hover:text-slate-900 hover:underline"
+          >
+            Keep My Current Offer
+          </button>
+          <p className="mt-2 text-[11px] text-slate-400">
+            Your current offer stays available while we review your photos.
+          </p>
+        </div>
       </div>
 
       <AnimatePresence>
