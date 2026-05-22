@@ -226,13 +226,15 @@ const CustomerLookup = () => {
           </form>
 
           {/* Reassurance row — transaction workspace, not a generic portal. */}
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
             {reassurance.map(({ icon: Icon, label }) => (
               <div
                 key={label}
-                className="flex items-center gap-2 rounded-xl border border-border/40 bg-white/70 px-3 py-2.5"
+                className="group flex items-center gap-3 rounded-xl border border-border/40 bg-white px-3.5 py-3 hover:border-[#4F46E5]/25 hover:bg-[#F5F3FF] hover:shadow-[0_8px_20px_-10px_rgba(79,70,229,0.25)] transition-all cursor-default"
               >
-                <Icon className="w-4 h-4 text-[#4F46E5] shrink-0" strokeWidth={2} />
+                <div className="shrink-2 w-9 h-9 rounded-lg bg-[#EEF0FF] group-hover:bg-[#DDD6FE]/60 grid place-items-center transition-colors">
+                  <Icon className="w-4 h-4 text-[#4F46E5]" strokeWidth={2} />
+                </div>
                 <span className="text-[12px] font-medium text-foreground/75 leading-tight">
                   {label}
                 </span>
