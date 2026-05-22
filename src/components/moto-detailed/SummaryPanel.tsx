@@ -142,6 +142,7 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
               Accepted screens. */}
           <VehicleImageCard
             imageUrl={vehicle.imageUrl}
+            year={vehicle.year}
             make={vehicle.make}
             model={vehicle.model}
           />
