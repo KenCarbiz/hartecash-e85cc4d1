@@ -70,12 +70,14 @@ const SLIDE_TITLES = [
   "Offer Breakdown", "Market Intelligence", "Transaction Progress",
 ];
 
-const SLIDE_HEIGHT = "min-h-[380px]";
+// Fixed slide content height — keeps every slide visually consistent
+// and prevents the carousel from pushing the bottom row off-screen.
+const SLIDE_HEIGHT = "h-[280px] md:h-[300px]";
 
 /* ---------- 1. Vehicle Overview --------------------------------- */
 const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () => void }) => (
-  <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-5 items-center">
-    <div className="relative h-[180px] md:h-[230px] flex items-center justify-center overflow-hidden group">
+  <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-4 items-center h-full">
+    <div className="relative h-[140px] md:h-[200px] flex items-center justify-center overflow-hidden group">
       <div className="absolute inset-0 grid place-items-center pointer-events-none">
         <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
       </div>
@@ -83,31 +85,31 @@ const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () 
         src={vehicleHero}
         alt={`${MOCK.vehicle.year} ${MOCK.vehicle.make} ${MOCK.vehicle.model}`}
         loading="lazy"
-        className="relative z-10 max-h-full w-auto object-contain scale-[1.28] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.35]"
+        className="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_18px_14px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.24]"
       />
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[68%] h-[12px] rounded-[50%] bg-black/25 blur-md z-0" />
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[68%] h-[10px] rounded-[50%] bg-black/25 blur-md z-0" />
     </div>
 
-    <div>
-      <h2 className="text-[22px] font-bold leading-tight tracking-tight text-[#06194A]">
+    <div className="min-w-0">
+      <h2 className="text-[19px] font-bold leading-tight tracking-tight text-[#06194A] truncate">
         {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
       </h2>
-      <p className="text-sm text-[#53627A] mt-1">
+      <p className="text-[12px] text-[#53627A] mt-0.5 truncate">
         {MOCK.vehicle.miles} mi · {MOCK.vehicle.engine} · {MOCK.vehicle.body} · {MOCK.vehicle.drivetrain}
       </p>
-      <div className="mt-2 flex items-center gap-2 text-xs text-[#53627A]">
-        <span className="font-mono tracking-tight">{MOCK.vehicle.vin}</span>
-        <button onClick={onCopy} aria-label="Copy VIN" className="p-1 rounded-md hover:bg-[#F4F6FA] transition">
+      <div className="mt-1 flex items-center gap-2 text-[11px] text-[#53627A]">
+        <span className="font-mono tracking-tight truncate">{MOCK.vehicle.vin}</span>
+        <button onClick={onCopy} aria-label="Copy VIN" className="p-1 rounded-md hover:bg-[#F4F6FA] transition shrink-0">
           {copied ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
         </button>
       </div>
 
-      <div className="mt-4 rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] via-[#F2FBF6] to-[#F0FAF4] px-4 py-3">
+      <div className="mt-2.5 rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] via-[#F2FBF6] to-[#F0FAF4] px-3.5 py-2.5">
         <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#53627A]">Estimated Value Range</div>
-        <div className="text-[24px] font-extrabold leading-none text-[#06194A] mt-1 whitespace-nowrap tracking-tight">
+        <div className="text-[20px] font-extrabold leading-none text-[#06194A] mt-1 whitespace-nowrap tracking-tight">
           {fmt(MOCK.range.low)} <span className="text-[#94A3B8] font-bold">–</span> {fmt(MOCK.range.high)}
         </div>
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-1.5 flex items-center gap-2">
           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2 py-0.5 rounded-full">
             <TrendingUp className="w-3 h-3" /> Strong Market
           </span>
@@ -153,24 +155,24 @@ const PhotoGallerySlide = () => {
     indigo: "bg-[#EEF0FF] text-[#4F46E5]",
   };
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-5">
-      <div>
-        <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] grid place-items-center group">
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-4 h-full">
+      <div className="flex flex-col min-h-0">
+        <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] grid place-items-center group">
           <img src={vehicleHero} alt={cat.label} loading="lazy"
-               className="w-[80%] object-contain drop-shadow-[0_22px_22px_rgba(15,23,42,0.18)] transition-transform duration-500 group-hover:scale-105" />
-          <span className={`absolute top-3 left-3 inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded-full ${TONE[cat.tone]}`}>
+               className="max-h-[88%] w-auto object-contain drop-shadow-[0_18px_18px_rgba(15,23,42,0.18)] transition-transform duration-500 group-hover:scale-105" />
+          <span className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${TONE[cat.tone]}`}>
             <Sparkles className="w-3 h-3" /> {cat.ai}
           </span>
-          <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 text-[10px] font-semibold text-white bg-black/55 backdrop-blur px-2 py-1 rounded-full">
+          <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 text-[10px] font-semibold text-white bg-black/55 backdrop-blur px-2 py-0.5 rounded-full">
             <ImageIcon className="w-3 h-3" /> {cat.count} photos
           </span>
         </div>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 shrink-0">
           {PHOTO_CATEGORIES.slice(0, 6).map((p, i) => (
             <button key={p.id} onClick={() => setActive(i)}
-              className={`w-14 h-14 rounded-xl shrink-0 grid place-items-center text-[10px] font-semibold transition ${
+              className={`px-2.5 h-8 rounded-lg shrink-0 text-[10.5px] font-semibold transition ${
                 i === active
-                  ? "bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white shadow-[0_8px_16px_-8px_rgba(79,70,229,0.6)]"
+                  ? "bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white shadow-[0_6px_14px_-8px_rgba(79,70,229,0.6)]"
                   : "bg-[#F4F6FA] text-[#53627A] hover:bg-[#EEF0FF]"
               }`}>
               {p.label}
@@ -178,27 +180,27 @@ const PhotoGallerySlide = () => {
           ))}
         </div>
       </div>
-      <div>
+      <div className="flex flex-col min-h-0">
         <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Photo Sets</div>
-        <ul className="mt-2 space-y-2">
+        <ul className="mt-1.5 space-y-1 flex-1 min-h-0 overflow-y-auto pr-0.5">
           {PHOTO_CATEGORIES.map((p, i) => (
             <li key={p.id}>
               <button onClick={() => setActive(i)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left ${
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition text-left ${
                   i === active ? "bg-[#EEF0FF] ring-1 ring-[#C7D2FE]" : "hover:bg-[#F7F8FB]"
                 }`}>
                 <span className="flex items-center gap-2 min-w-0">
                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg ${TONE[p.tone]}`}>
                     <Camera className="w-3 h-3" />
                   </span>
-                  <span className="text-[13px] font-semibold text-[#06194A] truncate">{p.label}</span>
+                  <span className="text-[12.5px] font-semibold text-[#06194A] truncate">{p.label}</span>
                 </span>
                 <span className="text-[11px] text-[#8893A8] tabular-nums">{p.count}</span>
               </button>
             </li>
           ))}
         </ul>
-        <button className="mt-3 w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-white border border-dashed border-[#C7D2FE] hover:bg-[#EEF0FF] rounded-xl py-2 transition">
+        <button className="mt-2 w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-white border border-dashed border-[#C7D2FE] hover:bg-[#EEF0FF] rounded-xl py-1.5 transition shrink-0">
           <Plus className="w-3.5 h-3.5" /> Upload More Photos
         </button>
       </div>
@@ -213,10 +215,10 @@ const ConditionSlide = () => {
     orange: "bg-[#FEF3E2] text-[#B45309] border-[#FED7AA]",
   };
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-5">
-      <div className="rounded-2xl bg-gradient-to-br from-[#F5F3FF] via-white to-[#EEF0FF] border border-[#E0E7FF] p-4 flex flex-col items-center text-center">
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] gap-4 h-full">
+      <div className="rounded-2xl bg-gradient-to-br from-[#F5F3FF] via-white to-[#EEF0FF] border border-[#E0E7FF] p-3 flex flex-col items-center text-center min-h-0">
         <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Condition Score</div>
-        <div className="relative w-[120px] h-[120px] mt-3">
+        <div className="relative w-[96px] h-[96px] mt-2">
           <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
             <circle cx="60" cy="60" r="50" stroke="#EEF0F4" strokeWidth="9" fill="none" />
             <motion.circle cx="60" cy="60" r="50" stroke="url(#cond)" strokeWidth="9" fill="none" strokeLinecap="round"
@@ -233,30 +235,30 @@ const ConditionSlide = () => {
           </svg>
           <div className="absolute inset-0 grid place-items-center">
             <div className="text-center">
-              <div className="text-[28px] font-extrabold text-[#06194A] tabular-nums leading-none">{CONDITION_SCORE}</div>
+              <div className="text-[22px] font-extrabold text-[#06194A] tabular-nums leading-none">{CONDITION_SCORE}</div>
               <div className="text-[10px] text-[#8893A8] mt-0.5">out of 10</div>
             </div>
           </div>
         </div>
-        <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#4F46E5] bg-[#EEF0FF] px-2.5 py-1 rounded-full">
+        <div className="mt-2 inline-flex items-center gap-1.5 text-[10.5px] font-semibold text-[#4F46E5] bg-[#EEF0FF] px-2 py-0.5 rounded-full">
           <Brain className="w-3 h-3" /> AI confidence 94%
         </div>
-        <div className="mt-3 text-[11px] text-[#53627A] leading-snug">
-          Multi-source review of photos, scan reports, and customer notes.
+        <div className="mt-2 text-[10.5px] text-[#53627A] leading-snug">
+          Multi-source review of photos, scans, and notes.
         </div>
       </div>
 
-      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 content-start">
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 content-start overflow-y-auto pr-0.5">
         {CONDITION.map((c) => (
-          <li key={c.label} className={`rounded-xl border p-3 ${TONE[c.tone]}`}>
+          <li key={c.label} className={`rounded-xl border p-2.5 ${TONE[c.tone]}`}>
             <div className="flex items-center justify-between">
-              <span className="text-[12px] font-bold text-[#06194A]">{c.label}</span>
+              <span className="text-[11.5px] font-bold text-[#06194A]">{c.label}</span>
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold">
                 {c.tone === "green" ? <CircleDot className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
                 {c.status}
               </span>
             </div>
-            <div className="text-[11px] text-[#53627A] mt-1 leading-snug">{c.note}</div>
+            <div className="text-[10.5px] text-[#53627A] mt-0.5 leading-snug">{c.note}</div>
           </li>
         ))}
       </ul>
@@ -268,20 +270,20 @@ const ConditionSlide = () => {
 const OfferBreakdownSlide = () => {
   const maxAbs = Math.max(...OFFER_FACTORS.map((f) => Math.abs(f.value)));
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-5">
-      <ul className="space-y-2">
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-4 h-full">
+      <ul className="space-y-1.5 overflow-y-auto pr-1">
         {OFFER_FACTORS.map((f, i) => {
           const pct = (Math.abs(f.value) / maxAbs) * 100;
           const positive = f.value >= 0;
           return (
             <li key={f.label} className="group" title={f.tip}>
-              <div className="flex items-center justify-between text-[12px]">
+              <div className="flex items-center justify-between text-[11.5px]">
                 <span className="font-semibold text-[#06194A] truncate">{f.label}</span>
                 <span className={`tabular-nums font-bold ${positive ? "text-[#0F7A3E]" : "text-[#B91C1C]"}`}>
                   {positive ? "+" : "−"}${Math.abs(f.value).toLocaleString()}
                 </span>
               </div>
-              <div className="h-2 mt-1 rounded-full bg-[#F4F6FA] overflow-hidden">
+              <div className="h-1.5 mt-1 rounded-full bg-[#F4F6FA] overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${pct}%` }}
@@ -289,22 +291,19 @@ const OfferBreakdownSlide = () => {
                   className={`h-full rounded-full ${positive ? "bg-gradient-to-r from-[#16A34A] to-[#22C55E]" : "bg-gradient-to-r from-[#F87171] to-[#DC2626]"}`}
                 />
               </div>
-              <div className="text-[10.5px] text-[#8893A8] mt-1 truncate opacity-0 group-hover:opacity-100 transition">
-                {f.tip}
-              </div>
             </li>
           );
         })}
       </ul>
-      <div className="rounded-2xl bg-gradient-to-br from-[#06194A] to-[#1E1B4B] text-white p-4 flex flex-col">
+      <div className="rounded-2xl bg-gradient-to-br from-[#06194A] to-[#1E1B4B] text-white p-3.5 flex flex-col min-h-0">
         <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A5B4FC]">Final Firm Offer</div>
-        <div className="text-[34px] font-extrabold leading-none mt-1 tabular-nums">{fmt(MOCK.firmOffer)}</div>
+        <div className="text-[26px] font-extrabold leading-none mt-1 tabular-nums">{fmt(MOCK.firmOffer)}</div>
         <div className="text-[11px] text-[#CBD5F5] mt-1">Held by {MOCK.customer.dealer}</div>
-        <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+        <div className="mt-2.5 grid grid-cols-1 gap-1.5 text-[10px]">
           <span className="inline-flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1"><ShieldCheck className="w-3 h-3" /> No obligation</span>
           <span className="inline-flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1"><Truck className="w-3 h-3" /> Free pickup</span>
         </div>
-        <div className="mt-auto pt-3 text-[10px] text-[#CBD5F5]">Expires {MOCK.offerExpires}</div>
+        <div className="mt-auto pt-2 text-[10px] text-[#CBD5F5]">Expires {MOCK.offerExpires}</div>
       </div>
     </div>
   );
@@ -322,9 +321,9 @@ const MarketSlide = () => {
     gray:   "bg-[#F4F6FA] text-[#53627A]",
   };
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-5">
-      <div>
-        <div className="rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] to-white p-4">
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-4 h-full">
+      <div className="flex flex-col gap-2 min-h-0">
+        <div className="rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] to-white p-3">
           <div className="flex items-center justify-between">
             <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">30-Day Trend</div>
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2 py-0.5 rounded-full">
@@ -332,12 +331,27 @@ const MarketSlide = () => {
             </span>
           </div>
           <Mini />
-          <div className="mt-2 flex items-center gap-2 text-[10px] text-[#8893A8]">
+          <div className="mt-1.5 flex items-center gap-2 text-[10px] text-[#8893A8]">
             <Activity className="w-3 h-3" /> Pricing refreshed 2 hrs ago
           </div>
         </div>
 
-        <div className="mt-3 rounded-2xl border border-[#EEF0F4] bg-white px-3 py-2.5 flex items-center gap-3 overflow-hidden">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl border border-[#EEF0F4] bg-white p-2 text-center">
+            <div className="text-[9.5px] uppercase tracking-wide text-[#8893A8] font-semibold">Demand</div>
+            <div className="text-[13px] font-extrabold text-[#0F7A3E] mt-0.5">High</div>
+          </div>
+          <div className="rounded-xl border border-[#EEF0F4] bg-white p-2 text-center">
+            <div className="text-[9.5px] uppercase tracking-wide text-[#8893A8] font-semibold">Regional Rank</div>
+            <div className="text-[13px] font-extrabold text-[#06194A] mt-0.5">Top 12%</div>
+          </div>
+          <div className="rounded-xl border border-[#EEF0F4] bg-white p-2 text-center">
+            <div className="text-[9.5px] uppercase tracking-wide text-[#8893A8] font-semibold">Avg DoM</div>
+            <div className="text-[13px] font-extrabold text-[#06194A] mt-0.5">11 days</div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-[#EEF0F4] bg-white px-3 py-2 flex items-center gap-3 overflow-hidden">
           <span className="relative flex w-2 h-2 shrink-0">
             <span className="absolute inset-0 rounded-full bg-[#16A34A] opacity-60 animate-ping" />
             <span className="relative rounded-full w-2 h-2 bg-[#16A34A]" />
@@ -348,7 +362,7 @@ const MarketSlide = () => {
               <motion.div key={t}
                 initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -14, opacity: 0 }}
                 transition={{ duration: 0.35 }}
-                className="absolute inset-0 flex items-center gap-2 text-[12.5px] text-[#06194A]">
+                className="absolute inset-0 flex items-center gap-2 text-[12px] text-[#06194A]">
                 <span className={`inline-flex items-center justify-center w-5 h-5 rounded-md ${TONE_BG[item.tone]}`}>
                   <Icon className="w-3 h-3" />
                 </span>
@@ -359,13 +373,13 @@ const MarketSlide = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#E0E7FF] p-4">
+      <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#E0E7FF] p-3.5 min-h-0">
         <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
           <Sparkles className="w-3 h-3" /> Best selling window
         </div>
-        <div className="text-[18px] font-bold text-[#06194A] mt-1 leading-snug">Next 7–14 days</div>
-        <div className="text-[11px] text-[#53627A] mt-1">May maximize your payout potential.</div>
-        <ul className="mt-3 space-y-1.5 text-[11.5px]">
+        <div className="text-[16px] font-bold text-[#06194A] mt-1 leading-snug">Next 7–14 days</div>
+        <div className="text-[11px] text-[#53627A] mt-0.5">May maximize your payout potential.</div>
+        <ul className="mt-2 space-y-1 text-[11px]">
           <li className="flex items-start gap-1.5 text-[#06194A]"><MapPin className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Hartford metro — high demand</li>
           <li className="flex items-start gap-1.5 text-[#06194A]"><Star className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Top 12% offer regionally</li>
           <li className="flex items-start gap-1.5 text-[#06194A]"><Clock className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Avg. days on market: 11</li>
@@ -377,29 +391,29 @@ const MarketSlide = () => {
 
 /* ---------- 6. Transaction Process ------------------------------ */
 const TimelineSlide = () => (
-  <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-5">
-    <ol className="space-y-2.5">
+  <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-4 h-full">
+    <ol className="space-y-1.5 overflow-y-auto pr-1">
       {TIMELINE.map((step, i) => {
         const Icon = step.icon;
         const done = step.state === "done";
         const active = step.state === "active";
         return (
-          <li key={step.id} className="flex items-start gap-3">
+          <li key={step.id} className="flex items-start gap-2.5">
             <div className="relative">
-              <div className={`w-8 h-8 rounded-full grid place-items-center shrink-0 ${
+              <div className={`w-7 h-7 rounded-full grid place-items-center shrink-0 ${
                 done ? "bg-[#16A34A] text-white" :
                 active ? "bg-[#EEF0FF] text-[#4F46E5] ring-2 ring-[#4F46E5]/30" :
                 "bg-[#F4F6FA] text-[#94A3B8]"
               }`}>
-                {done ? <Check className="w-4 h-4" /> : <Icon className="w-3.5 h-3.5" />}
+                {done ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3 h-3" />}
               </div>
               {i < TIMELINE.length - 1 && (
-                <span className={`absolute left-1/2 -translate-x-1/2 top-8 h-[18px] w-px ${done ? "bg-[#16A34A]/50" : "bg-[#E6EAF0]"}`} />
+                <span className={`absolute left-1/2 -translate-x-1/2 top-7 h-[10px] w-px ${done ? "bg-[#16A34A]/50" : "bg-[#E6EAF0]"}`} />
               )}
             </div>
-            <div className="flex-1 min-w-0 pt-1">
+            <div className="flex-1 min-w-0 pt-0.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[12.5px] font-semibold text-[#06194A] truncate">{step.label}</span>
+                <span className="text-[12px] font-semibold text-[#06194A] truncate">{step.label}</span>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${
                   done ? "bg-[#E8F8EE] text-[#0F7A3E]" :
                   active ? "bg-[#EEF0FF] text-[#4F46E5]" :
@@ -413,14 +427,14 @@ const TimelineSlide = () => (
         );
       })}
     </ol>
-    <div className="rounded-2xl border border-[#E0E7FF] bg-gradient-to-br from-[#F5F3FF] to-white p-4">
+    <div className="rounded-2xl border border-[#E0E7FF] bg-gradient-to-br from-[#F5F3FF] to-white p-3.5 min-h-0">
       <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
         <Zap className="w-3 h-3" /> What happens next?
       </div>
-      <p className="text-[12.5px] text-[#06194A] mt-2 leading-snug">
+      <p className="text-[12px] text-[#06194A] mt-1.5 leading-snug">
         Your dealer is reviewing the documents. Once approved, you'll select a pickup time and inspection slot.
       </p>
-      <ul className="mt-3 space-y-1.5 text-[11.5px] text-[#06194A]">
+      <ul className="mt-2 space-y-1 text-[11px] text-[#06194A]">
         <li className="flex items-start gap-1.5"><Wrench className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> AI-assisted inspection in minutes</li>
         <li className="flex items-start gap-1.5"><Truck className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Free pickup, scheduled around you</li>
         <li className="flex items-start gap-1.5"><Wallet className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> ACH released within 2 hrs of verification</li>
@@ -479,7 +493,7 @@ export const VehicleHeroCarousel = () => {
   }, [slide, copied]);
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5 relative overflow-hidden">
+    <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 relative overflow-hidden h-full flex flex-col">
       {/* Header strip */}
       <div className="flex items-center justify-between mb-3 gap-3">
         <div className="min-w-0">
@@ -525,7 +539,7 @@ export const VehicleHeroCarousel = () => {
       </div>
 
       {/* Dot pagination */}
-      <div className="flex items-center justify-center gap-1.5 mt-4">
+      <div className="flex items-center justify-center gap-1.5 mt-auto pt-3">
         {SLIDE_TITLES.map((_, i) => (
           <button key={i} onClick={() => { setDirection(i > slide ? 1 : -1); setSlide(i); }}
             aria-label={`Go to slide ${i + 1}`}
