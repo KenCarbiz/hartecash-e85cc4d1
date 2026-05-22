@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ShieldCheck, TrendingUp, CheckCircle2, Calendar, Camera, Car, Lock, BadgeCheck } from "lucide-react";
+import { ShieldCheck, TrendingUp, CheckCircle2, Calendar, Camera, Car, Lock, BadgeCheck, Circle } from "lucide-react";
 import type { JourneyState } from "./types";
 
 const fmt = (n: number) =>
@@ -75,9 +75,14 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
           )}
         </div>
         <div className="p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Your Vehicle
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Offer Profile
+            </p>
+            <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(262_83%_58%/0.08)] px-2 py-0.5 text-[10px] font-semibold text-[hsl(262_60%_45%)]">
+              {showFirm ? "Offer ready" : "Building your offer"}
+            </span>
+          </div>
           <p className="mt-1 text-lg font-semibold text-slate-900">
             {vehicle.year} {vehicle.make} {vehicle.model}
           </p>
@@ -90,6 +95,9 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
         </div>
 
       </div>
+
+      {/* Live progress checklist — feels like an offer profile being built */}
+      {!isAccepted && <ProfileChecklist state={state} />}
 
       {/* Pre-offer estimated range */}
       {valuation && !showFirm && (
@@ -232,6 +240,58 @@ const Sparkline = ({ data }: { data: number[] }) => {
         points={linePts}
       />
     </svg>
+  );
+};
+
+const ProfileChecklist = ({ state }: { state: JourneyState }) => {
+  const items = [
+    { label: "Vehicle identified", done: !!state.vehicle },
+    { label: "Market data connected", done: !!state.valuation },
+    { label: "Condition", done: !!state.condition },
+    { label: "Mileage", done: !!state.contact.mileage },
+    { label: "Contact", done: !!(state.contact.firstName && state.contact.email && state.contact.phone) },
+  ];
+  // First not-done item is the active one
+  const activeIdx = items.findIndex((i) => !i.done);
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+        Profile progress
+      </p>
+      <ul className="mt-3 space-y-2.5">
+        {items.map((it, i) => {
+          const isActive = i === activeIdx;
+          return (
+            <li key={it.label} className="flex items-center gap-2.5 text-sm">
+              {it.done ? (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
+                  <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2.5} />
+                </span>
+              ) : isActive ? (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(262_83%_58%)] text-white ring-4 ring-[hsl(262_83%_58%/0.15)]">
+                  <Circle className="h-2 w-2 fill-current" />
+                </span>
+              ) : (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-slate-50">
+                  <Circle className="h-1.5 w-1.5 fill-slate-300 text-slate-300" />
+                </span>
+              )}
+              <span
+                className={
+                  it.done
+                    ? "text-slate-700"
+                    : isActive
+                      ? "font-medium text-slate-900"
+                      : "text-slate-400"
+                }
+              >
+                {it.label}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 };
 

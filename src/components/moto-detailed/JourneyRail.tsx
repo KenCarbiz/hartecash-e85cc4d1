@@ -12,8 +12,27 @@ interface Props {
  * NOT the customer portal sidebar — purely a progress tracker for
  * the public valuation flow.
  */
-const JourneyRail = ({ steps, activeIndex }: Props) => (
+const JourneyRail = ({ steps, activeIndex }: Props) => {
+  const total = steps.length;
+  const isLast = activeIndex >= total - 1;
+  const pct = isLast ? 100 : Math.round((activeIndex / Math.max(total - 1, 1)) * 100);
+  const label = isLast ? "Offer ready" : `Offer progress: ${pct}%`;
+  return (
   <nav className="sticky top-24 hidden lg:block" aria-label="Valuation progress">
+    <div className="mb-4 px-1">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+        Your offer
+      </p>
+      <p className="mt-1 text-sm font-semibold text-slate-900">{label}</p>
+      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+        <motion.div
+          initial={false}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="h-full rounded-full bg-gradient-to-r from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)]"
+        />
+      </div>
+    </div>
     <ol className="space-y-2">
       {steps.map((step, i) => {
         const isComplete = i < activeIndex;
@@ -75,6 +94,7 @@ const JourneyRail = ({ steps, activeIndex }: Props) => (
       })}
     </ol>
   </nav>
-);
+  );
+};
 
 export default JourneyRail;

@@ -48,12 +48,15 @@ const StepCondition = ({ state, update, next }: StepContext) => {
         })}
       </div>
 
-      <p className="text-sm text-slate-500">
-        Most vehicles with similar age and mileage are rated{" "}
-        <span className="font-semibold text-slate-700">Good</span>.
-      </p>
+      <div className="flex items-start gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-[13px] leading-relaxed text-slate-600">
+        <span className="mt-0.5 text-[hsl(262_60%_45%)]">💡</span>
+        <span>
+          Most vehicles with similar age and mileage are rated{" "}
+          <span className="font-semibold text-slate-800">Good</span>.
+        </span>
+      </div>
 
-      <PrimaryCTA onClick={next} disabled={!selected}>Next</PrimaryCTA>
+      <PrimaryCTA onClick={next} disabled={!selected}>Continue to Usage</PrimaryCTA>
     </div>
   );
 };

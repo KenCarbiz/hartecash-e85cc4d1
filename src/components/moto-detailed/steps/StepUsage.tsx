@@ -24,11 +24,12 @@ const StepUsage = ({ state, update, next }: StepContext) => {
         />
       </div>
 
-      <p className="text-center text-[13px] text-slate-500 sm:text-left">
-        You can change this later before accepting your offer.
-      </p>
+      <div className="flex items-start gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-[13px] leading-relaxed text-slate-600">
+        <span className="mt-0.5 text-[hsl(262_60%_45%)]">💡</span>
+        <span>Your choice helps us match the right dealer process for your offer. You can change this before accepting.</span>
+      </div>
 
-      <PrimaryCTA onClick={next} disabled={!sel}>Next</PrimaryCTA>
+      <PrimaryCTA onClick={next} disabled={!sel}>Continue to Contact Info</PrimaryCTA>
     </div>
   );
 };
