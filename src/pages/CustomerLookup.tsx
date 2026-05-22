@@ -138,8 +138,8 @@ const CustomerLookup = () => {
         <div className="w-full max-w-lg mx-auto">
           {/* Heading — emotional continuity with the transaction. */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5 bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_10px_28px_-12px_rgba(79,70,229,0.55)]">
-              <ShieldCheck className="w-6 h-6 text-white" strokeWidth={2} />
+            <div className="inline-flex items-center justify-center w-[52px] h-[52px] rounded-2xl mb-5 bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_10px_28px_-12px_rgba(79,70,229,0.55)] ring-4 ring-[#4F46E5]/10">
+              <LockKeyhole className="w-7 h-7 text-white" strokeWidth={2} />
             </div>
             <h1 className="text-3xl lg:text-[38px] font-bold text-foreground leading-[1.15] tracking-tight mb-3">
               Continue Your Vehicle Sale
