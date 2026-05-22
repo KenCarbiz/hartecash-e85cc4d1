@@ -105,7 +105,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
             <X className="h-4 w-4" />
           </button>
 
-          {/* Glowing AI icon */}
+          {/* Glowing AI icon — white circle with purple sparkle */}
           <div className="flex justify-center">
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }}
@@ -115,23 +115,29 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
             >
               <div
                 aria-hidden
-                className="absolute inset-0 -m-3 rounded-full bg-[hsl(262_83%_62%/0.35)] blur-xl"
+                className="absolute inset-0 -m-4 rounded-full bg-[hsl(262_83%_62%/0.30)] blur-2xl"
               />
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(262_83%_62%)] to-[hsl(262_83%_48%)] text-white shadow-[0_8px_24px_-6px_hsl(262_83%_58%/0.6)] ring-1 ring-white/40">
-                <Sparkles className="h-6 w-6" />
+              {/* tiny decorative sparkles */}
+              <span aria-hidden className="absolute -left-6 top-1 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.55)]" />
+              <span aria-hidden className="absolute -right-5 top-3 h-1.5 w-1.5 rounded-full bg-[hsl(262_83%_62%/0.45)]" />
+              <span aria-hidden className="absolute -right-7 bottom-2 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.45)]" />
+              <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-[0_10px_30px_-10px_hsl(262_83%_58%/0.55)] ring-1 ring-[hsl(262_83%_62%/0.20)]">
+                <Sparkles className="h-7 w-7" strokeWidth={2.2} />
               </div>
             </motion.div>
           </div>
 
           {/* Eyebrow */}
-          <p className="mt-6 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[hsl(262_60%_45%)]">
+          <p className="mt-6 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(262_70%_48%)]">
             AI Photo Appraisal
           </p>
 
           {/* Headline */}
-          <h2 className="mt-3 text-center text-[26px] font-semibold leading-[1.15] tracking-tight text-slate-900 sm:text-[30px]">
-            Get your strongest offer with a photo review.
+          <h2 className="mt-3 text-center text-[26px] font-bold leading-[1.15] tracking-tight text-slate-900 sm:text-[32px]">
+            Get your strongest offer with a{" "}
+            <span className="text-[hsl(262_83%_55%)]">photo review.</span>
           </h2>
+
 
           {/* Subheadline */}
           <p className="mx-auto mt-3 max-w-[520px] text-center text-[15px] leading-relaxed text-slate-500">
