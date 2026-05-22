@@ -176,7 +176,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
           {/* LEFT — desktop journey rail */}
-          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-2" : "lg:col-span-3"}>
+          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-2" : current.id === "contact" ? "lg:col-span-3" : "lg:col-span-3"}>
             <JourneyRail
               steps={activeSteps}
               activeIndex={safeCursor}
@@ -184,7 +184,8 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
           </div>
 
           {/* CENTER — active step */}
-          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-7" : "lg:col-span-5"}>
+          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-7" : current.id === "contact" ? "lg:col-span-6" : "lg:col-span-5"}>
+
             {safeCursor > 0 && (
               <button
                 onClick={back}
