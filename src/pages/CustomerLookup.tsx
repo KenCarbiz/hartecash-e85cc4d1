@@ -14,7 +14,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Search, Car, ChevronRight, ArrowRight, ShieldCheck,
-  FileText, Wallet, CalendarCheck, Eye, HelpCircle, LifeBuoy, Mail,
+  Receipt, FileUp, DollarSign, Truck, HelpCircle, LifeBuoy, Mail,
+  LockKeyhole,
 } from "lucide-react";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
