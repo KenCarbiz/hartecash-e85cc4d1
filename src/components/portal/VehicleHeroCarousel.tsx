@@ -70,7 +70,9 @@ const SLIDE_TITLES = [
   "Offer Breakdown", "Market Intelligence", "Transaction Progress",
 ];
 
-const SLIDE_HEIGHT = "min-h-[380px]";
+// Fixed slide content height — keeps every slide visually consistent
+// and prevents the carousel from pushing the bottom row off-screen.
+const SLIDE_HEIGHT = "h-[280px] md:h-[300px]";
 
 /* ---------- 1. Vehicle Overview --------------------------------- */
 const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () => void }) => (
