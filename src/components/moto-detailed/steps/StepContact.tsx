@@ -82,7 +82,7 @@ const StepContact = ({ state, update, next }: StepContext) => {
         </span>
       </div>
 
-      <PrimaryCTA onClick={onSubmit} disabled={!valid}>See My Offer</PrimaryCTA>
+      <PrimaryCTA onClick={onSubmit} disabled={!valid}>See My Firm Offer</PrimaryCTA>
     </div>
   );
 };
