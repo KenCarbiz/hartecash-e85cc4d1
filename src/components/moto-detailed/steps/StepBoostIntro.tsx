@@ -5,6 +5,8 @@ import {
   Camera,
   ShieldCheck,
   ArrowRight,
+  ArrowUpRight,
+  Clock,
   X,
 } from "lucide-react";
 import type { StepContext } from "../types";
