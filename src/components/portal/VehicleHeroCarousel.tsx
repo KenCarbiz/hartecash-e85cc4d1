@@ -602,7 +602,7 @@ export const VehicleHeroCarousel = ({ onViewOfferDetails }: { onViewOfferDetails
       case 0: return <VehicleOverviewSlide copied={copied} onCopy={copyVin} />;
       case 1: return <PhotoGallerySlide />;
       case 2: return <ConditionSlide />;
-      case 3: return <OfferBreakdownSlide />;
+      case 3: return <OfferBreakdownSlide onViewOfferDetails={onViewOfferDetails} />;
       case 4: return <MarketSlide />;
       case 5: return <TimelineSlide />;
       default: return null;
