@@ -39,7 +39,7 @@ const StepContact = ({ state, update, next }: StepContext) => {
       setTouched({ firstName: true, lastName: true, email: true, phone: true, zip: true, mileage: true });
       return;
     }
-    trackCtaClicked("contact", "See My Offer");
+    trackCtaClicked("contact", "See My Firm Offer");
     trackContactSubmitted();
     update({ offerUnlocked: true });
     next();
