@@ -13,7 +13,10 @@ const fmt = (n: number) =>
  * gives the customer a next action without overwhelming.
  */
 const StepAccepted = ({ state, update }: StepContext) => {
-  const firm = state.boost.boostedFirm ?? state.valuation?.firm ?? 0;
+  const requiredPhotoReviewComplete = state.boost.analyzed && state.boost.uploadedCategories.length >= 6;
+  const firm = requiredPhotoReviewComplete && state.boost.boostedFirm
+    ? state.boost.boostedFirm
+    : state.valuation?.firm ?? 0;
   const [pickedSlot, setPickedSlot] = useState<string | null>(state.appointment?.timeSlot ?? null);
   const [mode, setMode] = useState<JourneyAppointment["mode"]>(state.appointment?.mode ?? "appointment");
 
