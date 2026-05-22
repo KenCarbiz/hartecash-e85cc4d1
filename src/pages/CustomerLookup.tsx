@@ -280,7 +280,7 @@ const CustomerLookup = () => {
                     onClick={() => navigate(`/my-submission/${r.token}`)}
                     className="w-full rounded-2xl border border-border/60 bg-white p-5 hover:border-[#4F46E5]/40 hover:shadow-[0_12px_28px_-14px_rgba(79,70,229,0.25)] transition-all text-left flex items-center gap-4 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/30"
                   >
-                    <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center">
+                    <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_6px_16px_-6px_rgba(79,70,229,0.45)] grid place-items-center">
                       <Car className="w-5 h-5 text-white" strokeWidth={2} />
                     </div>
                     <div className="flex-1 min-w-0">
