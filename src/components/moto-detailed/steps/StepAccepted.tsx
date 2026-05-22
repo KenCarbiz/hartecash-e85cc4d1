@@ -230,6 +230,29 @@ const StepAccepted = ({ state, update }: StepContext) => {
             <span className="font-semibold text-zinc-900">{fmt(firm)} secured</span> with {DEALER_NAME}. We'll guide you through the final steps so your visit or pickup is fast and simple.
           </p>
 
+          {state.vehicle && (
+            <div className="mt-5 grid grid-cols-[140px_1fr] items-center gap-4 rounded-2xl border border-emerald-100 bg-white/70 p-3 backdrop-blur-sm">
+              <div className="overflow-hidden rounded-xl border border-emerald-100">
+                <VehicleImageCard
+                  imageUrl={state.vehicle.imageUrl}
+                  make={state.vehicle.make}
+                  model={state.vehicle.model}
+                  aspectClassName="aspect-[16/10]"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">Your vehicle</p>
+                <p className="mt-0.5 text-base font-semibold text-zinc-900">{vehicleLabel}</p>
+                {state.vehicle.trim && <p className="text-sm text-zinc-500">{state.vehicle.trim}</p>}
+                {state.contact.mileage && (
+                  <p className="mt-0.5 text-xs text-zinc-500">
+                    {Number(state.contact.mileage).toLocaleString("en-US")} mi
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="mt-5 flex flex-wrap gap-2">
             <Pill icon={BellRing}>Dealer notified</Pill>
             <Pill icon={Lock}>Offer secured</Pill>
