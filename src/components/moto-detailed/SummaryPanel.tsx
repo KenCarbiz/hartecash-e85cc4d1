@@ -19,7 +19,7 @@ const strengthLabel = {
  * progresses: pre-offer = range + market signal; post-offer =
  * firm number + accepted/boost state + checklist progress.
  */
-const SummaryPanel = ({ state }: { state: JourneyState }) => {
+const SummaryPanel = ({ state, currentStepId }: { state: JourneyState; currentStepId?: string }) => {
   const { vehicle, valuation } = state;
   if (!vehicle) {
     return (
@@ -39,6 +39,16 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
   const isAccepted = state.branch === "accept";
   const todosDone = state.todos.filter((t) => t.done).length;
 
+  // Step → high-level offer-progress percentage shown in the pill.
+  const STEP_PROGRESS: Record<string, number> = {
+    vehicle: 10, condition: 25, usage: 50, ownership: 60, timeline: 65,
+    contact: 75, offer: 100, accepted: 100,
+    boost_intro: 100, boost_upload: 100, boost_result: 100,
+  };
+  const progressPct = currentStepId && STEP_PROGRESS[currentStepId] != null
+    ? STEP_PROGRESS[currentStepId]
+    : state.valuation ? 25 : 10;
+
   return (
     <motion.aside
       initial={{ opacity: 0, y: 8 }}
@@ -54,7 +64,7 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
               Offer Profile
             </p>
             <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(262_83%_58%/0.08)] px-2 py-0.5 text-[10px] font-semibold text-[hsl(262_60%_45%)]">
-              Building your offer
+              Building your offer · {progressPct}%
             </span>
           </div>
 
@@ -104,7 +114,7 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
               Building your offer
             </p>
-            <ProfileChecklist state={state} inline />
+            <ProfileChecklist state={state} currentStepId={currentStepId} inline />
           </div>
 
           {/* Trust items */}
@@ -260,24 +270,52 @@ const Sparkline = ({ data }: { data: number[] }) => {
   );
 };
 
-const ProfileChecklist = ({ state, inline = false }: { state: JourneyState; inline?: boolean }) => {
+const ProfileChecklist = ({
+  state,
+  currentStepId,
+  inline = false,
+}: {
+  state: JourneyState;
+  currentStepId?: string;
+  inline?: boolean;
+}) => {
   const items = [
-    { label: "Vehicle identified", done: !!state.vehicle },
-    { label: "Market data connected", done: !!state.valuation },
-    { label: "Condition", done: !!state.condition },
-    { label: "Usage selected", done: !!state.usage },
-    { label: "Mileage added", done: !!state.contact.mileage },
-    { label: "Ownership status", done: !!state.contact.ownership },
-    { label: "Contact info", done: !!(state.contact.firstName && state.contact.email && state.contact.phone) },
+    { id: "vehicle",   label: "Vehicle identified",    done: !!state.vehicle },
+    { id: "market",    label: "Market data connected", done: !!state.valuation },
+    { id: "condition", label: "Condition",             done: !!state.condition },
+    { id: "usage",     label: "Usage selected",        done: !!state.usage },
+    { id: "mileage",   label: "Mileage added",         done: !!state.contact.mileage },
+    { id: "ownership", label: "Ownership status",      done: !!state.contact.ownership },
+    { id: "contact",   label: "Contact info",          done: !!(state.contact.firstName && state.contact.email && state.contact.phone) },
   ];
-  const activeIdx = items.findIndex((i) => !i.done);
+
+  // Map the live step id from the engine to the checklist item that
+  // should be highlighted purple. Falls back to the first incomplete
+  // item so the indicator never disappears between steps.
+  const stepToItem: Record<string, string> = {
+    vehicle: "vehicle",
+    condition: "condition",
+    usage: "usage",
+    contact: "contact",
+    ownership: "ownership",
+    timeline: "usage",
+    offer: "contact",
+  };
+  const mappedId = currentStepId ? stepToItem[currentStepId] : undefined;
+  let activeIdx = mappedId ? items.findIndex((i) => i.id === mappedId) : -1;
+  if (activeIdx < 0) activeIdx = items.findIndex((i) => !i.done);
+
   const list = (
     <ul className={`${inline ? "mt-2.5" : "mt-3"} space-y-2`}>
       {items.map((it, i) => {
         const isActive = i === activeIdx;
+        // Active beats done — if the engine is on this step right
+        // now, render it purple even if the field already has a
+        // default value (e.g. condition seeded as "good").
+        const showDone = it.done && !isActive;
         return (
           <li key={it.label} className="flex items-center gap-2.5 text-[13px]">
-            {it.done ? (
+            {showDone ? (
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white">
                 <CheckCircle2 className="h-3 w-3" strokeWidth={2.75} />
               </span>
@@ -292,10 +330,10 @@ const ProfileChecklist = ({ state, inline = false }: { state: JourneyState; inli
             )}
             <span
               className={
-                it.done
+                showDone
                   ? "text-slate-600"
                   : isActive
-                    ? "font-medium text-slate-900"
+                    ? "font-semibold text-[hsl(262_60%_45%)]"
                     : "text-slate-400"
               }
             >
