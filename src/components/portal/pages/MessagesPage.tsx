@@ -307,7 +307,7 @@ export const MessagesPage = () => {
   };
 
   // Stage-aware quick replies (firm offer issued but pickup pending → postOffer)
-  const quickReplies = useMemo(() => QUICK_REPLIES.postOffer, []);
+  const quickReplies = useMemo(() => QUICK_REPLIES.postOffer.slice(0, 3), []);
 
   return (
     <PortalPageShell title="Messages" subtitle="Your direct line to your acquisition specialist.">
