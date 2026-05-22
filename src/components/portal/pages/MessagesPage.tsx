@@ -76,30 +76,23 @@ const TypingDots = () => (
 const TransactionHeader = ({ onOffer }: { onOffer: () => void }) => (
   <motion.div
     initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-    className="relative border-b border-[#E6EAF0] bg-gradient-to-r from-[#EEF0FF]/60 via-white to-[#F5F3FF]/60 px-4 py-3"
+    className="border-b border-[#E6EAF0] bg-[#FAFBFE] px-4 py-2"
   >
     <div className="flex items-center gap-3">
-      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#E6EAF0] to-[#F4F6FA] grid place-items-center shrink-0 ring-1 ring-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
-        <ImageIcon className="w-6 h-6 text-[#8893A8]" />
-      </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">Active transaction</div>
         <div className="text-sm font-semibold text-[#06194A] truncate">
           {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
         </div>
-        <div className="mt-1 flex items-center gap-3 flex-wrap text-[11px]">
-          <button onClick={onOffer} className="inline-flex items-center gap-1 font-semibold text-[#4F46E5] hover:underline">
-            <DollarSign className="w-3 h-3" /> {fmt(MOCK.firmOffer)}
-          </button>
-          <span className="inline-flex items-center gap-1 text-[#B45309]">
-            <Truck className="w-3 h-3" /> Pickup pending
-          </span>
-          <span className="inline-flex items-center gap-1 text-[#53627A]">
-            <FileText className="w-3 h-3" /> 2 docs remaining
-          </span>
-          <StatusPill tone="indigo">Stage: Offer Accepted</StatusPill>
+        <div className="text-[11px] text-[#53627A] truncate">
+          Firm offer accepted · 2 docs remaining
         </div>
       </div>
+      <button
+        onClick={onOffer}
+        className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-white border border-[#E0E7FF] rounded-lg px-2.5 py-1.5 hover:bg-[#EEF0FF] transition shrink-0"
+      >
+        <DollarSign className="w-3.5 h-3.5" /> {fmt(MOCK.firmOffer)}
+      </button>
     </div>
   </motion.div>
 );
@@ -314,7 +307,7 @@ export const MessagesPage = () => {
   };
 
   // Stage-aware quick replies (firm offer issued but pickup pending → postOffer)
-  const quickReplies = useMemo(() => QUICK_REPLIES.postOffer, []);
+  const quickReplies = useMemo(() => QUICK_REPLIES.postOffer.slice(0, 3), []);
 
   return (
     <PortalPageShell title="Messages" subtitle="Your direct line to your acquisition specialist.">
@@ -476,75 +469,87 @@ export const MessagesPage = () => {
             </div>
           </section>
 
-          {/* ── Advisor profile (desktop) ────────────────────────────── */}
-          <aside className="hidden lg:flex flex-col border-l border-[#E6EAF0] bg-gradient-to-b from-white to-[#FAFBFE]">
-            <div className="p-5 text-center border-b border-[#E6EAF0]">
-              <div className="relative w-20 h-20 mx-auto">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#4F46E5] grid place-items-center text-xl font-bold ring-4 ring-white shadow-[0_8px_24px_rgba(79,70,229,0.18)]">{conv.initials}</div>
-                <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#16A34A] ring-3 ring-white grid place-items-center">
-                  <span className="w-2 h-2 rounded-full bg-white" />
-                </span>
-              </div>
-              <div className="text-sm font-semibold text-[#06194A] mt-3">Marcus Chen</div>
-              <div className="text-[11px] text-[#53627A]">Senior Acquisition Specialist</div>
-              <div className="text-[11px] text-[#8893A8] mt-0.5">{conv.name}</div>
-              <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
-                <StatusPill tone="green">🟢 Active</StatusPill>
-                <StatusPill tone="indigo">8 yrs exp</StatusPill>
-              </div>
-            </div>
-
-            <div className="p-4 space-y-2">
-              <div className="rounded-xl bg-white border border-[#E6EAF0] p-3 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#FEF3C7] text-[#B45309] grid place-items-center"><Zap className="w-4 h-4" /></div>
-                <div>
-                  <div className="text-[11px] text-[#8893A8]">Avg. response</div>
-                  <div className="text-xs font-semibold text-[#06194A]">Replies within 5 min</div>
+          {/* ── Advisor profile (desktop) — compact ──────────────────── */}
+          <aside className="hidden lg:flex flex-col border-l border-[#E6EAF0] bg-white">
+            {/* Specialist identity */}
+            <div className="p-4 text-center border-b border-[#E6EAF0]">
+              <div className="relative w-14 h-14 mx-auto">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#4F46E5] grid place-items-center text-base font-bold ring-2 ring-white shadow-[0_4px_14px_rgba(79,70,229,0.15)]">
+                  {conv.initials}
                 </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#16A34A] ring-2 ring-white" />
               </div>
-              <div className="rounded-xl bg-white border border-[#E6EAF0] p-3 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#FEF3C7] text-[#D97706] grid place-items-center"><Star className="w-4 h-4 fill-current" /></div>
-                <div>
-                  <div className="text-[11px] text-[#8893A8]">Customer rating</div>
-                  <div className="text-xs font-semibold text-[#06194A]">4.9 ★ from 312 reviews</div>
-                </div>
+              <div className="text-[13.5px] font-semibold text-[#06194A] mt-2 inline-flex items-center gap-1 justify-center">
+                Marcus Chen <BadgeCheck className="w-3.5 h-3.5 text-[#4F46E5]" />
               </div>
-            </div>
-
-            {/* Trust indicators — surfaced high */}
-            <div className="px-4 pb-4">
-              <div className="text-[10px] uppercase tracking-wide text-[#8893A8] font-semibold mb-2">Trust & security</div>
-              <div className="grid grid-cols-2 gap-1.5">
-                {TRUST_BADGES.map((b) => {
-                  const Icon = b.icon;
-                  return (
-                    <div key={b.label} className="flex items-center gap-1.5 rounded-lg bg-[#F7F8FB] px-2 py-1.5 text-[10px] font-semibold text-[#06194A]">
-                      <Icon className="w-3 h-3 text-[#16A34A] shrink-0" /> <span className="truncate">{b.label}</span>
-                    </div>
-                  );
-                })}
+              <div className="text-[11px] text-[#53627A]">Acquisition Specialist</div>
+              <div className="text-[11px] text-[#8893A8]">{conv.name}</div>
+              <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#16A34A]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" /> Active · Replies in ~5 min
               </div>
-            </div>
-
-            <div className="px-4 pb-4 space-y-1.5">
-              <div className="text-[10px] uppercase tracking-wide text-[#8893A8] font-semibold mb-1">Support</div>
-              <button onClick={() => setSupportDrawer("callback")} className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-[#06194A] hover:bg-[#F4F6FA] transition">
-                <PhoneCall className="w-4 h-4 text-[#4F46E5]" /> Request Callback
+              <button
+                onClick={() => setProfile(true)}
+                className="block mx-auto mt-2 text-[11px] font-semibold text-[#4F46E5] hover:underline"
+              >
+                View specialist details
               </button>
-              <button onClick={() => setAttach(true)} className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-[#06194A] hover:bg-[#F4F6FA] transition">
+            </div>
+
+            {/* Transaction summary */}
+            <div className="p-4 border-b border-[#E6EAF0]">
+              <div className="text-[10px] uppercase tracking-wide text-[#8893A8] font-semibold mb-2">Your transaction</div>
+              <dl className="space-y-1.5 text-[12px]">
+                <div className="flex justify-between gap-2">
+                  <dt className="text-[#53627A]">Vehicle</dt>
+                  <dd className="font-semibold text-[#06194A] text-right truncate">
+                    {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <dt className="text-[#53627A]">Firm Offer</dt>
+                  <dd className="font-bold text-[#06194A]">{fmt(MOCK.firmOffer)}</dd>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <dt className="text-[#53627A]">Status</dt>
+                  <dd className="font-semibold text-[#16A34A]">Offer Accepted</dd>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <dt className="text-[#53627A]">Documents</dt>
+                  <dd className="font-semibold text-[#B45309]">2 remaining</dd>
+                </div>
+              </dl>
+            </div>
+
+            {/* Quick actions */}
+            <div className="p-3 space-y-1">
+              <div className="text-[10px] uppercase tracking-wide text-[#8893A8] font-semibold mb-1 px-1">Quick actions</div>
+              <button onClick={() => setOfferDrawer(true)} className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] font-semibold text-[#06194A] hover:bg-[#F4F6FA] transition">
+                <DollarSign className="w-4 h-4 text-[#16A34A]" /> View Offer
+              </button>
+              <button onClick={() => setAttach(true)} className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] font-semibold text-[#06194A] hover:bg-[#F4F6FA] transition">
                 <Upload className="w-4 h-4 text-[#4F46E5]" /> Upload Document
               </button>
-              <button onClick={() => setSupportDrawer("escalate")} className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-[#06194A] hover:bg-[#F4F6FA] transition">
-                <AlertTriangle className="w-4 h-4 text-[#B45309]" /> Escalate Question
+              <button className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] font-semibold text-[#06194A] hover:bg-[#F4F6FA] transition">
+                <Truck className="w-4 h-4 text-[#4F46E5]" /> Schedule Pickup
               </button>
-              <button onClick={() => setOfferDrawer(true)} className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-[#06194A] hover:bg-[#F4F6FA] transition">
-                <DollarSign className="w-4 h-4 text-[#16A34A]" /> View Offer Details
+              <button onClick={() => setSupportDrawer("callback")} className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] font-semibold text-[#06194A] hover:bg-[#F4F6FA] transition">
+                <PhoneCall className="w-4 h-4 text-[#4F46E5]" /> Request Callback
               </button>
             </div>
 
-            <div className="mt-auto p-4 border-t border-[#E6EAF0] grid grid-cols-2 gap-2">
-              <SecondaryButton><Phone className="w-4 h-4" /> Call</SecondaryButton>
-              <SecondaryButton><Mail className="w-4 h-4" /> Email</SecondaryButton>
+            {/* Footer: secondary Call/Email + trust line */}
+            <div className="mt-auto border-t border-[#E6EAF0]">
+              <div className="grid grid-cols-2 gap-2 p-3">
+                <button className="inline-flex items-center justify-center gap-1.5 text-[11.5px] font-semibold text-[#53627A] hover:text-[#4F46E5] py-1.5 rounded-lg hover:bg-[#F4F6FA] transition">
+                  <Phone className="w-3.5 h-3.5" /> Call
+                </button>
+                <button className="inline-flex items-center justify-center gap-1.5 text-[11.5px] font-semibold text-[#53627A] hover:text-[#4F46E5] py-1.5 rounded-lg hover:bg-[#F4F6FA] transition">
+                  <Mail className="w-3.5 h-3.5" /> Email
+                </button>
+              </div>
+              <div className="px-4 pb-3 text-[10.5px] text-[#8893A8] inline-flex items-center gap-1.5">
+                <Lock className="w-3 h-3" /> Secure dealer conversation
+              </div>
             </div>
           </aside>
         </div>
