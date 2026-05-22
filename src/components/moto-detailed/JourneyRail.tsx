@@ -94,6 +94,7 @@ const JourneyRail = ({ steps, activeIndex }: Props) => {
       })}
     </ol>
   </nav>
-);
+  );
+};
 
 export default JourneyRail;
