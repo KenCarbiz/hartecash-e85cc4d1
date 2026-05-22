@@ -115,15 +115,25 @@ const ACCEPTED_PORTAL_STATUSES = new Set([
 ]);
 
 import CustomerPortalClarity from "./CustomerPortalClarity";
-import CustomerPortalMoto from "./CustomerPortalMoto";
+// CustomerPortalMoto is intentionally NOT dispatched at the moment.
+// The recently-shipped Moto portal at /my-submission/:token never reads
+// the route token from useParams and renders fully static mock PII
+// ("Alex Morgan" / fake VIN / fake bank info) for every visitor.
+// Routing Moto-template tenants here would show every real customer
+// the same fake submission. Falling through to CustomerPortalLegacy
+// until the new portal is wired to supabase.rpc("get_submission_portal").
+//
+// See: technical review punch list, P0 #1. Re-enable the import + the
+// branch below once CustomerPortalMoto reads { token } and queries
+// real data.
+// import CustomerPortalMoto from "./CustomerPortalMoto";
 
 const CustomerPortal = () => {
   const { config: rootConfig } = useSiteConfig();
-  // Template-aware dispatch — Moto dealers get the new
-  // "national-brand clean contemporary" portal that matches the
-  // MotoAcquire reference; Clarity dealers stay on the Apple-minimal
-  // zinc scaffold; everyone else falls through to the maximalist
-  // legacy portal below.
+  // Template-aware dispatch — Clarity dealers get the Apple-minimal
+  // portal scaffold; everyone else (including Moto for now) falls
+  // through to the maximalist legacy portal which is the only branch
+  // currently wired to real submission data.
   return (
     <>
       <SEO
@@ -132,9 +142,7 @@ const CustomerPortal = () => {
         path="/my-submission"
         noindex
       />
-      {rootConfig.landing_template === "moto" ? (
-        <CustomerPortalMoto />
-      ) : rootConfig.landing_template === "clarity" ? (
+      {rootConfig.landing_template === "clarity" ? (
         <CustomerPortalClarity />
       ) : (
         <CustomerPortalLegacy />

@@ -14,12 +14,23 @@ import AnalyticsPage from "@/components/portal/pages/AnalyticsPage";
 import PaymentsPage from "@/components/portal/pages/PaymentsPage";
 import PickupPage from "@/components/portal/pages/PickupPage";
 import SettingsPage from "@/components/portal/pages/SettingsPage";
+import SEO from "@/components/SEO";
 
 /* /portal-preview shell:
    • Sidebar + mobile top bar stay mounted across navigation.
    • Main content swaps in via Framer Motion AnimatePresence keyed by activeNav.
    • Sidebar links never open right-side drawers — drawers are reserved for
-     secondary actions inside each page (edit, upload, accept, etc). */
+     secondary actions inside each page (edit, upload, accept, etc).
+
+   IMPORTANT: this route renders fully static mock customer data
+   (Alex Morgan / Liberty Automotive / fake VIN + bank details from
+   src/components/portal/portalMock.ts). It must never be indexed by
+   search engines — a real customer landing on it from a stray Google
+   hit would see someone else's name and assume their actual portal
+   is fake. Hence the noindex below.
+
+   Long-term: this preview tree replaces CustomerPortalMoto at
+   /my-submission/:token once the data layer is wired up. */
 
 const PortalPreview = () => {
   const [activeNav, setActiveNav] = useState<NavKey>("dashboard");
@@ -41,6 +52,12 @@ const PortalPreview = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F8FB] text-[#06194A] flex">
+      <SEO
+        title="Portal preview"
+        description="Internal portal UX preview — not indexed."
+        path="/portal-preview"
+        noindex
+      />
       <PortalSidebar active={activeNav} onChange={setActiveNav} customer={MOCK.customer} />
 
       <div className="flex-1 min-w-0 flex flex-col">
