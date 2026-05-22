@@ -180,6 +180,8 @@ export interface StepDefinition {
   shouldRender?: (state: JourneyState) => boolean;
   /** Validate before allowing `next()`. Return true / message string. */
   validate?: (state: JourneyState) => true | string;
+  /** Optional fixed badge override (e.g. show "Step 3 of 4" regardless of conditional skips). */
+  stepBadge?: { current: number; total: number };
 }
 
 export interface JourneyConfig {

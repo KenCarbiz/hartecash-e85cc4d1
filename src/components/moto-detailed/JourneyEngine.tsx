@@ -164,7 +164,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className="min-h-screen bg-gradient-to-b from-white via-white to-slate-50"
     >
-      <div className={`mx-auto w-full px-4 pb-16 pt-8 lg:px-8 lg:pt-12 ${current.id === "boost_upload" || current.id === "boost_intro" ? "max-w-[1320px]" : "max-w-[1180px]"}`}>
+      <div className={`mx-auto w-full px-4 pb-16 pt-8 lg:px-8 lg:pt-12 ${current.id === "boost_upload" || current.id === "boost_intro" ? "max-w-[1320px]" : current.id === "contact" ? "max-w-[1240px]" : "max-w-[1180px]"}`}>
         {/* Mobile stepper */}
         <div className="mb-6 lg:hidden">
           <MobileStepper
@@ -176,7 +176,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
           {/* LEFT — desktop journey rail */}
-          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-2" : "lg:col-span-3"}>
+          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-2" : current.id === "contact" ? "lg:col-span-3" : "lg:col-span-3"}>
             <JourneyRail
               steps={activeSteps}
               activeIndex={safeCursor}
@@ -184,7 +184,8 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
           </div>
 
           {/* CENTER — active step */}
-          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-7" : "lg:col-span-5"}>
+          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-7" : current.id === "contact" ? "lg:col-span-6" : "lg:col-span-5"}>
+
             {safeCursor > 0 && (
               <button
                 onClick={back}
@@ -206,7 +207,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
                 <header className="mb-6">
                   <div className="mb-3 inline-flex items-center gap-2">
                     <span className="inline-flex items-center rounded-full bg-[hsl(262_83%_58%/0.1)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)]">
-                      Step {safeCursor + 1} of {activeSteps.length}
+                      Step {current.stepBadge?.current ?? safeCursor + 1} of {current.stepBadge?.total ?? activeSteps.length}
                     </span>
                     <span className="text-[11px] font-medium text-slate-400">
                       {current.title}
@@ -238,7 +239,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
           </div>
 
           {/* RIGHT — summary panel */}
-          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-3" : "lg:col-span-4"}>
+          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-3" : current.id === "contact" ? "lg:col-span-3" : "lg:col-span-4"}>
             <SummaryPanel state={state} currentStepId={current.id} />
           </div>
         </div>
