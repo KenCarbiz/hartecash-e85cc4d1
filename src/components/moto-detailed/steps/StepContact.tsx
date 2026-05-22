@@ -112,29 +112,33 @@ const StepContact = ({ state, update, next }: StepContext) => {
                 type="button"
                 whileTap={{ scale: 0.995 }}
                 onClick={() => { set({ ownership: value }); touch("ownership"); }}
-                className={`group relative flex w-full items-center gap-4 rounded-2xl border px-4 py-4 text-left transition-all ${
+                className={`group relative flex w-full items-center gap-4 rounded-2xl border px-5 py-5 text-left transition-all ${
                   active
-                    ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%/0.05)] shadow-[0_10px_28px_-14px_hsl(262_83%_58%/0.45),0_0_0_4px_hsl(262_83%_58%/0.08)]"
-                    : "border-slate-200 bg-white hover:border-[hsl(262_83%_58%/0.55)] hover:bg-[hsl(262_83%_58%/0.035)]"
+                    ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%/0.06)] shadow-[0_10px_28px_-14px_hsl(262_83%_58%/0.45),0_0_0_4px_hsl(262_83%_58%/0.08)]"
+                    : "border-slate-200 bg-white hover:border-[hsl(262_83%_58%/0.6)] hover:bg-[hsl(262_83%_58%/0.04)] hover:shadow-[0_6px_18px_-12px_hsl(262_83%_58%/0.3)]"
                 }`}
               >
                 <div
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors ${
-                    active ? "bg-[hsl(262_83%_58%)] text-white" : "bg-[hsl(262_83%_58%/0.08)] text-[hsl(262_60%_45%)]"
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-all ${
+                    active
+                      ? "bg-[hsl(262_83%_58%)] text-white shadow-[0_6px_16px_-6px_hsl(262_83%_58%/0.55)]"
+                      : "bg-[hsl(262_83%_58%/0.1)] text-[hsl(262_60%_45%)] ring-1 ring-[hsl(262_83%_58%/0.15)]"
                   }`}
                 >
                   <Icon className="h-5 w-5" strokeWidth={2.25} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-semibold text-slate-900">{title}</p>
+                  <p className="text-[15.5px] font-semibold tracking-tight text-slate-900">{title}</p>
                   <p className="mt-0.5 text-[12.5px] leading-relaxed text-slate-500">{desc}</p>
                 </div>
                 <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                    active ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%)] text-white" : "border-slate-300 bg-white"
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+                    active
+                      ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%)] text-white shadow-[0_4px_12px_-4px_hsl(262_83%_58%/0.5)]"
+                      : "border-slate-300 bg-white group-hover:border-[hsl(262_83%_58%/0.5)]"
                   }`}
                 >
-                  {active && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+                  {active && <Check className="h-4 w-4" strokeWidth={3} />}
                 </span>
               </motion.button>
             );
