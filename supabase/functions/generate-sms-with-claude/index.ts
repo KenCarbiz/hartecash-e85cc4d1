@@ -91,15 +91,27 @@ serve(async (req) => {
     // ── Pull customer + vehicle + recent comms context for the prompt ──
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
+
+    // Auth gate: staff-only. Anonymous users must NOT be able to extract
+    // customer PII or burn Anthropic credits by guessing/leaking submission UUIDs.
+    const caller = await resolveCaller(req, supabaseUrl, anonKey, serviceKey);
+    if (caller.kind !== "platform_admin" && caller.kind !== "tenant_staff") {
+      return forbidden(corsHeaders, "Staff authentication required");
+    }
 
     let context = "";
     if (submissionId) {
       const { data: sub } = await supabase
         .from("submissions")
-        .select("name, phone, email, vehicle_year, vehicle_make, vehicle_model, vehicle_trim, mileage, offered_price, estimated_offer_high, acv_value, progress_status, appointment_date")
+        .select("name, phone, email, vehicle_year, vehicle_make, vehicle_model, vehicle_trim, mileage, offered_price, estimated_offer_high, acv_value, progress_status, appointment_date, dealership_id")
         .eq("id", submissionId)
         .maybeSingle();
+      // Tenant isolation: tenant staff can only draft SMS for their own dealership's submissions.
+      if (sub && !callerCanActOnTenant(caller, (sub as { dealership_id?: string }).dealership_id)) {
+        return forbidden(corsHeaders);
+      }
       const { data: convo } = await supabase
         .from("conversation_events")
         .select("channel, direction, body_text, occurred_at")
