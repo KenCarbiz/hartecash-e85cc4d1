@@ -164,7 +164,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className="min-h-screen bg-gradient-to-b from-white via-white to-slate-50"
     >
-      <div className="mx-auto w-full max-w-[1180px] px-4 pb-16 pt-8 lg:px-8 lg:pt-12">
+      <div className={`mx-auto w-full px-4 pb-16 pt-8 lg:px-8 lg:pt-12 ${current.id === "boost_upload" || current.id === "boost_intro" ? "max-w-[1320px]" : "max-w-[1180px]"}`}>
         {/* Mobile stepper */}
         <div className="mb-6 lg:hidden">
           <MobileStepper
@@ -176,7 +176,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
           {/* LEFT — desktop journey rail */}
-          <div className="lg:col-span-3">
+          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-2" : "lg:col-span-3"}>
             <JourneyRail
               steps={activeSteps}
               activeIndex={safeCursor}
@@ -184,7 +184,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
           </div>
 
           {/* CENTER — active step */}
-          <div className="lg:col-span-5">
+          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-7" : "lg:col-span-5"}>
             {safeCursor > 0 && (
               <button
                 onClick={back}
@@ -238,7 +238,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
           </div>
 
           {/* RIGHT — summary panel */}
-          <div className="lg:col-span-4">
+          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-3" : "lg:col-span-4"}>
             <SummaryPanel state={state} currentStepId={current.id} />
           </div>
         </div>
