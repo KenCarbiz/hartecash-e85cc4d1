@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   type LucideIcon,
 } from "lucide-react";
+import DOMPurify from "dompurify";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig, type AboutMilestone, type AboutValue } from "@/hooks/useSiteConfig";
@@ -27,28 +28,27 @@ const ICON_MAP: Record<string, LucideIcon> = {
   HandshakeIcon, Shield, Clock, Award, Heart, Star, CheckCircle, Users, Zap, Target, Smile, ThumbsUp,
 };
 
-/** Sanitize HTML to only allow safe tags and strip event handlers / scripts. */
-const ALLOWED_TAGS = new Set([
+/**
+ * Sanitize admin-supplied HTML using DOMPurify (battle-tested).
+ * Replaces an earlier regex-based sanitizer that had several known XSS
+ * bypass vectors (no-leading-whitespace `on*` handlers, src/formaction
+ * javascript: URIs, etc.). DOMPurify handles all of these correctly.
+ */
+const ALLOWED_TAGS = [
   "p", "br", "strong", "em", "b", "i", "u", "a",
   "h1", "h2", "h3", "h4", "h5", "h6",
   "ul", "ol", "li", "span", "div", "blockquote",
-]);
+];
+const ALLOWED_ATTR = ["href", "target", "rel", "class"];
 
 function sanitizeHtml(html: string): string {
-  // Remove <script> blocks entirely
-  let cleaned = html.replace(/<script[\s\S]*?<\/script>/gi, "");
-  // Remove <style> blocks
-  cleaned = cleaned.replace(/<style[\s\S]*?<\/style>/gi, "");
-  // Remove event handlers (on*)
-  cleaned = cleaned.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "");
-  // Remove javascript: URLs
-  cleaned = cleaned.replace(/href\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi, "");
-  // Remove disallowed tags but keep their content
-  cleaned = cleaned.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (match, tagName) => {
-    if (ALLOWED_TAGS.has(tagName.toLowerCase())) return match;
-    return "";
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS,
+    ALLOWED_ATTR,
+    ALLOW_DATA_ATTR: false,
+    FORBID_TAGS: ["style", "script", "iframe", "object", "embed", "base", "form"],
+    FORBID_ATTR: ["style", "srcset", "formaction", "xlink:href"],
   });
-  return cleaned;
 }
 
 const DEFAULT_MILESTONES: AboutMilestone[] = [
