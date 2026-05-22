@@ -321,9 +321,9 @@ const MarketSlide = () => {
     gray:   "bg-[#F4F6FA] text-[#53627A]",
   };
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-5">
-      <div>
-        <div className="rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] to-white p-4">
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-4 h-full">
+      <div className="flex flex-col gap-2 min-h-0">
+        <div className="rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] to-white p-3">
           <div className="flex items-center justify-between">
             <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">30-Day Trend</div>
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2 py-0.5 rounded-full">
@@ -331,12 +331,27 @@ const MarketSlide = () => {
             </span>
           </div>
           <Mini />
-          <div className="mt-2 flex items-center gap-2 text-[10px] text-[#8893A8]">
+          <div className="mt-1.5 flex items-center gap-2 text-[10px] text-[#8893A8]">
             <Activity className="w-3 h-3" /> Pricing refreshed 2 hrs ago
           </div>
         </div>
 
-        <div className="mt-3 rounded-2xl border border-[#EEF0F4] bg-white px-3 py-2.5 flex items-center gap-3 overflow-hidden">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl border border-[#EEF0F4] bg-white p-2 text-center">
+            <div className="text-[9.5px] uppercase tracking-wide text-[#8893A8] font-semibold">Demand</div>
+            <div className="text-[13px] font-extrabold text-[#0F7A3E] mt-0.5">High</div>
+          </div>
+          <div className="rounded-xl border border-[#EEF0F4] bg-white p-2 text-center">
+            <div className="text-[9.5px] uppercase tracking-wide text-[#8893A8] font-semibold">Regional Rank</div>
+            <div className="text-[13px] font-extrabold text-[#06194A] mt-0.5">Top 12%</div>
+          </div>
+          <div className="rounded-xl border border-[#EEF0F4] bg-white p-2 text-center">
+            <div className="text-[9.5px] uppercase tracking-wide text-[#8893A8] font-semibold">Avg DoM</div>
+            <div className="text-[13px] font-extrabold text-[#06194A] mt-0.5">11 days</div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-[#EEF0F4] bg-white px-3 py-2 flex items-center gap-3 overflow-hidden">
           <span className="relative flex w-2 h-2 shrink-0">
             <span className="absolute inset-0 rounded-full bg-[#16A34A] opacity-60 animate-ping" />
             <span className="relative rounded-full w-2 h-2 bg-[#16A34A]" />
@@ -347,7 +362,7 @@ const MarketSlide = () => {
               <motion.div key={t}
                 initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -14, opacity: 0 }}
                 transition={{ duration: 0.35 }}
-                className="absolute inset-0 flex items-center gap-2 text-[12.5px] text-[#06194A]">
+                className="absolute inset-0 flex items-center gap-2 text-[12px] text-[#06194A]">
                 <span className={`inline-flex items-center justify-center w-5 h-5 rounded-md ${TONE_BG[item.tone]}`}>
                   <Icon className="w-3 h-3" />
                 </span>
@@ -358,13 +373,13 @@ const MarketSlide = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#E0E7FF] p-4">
+      <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#E0E7FF] p-3.5 min-h-0">
         <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
           <Sparkles className="w-3 h-3" /> Best selling window
         </div>
-        <div className="text-[18px] font-bold text-[#06194A] mt-1 leading-snug">Next 7–14 days</div>
-        <div className="text-[11px] text-[#53627A] mt-1">May maximize your payout potential.</div>
-        <ul className="mt-3 space-y-1.5 text-[11.5px]">
+        <div className="text-[16px] font-bold text-[#06194A] mt-1 leading-snug">Next 7–14 days</div>
+        <div className="text-[11px] text-[#53627A] mt-0.5">May maximize your payout potential.</div>
+        <ul className="mt-2 space-y-1 text-[11px]">
           <li className="flex items-start gap-1.5 text-[#06194A]"><MapPin className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Hartford metro — high demand</li>
           <li className="flex items-start gap-1.5 text-[#06194A]"><Star className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Top 12% offer regionally</li>
           <li className="flex items-start gap-1.5 text-[#06194A]"><Clock className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Avg. days on market: 11</li>
