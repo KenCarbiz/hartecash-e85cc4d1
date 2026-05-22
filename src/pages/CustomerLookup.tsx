@@ -14,7 +14,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Search, Car, ChevronRight, ArrowRight, ShieldCheck,
-  FileText, Wallet, CalendarCheck, Eye, HelpCircle, LifeBuoy, Mail,
+  Receipt, FileUp, DollarSign, Truck, HelpCircle, LifeBuoy, Mail,
+  LockKeyhole,
 } from "lucide-react";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -86,10 +87,10 @@ const CustomerLookup = () => {
   };
 
   const reassurance = useMemo(() => ([
-    { icon: Eye, label: "View your offer" },
-    { icon: FileText, label: "Upload documents" },
-    { icon: Wallet, label: "Track payout" },
-    { icon: CalendarCheck, label: "Schedule pickup" },
+    { icon: Receipt, label: "View your offer" },
+    { icon: FileUp, label: "Upload documents" },
+    { icon: DollarSign, label: "Track payout" },
+    { icon: Truck, label: "Schedule pickup" },
   ]), []);
 
   return (
@@ -137,8 +138,8 @@ const CustomerLookup = () => {
         <div className="w-full max-w-lg mx-auto">
           {/* Heading — emotional continuity with the transaction. */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5 bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_10px_28px_-12px_rgba(79,70,229,0.55)]">
-              <ShieldCheck className="w-6 h-6 text-white" strokeWidth={2} />
+            <div className="inline-flex items-center justify-center w-[52px] h-[52px] rounded-2xl mb-5 bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_10px_28px_-12px_rgba(79,70,229,0.55)] ring-4 ring-[#4F46E5]/10">
+              <LockKeyhole className="w-7 h-7 text-white" strokeWidth={2} />
             </div>
             <h1 className="text-3xl lg:text-[38px] font-bold text-foreground leading-[1.15] tracking-tight mb-3">
               Continue Your Vehicle Sale
@@ -153,13 +154,13 @@ const CustomerLookup = () => {
             <button
               type="button"
               onClick={() => navigate(`/my-submission/${lastSession.token}`)}
-              className="w-full mb-5 rounded-2xl border border-[#C7D2FE] bg-gradient-to-br from-[#EEF0FF] via-white to-white p-5 text-left flex items-center gap-4 hover:shadow-[0_12px_28px_-14px_rgba(79,70,229,0.35)] transition-shadow group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/40"
+              className="w-full mb-5 rounded-2xl border border-[#C7D2FE] bg-gradient-to-br from-[#EEF0FF] via-white to-white p-5 text-left flex items-center gap-4 hover:shadow-[0_12px_28px_-14px_rgba(79,70,229,0.35)] hover:border-[#4F46E5]/30 transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/40"
             >
-              <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center">
+              <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_6px_16px_-6px_rgba(79,70,229,0.45)] grid place-items-center">
                 <Car className="w-5 h-5 text-white" strokeWidth={2} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#4F46E5] mb-0.5">
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#4F46E5] mb-1">
                   Welcome back
                 </p>
                 <p className="text-sm font-semibold text-foreground truncate capitalize">
@@ -219,19 +220,21 @@ const CustomerLookup = () => {
             </button>
 
             <p className="flex items-center justify-center gap-1.5 text-xs text-foreground/55">
-              <ShieldCheck className="w-3.5 h-3.5" />
+              <LockKeyhole className="w-3.5 h-3.5 text-[#4F46E5]" strokeWidth={2} />
               Secure access · Your info is never shared
             </p>
           </form>
 
           {/* Reassurance row — transaction workspace, not a generic portal. */}
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
             {reassurance.map(({ icon: Icon, label }) => (
               <div
                 key={label}
-                className="flex items-center gap-2 rounded-xl border border-border/40 bg-white/70 px-3 py-2.5"
+                className="group flex items-center gap-3 rounded-xl border border-border/40 bg-white px-3.5 py-3 hover:border-[#4F46E5]/25 hover:bg-[#F5F3FF] hover:shadow-[0_8px_20px_-10px_rgba(79,70,229,0.25)] transition-all cursor-default"
               >
-                <Icon className="w-4 h-4 text-[#4F46E5] shrink-0" strokeWidth={2} />
+                <div className="shrink-2 w-9 h-9 rounded-lg bg-[#EEF0FF] group-hover:bg-[#DDD6FE]/60 grid place-items-center transition-colors">
+                  <Icon className="w-4 h-4 text-[#4F46E5]" strokeWidth={2} />
+                </div>
                 <span className="text-[12px] font-medium text-foreground/75 leading-tight">
                   {label}
                 </span>
@@ -277,7 +280,7 @@ const CustomerLookup = () => {
                     onClick={() => navigate(`/my-submission/${r.token}`)}
                     className="w-full rounded-2xl border border-border/60 bg-white p-5 hover:border-[#4F46E5]/40 hover:shadow-[0_12px_28px_-14px_rgba(79,70,229,0.25)] transition-all text-left flex items-center gap-4 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/30"
                   >
-                    <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center">
+                    <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_6px_16px_-6px_rgba(79,70,229,0.45)] grid place-items-center">
                       <Car className="w-5 h-5 text-white" strokeWidth={2} />
                     </div>
                     <div className="flex-1 min-w-0">
