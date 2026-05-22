@@ -236,7 +236,7 @@ const PhotoGallerySlide = () => {
               {reviewCount > 0 && <> · <span className="text-[#B45309] font-semibold">{reviewCount} in review</span></>}
             </div>
           </div>
-          <ul className="mt-1.5 space-y-1 flex-1 min-h-0 overflow-y-auto pr-0.5">
+          <ul className="mt-1.5 space-y-1 flex-1 min-h-0 overflow-y-auto pr-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {PHOTO_CATEGORIES.map((p, i) => {
               const status = PHOTO_STATUS[p.id];
               return (
