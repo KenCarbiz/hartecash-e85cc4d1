@@ -29,7 +29,8 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
 
   const strength = valuation ? strengthLabel[valuation.marketStrength] : null;
   const original = valuation?.firm ?? null;
-  const boosted = state.boost.boostedFirm;
+  const requiredPhotoReviewComplete = state.boost.analyzed && state.boost.uploadedCategories.length >= 6;
+  const boosted = requiredPhotoReviewComplete ? state.boost.boostedFirm : null;
   const showFirm = state.offerUnlocked && original;
   const isAccepted = state.branch === "accept";
   const todosDone = state.todos.filter((t) => t.done).length;
