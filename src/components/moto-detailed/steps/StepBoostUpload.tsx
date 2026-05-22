@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Camera, Check, Loader2, AlertTriangle, RefreshCw,
   ShieldCheck, Smartphone, QrCode, Send, X, Sparkles,
+  TrendingUp, ScanSearch, ArrowRight, ArrowUpRight,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { PhotoQuality, PhotoQualityResult, StepContext } from "../types";
