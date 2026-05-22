@@ -259,8 +259,9 @@ const ProfileChecklist = ({ state, inline = false }: { state: JourneyState; inli
     { label: "Market data connected", done: !!state.valuation },
     { label: "Condition", done: !!state.condition },
     { label: "Usage selected", done: !!state.usage },
+    { label: "Mileage added", done: !!state.contact.mileage },
+    { label: "Ownership status", done: !!state.contact.ownership },
     { label: "Contact info", done: !!(state.contact.firstName && state.contact.email && state.contact.phone) },
-    { label: "Mileage", done: !!state.contact.mileage },
   ];
   const activeIdx = items.findIndex((i) => !i.done);
   const list = (
