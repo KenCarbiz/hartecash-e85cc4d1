@@ -75,9 +75,14 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
           )}
         </div>
         <div className="p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Your Vehicle
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Offer Profile
+            </p>
+            <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(262_83%_58%/0.08)] px-2 py-0.5 text-[10px] font-semibold text-[hsl(262_60%_45%)]">
+              {showFirm ? "Offer ready" : "Building your offer"}
+            </span>
+          </div>
           <p className="mt-1 text-lg font-semibold text-slate-900">
             {vehicle.year} {vehicle.make} {vehicle.model}
           </p>
@@ -90,6 +95,9 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
         </div>
 
       </div>
+
+      {/* Live progress checklist — feels like an offer profile being built */}
+      {!isAccepted && <ProfileChecklist state={state} />}
 
       {/* Pre-offer estimated range */}
       {valuation && !showFirm && (
