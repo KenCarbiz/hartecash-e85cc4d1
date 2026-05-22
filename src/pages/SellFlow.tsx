@@ -62,37 +62,35 @@ const SellFlow = () => {
   const [state, setState] = useState<MotoFlowState>(emptyMotoFlowState);
   const [revealMode, setRevealMode] = useState<RevealMode>("contact_first");
 
-  // Dealer-selectable journey template. Defaults to the existing
-  // ultra-minimal "moto" flow; "moto_detailed" routes to the new
-  // premium guided journey engine without touching the original.
-  const journeyTemplate =
-    ((config as any).customer_journey_template as
-      | "moto"
-      | "moto_detailed"
-      | undefined) ?? "moto";
-  const detailedOfferMode =
-    ((config as any).moto_detailed_offer_display_mode as
-      | "before_contact_info"
-      | "after_contact_info"
-      | undefined) ?? "after_contact_info";
-
-  if (journeyTemplate === "moto_detailed") {
-    return (
-      <>
-        <SEO
-          title={`Get an Instant Vehicle Valuation | ${config.dealership_name}`}
-          description={`Get a guided, premium offer from ${config.dealership_name}. See your estimated value in seconds.`}
-          path="/sell"
-        />
-        <MotoDetailedFlow offerDisplayMode={detailedOfferMode} />
-      </>
-    );
-  }
-
+  // Snap-to-top on every step transition. PO direction: "no lazy
+  // pages in the customer flow" — a long step (condition with all
+  // sub-questions, contact form) that ends scrolled down must not
+  // bleed that scroll position into the next step. Instant scroll
+  // (not smooth) — the step's own enter animation handles the visual
+  // transition. requestAnimationFrame defers the scroll to after the
+  // new step's DOM commit so it lands on fresh content.
+  //
+  // NOTE: kept ABOVE the journeyTemplate early-return so all hooks
+  // run in the same order on every render (rules-of-hooks). When the
+  // Detail journey owns rendering, this hook is harmless — it just
+  // re-runs when state.step changes (which the Detail flow never
+  // touches, so it fires once on mount and is a no-op thereafter).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const id = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [state.step]);
 
   // Load the dealer's contact placement preference once on mount.
   // Soft-fail to contact_first if offer_settings isn't yet populated
   // for this rooftop — that matches the rest of the flow's default.
+  //
+  // NOTE: kept ABOVE the journeyTemplate early-return so this hook
+  // runs in the same order on every render (rules-of-hooks). It's a
+  // soft side-effect (just sets revealMode); harmless when the
+  // Detail flow is active and unused.
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -130,6 +128,30 @@ const SellFlow = () => {
     },
     [revealMode],
   );
+
+  // Dealer-selectable journey template. Declared AFTER all hooks so
+  // the early-return below doesn't change hook order between renders
+  // (rules-of-hooks). Defaults to the existing ultra-minimal "moto"
+  // flow; "moto_detailed" routes to the new premium guided engine.
+  const journeyTemplate =
+    ((config as { customer_journey_template?: "moto" | "moto_detailed" })
+      .customer_journey_template) ?? "moto";
+  const detailedOfferMode =
+    ((config as { moto_detailed_offer_display_mode?: "before_contact_info" | "after_contact_info" })
+      .moto_detailed_offer_display_mode) ?? "after_contact_info";
+
+  if (journeyTemplate === "moto_detailed") {
+    return (
+      <>
+        <SEO
+          title={`Get an Instant Vehicle Valuation | ${config.dealership_name}`}
+          description={`Get a guided, premium offer from ${config.dealership_name}. See your estimated value in seconds.`}
+          path="/sell"
+        />
+        <MotoDetailedFlow offerDisplayMode={detailedOfferMode} />
+      </>
+    );
+  }
 
   return (
     <MotoShell>

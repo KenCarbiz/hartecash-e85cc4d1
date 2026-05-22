@@ -56,6 +56,24 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
     };
   }, [current?.id, safeCursor, preview]);
 
+  // ── Snap-to-top on every step transition ──────────────────────────
+  // PO direction: "no lazy pages in the customer flow." Without this,
+  // when a tall step (contact form, condition with all sub-questions)
+  // ends with the user scrolled mid-page, the next step starts at
+  // that same scroll position and reads as broken. Runs in a
+  // requestAnimationFrame so the scroll fires AFTER React has
+  // committed the new step's DOM, otherwise the browser sometimes
+  // races and the scroll lands on stale content. Instant (not
+  // smooth) — the step's own enter animation handles the visual
+  // transition; a smooth scroll on top of it feels janky.
+  useEffect(() => {
+    if (!current || typeof window === "undefined") return;
+    const id = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [current?.id, safeCursor]);
+
   // Unmount = true abandonment (tab close / nav away).
   useEffect(() => {
     if (preview) return;
