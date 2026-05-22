@@ -76,8 +76,8 @@ const SLIDE_HEIGHT = "h-[280px] md:h-[300px]";
 
 /* ---------- 1. Vehicle Overview --------------------------------- */
 const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () => void }) => (
-  <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-5 items-center">
-    <div className="relative h-[180px] md:h-[230px] flex items-center justify-center overflow-hidden group">
+  <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-4 items-center h-full">
+    <div className="relative h-[140px] md:h-[200px] flex items-center justify-center overflow-hidden group">
       <div className="absolute inset-0 grid place-items-center pointer-events-none">
         <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
       </div>
@@ -85,31 +85,31 @@ const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () 
         src={vehicleHero}
         alt={`${MOCK.vehicle.year} ${MOCK.vehicle.make} ${MOCK.vehicle.model}`}
         loading="lazy"
-        className="relative z-10 max-h-full w-auto object-contain scale-[1.28] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.35]"
+        className="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_18px_14px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.24]"
       />
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[68%] h-[12px] rounded-[50%] bg-black/25 blur-md z-0" />
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[68%] h-[10px] rounded-[50%] bg-black/25 blur-md z-0" />
     </div>
 
-    <div>
-      <h2 className="text-[22px] font-bold leading-tight tracking-tight text-[#06194A]">
+    <div className="min-w-0">
+      <h2 className="text-[19px] font-bold leading-tight tracking-tight text-[#06194A] truncate">
         {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
       </h2>
-      <p className="text-sm text-[#53627A] mt-1">
+      <p className="text-[12px] text-[#53627A] mt-0.5 truncate">
         {MOCK.vehicle.miles} mi · {MOCK.vehicle.engine} · {MOCK.vehicle.body} · {MOCK.vehicle.drivetrain}
       </p>
-      <div className="mt-2 flex items-center gap-2 text-xs text-[#53627A]">
-        <span className="font-mono tracking-tight">{MOCK.vehicle.vin}</span>
-        <button onClick={onCopy} aria-label="Copy VIN" className="p-1 rounded-md hover:bg-[#F4F6FA] transition">
+      <div className="mt-1 flex items-center gap-2 text-[11px] text-[#53627A]">
+        <span className="font-mono tracking-tight truncate">{MOCK.vehicle.vin}</span>
+        <button onClick={onCopy} aria-label="Copy VIN" className="p-1 rounded-md hover:bg-[#F4F6FA] transition shrink-0">
           {copied ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Copy className="w-3.5 h-3.5" />}
         </button>
       </div>
 
-      <div className="mt-4 rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] via-[#F2FBF6] to-[#F0FAF4] px-4 py-3">
+      <div className="mt-2.5 rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] via-[#F2FBF6] to-[#F0FAF4] px-3.5 py-2.5">
         <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#53627A]">Estimated Value Range</div>
-        <div className="text-[24px] font-extrabold leading-none text-[#06194A] mt-1 whitespace-nowrap tracking-tight">
+        <div className="text-[20px] font-extrabold leading-none text-[#06194A] mt-1 whitespace-nowrap tracking-tight">
           {fmt(MOCK.range.low)} <span className="text-[#94A3B8] font-bold">–</span> {fmt(MOCK.range.high)}
         </div>
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-1.5 flex items-center gap-2">
           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2 py-0.5 rounded-full">
             <TrendingUp className="w-3 h-3" /> Strong Market
           </span>
