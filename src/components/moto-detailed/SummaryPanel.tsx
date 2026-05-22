@@ -50,6 +50,8 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
             />
           ) : (
             <>
+              {/* Soft light gray/blue gradient background */}
+              <div className="absolute inset-1 rounded-xl bg-gradient-to-br from-slate-50 via-white to-[hsl(215_40%_96%)]" />
               {/* Subtle dot grid for premium feel */}
               <div
                 className="absolute inset-0 opacity-[0.35]"
@@ -59,11 +61,14 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
                   backgroundSize: "14px 14px",
                 }}
               />
-              <div className="relative flex h-full items-center justify-center">
+              <div className="relative flex h-full flex-col items-center justify-center">
                 <Car
-                  className="h-20 w-20 text-[hsl(262_60%_45%)] opacity-70"
+                  className="h-16 w-16 text-[hsl(262_60%_45%)] opacity-60"
                   strokeWidth={1.25}
                 />
+                <p className="mt-3 text-xs font-medium text-slate-400">
+                  Vehicle photo coming soon
+                </p>
               </div>
               <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-white to-transparent" />
             </>

@@ -6,7 +6,7 @@ import type { StepContext } from "../types";
 const StepUsage = ({ state, update, next }: StepContext) => {
   const sel = state.usage;
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Card
           active={sel === "trade"}
@@ -42,10 +42,10 @@ const Card = ({
     type="button"
     whileTap={{ scale: 0.99 }}
     onClick={onClick}
-    className={`group relative flex h-full min-h-[156px] cursor-pointer flex-col rounded-2xl border p-5 text-left transition-all ${
+    className={`group relative flex h-full min-h-[156px] cursor-pointer flex-col rounded-2xl border p-5 text-left transition-all duration-200 ${
       active
         ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%/0.05)] shadow-[0_8px_24px_-12px_hsl(262_83%_58%/0.45),0_0_0_4px_hsl(262_83%_58%/0.08)]"
-        : "border-slate-200 bg-white hover:border-[hsl(262_83%_58%/0.5)] hover:bg-[hsl(262_83%_58%/0.025)] hover:shadow-[0_4px_12px_-6px_rgba(15,23,42,0.1)]"
+        : "border-slate-200 bg-white hover:border-[hsl(262_83%_58%/0.55)] hover:bg-[hsl(262_83%_58%/0.035)] hover:shadow-[0_8px_24px_-12px_hsl(262_83%_58%/0.18)] hover:-translate-y-[1px]"
     }`}
   >
     {/* Top row — icon + selection indicator */}
