@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { ShieldCheck, TrendingUp, CheckCircle2, Calendar, Camera, Car, Lock, BadgeCheck, Circle } from "lucide-react";
+import { ShieldCheck, TrendingUp, CheckCircle2, Calendar, Camera, Lock, BadgeCheck, Circle } from "lucide-react";
+import VehicleImageCard from "./VehicleImageCard";
 import type { JourneyState } from "./types";
 
 const fmt = (n: number) =>
@@ -58,37 +59,11 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
           </div>
 
           {/* Vehicle image */}
-          <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-[hsl(262_83%_58%/0.08)]">
-            {vehicle.imageUrl ? (
-              <img
-                src={vehicle.imageUrl}
-                alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <>
-                <div className="absolute inset-1 rounded-xl bg-gradient-to-br from-slate-50 via-white to-[hsl(215_40%_96%)]" />
-                <div
-                  className="absolute inset-0 opacity-[0.35]"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(hsl(215 20% 65% / 0.35) 1px, transparent 1px)",
-                    backgroundSize: "14px 14px",
-                  }}
-                />
-                <div className="relative flex h-full flex-col items-center justify-center">
-                  <Car
-                    className="h-14 w-14 text-[hsl(262_60%_45%)] opacity-60"
-                    strokeWidth={1.25}
-                  />
-                  <p className="mt-2 text-[11px] font-medium text-slate-400">
-                    Vehicle image pending
-                  </p>
-                </div>
-                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-white to-transparent" />
-              </>
-            )}
-          </div>
+          <VehicleImageCard
+            imageUrl={vehicle.imageUrl}
+            make={vehicle.make}
+            model={vehicle.model}
+          />
 
           {/* Vehicle name */}
           <div className="px-5 pt-4">
@@ -159,44 +134,70 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+          className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-16px_rgba(15,23,42,0.12)]"
         >
-          <p className="text-xs uppercase tracking-wide text-zinc-500">
-            {boosted ? "Updated Offer" : "Firm offer"}
-          </p>
-          <p className="mt-1 text-3xl font-semibold text-zinc-900">{fmt(boosted ?? original!)}</p>
+          {/* Vehicle image header — keeps the customer's car visible
+              through Offer Ready, Photo Review, Updated Offer, and
+              Accepted screens. */}
+          <VehicleImageCard
+            imageUrl={vehicle.imageUrl}
+            make={vehicle.make}
+            model={vehicle.model}
+          />
 
-          {boosted && (
-            <>
-              <div className="mt-1 flex items-center gap-2 text-xs">
-                <span className="text-zinc-400 line-through">{fmt(original!)}</span>
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
-                  +{fmt(boosted - original!)}
-                </span>
-              </div>
-              <p className="mt-2 text-[11px] font-medium text-emerald-700">Photo review complete</p>
-            </>
-          )}
+          <div className="border-t border-slate-100 px-5 pb-5 pt-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Your vehicle
+            </p>
+            <p className="mt-0.5 text-base font-semibold text-slate-900">
+              {vehicle.year} {vehicle.make} {vehicle.model}
+            </p>
+            {vehicle.trim && <p className="text-sm text-slate-500">{vehicle.trim}</p>}
+            {state.contact.mileage && (
+              <p className="mt-0.5 text-xs text-slate-500">
+                {Number(state.contact.mileage).toLocaleString("en-US")} mi
+              </p>
+            )}
 
-          {isAccepted && (
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-              <CheckCircle2 className="h-3 w-3" /> Review Complete
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <p className="text-xs uppercase tracking-wide text-zinc-500">
+                {boosted ? "Updated Offer" : "Firm offer"}
+              </p>
+              <p className="mt-1 text-3xl font-semibold text-zinc-900">{fmt(boosted ?? original!)}</p>
+
+              {boosted && (
+                <>
+                  <div className="mt-1 flex items-center gap-2 text-xs">
+                    <span className="text-zinc-400 line-through">{fmt(original!)}</span>
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                      +{fmt(boosted - original!)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[11px] font-medium text-emerald-700">Photo review complete</p>
+                </>
+              )}
+
+              {isAccepted && (
+                <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  <CheckCircle2 className="h-3 w-3" /> Review Complete
+                </div>
+              )}
+
+              {state.appointment?.timeSlot && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-zinc-700">
+                  <Calendar className="h-4 w-4 text-zinc-400" />
+                  <span>{state.appointment.mode === "pickup" ? "Pickup" : "Visit"} · {state.appointment.timeSlot}</span>
+                </div>
+              )}
+
+              {state.boost.uploadedCategories.length > 0 && (
+                <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
+                  <Camera className="h-3.5 w-3.5" />
+                  {state.boost.uploadedCategories.length} photos reviewed
+                </div>
+              )}
             </div>
-          )}
-
-          {state.appointment?.timeSlot && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-zinc-700">
-              <Calendar className="h-4 w-4 text-zinc-400" />
-              <span>{state.appointment.mode === "pickup" ? "Pickup" : "Visit"} · {state.appointment.timeSlot}</span>
-            </div>
-          )}
-
-          {state.boost.uploadedCategories.length > 0 && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
-              <Camera className="h-3.5 w-3.5" />
-              {state.boost.uploadedCategories.length} photos reviewed
-            </div>
-          )}
+          </div>
         </motion.div>
       )}
 
