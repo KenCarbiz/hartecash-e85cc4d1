@@ -226,9 +226,9 @@ const Row = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-const Trust = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
-  <div className="flex items-center gap-1.5 rounded-lg border border-slate-100 bg-white px-2.5 py-2 text-[11px] font-medium text-slate-700">
-    <span className="text-emerald-600">{icon}</span>
+const TrustItem = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
+  <div className="flex items-center gap-1.5 text-[11px] font-medium text-[hsl(210_30%_28%)]">
+    <span className="text-[hsl(160_55%_38%)]">{icon}</span>
     {label}
   </div>
 );
