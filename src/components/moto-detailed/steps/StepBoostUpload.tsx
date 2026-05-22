@@ -38,15 +38,11 @@ const OPTIONAL: Category[] = [
 ];
 const ALL = [...REQUIRED, ...OPTIONAL];
 
-const ANALYZING_MESSAGES = [
-  "Reviewing exterior condition…",
-  "Checking body panel consistency…",
-  "Reviewing wheel and tire condition…",
-  "Reviewing interior wear patterns…",
-  "Comparing against live market data…",
-  "Detecting trim and package options…",
-  "Calculating market adjustment…",
-  "Finalizing updated valuation…",
+const REVIEW_STEPS = [
+  "Checking photo clarity",
+  "Reviewing vehicle condition",
+  "Comparing live market data",
+  "Preparing your updated offer",
 ];
 
 const YELLOW_REASONS = [
