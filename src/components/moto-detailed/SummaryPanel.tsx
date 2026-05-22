@@ -299,9 +299,13 @@ const ProfileChecklist = ({
     <ul className={`${inline ? "mt-2.5" : "mt-3"} space-y-2`}>
       {items.map((it, i) => {
         const isActive = i === activeIdx;
+        // Active beats done — if the engine is on this step right
+        // now, render it purple even if the field already has a
+        // default value (e.g. condition seeded as "good").
+        const showDone = it.done && !isActive;
         return (
           <li key={it.label} className="flex items-center gap-2.5 text-[13px]">
-            {it.done ? (
+            {showDone ? (
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white">
                 <CheckCircle2 className="h-3 w-3" strokeWidth={2.75} />
               </span>
@@ -316,10 +320,10 @@ const ProfileChecklist = ({
             )}
             <span
               className={
-                it.done
+                showDone
                   ? "text-slate-600"
                   : isActive
-                    ? "font-medium text-slate-900"
+                    ? "font-semibold text-[hsl(262_60%_45%)]"
                     : "text-slate-400"
               }
             >
