@@ -7,13 +7,19 @@ import { trackCtaClicked } from "../analytics";
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
+const REQUIRED_PHOTO_IDS = ["front", "rear", "driver", "passenger", "interior", "odometer"];
+
 /**
  * Post-acceptance confirmation + scheduling + personalized checklist.
  * Modal-quality moment — celebrates the lock-in, then immediately
  * gives the customer a next action without overwhelming.
  */
 const StepAccepted = ({ state, update }: StepContext) => {
-  const firm = state.boost.boostedFirm ?? state.valuation?.firm ?? 0;
+  const requiredPhotoReviewComplete =
+    state.boost.analyzed && REQUIRED_PHOTO_IDS.every((id) => state.boost.uploadedCategories.includes(id));
+  const firm = requiredPhotoReviewComplete && state.boost.boostedFirm
+    ? state.boost.boostedFirm
+    : state.valuation?.firm ?? 0;
   const [pickedSlot, setPickedSlot] = useState<string | null>(state.appointment?.timeSlot ?? null);
   const [mode, setMode] = useState<JourneyAppointment["mode"]>(state.appointment?.mode ?? "appointment");
 

@@ -5,6 +5,8 @@ import type { JourneyState } from "./types";
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
+const REQUIRED_PHOTO_IDS = ["front", "rear", "driver", "passenger", "interior", "odometer"];
+
 const strengthLabel = {
   soft: { text: "Soft Market", className: "bg-slate-100 text-slate-700" },
   balanced: { text: "Balanced Market", className: "bg-[hsl(262_83%_58%/0.1)] text-[hsl(262_60%_45%)]" },
@@ -29,7 +31,9 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
 
   const strength = valuation ? strengthLabel[valuation.marketStrength] : null;
   const original = valuation?.firm ?? null;
-  const boosted = state.boost.boostedFirm;
+  const requiredPhotoReviewComplete =
+    state.boost.analyzed && REQUIRED_PHOTO_IDS.every((id) => state.boost.uploadedCategories.includes(id));
+  const boosted = requiredPhotoReviewComplete ? state.boost.boostedFirm : null;
   const showFirm = state.offerUnlocked && original;
   const isAccepted = state.branch === "accept";
   const todosDone = state.todos.filter((t) => t.done).length;
