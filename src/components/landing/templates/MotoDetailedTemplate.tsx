@@ -2,6 +2,8 @@ import SEO from "@/components/SEO";
 import MotoDetailedFlow from "@/components/moto-detailed/MotoDetailedFlow";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import BrandStructuredData from "@/components/BrandStructuredData";
+import { MotoBelowFold, MotoMobileBelowFold } from "../sharedSections";
+import StickyOfferCTA from "@/components/moto-sections/StickyOfferCTA";
 import type { JourneyPresetId } from "@/components/moto-detailed/presets";
 
 /**
@@ -11,6 +13,23 @@ import type { JourneyPresetId } from "@/components/moto-detailed/presets";
  * site_config and renders MotoDetailedFlow accordingly. Falls back
  * to safe defaults so a half-provisioned tenant still gets a
  * working premium flow instead of a blank screen.
+ *
+ * Below-fold chrome mirrors MotoTemplate (the original Instant Offer)
+ * — both should present the same landing page experience and only
+ * differ in the appraisal flow itself. Per product-owner direction
+ * ("the new Detail version is missing all the lower information on
+ * the landing page that's there for the earlier version — please
+ * make them the same").
+ *
+ * DESKTOP (md+) — 4 sections: HowItWorks → ValueTracker → FAQ → CTA
+ * MOBILE (<md)  — 3 sections (watered-down): HowItWorks → FAQ → CTA
+ *
+ * StickyOfferCTA is desktop-only; mobile gets the in-flow CTAs from
+ * MotoShell so adding another floating pill would break thumb-zone
+ * ergonomics.
+ *
+ * Footer is owned by Index.tsx (BrandFooter for Moto templates,
+ * SiteFooter elsewhere) — mounting one here would double-render.
  */
 const MotoDetailedTemplate = () => {
   const { config } = useSiteConfig();
@@ -33,6 +52,19 @@ const MotoDetailedTemplate = () => {
         path="/sell"
       />
       <MotoDetailedFlow preset={preset} offerDisplayMode={offerMode} />
+
+      {/* Below-fold chrome — same set as MotoTemplate so the two
+          journeys present an identical landing experience. */}
+      <div className="hidden md:block bg-background">
+        <MotoBelowFold />
+      </div>
+      <div className="md:hidden bg-background">
+        <MotoMobileBelowFold />
+      </div>
+
+      {/* Sticky desktop pill — second-look visitor scrolling back up
+          is never more than one click from the form. */}
+      <StickyOfferCTA />
     </main>
   );
 };
