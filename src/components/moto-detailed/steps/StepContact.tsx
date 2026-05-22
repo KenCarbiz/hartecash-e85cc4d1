@@ -1,15 +1,35 @@
+import { useState } from "react";
 import { Lock } from "lucide-react";
 import PrimaryCTA from "../PrimaryCTA";
 import type { StepContext } from "../types";
 import { trackContactSubmitted, trackCtaClicked } from "../analytics";
 
+type FieldKey = "firstName" | "lastName" | "email" | "phone" | "zip";
+
+const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+const isPhone = (v: string) => v.replace(/\D/g, "").length >= 10;
+
 const StepContact = ({ state, update, next }: StepContext) => {
   const c = state.contact;
+  const [touched, setTouched] = useState<Record<FieldKey, boolean>>({
+    firstName: false, lastName: false, email: false, phone: false, zip: false,
+  });
   const set = (patch: Partial<typeof c>) => update({ contact: { ...c, ...patch } });
-  const valid = c.firstName && c.lastName && c.email && c.phone;
+  const touch = (k: FieldKey) => setTouched((t) => ({ ...t, [k]: true }));
+
+  const errors: Partial<Record<FieldKey, string>> = {
+    firstName: !c.firstName.trim() ? "Required" : undefined,
+    lastName: !c.lastName.trim() ? "Required" : undefined,
+    email: !c.email.trim() ? "Required" : !isEmail(c.email) ? "Enter a valid email" : undefined,
+    phone: !c.phone.trim() ? "Required" : !isPhone(c.phone) ? "Enter a valid phone number" : undefined,
+  };
+  const valid = !errors.firstName && !errors.lastName && !errors.email && !errors.phone;
 
   const onSubmit = () => {
-    if (!valid) return;
+    if (!valid) {
+      setTouched({ firstName: true, lastName: true, email: true, phone: true, zip: true });
+      return;
+    }
     trackCtaClicked("contact", "See My Offer");
     trackContactSubmitted();
     update({ offerUnlocked: true });
@@ -19,16 +39,27 @@ const StepContact = ({ state, update, next }: StepContext) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="First name" value={c.firstName} onChange={(v) => set({ firstName: v })} />
-        <Field label="Last name" value={c.lastName} onChange={(v) => set({ lastName: v })} />
-        <Field label="Email" type="email" value={c.email} onChange={(v) => set({ email: v })} className="sm:col-span-2" />
-        <Field label="Phone" type="tel" value={c.phone} onChange={(v) => set({ phone: v })} />
-        <Field label="ZIP (optional)" value={c.zip} onChange={(v) => set({ zip: v })} />
+        <Field label="First name" value={c.firstName} onChange={(v) => set({ firstName: v })}
+          onBlur={() => touch("firstName")} error={touched.firstName ? errors.firstName : undefined} autoComplete="given-name" />
+        <Field label="Last name" value={c.lastName} onChange={(v) => set({ lastName: v })}
+          onBlur={() => touch("lastName")} error={touched.lastName ? errors.lastName : undefined} autoComplete="family-name" />
+        <Field label="Email" type="email" value={c.email} onChange={(v) => set({ email: v })}
+          onBlur={() => touch("email")} error={touched.email ? errors.email : undefined}
+          className="sm:col-span-2" autoComplete="email" placeholder="you@example.com" />
+        <Field label="Phone" type="tel" value={c.phone} onChange={(v) => set({ phone: v })}
+          onBlur={() => touch("phone")} error={touched.phone ? errors.phone : undefined}
+          autoComplete="tel" placeholder="(555) 555-5555" />
+        <Field label="ZIP (optional)" value={c.zip} onChange={(v) => set({ zip: v })}
+          onBlur={() => touch("zip")} autoComplete="postal-code" placeholder="90210" />
       </div>
 
-      <div className="flex items-start gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 text-sm text-emerald-800">
-        <Lock className="mt-0.5 h-4 w-4 shrink-0" />
-        <span>We never share your information. You'll see your offer on the next screen.</span>
+      <div className="flex items-start gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/70 p-4 text-sm text-emerald-900">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+          <Lock className="h-3.5 w-3.5" />
+        </div>
+        <span className="leading-relaxed">
+          Your information stays secure. We'll only use it to send your offer and help with next steps.
+        </span>
       </div>
 
       <PrimaryCTA onClick={onSubmit} disabled={!valid}>See My Offer</PrimaryCTA>
@@ -37,18 +68,34 @@ const StepContact = ({ state, update, next }: StepContext) => {
 };
 
 const Field = ({
-  label, value, onChange, type = "text", className,
+  label, value, onChange, onBlur, type = "text", className, error, autoComplete, placeholder,
 }: {
-  label: string; value: string; onChange: (v: string) => void; type?: string; className?: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  onBlur?: () => void;
+  type?: string;
+  className?: string;
+  error?: string;
+  autoComplete?: string;
+  placeholder?: string;
 }) => (
   <label className={`block ${className ?? ""}`}>
-    <span className="mb-1.5 block text-sm font-medium text-zinc-700">{label}</span>
+    <span className="mb-1.5 block text-sm font-medium text-slate-800">{label}</span>
     <input
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-base text-zinc-900 outline-none transition-all placeholder:text-zinc-400 focus:border-[hsl(262_83%_58%)] focus:ring-4 focus:ring-[hsl(262_83%_58%/0.1)]"
+      onBlur={onBlur}
+      autoComplete={autoComplete}
+      placeholder={placeholder}
+      className={`h-[52px] w-full rounded-xl border bg-white px-4 text-base text-slate-900 outline-none transition-all placeholder:text-slate-400 ${
+        error
+          ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
+          : "border-[#E6EAF0] focus:border-[hsl(262_83%_58%)] focus:ring-4 focus:ring-[hsl(262_83%_58%/0.12)]"
+      }`}
     />
+    {error && <span className="mt-1 block text-xs font-medium text-red-600">{error}</span>}
   </label>
 );
 
