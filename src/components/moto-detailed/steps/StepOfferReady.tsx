@@ -14,14 +14,13 @@ const DEALER_NAME = "Liberty Automotive";
  *
  * - No "Save Offer" button.
  * - No customer-facing AI Boost copy.
- * - The hidden market adjustment is only revealed if the customer
- *   clicks "I'm not ready", surfaced as an "Updated Market Offer".
+ * - "I'm not ready" opens a photo-review invitation modal only.
+ *   No increased dollar amount is revealed unless the customer
+ *   completes the photo review flow.
  */
 const StepOfferReady = ({ state, update, goTo }: StepContext) => {
   const v = state.valuation;
   const firm = v?.firm ?? (v ? Math.round((v.low + v.high) / 2) : 0);
-  // Hidden retention adjustment — surfaced only on "I'm not ready".
-  const updatedOffer = Math.round((firm + 350) / 50) * 50;
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const expiresLabel = expires.toLocaleDateString("en-US", {
     month: "long", day: "numeric", year: "numeric",
@@ -34,15 +33,10 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
 
   const [showRetention, setShowRetention] = useState(false);
 
-  const acceptAt = (amount: number, source: "original" | "updated") => {
-    trackCtaClicked("offer", source === "updated" ? "Accept Updated Offer" : "Accept Offer");
-    trackOfferAccepted(amount);
-    update({
-      branch: "accept",
-      ...(source === "updated"
-        ? { boost: { ...state.boost, boostedFirm: amount, delta: amount - firm, analyzed: true } }
-        : {}),
-    });
+  const acceptOriginal = () => {
+    trackCtaClicked("offer", "Accept Offer");
+    trackOfferAccepted(firm);
+    update({ branch: "accept" });
     setShowRetention(false);
     setTimeout(() => goTo("accepted"), 0);
   };
@@ -50,6 +44,13 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
   const onNotReady = () => {
     trackCtaClicked("offer", "I'm not ready");
     setShowRetention(true);
+  };
+
+  const onAddPhotos = () => {
+    trackCtaClicked("offer", "Add Photos & Review Offer");
+    update({ branch: "boost" });
+    setShowRetention(false);
+    setTimeout(() => goTo("boost_intro"), 0);
   };
 
   return (
