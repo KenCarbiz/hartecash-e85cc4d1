@@ -64,7 +64,7 @@ const SummaryPanel = ({ state, currentStepId }: { state: JourneyState; currentSt
               Offer Profile
             </p>
             <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(262_83%_58%/0.08)] px-2 py-0.5 text-[10px] font-semibold text-[hsl(262_60%_45%)]">
-              Building your offer
+              Building your offer · {progressPct}%
             </span>
           </div>
 
