@@ -239,7 +239,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
 
           {/* RIGHT — summary panel */}
           <div className="lg:col-span-4">
-            <SummaryPanel state={state} />
+            <SummaryPanel state={state} currentStepId={current.id} />
           </div>
         </div>
       </div>
