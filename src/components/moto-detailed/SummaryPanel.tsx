@@ -6,9 +6,9 @@ const fmt = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
 const strengthLabel = {
-  soft: { text: "Soft demand", className: "bg-zinc-100 text-zinc-700" },
-  balanced: { text: "Balanced market", className: "bg-amber-50 text-amber-700" },
-  hot: { text: "Hot market", className: "bg-emerald-50 text-emerald-700" },
+  soft: { text: "Soft Market", className: "bg-slate-100 text-slate-700" },
+  balanced: { text: "Balanced Market", className: "bg-[hsl(262_83%_58%/0.1)] text-[hsl(262_60%_45%)]" },
+  hot: { text: "Hot Market", className: "bg-emerald-50 text-emerald-700" },
 } as const;
 
 /**
