@@ -214,12 +214,12 @@ const StepContact = ({ state, update, next }: StepContext) => {
         )}
       </Section>
 
-      {/* Privacy strip */}
-      <div className="flex items-start gap-3 rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-4 text-sm text-emerald-900">
-        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-          <Lock className="h-4 w-4" />
-        </div>
-        <span className="leading-relaxed">
+      {/* Privacy strip — compact */}
+      <div className="flex items-center gap-2.5 rounded-[14px] border border-emerald-200/70 bg-emerald-50/60 px-3.5 py-2.5 text-[12.5px] text-emerald-800">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+          <Lock className="h-3.5 w-3.5" />
+        </span>
+        <span className="leading-snug">
           Your information stays secure. We'll only use it to send your offer and help with next steps.
         </span>
       </div>
