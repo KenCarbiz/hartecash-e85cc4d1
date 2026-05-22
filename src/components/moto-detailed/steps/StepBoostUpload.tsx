@@ -93,10 +93,10 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
   const hasReds = uploaded.some((id) => quality[id]?.status === "red");
   const enoughRequired = requiredOk >= REQUIRED.length;
 
-  // Rotate analysis messages.
+  // Advance stages during review (4 stages over ~5.4s).
   useEffect(() => {
     if (!analyzing) return;
-    const t = setInterval(() => setStatusIdx((i) => (i + 1) % ANALYZING_MESSAGES.length), 1100);
+    const t = setInterval(() => setStatusIdx((i) => Math.min(i + 1, REVIEW_STEPS.length - 1)), 1300);
     return () => clearInterval(t);
   }, [analyzing]);
 
@@ -104,6 +104,7 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
   useEffect(() => {
     if (!analyzing) {
       setProgress(0);
+      setStatusIdx(0);
       return;
     }
     const start = Date.now();
