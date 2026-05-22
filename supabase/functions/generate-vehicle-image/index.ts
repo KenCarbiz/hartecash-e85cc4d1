@@ -8,6 +8,86 @@ const corsHeaders = {
 
 const BB_PHOTO_BASE = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle/Photo/uvc";
 
+// ── Abuse mitigation ─────────────────────────────────────────────
+// This function is `verify_jwt = false` in supabase/config.toml so
+// the customer-facing landing form can call it without a session.
+// That makes it the platform's most expensive open endpoint — each
+// cache miss can fan out to a paid Black Book photo call AND up to
+// two Gemini image-gen calls (~$0.04 each) via Lovable AI Gateway.
+//
+// Two soft gates protect the budget without breaking legit traffic:
+//
+//   1) ALLOWED_ORIGIN_PATTERNS — accept calls whose Origin or Referer
+//      matches our domain set (hartecash.com, sell2harte.com, the
+//      MotoAcquire trade microsite, *.lovable.app preview URLs,
+//      localhost). Casual abusers running curl/scripts won't match
+//      and get a 403. Sophisticated abusers will spoof the header
+//      but the rate limit catches them next.
+//
+//   2) In-isolate per-IP rate limiter — 30 requests/min per IP.
+//      Each Supabase Edge isolate has its own Map, so a coordinated
+//      attack that lands on multiple isolates can exceed 30/min in
+//      aggregate. Acceptable trade-off: we don't need a Postgres
+//      round-trip on every call, and a per-isolate cap of 30/min
+//      still bounds the worst-case spend.
+//
+// If we ever need stronger guarantees (e.g., the budget burn isn't
+// acceptable), promote to a Postgres-backed counter on a small
+// edge_request_log table.
+const ALLOWED_ORIGIN_PATTERNS: RegExp[] = [
+  /^https?:\/\/(?:[a-z0-9-]+\.)*hartecash\.com(?::\d+)?(?:\/|$)/i,
+  /^https?:\/\/(?:[a-z0-9-]+\.)*sell2harte\.com(?::\d+)?(?:\/|$)/i,
+  /^https?:\/\/(?:[a-z0-9-]+\.)*harte\.app(?::\d+)?(?:\/|$)/i,
+  /^https?:\/\/[a-z0-9-]+\.lovable\.app(?::\d+)?(?:\/|$)/i,
+  /^https?:\/\/[a-z0-9-]+\.lovableproject\.com(?::\d+)?(?:\/|$)/i,
+  /^https?:\/\/localhost(?::\d+)?(?:\/|$)/i,
+  /^https?:\/\/127\.0\.0\.1(?::\d+)?(?:\/|$)/i,
+];
+
+function isAllowedOrigin(req: Request): boolean {
+  const candidates = [req.headers.get("origin"), req.headers.get("referer")]
+    .filter((s): s is string => !!s);
+  // Server-to-server callers won't have either header. Reject those
+  // outright — every legitimate caller is a browser whose Origin or
+  // Referer is set by the user agent. (Custom dealer iframes embed
+  // the Hartecash widget which forwards Origin correctly.)
+  if (candidates.length === 0) return false;
+  return candidates.some(c => ALLOWED_ORIGIN_PATTERNS.some(re => re.test(c)));
+}
+
+const RATE_LIMIT_PER_MIN = 30;
+const RATE_WINDOW_MS = 60_000;
+const rateLimitBuckets = new Map<string, number[]>();
+function clientIp(req: Request): string {
+  // Supabase Edge sits behind Cloudflare; x-forwarded-for is the
+  // ordered list of proxies, leftmost = original client.
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  const real = req.headers.get("x-real-ip");
+  if (real) return real.trim();
+  return "unknown";
+}
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const recent = (rateLimitBuckets.get(ip) ?? []).filter(t => now - t < RATE_WINDOW_MS);
+  if (recent.length >= RATE_LIMIT_PER_MIN) {
+    rateLimitBuckets.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  rateLimitBuckets.set(ip, recent);
+  // Best-effort garbage collection so the Map doesn't grow forever
+  // on a long-lived isolate.
+  if (rateLimitBuckets.size > 5000) {
+    for (const [k, arr] of rateLimitBuckets) {
+      const fresh = arr.filter(t => now - t < RATE_WINDOW_MS);
+      if (fresh.length === 0) rateLimitBuckets.delete(k);
+      else rateLimitBuckets.set(k, fresh);
+    }
+  }
+  return false;
+}
+
 // Wikipedia REST API — free, no key, ~300-500ms response time.
 // Most popular vehicles (Camry, Civic, F-150, Armada, etc.) have a
 // Wikipedia article whose infobox includes a stock photo. We use the
@@ -63,6 +143,24 @@ async function fetchWikipediaImage(year: string, make: string, model: string): P
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // ── Auth gate (see ALLOWED_ORIGIN_PATTERNS + rate limiter above) ──
+  // Origin/Referer check first so we never spend a Postgres round-trip
+  // on obvious abuse.
+  if (!isAllowedOrigin(req)) {
+    console.warn(`[auth-gate] forbidden origin/referer: origin=${req.headers.get("origin")} referer=${req.headers.get("referer")}`);
+    return new Response(JSON.stringify({ error: "forbidden" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+  const ip = clientIp(req);
+  if (isRateLimited(ip)) {
+    console.warn(`[rate-limit] ip=${ip} exceeded ${RATE_LIMIT_PER_MIN}/min`);
+    return new Response(JSON.stringify({ error: "rate_limit_exceeded" }), {
+      status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" }
+    });
   }
 
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
