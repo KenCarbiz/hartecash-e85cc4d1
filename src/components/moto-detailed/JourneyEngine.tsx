@@ -207,7 +207,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
                 <header className="mb-6">
                   <div className="mb-3 inline-flex items-center gap-2">
                     <span className="inline-flex items-center rounded-full bg-[hsl(262_83%_58%/0.1)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)]">
-                      Step {safeCursor + 1} of {activeSteps.length}
+                      Step {current.stepBadge?.current ?? safeCursor + 1} of {current.stepBadge?.total ?? activeSteps.length}
                     </span>
                     <span className="text-[11px] font-medium text-slate-400">
                       {current.title}
