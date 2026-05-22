@@ -5,6 +5,7 @@ import {
   FileText, Camera, Receipt, ClipboardList, CheckCircle2, Clock, Truck,
   DollarSign, BadgeCheck, Lock, Star, Zap,
   PhoneCall, AlertTriangle, Eye, Sparkles, Image as ImageIcon,
+  type LucideIcon,
 } from "lucide-react";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
@@ -20,7 +21,7 @@ type Msg = {
   time: string;
   read?: "delivered" | "seen";
   seenAgo?: string;
-  system?: { icon: any; tone: "indigo" | "green" | "amber" | "blue"; title: string };
+  system?: { icon: LucideIcon; tone: "indigo" | "green" | "amber" | "blue"; title: string };
   file?: { name: string; type: "pdf" | "image"; size: string; status: "uploading" | "review" | "approved" };
 };
 

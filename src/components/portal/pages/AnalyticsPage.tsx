@@ -4,6 +4,7 @@ import {
   TrendingUp, TrendingDown, Sparkles, Car, MapPin, Activity, Flame,
   Gauge, Radar, Search, Clock, ShieldCheck, Zap, ArrowUpRight, ArrowDownRight,
   Filter, BarChart3, Target, Brain, AlertTriangle, CircleDot,
+  type LucideIcon,
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -186,9 +187,17 @@ const LiveMarketStrip = () => {
 /*  Chart                                                             */
 /* ------------------------------------------------------------------ */
 
-const ChartTooltip = ({ active, payload }: any) => {
+// Recharts' tooltip injects { active, payload, label }; we only need
+// the first two and the typed payload shape so we can deref .payload
+// safely. Recharts' own TooltipProps type is fine to use here.
+interface ChartTooltipPayload {
+  active?: boolean;
+  payload?: Array<{ payload: SeriesPoint }>;
+}
+
+const ChartTooltip = ({ active, payload }: ChartTooltipPayload) => {
   if (!active || !payload?.length) return null;
-  const p = payload[0].payload as SeriesPoint;
+  const p = payload[0].payload;
   return (
     <div className="rounded-xl bg-white border border-[#E6EAF0] shadow-[0_10px_30px_-12px_rgba(15,23,42,0.18)] px-3 py-2 min-w-[180px]">
       <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8893A8]">{p.label}</div>
@@ -794,7 +803,7 @@ export const AnalyticsPage = () => {
 
 const FilterChip = ({
   icon: Icon, label, active, onClick,
-}: { icon: any; label: string; active?: boolean; onClick: () => void }) => (
+}: { icon: LucideIcon; label: string; active?: boolean; onClick: () => void }) => (
   <button
     onClick={onClick}
     className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold border transition ${

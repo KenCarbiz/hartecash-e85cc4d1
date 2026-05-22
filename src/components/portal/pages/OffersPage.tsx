@@ -7,6 +7,7 @@ import {
   CheckCircle2, CalendarDays, Wallet,
   AlertTriangle, Users, FileText, HelpCircle, Paperclip,
   Eye, ChevronRight,
+  type LucideIcon,
 } from "lucide-react";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, SectionLabel } from "../PortalPageShell";
@@ -72,7 +73,7 @@ const MAX_BAR = Math.max(...BREAKDOWN.map((b) => Math.abs(b.value)));
 
 /* ─── Competitive advantage details for drawers ─────────────── */
 type AdvantageKey = "best" | "pickup" | "payment" | "fees";
-const ADVANTAGES: Record<AdvantageKey, { Icon: any; title: string; tagline: string; tone: "indigo" | "green"; body: string; bullets: string[] }> = {
+const ADVANTAGES: Record<AdvantageKey, { Icon: LucideIcon; title: string; tagline: string; tone: "indigo" | "green"; body: string; bullets: string[] }> = {
   best: {
     Icon: Award, title: "Best Overall Offer", tagline: "Above wholesale baseline", tone: "indigo",
     body: "Your offer sits above the regional wholesale average for similar vehicles. We pair Black Book comps with live local demand to make sure our number is genuinely competitive — not just an opening bid.",
@@ -479,7 +480,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
               { key: "pickup",  Icon: Truck, t: "Free Pickup",        d: "We come to you" },
               { key: "payment", Icon: Zap,   t: "Fastest Payment",    d: "ACH within 1 day" },
               { key: "fees",    Icon: Lock,  t: "No Hidden Fees",     d: "Number you see is what you get" },
-            ] as { key: AdvantageKey; Icon: any; t: string; d: string }[]).map((x) => (
+            ] as { key: AdvantageKey; Icon: LucideIcon; t: string; d: string }[]).map((x) => (
               <button
                 key={x.key}
                 onClick={() => setAdvantage(x.key)}
@@ -549,7 +550,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
             { key: "docs",     Icon: FileText,      t: "Final Documents", d: "Upload or sign at pickup", time: "5 min",          onClick: () => onNavigate("documents") },
             { key: "pickup",   Icon: CalendarDays,  t: "Schedule Pickup", d: "We come to you",           time: "Free",           onClick: () => onNavigate("pickup") },
             { key: "payment",  Icon: Wallet,        t: "Receive Payment", d: "Secure ACH transfer",      time: "1 business day", onClick: () => onNavigate("payments") },
-          ] as { key: string; Icon: any; t: string; d: string; time: string; onClick: () => void }[]).map((s, i) => (
+          ] as { key: string; Icon: LucideIcon; t: string; d: string; time: string; onClick: () => void }[]).map((s, i) => (
             <motion.li
               key={s.key}
               initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}

@@ -7,6 +7,7 @@ import {
   CalendarDays, MessageSquare, DollarSign, Check, CheckCircle2, AlertCircle,
   Clock, Search, Sparkles, Settings2, ZoomIn, MoreHorizontal, Archive, Download,
   Pencil, Lightbulb, Fingerprint, History, FileCheck2,
+  type LucideIcon,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
@@ -43,7 +44,7 @@ const GALLERY = [
   { src: vehicleHero, caption: "Title • Front" },
 ];
 
-const STATUS_META: Record<PhotoStatus, { label: string; cls: string; Icon: any }> = {
+const STATUS_META: Record<PhotoStatus, { label: string; cls: string; Icon: LucideIcon }> = {
   approved: { label: "Approved",     cls: "text-[#0F7A3E] bg-[#E8F8EE]", Icon: CheckCircle2 },
   uploaded: { label: "Uploaded",     cls: "text-[#4F46E5] bg-[#EEF0FF]", Icon: Check },
   review:   { label: "Under Review", cls: "text-[#B45309] bg-[#FEF3E2]", Icon: Clock },
@@ -68,7 +69,7 @@ const Counter = ({ value, prefix = "", duration = 700 }: { value: number; prefix
 
 const SummaryChip = ({
   label, value, prefix, Icon, tone = "indigo",
-}: { label: string; value: number; prefix?: string; Icon: any; tone?: "indigo" | "orange" | "green" }) => {
+}: { label: string; value: number; prefix?: string; Icon: LucideIcon; tone?: "indigo" | "orange" | "green" }) => {
   const tones = {
     indigo: "text-[#4F46E5] bg-[#EEF0FF]",
     orange: "text-[#B45309] bg-[#FEF3E2]",
@@ -92,7 +93,7 @@ const SummaryChip = ({
 /* Clickable status pill with hover lift + glow. Pending states subtly pulse. */
 const ActionPill = ({
   tone, Icon, children, onClick, pulse = false,
-}: { tone: "green" | "orange" | "gray" | "indigo"; Icon: any; children: React.ReactNode; onClick: () => void; pulse?: boolean }) => {
+}: { tone: "green" | "orange" | "gray" | "indigo"; Icon: LucideIcon; children: React.ReactNode; onClick: () => void; pulse?: boolean }) => {
   const tones: Record<string, string> = {
     green:  "text-[#0F7A3E] bg-[#E8F8EE] hover:shadow-[0_8px_18px_-10px_rgba(15,122,62,0.55)]",
     orange: "text-[#B45309] bg-[#FEF3E2] hover:shadow-[0_8px_18px_-10px_rgba(180,83,9,0.5)]",
@@ -123,7 +124,7 @@ const ActionPill = ({
 /* Smart contextual guidance banner. Adapts CTA + tone to vehicle state. */
 const SmartGuidanceBanner = ({
   tone, Icon, title, description, ctaLabel, onCta,
-}: { tone: "indigo" | "orange" | "green"; Icon: any; title: string; description: string; ctaLabel: string; onCta: () => void }) => {
+}: { tone: "indigo" | "orange" | "green"; Icon: LucideIcon; title: string; description: string; ctaLabel: string; onCta: () => void }) => {
   const tones = {
     indigo: { bg: "from-[#EEF0FF] to-white", border: "border-[#C7D2FE]", icon: "bg-white text-[#4F46E5]", btn: "bg-[#4F46E5] hover:bg-[#4338CA] text-white" },
     orange: { bg: "from-[#FEF3E2] to-white", border: "border-[#FCD9A8]", icon: "bg-white text-[#B45309]", btn: "bg-[#B45309] hover:bg-[#92400E] text-white" },
@@ -569,7 +570,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
               ["Interior",   v.interior,   Palette,    true],
               ["Ownership",  v.ownership,  ShieldCheck, true],
               ["Payoff",     v.payoff ? fmt(v.payoff) : "None", DollarSign, true],
-            ] as [string, string, any, boolean][]).map(([k, val, Icon, editable]) => (
+            ] as [string, string, LucideIcon, boolean][]).map(([k, val, Icon, editable]) => (
               <button
                 key={k}
                 onClick={() => editable && setEdit(true)}
@@ -833,7 +834,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
               ["Registration",       "Active • Expires 03/2026",                    "approved", FileText],
               ["Accident report",    "No reported incidents",                       "approved", ShieldCheck],
               ["Lien / Payoff",      v.payoff ? `Outstanding: ${fmt(v.payoff)}` : "No active lien", v.payoff ? "review" : "approved", DollarSign],
-            ] as [string, string, PhotoStatus, any][]).map(([title, sub, status, Icon]) => {
+            ] as [string, string, PhotoStatus, LucideIcon][]).map(([title, sub, status, Icon]) => {
               const meta = STATUS_META[status];
               return (
                 <li key={title} className="flex items-center gap-3 p-3 rounded-xl border border-[#E6EAF0] bg-white hover:border-[#4F46E5]/30 transition">

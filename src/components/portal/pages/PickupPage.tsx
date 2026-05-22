@@ -5,6 +5,7 @@ import {
   Building2, Sparkles, Camera, ShieldCheck, Zap, Clock, FileSignature, KeyRound,
   DollarSign, Lock, Star, ArrowRight, ArrowLeft, RotateCcw, CheckCircle2,
   AlertCircle, Briefcase, Navigation, MessageSquare,
+  type LucideIcon,
 } from "lucide-react";
 import { PORTAL_MOCK as MOCK } from "../portalMock";
 import { PortalPageShell, Card, SectionLabel, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
@@ -81,9 +82,20 @@ const buildDays = () => {
 
 // ── Subcomponents ────────────────────────────────────────────────────────────
 
+interface MethodCardProps {
+  active: boolean;
+  onClick: () => void;
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+  benefits: readonly string[];
+  cta: string;
+  accent: string;
+}
+
 const MethodCard = ({
   active, onClick, icon: Icon, title, desc, benefits, cta, accent,
-}: any) => (
+}: MethodCardProps) => (
   <motion.button
     whileHover={{ y: -3 }}
     onClick={onClick}
@@ -243,7 +255,11 @@ export const PickupPage = () => {
   };
 
   const toggleCheck = (t: string) =>
-    setChecked((p) => { const n = new Set(p); n.has(t) ? n.delete(t) : n.add(t); return n; });
+    setChecked((p) => {
+      const n = new Set(p);
+      if (n.has(t)) n.delete(t); else n.add(t);
+      return n;
+    });
 
   return (
     <PortalPageShell
