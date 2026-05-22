@@ -4545,9 +4545,12 @@ export type Database = {
           top_bar_text: string | null
           track_abandoned_leads: boolean
           tracker_oem_flagships: Json
+          tracker_vehicle_image_url: string | null
+          tracker_vehicle_label: string | null
           tracker_vehicle_make: string | null
           tracker_vehicle_mode: string
           tracker_vehicle_model: string | null
+          tracker_vehicle_options: Json
           tracker_vehicle_specs: string | null
           tracker_vehicle_style: string | null
           tracker_vehicle_year: number | null
@@ -4674,9 +4677,12 @@ export type Database = {
           top_bar_text?: string | null
           track_abandoned_leads?: boolean
           tracker_oem_flagships?: Json
+          tracker_vehicle_image_url?: string | null
+          tracker_vehicle_label?: string | null
           tracker_vehicle_make?: string | null
           tracker_vehicle_mode?: string
           tracker_vehicle_model?: string | null
+          tracker_vehicle_options?: Json
           tracker_vehicle_specs?: string | null
           tracker_vehicle_style?: string | null
           tracker_vehicle_year?: number | null
@@ -4803,9 +4809,12 @@ export type Database = {
           top_bar_text?: string | null
           track_abandoned_leads?: boolean
           tracker_oem_flagships?: Json
+          tracker_vehicle_image_url?: string | null
+          tracker_vehicle_label?: string | null
           tracker_vehicle_make?: string | null
           tracker_vehicle_mode?: string
           tracker_vehicle_model?: string | null
+          tracker_vehicle_options?: Json
           tracker_vehicle_specs?: string | null
           tracker_vehicle_style?: string | null
           tracker_vehicle_year?: number | null
