@@ -134,44 +134,70 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+          className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-16px_rgba(15,23,42,0.12)]"
         >
-          <p className="text-xs uppercase tracking-wide text-zinc-500">
-            {boosted ? "Updated Offer" : "Firm offer"}
-          </p>
-          <p className="mt-1 text-3xl font-semibold text-zinc-900">{fmt(boosted ?? original!)}</p>
+          {/* Vehicle image header — keeps the customer's car visible
+              through Offer Ready, Photo Review, Updated Offer, and
+              Accepted screens. */}
+          <VehicleImageCard
+            imageUrl={vehicle.imageUrl}
+            make={vehicle.make}
+            model={vehicle.model}
+          />
 
-          {boosted && (
-            <>
-              <div className="mt-1 flex items-center gap-2 text-xs">
-                <span className="text-zinc-400 line-through">{fmt(original!)}</span>
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
-                  +{fmt(boosted - original!)}
-                </span>
-              </div>
-              <p className="mt-2 text-[11px] font-medium text-emerald-700">Photo review complete</p>
-            </>
-          )}
+          <div className="border-t border-slate-100 px-5 pb-5 pt-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Your vehicle
+            </p>
+            <p className="mt-0.5 text-base font-semibold text-slate-900">
+              {vehicle.year} {vehicle.make} {vehicle.model}
+            </p>
+            {vehicle.trim && <p className="text-sm text-slate-500">{vehicle.trim}</p>}
+            {state.contact.mileage && (
+              <p className="mt-0.5 text-xs text-slate-500">
+                {Number(state.contact.mileage).toLocaleString("en-US")} mi
+              </p>
+            )}
 
-          {isAccepted && (
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-              <CheckCircle2 className="h-3 w-3" /> Review Complete
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <p className="text-xs uppercase tracking-wide text-zinc-500">
+                {boosted ? "Updated Offer" : "Firm offer"}
+              </p>
+              <p className="mt-1 text-3xl font-semibold text-zinc-900">{fmt(boosted ?? original!)}</p>
+
+              {boosted && (
+                <>
+                  <div className="mt-1 flex items-center gap-2 text-xs">
+                    <span className="text-zinc-400 line-through">{fmt(original!)}</span>
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                      +{fmt(boosted - original!)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[11px] font-medium text-emerald-700">Photo review complete</p>
+                </>
+              )}
+
+              {isAccepted && (
+                <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  <CheckCircle2 className="h-3 w-3" /> Review Complete
+                </div>
+              )}
+
+              {state.appointment?.timeSlot && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-zinc-700">
+                  <Calendar className="h-4 w-4 text-zinc-400" />
+                  <span>{state.appointment.mode === "pickup" ? "Pickup" : "Visit"} · {state.appointment.timeSlot}</span>
+                </div>
+              )}
+
+              {state.boost.uploadedCategories.length > 0 && (
+                <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
+                  <Camera className="h-3.5 w-3.5" />
+                  {state.boost.uploadedCategories.length} photos reviewed
+                </div>
+              )}
             </div>
-          )}
-
-          {state.appointment?.timeSlot && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-zinc-700">
-              <Calendar className="h-4 w-4 text-zinc-400" />
-              <span>{state.appointment.mode === "pickup" ? "Pickup" : "Visit"} · {state.appointment.timeSlot}</span>
-            </div>
-          )}
-
-          {state.boost.uploadedCategories.length > 0 && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
-              <Camera className="h-3.5 w-3.5" />
-              {state.boost.uploadedCategories.length} photos reviewed
-            </div>
-          )}
+          </div>
         </motion.div>
       )}
 
