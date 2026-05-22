@@ -45,7 +45,7 @@ const VehicleImageCard = ({
       {!showFallback ? (
         <img
           src={imageUrl!}
-          alt={alt ?? `${make ?? ""} ${model ?? ""}`.trim() || "Vehicle"}
+          alt={alt ?? (`${make ?? ""} ${model ?? ""}`.trim() || "Vehicle")}
           className="h-full w-full object-contain"
           loading="lazy"
           onError={() => setErrored(true)}
