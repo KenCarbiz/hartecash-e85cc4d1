@@ -235,6 +235,7 @@ const StepAccepted = ({ state, update }: StepContext) => {
               <div className="overflow-hidden rounded-xl border border-emerald-100">
                 <VehicleImageCard
                   imageUrl={state.vehicle.imageUrl}
+                  year={state.vehicle.year}
                   make={state.vehicle.make}
                   model={state.vehicle.model}
                   aspectClassName="aspect-[16/10]"
