@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { paidApiGuard } from "../_shared/paidApiGuard.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -211,7 +212,17 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { lookup_type, vin, plate, state, mileage, uvc, adddeductcodes, dealership_id } = body;
+    const { lookup_type, vin, plate, state, mileage, uvc, adddeductcodes, dealership_id, submission_token } = body;
+
+    // Auth/rate-limit gate for paid API. Anonymous landing-form callers
+    // are allowed within an IP cap; submission_token or staff JWT bypass.
+    const blocked = await paidApiGuard(req, corsHeaders, {
+      submissionToken: submission_token,
+      anonMaxPerHour: 60,
+      scope: "bb-lookup",
+    });
+    if (blocked) return blocked;
+
 
     // ── Demo-mode short-circuit ────────────────────────────────────────
     // Resolve demo_mode in priority order:
