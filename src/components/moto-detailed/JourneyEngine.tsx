@@ -201,9 +201,18 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_40px_-24px_rgba(15,23,42,0.14)] sm:p-8"
               >
                 <header className="mb-6">
-                  <h1 className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-[28px]">
+                  <div className="mb-3 inline-flex items-center gap-2">
+                    <span className="inline-flex items-center rounded-full bg-[hsl(262_83%_58%/0.1)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)]">
+                      Step {safeCursor + 1} of {activeSteps.length}
+                    </span>
+                    <span className="text-[11px] font-medium text-slate-400">
+                      {current.title}
+                    </span>
+                  </div>
+                  <h1 className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-[26px]">
                     {current.pageTitle}
                   </h1>
                   {current.pageSubtitle && (
@@ -212,6 +221,18 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
                 </header>
 
                 <StepComponent {...ctx} />
+
+                <div className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-slate-100 pt-5 text-[11px] font-medium text-slate-500">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Lock className="h-3.5 w-3.5 text-slate-400" /> Secure &amp; private
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <BadgeCheck className="h-3.5 w-3.5 text-emerald-600" /> No obligation
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-[hsl(262_60%_45%)]" /> Dealer reviewed
+                  </span>
+                </div>
               </motion.div>
             </AnimatePresence>
           </div>
