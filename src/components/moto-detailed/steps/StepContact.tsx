@@ -93,6 +93,7 @@ const StepContact = ({ state, update, next }: StepContext) => {
           inputMode="numeric"
           placeholder="Enter current mileage"
           Icon={Gauge}
+          helper={!errors.mileage ? "Your offer may update once mileage is confirmed." : undefined}
         />
       </Section>
 
