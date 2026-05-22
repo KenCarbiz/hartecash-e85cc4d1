@@ -82,7 +82,13 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
             {vehicle.year} {vehicle.make} {vehicle.model}
           </p>
           {vehicle.trim && <p className="text-sm text-slate-500">{vehicle.trim}</p>}
+          {state.contact.mileage && (
+            <p className="mt-1 text-sm text-slate-500">
+              Current mileage: {Number(state.contact.mileage).toLocaleString("en-US")} mi
+            </p>
+          )}
         </div>
+
       </div>
 
       {/* Pre-offer estimated range */}

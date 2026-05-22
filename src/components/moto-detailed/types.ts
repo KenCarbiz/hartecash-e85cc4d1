@@ -37,6 +37,8 @@ export interface JourneyContact {
   email: string;
   phone: string;
   zip: string;
+  /** Current odometer reading in miles (digits only as string). */
+  mileage: string;
 }
 
 export type JourneyCondition = "excellent" | "very_good" | "good" | "fair";
@@ -126,7 +128,7 @@ export const emptyJourneyState: JourneyState = {
   valuation: null,
   condition: "good",
   usage: null,
-  contact: { firstName: "", lastName: "", email: "", phone: "", zip: "" },
+  contact: { firstName: "", lastName: "", email: "", phone: "", zip: "", mileage: "" },
   custom: {},
   offerUnlocked: false,
   branch: null,
