@@ -1,42 +1,113 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { inferBodyStyle, type VehicleBodyStyle } from "./inferBodyStyle";
 
 /**
  * VehicleImageCard — single source of truth for vehicle imagery in
  * the moto-detailed journey. Image hierarchy:
  *
- *   1. Real vehicle photo via `imageUrl` (BB photo / VIN provider).
- *   2. Premium silhouette fallback inferred from year/make/model
- *      body style (truck / suv / coupe / sedan).
+ *   1. Real photo passed in via `imageUrl` (BB / VIN provider).
+ *   2. Auto-fetch from the `generate-vehicle-image` edge function
+ *      using year/make/model (Black Book → Wikipedia → AI fallback,
+ *      with a localStorage cache). Used when no `imageUrl` is given.
+ *   3. Premium silhouette fallback inferred from body style
+ *      (truck / suv / coupe / sedan).
  *
- * Never a flat gray "Vehicle photo" block. The fallback uses a
- * soft brand-tinted gradient + dotted grid + glowing silhouette so
- * the card always looks intentional.
+ * Never a flat gray "Vehicle photo" block. The same y/m/m → URL is
+ * cached in localStorage so every step in the journey reuses the
+ * same image without re-fetching.
  */
 interface Props {
   imageUrl?: string | null;
+  year?: string | null;
   make?: string | null;
   model?: string | null;
+  uvc?: string | null;
+  /** When false, skip the network fetch and only use silhouette fallback. */
+  autoFetch?: boolean;
   bodyStyle?: VehicleBodyStyle;
   /** Tailwind aspect ratio class. Defaults to 16/10 for the right rail. */
   aspectClassName?: string;
-  /** Optional rounded corners override. */
   className?: string;
   alt?: string;
 }
 
+const cacheKey = (year?: string | null, make?: string | null, model?: string | null) =>
+  `journey-vehicle-img-v1-${year ?? ""}-${make ?? ""}-${model ?? ""}`
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+
+const NULL_SENTINEL = "__none__";
+
 const VehicleImageCard = ({
   imageUrl,
+  year,
   make,
   model,
+  uvc,
+  autoFetch = true,
   bodyStyle,
   aspectClassName = "aspect-[16/10]",
   className = "",
   alt,
 }: Props) => {
   const [errored, setErrored] = useState(false);
+  const [fetchedUrl, setFetchedUrl] = useState<string | null>(null);
+  const fetchedFor = useRef<string>("");
   const resolvedBody = bodyStyle ?? inferBodyStyle(make, model);
-  const showFallback = !imageUrl || errored;
+
+  // Lazy-fetch a real photo when none was passed in. Cached across
+  // every journey step so the same vehicle image renders consistently.
+  useEffect(() => {
+    if (imageUrl || !autoFetch || !year || !make || !model) return;
+    const key = cacheKey(year, make, model);
+    if (fetchedFor.current === key) return;
+    fetchedFor.current = key;
+
+    try {
+      const cached = localStorage.getItem(key);
+      if (cached === NULL_SENTINEL) return;
+      if (cached) {
+        setFetchedUrl(cached);
+        return;
+      }
+    } catch {
+      /* localStorage unavailable */
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("generate-vehicle-image", {
+          body: {
+            year,
+            make,
+            model,
+            color: "white",
+            uvc: uvc ?? undefined,
+            angle: "three_quarter",
+          },
+        });
+        if (cancelled) return;
+        const url = data?.image_url as string | undefined;
+        if (url) {
+          try { localStorage.setItem(key, url); } catch { /* quota */ }
+          setFetchedUrl(url);
+        } else {
+          try { localStorage.setItem(key, NULL_SENTINEL); } catch { /* quota */ }
+        }
+      } catch {
+        /* silhouette fallback handles it */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [imageUrl, autoFetch, year, make, model, uvc]);
+
+  const displayUrl = imageUrl || fetchedUrl;
+  const showFallback = !displayUrl || errored;
 
   return (
     <div
@@ -44,7 +115,7 @@ const VehicleImageCard = ({
     >
       {!showFallback ? (
         <img
-          src={imageUrl!}
+          src={displayUrl!}
           alt={alt ?? (`${make ?? ""} ${model ?? ""}`.trim() || "Vehicle")}
           className="h-full w-full object-contain"
           loading="lazy"
