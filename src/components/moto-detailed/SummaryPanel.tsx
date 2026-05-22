@@ -198,26 +198,36 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
 const Sparkline = ({ data }: { data: number[] }) => {
   if (!data?.length) return null;
   const w = 240;
-  const h = 48;
+  const h = 56;
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
-  const pts = data
-    .map((v, i) => {
-      const x = (i / (data.length - 1)) * w;
-      const y = h - ((v - min) / range) * h;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
+  const points = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 6) - 3;
+    return { x, y };
+  });
+  const linePts = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const areaPts = `0,${h} ${linePts} ${w},${h}`;
+  const gradId = "spark-fill";
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="mt-3 h-12 w-full">
+    <svg viewBox={`0 0 ${w} ${h}`} className="mt-3 h-14 w-full" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="hsl(262 83% 58%)" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="hsl(262 83% 58%)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {/* Faint baseline grid */}
+      <line x1="0" x2={w} y1={h - 1} y2={h - 1} stroke="hsl(215 20% 92%)" strokeWidth="1" />
+      <polygon points={areaPts} fill={`url(#${gradId})`} />
       <polyline
         fill="none"
         stroke="hsl(262 83% 58%)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        points={pts}
+        points={linePts}
       />
     </svg>
   );
