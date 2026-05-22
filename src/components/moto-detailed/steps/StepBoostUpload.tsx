@@ -235,7 +235,14 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
       : `Add ${REQUIRED.length - requiredOk} more required photo${REQUIRED.length - requiredOk === 1 ? "" : "s"} →`;
 
   if (analyzing) {
-    return <AnalysisStage statusIdx={statusIdx} progress={progress} photoCount={uploaded.length} />;
+    return (
+      <AnalysisStage
+        statusIdx={statusIdx}
+        progress={progress}
+        previews={previews}
+        categories={REQUIRED}
+      />
+    );
   }
 
   return (
