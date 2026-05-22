@@ -31,6 +31,8 @@ export interface JourneyValuation {
   trend: number[]; // last ~8 datapoints, normalized 0..1 for sparkline
 }
 
+export type JourneyOwnership = "own" | "loan" | "lease";
+
 export interface JourneyContact {
   firstName: string;
   lastName: string;
@@ -39,6 +41,13 @@ export interface JourneyContact {
   zip: string;
   /** Current odometer reading in miles (digits only as string). */
   mileage: string;
+  /** Required: how the customer holds the vehicle. */
+  ownership: JourneyOwnership | null;
+  /** Optional payoff if ownership === "loan". Digits-only string. */
+  payoffAmount?: string;
+  /** Optional lease details if ownership === "lease". */
+  leaseCompany?: string;
+  leaseMonthly?: string;
 }
 
 export type JourneyCondition = "excellent" | "very_good" | "good" | "fair";
@@ -132,7 +141,7 @@ export const emptyJourneyState: JourneyState = {
   valuation: null,
   condition: "good",
   usage: null,
-  contact: { firstName: "", lastName: "", email: "", phone: "", zip: "", mileage: "" },
+  contact: { firstName: "", lastName: "", email: "", phone: "", zip: "", mileage: "", ownership: null, payoffAmount: "", leaseCompany: "", leaseMonthly: "" },
   custom: {},
   offerUnlocked: false,
   branch: null,

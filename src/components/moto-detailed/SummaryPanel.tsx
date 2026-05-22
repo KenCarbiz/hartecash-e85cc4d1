@@ -40,103 +40,113 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.12)]">
-        <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-[hsl(262_83%_58%/0.08)]">
-          {vehicle.imageUrl ? (
-            <img
-              src={vehicle.imageUrl}
-              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <>
-              {/* Soft light gray/blue gradient background */}
-              <div className="absolute inset-1 rounded-xl bg-gradient-to-br from-slate-50 via-white to-[hsl(215_40%_96%)]" />
-              {/* Subtle dot grid for premium feel */}
-              <div
-                className="absolute inset-0 opacity-[0.35]"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(hsl(215 20% 65% / 0.35) 1px, transparent 1px)",
-                  backgroundSize: "14px 14px",
-                }}
-              />
-              <div className="relative flex h-full flex-col items-center justify-center">
-                <Car
-                  className="h-16 w-16 text-[hsl(262_60%_45%)] opacity-60"
-                  strokeWidth={1.25}
-                />
-                <p className="mt-3 text-xs font-medium text-slate-400">
-                  Vehicle photo coming soon
-                </p>
-              </div>
-              <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-white to-transparent" />
-            </>
-          )}
-        </div>
-        <div className="p-5">
-          <div className="flex items-center justify-between">
+      {/* Unified Offer Profile card (pre-offer) */}
+      {!showFirm && (
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.12)]">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-slate-100 px-5 pb-3 pt-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
               Offer Profile
             </p>
             <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(262_83%_58%/0.08)] px-2 py-0.5 text-[10px] font-semibold text-[hsl(262_60%_45%)]">
-              {showFirm ? "Offer ready" : "Building your offer"}
+              Building your offer
             </span>
           </div>
-          <p className="mt-1 text-lg font-semibold text-slate-900">
-            {vehicle.year} {vehicle.make} {vehicle.model}
-          </p>
-          {vehicle.trim && <p className="text-sm text-slate-500">{vehicle.trim}</p>}
-          {state.contact.mileage && (
-            <p className="mt-1 text-sm text-slate-500">
-              Current mileage: {Number(state.contact.mileage).toLocaleString("en-US")} mi
-            </p>
-          )}
-        </div>
 
-      </div>
-
-      {/* Live progress checklist — feels like an offer profile being built */}
-      {!isAccepted && <ProfileChecklist state={state} />}
-
-      {/* Pre-offer estimated range */}
-      {valuation && !showFirm && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.12)]">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-              Estimated Range
-            </p>
-            {strength && (
-              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${strength.className}`}>
-                {strength.text}
-              </span>
+          {/* Vehicle image */}
+          <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-[hsl(262_83%_58%/0.08)]">
+            {vehicle.imageUrl ? (
+              <img
+                src={vehicle.imageUrl}
+                alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <>
+                <div className="absolute inset-1 rounded-xl bg-gradient-to-br from-slate-50 via-white to-[hsl(215_40%_96%)]" />
+                <div
+                  className="absolute inset-0 opacity-[0.35]"
+                  style={{
+                    backgroundImage:
+                      "radial-gradient(hsl(215 20% 65% / 0.35) 1px, transparent 1px)",
+                    backgroundSize: "14px 14px",
+                  }}
+                />
+                <div className="relative flex h-full flex-col items-center justify-center">
+                  <Car
+                    className="h-14 w-14 text-[hsl(262_60%_45%)] opacity-60"
+                    strokeWidth={1.25}
+                  />
+                  <p className="mt-2 text-[11px] font-medium text-slate-400">
+                    Vehicle image pending
+                  </p>
+                </div>
+                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-white to-transparent" />
+              </>
             )}
           </div>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">
-            {fmt(valuation.low)} <span className="text-slate-300">–</span> {fmt(valuation.high)}
-          </p>
 
-          <Sparkline data={valuation.trend} />
-
-          <div className="mt-4 space-y-2 text-sm">
-            <div className="flex items-center gap-2 text-emerald-700">
-              <ShieldCheck className="h-4 w-4" />
-              <span>Secure & private</span>
-            </div>
-            <div className="flex items-center gap-2 text-slate-600">
-              <TrendingUp className="h-4 w-4 text-[hsl(262_60%_45%)]" />
-              <span>Live market data</span>
-            </div>
-            <div className="flex items-center gap-2 text-slate-600">
-              <BadgeCheck className="h-4 w-4 text-emerald-600" />
-              <span>No obligation</span>
-            </div>
+          {/* Vehicle name */}
+          <div className="px-5 pt-4">
+            <p className="text-base font-semibold text-slate-900">
+              {vehicle.year} {vehicle.make} {vehicle.model}
+            </p>
+            {vehicle.trim && <p className="text-sm text-slate-500">{vehicle.trim}</p>}
+            {state.contact.mileage && (
+              <p className="mt-0.5 text-xs text-slate-500">
+                {Number(state.contact.mileage).toLocaleString("en-US")} mi
+              </p>
+            )}
           </div>
 
-          <p className="mt-4 border-t border-slate-100 pt-3 text-[12px] leading-relaxed text-slate-500">
-            <Lock className="mr-1 inline h-3 w-3 align-[-2px] text-slate-400" />
-            Estimate improves as you continue.
-          </p>
+          {/* Estimated range */}
+          {valuation && (
+            <div className="px-5 pt-4">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                  Estimated Range
+                </p>
+                {strength && (
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${strength.className}`}>
+                    {strength.text}
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-xl font-semibold text-slate-900">
+                {fmt(valuation.low)} <span className="text-slate-300">–</span> {fmt(valuation.high)}
+              </p>
+              <Sparkline data={valuation.trend} />
+            </div>
+          )}
+
+          {/* Progress checklist */}
+          <div className="mt-4 border-t border-slate-100 px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Building your offer
+            </p>
+            <ProfileChecklist state={state} inline />
+          </div>
+
+          {/* Trust items */}
+          <div className="border-t border-slate-100 px-5 py-4">
+            <div className="grid grid-cols-1 gap-1.5 text-[12px]">
+              <div className="flex items-center gap-2 text-emerald-700">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>Secure &amp; private</span>
+              </div>
+              <div className="flex items-center gap-2 text-slate-600">
+                <TrendingUp className="h-3.5 w-3.5 text-[hsl(262_60%_45%)]" />
+                <span>Live market data</span>
+              </div>
+              <div className="flex items-center gap-2 text-slate-600">
+                <BadgeCheck className="h-3.5 w-3.5 text-emerald-600" />
+                <span>No obligation</span>
+              </div>
+            </div>
+            <p className="mt-3 flex items-center gap-1 text-[11px] leading-relaxed text-slate-400">
+              <Lock className="h-3 w-3" /> Estimate improves as you continue.
+            </p>
+          </div>
         </div>
       )}
 
@@ -243,54 +253,59 @@ const Sparkline = ({ data }: { data: number[] }) => {
   );
 };
 
-const ProfileChecklist = ({ state }: { state: JourneyState }) => {
+const ProfileChecklist = ({ state, inline = false }: { state: JourneyState; inline?: boolean }) => {
   const items = [
     { label: "Vehicle identified", done: !!state.vehicle },
     { label: "Market data connected", done: !!state.valuation },
     { label: "Condition", done: !!state.condition },
-    { label: "Mileage", done: !!state.contact.mileage },
-    { label: "Contact", done: !!(state.contact.firstName && state.contact.email && state.contact.phone) },
+    { label: "Usage selected", done: !!state.usage },
+    { label: "Mileage added", done: !!state.contact.mileage },
+    { label: "Ownership status", done: !!state.contact.ownership },
+    { label: "Contact info", done: !!(state.contact.firstName && state.contact.email && state.contact.phone) },
   ];
-  // First not-done item is the active one
   const activeIdx = items.findIndex((i) => !i.done);
+  const list = (
+    <ul className={`${inline ? "mt-2.5" : "mt-3"} space-y-2`}>
+      {items.map((it, i) => {
+        const isActive = i === activeIdx;
+        return (
+          <li key={it.label} className="flex items-center gap-2.5 text-[13px]">
+            {it.done ? (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white">
+                <CheckCircle2 className="h-3 w-3" strokeWidth={2.75} />
+              </span>
+            ) : isActive ? (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[hsl(262_83%_58%)] text-white ring-[3px] ring-[hsl(262_83%_58%/0.15)]">
+                <Circle className="h-1.5 w-1.5 fill-current" />
+              </span>
+            ) : (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-slate-200 bg-slate-50">
+                <Circle className="h-1 w-1 fill-slate-300 text-slate-300" />
+              </span>
+            )}
+            <span
+              className={
+                it.done
+                  ? "text-slate-600"
+                  : isActive
+                    ? "font-medium text-slate-900"
+                    : "text-slate-400"
+              }
+            >
+              {it.label}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+  if (inline) return list;
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
         Profile progress
       </p>
-      <ul className="mt-3 space-y-2.5">
-        {items.map((it, i) => {
-          const isActive = i === activeIdx;
-          return (
-            <li key={it.label} className="flex items-center gap-2.5 text-sm">
-              {it.done ? (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
-                  <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2.5} />
-                </span>
-              ) : isActive ? (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(262_83%_58%)] text-white ring-4 ring-[hsl(262_83%_58%/0.15)]">
-                  <Circle className="h-2 w-2 fill-current" />
-                </span>
-              ) : (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-slate-50">
-                  <Circle className="h-1.5 w-1.5 fill-slate-300 text-slate-300" />
-                </span>
-              )}
-              <span
-                className={
-                  it.done
-                    ? "text-slate-700"
-                    : isActive
-                      ? "font-medium text-slate-900"
-                      : "text-slate-400"
-                }
-              >
-                {it.label}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      {list}
     </div>
   );
 };

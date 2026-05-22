@@ -63,7 +63,7 @@ const usage = (): StepDefinition => ({
 const contact = (): StepDefinition => ({
   id: "contact", title: "Contact Info", helper: "Share your details so we can reach you",
   pageTitle: "Where should we send your offer?",
-  pageSubtitle: "We'll use this to send your full offer breakdown and reach out about pickup.",
+  pageSubtitle: "We'll use this to send your offer breakdown, confirm next steps, and help with payoff or title details if needed.",
   Component: StepContact,
 });
 const offer = (): StepDefinition => ({
