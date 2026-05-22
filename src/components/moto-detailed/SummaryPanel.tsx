@@ -61,6 +61,7 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
           {/* Vehicle image */}
           <VehicleImageCard
             imageUrl={vehicle.imageUrl}
+            year={vehicle.year}
             make={vehicle.make}
             model={vehicle.model}
           />
