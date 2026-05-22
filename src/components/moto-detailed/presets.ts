@@ -68,10 +68,11 @@ const contact = (): StepDefinition => ({
 });
 const offer = (): StepDefinition => ({
   id: "offer", title: "Offer Ready", helper: "Review your offer and choose next step",
-  pageTitle: "Your offer is ready",
-  pageSubtitle: "Here's what your vehicle is worth today — pick how you'd like to move forward.",
+  pageTitle: "Your firm offer is ready.",
+  pageSubtitle: "Review your offer below. If everything looks good, you can move forward and we'll help with the next steps.",
   Component: StepOfferReady,
 });
+
 
 // ── Post-offer branches ─────────────────────────────────────────────
 // The engine reaches these steps via goTo() from StepOfferReady / boost
