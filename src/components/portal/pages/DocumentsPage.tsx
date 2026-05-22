@@ -14,7 +14,7 @@ import {
   QrCode,
   Info,
 } from "lucide-react";
-import { PORTAL_MOCK as MOCK } from "../portalMock";
+import { usePortalData } from "../PortalDataContext";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, StatusPill, SectionLabel } from "../PortalPageShell";
 import { DocumentUploadHub, type HubDoc, type HubDocStatus } from "../DocumentUploadHub";
 
@@ -37,6 +37,7 @@ const REJECT_TIP: Record<string, string> = {
 };
 
 export const DocumentsPage = () => {
+  const MOCK = usePortalData();
   const [hubOpen, setHubOpen] = useState(false);
   const [focus, setFocus] = useState<string | null>(null);
 

@@ -9,7 +9,8 @@ import {
   Pencil, Lightbulb, Fingerprint, History, FileCheck2,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
-import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
+import { fmt } from "../portalMock";
+import { usePortalData } from "../PortalDataContext";
 import {
   PortalPageShell, Card, PrimaryButton, SecondaryButton, StatusPill, SectionLabel,
 } from "../PortalPageShell";
@@ -420,6 +421,7 @@ const AddVehicleWizard = ({ open, onClose }: { open: boolean; onClose: () => voi
    Page
    ────────────────────────────────────────────────────────────── */
 export const VehiclesPage = ({ onNavigate }: Props) => {
+  const MOCK = usePortalData();
   const [edit, setEdit] = useState(false);
   const [upload, setUpload] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);

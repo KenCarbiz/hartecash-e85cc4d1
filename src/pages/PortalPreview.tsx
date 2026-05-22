@@ -35,7 +35,9 @@ import { AnimatePresence } from "framer-motion";
 import { Search, Bell } from "lucide-react";
 import { AccountMenu } from "@/components/portal/AccountMenu";
 import { PortalSidebar, PortalMobileTopBar, type NavKey } from "@/components/portal/PortalSidebar";
-import { PORTAL_MOCK as MOCK } from "@/components/portal/portalMock";
+import { PortalDataProvider, usePortalData, usePortalDataStatus } from "@/components/portal/PortalDataContext";
+import PortalSkeleton from "@/components/PortalSkeleton";
+import TokenErrorScreen from "@/components/TokenErrorScreen";
 import DashboardPage from "@/components/portal/pages/DashboardPage";
 import VehiclesPage from "@/components/portal/pages/VehiclesPage";
 import OffersPage from "@/components/portal/pages/OffersPage";
@@ -48,15 +50,16 @@ import PickupPage from "@/components/portal/pages/PickupPage";
 import SettingsPage from "@/components/portal/pages/SettingsPage";
 import SEO from "@/components/SEO";
 
-const PortalPreview = () => {
+const PortalShell = () => {
   const [activeNav, setActiveNav] = useState<NavKey>("dashboard");
-
-  // Plumbed for the data-wire PR. When real data lands every page
-  // below this shell will switch from `PORTAL_MOCK` to a token-scoped
-  // query (`useSubmissionPortal(token)` etc.). For now the token is
-  // read here so that route changes always re-render the shell and
-  // the React tree stays consistent between demo and live routes.
   const { token } = useParams<{ token: string }>();
+  const MOCK = usePortalData();
+  const { loading, tokenStatus } = usePortalDataStatus();
+
+  if (loading) return <PortalSkeleton headline="Loading your submission" />;
+  if (tokenStatus && tokenStatus !== "valid") {
+    return <TokenErrorScreen status={tokenStatus} />;
+  }
 
   const renderPage = () => {
     switch (activeNav) {
@@ -109,6 +112,15 @@ const PortalPreview = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const PortalPreview = () => {
+  const { token } = useParams<{ token: string }>();
+  return (
+    <PortalDataProvider token={token}>
+      <PortalShell />
+    </PortalDataProvider>
   );
 };
 

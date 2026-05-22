@@ -7,7 +7,8 @@ import {
   ChevronRight, Activity as ActivityIcon, Circle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
+import { fmt } from "../portalMock";
+import { usePortalData } from "../PortalDataContext";
 import {
   PortalPageShell, Card, SectionLabel, StatusPill, PrimaryButton, SecondaryButton,
 } from "../PortalPageShell";
@@ -188,6 +189,7 @@ const InsightChip = ({ Icon, text }: { Icon: LucideIcon; text: string }) => (
    ──────────────────────────────────────────────────────────────── */
 
 export const ActivityPage = ({ onNavigate }: Props) => {
+  const MOCK = usePortalData();
   const [filter, setFilter] = useState<Filter>("All");
   const [open, setOpen] = useState<ActivityItem | null>(null);
 

@@ -10,7 +10,8 @@ import {
   AlertTriangle, Users, FileText, HelpCircle, Paperclip,
   Eye, ChevronRight,
 } from "lucide-react";
-import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
+import { fmt } from "../portalMock";
+import { usePortalData } from "../PortalDataContext";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, SectionLabel } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
 
@@ -300,6 +301,7 @@ const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () 
 
 /* ─── Page ───────────────────────────────────────────────────── */
 export const OffersPage = ({ onNavigate }: Props) => {
+  const MOCK = usePortalData();
   const [accept, setAccept] = useState(false);
   const [counter, setCounter] = useState(false);
   const [ask, setAsk] = useState(false);

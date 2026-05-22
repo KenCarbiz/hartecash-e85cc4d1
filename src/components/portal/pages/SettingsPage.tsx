@@ -6,7 +6,7 @@ import {
   MessageSquare, FileText, Calendar, CreditCard, Tag, X, Mail,
   MapPin, Truck, Home, Star, Eye, ShieldCheck,
 } from "lucide-react";
-import { PORTAL_MOCK as MOCK } from "../portalMock";
+import { usePortalData } from "../PortalDataContext";
 import { PortalPageShell, Card, SectionLabel, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
 import {
@@ -33,6 +33,7 @@ const SMS_IMPACTS = [
 ];
 
 export const SettingsPage = () => {
+  const MOCK = usePortalData();
   const [panel, setPanel] = useState<Panel>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [smsConfirmOpen, setSmsConfirmOpen] = useState(false);
