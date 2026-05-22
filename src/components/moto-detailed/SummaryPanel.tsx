@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { ShieldCheck, TrendingUp, CheckCircle2, Calendar, Camera, Car, Lock, BadgeCheck, Circle } from "lucide-react";
+import { ShieldCheck, TrendingUp, CheckCircle2, Calendar, Camera, Lock, BadgeCheck, Circle } from "lucide-react";
+import VehicleImageCard from "./VehicleImageCard";
 import type { JourneyState } from "./types";
 
 const fmt = (n: number) =>
