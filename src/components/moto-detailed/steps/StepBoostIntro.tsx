@@ -231,9 +231,11 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           </div>
 
           {/* Reassurance */}
-          <p className="mt-5 text-center text-[11.5px] text-slate-400">
+          <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[12px] text-slate-500">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
             Your current offer remains available while you decide.
           </p>
+
         </div>
       </motion.div>
     </div>
