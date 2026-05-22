@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Lock, ShieldCheck, BadgeCheck } from "lucide-react";
 import JourneyRail from "./JourneyRail";
 import MobileStepper from "./MobileStepper";
 import SummaryPanel from "./SummaryPanel";
