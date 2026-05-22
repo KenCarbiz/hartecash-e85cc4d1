@@ -4,30 +4,39 @@ import PrimaryCTA from "../PrimaryCTA";
 import type { StepContext } from "../types";
 import { trackContactSubmitted, trackCtaClicked } from "../analytics";
 
-type FieldKey = "firstName" | "lastName" | "email" | "phone" | "zip";
+type FieldKey = "firstName" | "lastName" | "email" | "phone" | "zip" | "mileage";
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 const isPhone = (v: string) => v.replace(/\D/g, "").length >= 10;
+const digitsOnly = (v: string) => v.replace(/\D/g, "");
+const formatMiles = (digits: string) =>
+  digits ? Number(digits).toLocaleString("en-US") : "";
 
 const StepContact = ({ state, update, next }: StepContext) => {
   const c = state.contact;
   const [touched, setTouched] = useState<Record<FieldKey, boolean>>({
-    firstName: false, lastName: false, email: false, phone: false, zip: false,
+    firstName: false, lastName: false, email: false, phone: false, zip: false, mileage: false,
   });
   const set = (patch: Partial<typeof c>) => update({ contact: { ...c, ...patch } });
   const touch = (k: FieldKey) => setTouched((t) => ({ ...t, [k]: true }));
 
+  const mileageNum = c.mileage ? Number(c.mileage) : NaN;
   const errors: Partial<Record<FieldKey, string>> = {
     firstName: !c.firstName.trim() ? "Required" : undefined,
     lastName: !c.lastName.trim() ? "Required" : undefined,
     email: !c.email.trim() ? "Required" : !isEmail(c.email) ? "Enter a valid email" : undefined,
     phone: !c.phone.trim() ? "Required" : !isPhone(c.phone) ? "Enter a valid phone number" : undefined,
+    mileage: !c.mileage
+      ? "Required"
+      : !Number.isFinite(mileageNum) || mileageNum <= 0
+        ? "Please enter a valid mileage."
+        : undefined,
   };
-  const valid = !errors.firstName && !errors.lastName && !errors.email && !errors.phone;
+  const valid = !errors.firstName && !errors.lastName && !errors.email && !errors.phone && !errors.mileage;
 
   const onSubmit = () => {
     if (!valid) {
-      setTouched({ firstName: true, lastName: true, email: true, phone: true, zip: true });
+      setTouched({ firstName: true, lastName: true, email: true, phone: true, zip: true, mileage: true });
       return;
     }
     trackCtaClicked("contact", "See My Offer");
@@ -51,6 +60,17 @@ const StepContact = ({ state, update, next }: StepContext) => {
           autoComplete="tel" placeholder="(555) 555-5555" />
         <Field label="ZIP (optional)" value={c.zip} onChange={(v) => set({ zip: v })}
           onBlur={() => touch("zip")} autoComplete="postal-code" placeholder="90210" />
+        <Field
+          label="Current mileage"
+          value={formatMiles(c.mileage)}
+          onChange={(v) => set({ mileage: digitsOnly(v) })}
+          onBlur={() => touch("mileage")}
+          error={touched.mileage ? errors.mileage : undefined}
+          inputMode="numeric"
+          placeholder="Enter current mileage"
+          className="sm:col-span-2"
+          helper="Accurate mileage helps us calculate your best available offer."
+        />
       </div>
 
       <div className="flex items-start gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/70 p-4 text-sm text-emerald-900">
@@ -66,6 +86,7 @@ const StepContact = ({ state, update, next }: StepContext) => {
     </div>
   );
 };
+
 
 const Field = ({
   label, value, onChange, onBlur, type = "text", className, error, autoComplete, placeholder,
