@@ -239,7 +239,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
           </div>
 
           {/* RIGHT — summary panel */}
-          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-3" : "lg:col-span-4"}>
+          <div className={current.id === "boost_upload" || current.id === "boost_intro" ? "lg:col-span-3" : current.id === "contact" ? "lg:col-span-3" : "lg:col-span-4"}>
             <SummaryPanel state={state} currentStepId={current.id} />
           </div>
         </div>
