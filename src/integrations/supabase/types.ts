@@ -5088,6 +5088,9 @@ export type Database = {
           cadence_started_at: string | null
           cadence_state: string | null
           cadence_step: number
+          check_picked_up_at: string | null
+          check_pickup_notified_at: string | null
+          check_ready_at: string | null
           check_request_done: boolean
           created_at: string
           customer_memory: Json
@@ -5252,6 +5255,9 @@ export type Database = {
           cadence_started_at?: string | null
           cadence_state?: string | null
           cadence_step?: number
+          check_picked_up_at?: string | null
+          check_pickup_notified_at?: string | null
+          check_ready_at?: string | null
           check_request_done?: boolean
           created_at?: string
           customer_memory?: Json
@@ -5416,6 +5422,9 @@ export type Database = {
           cadence_started_at?: string | null
           cadence_state?: string | null
           cadence_step?: number
+          check_picked_up_at?: string | null
+          check_pickup_notified_at?: string | null
+          check_ready_at?: string | null
           check_request_done?: boolean
           created_at?: string
           customer_memory?: Json
