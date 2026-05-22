@@ -155,24 +155,24 @@ const PhotoGallerySlide = () => {
     indigo: "bg-[#EEF0FF] text-[#4F46E5]",
   };
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-5">
-      <div>
-        <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] grid place-items-center group">
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-4 h-full">
+      <div className="flex flex-col min-h-0">
+        <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] grid place-items-center group">
           <img src={vehicleHero} alt={cat.label} loading="lazy"
-               className="w-[80%] object-contain drop-shadow-[0_22px_22px_rgba(15,23,42,0.18)] transition-transform duration-500 group-hover:scale-105" />
-          <span className={`absolute top-3 left-3 inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded-full ${TONE[cat.tone]}`}>
+               className="max-h-[88%] w-auto object-contain drop-shadow-[0_18px_18px_rgba(15,23,42,0.18)] transition-transform duration-500 group-hover:scale-105" />
+          <span className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${TONE[cat.tone]}`}>
             <Sparkles className="w-3 h-3" /> {cat.ai}
           </span>
-          <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 text-[10px] font-semibold text-white bg-black/55 backdrop-blur px-2 py-1 rounded-full">
+          <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 text-[10px] font-semibold text-white bg-black/55 backdrop-blur px-2 py-0.5 rounded-full">
             <ImageIcon className="w-3 h-3" /> {cat.count} photos
           </span>
         </div>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 shrink-0">
           {PHOTO_CATEGORIES.slice(0, 6).map((p, i) => (
             <button key={p.id} onClick={() => setActive(i)}
-              className={`w-14 h-14 rounded-xl shrink-0 grid place-items-center text-[10px] font-semibold transition ${
+              className={`px-2.5 h-8 rounded-lg shrink-0 text-[10.5px] font-semibold transition ${
                 i === active
-                  ? "bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white shadow-[0_8px_16px_-8px_rgba(79,70,229,0.6)]"
+                  ? "bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white shadow-[0_6px_14px_-8px_rgba(79,70,229,0.6)]"
                   : "bg-[#F4F6FA] text-[#53627A] hover:bg-[#EEF0FF]"
               }`}>
               {p.label}
@@ -180,27 +180,27 @@ const PhotoGallerySlide = () => {
           ))}
         </div>
       </div>
-      <div>
+      <div className="flex flex-col min-h-0">
         <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Photo Sets</div>
-        <ul className="mt-2 space-y-2">
+        <ul className="mt-1.5 space-y-1 flex-1 min-h-0 overflow-y-auto pr-0.5">
           {PHOTO_CATEGORIES.map((p, i) => (
             <li key={p.id}>
               <button onClick={() => setActive(i)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left ${
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition text-left ${
                   i === active ? "bg-[#EEF0FF] ring-1 ring-[#C7D2FE]" : "hover:bg-[#F7F8FB]"
                 }`}>
                 <span className="flex items-center gap-2 min-w-0">
                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg ${TONE[p.tone]}`}>
                     <Camera className="w-3 h-3" />
                   </span>
-                  <span className="text-[13px] font-semibold text-[#06194A] truncate">{p.label}</span>
+                  <span className="text-[12.5px] font-semibold text-[#06194A] truncate">{p.label}</span>
                 </span>
                 <span className="text-[11px] text-[#8893A8] tabular-nums">{p.count}</span>
               </button>
             </li>
           ))}
         </ul>
-        <button className="mt-3 w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-white border border-dashed border-[#C7D2FE] hover:bg-[#EEF0FF] rounded-xl py-2 transition">
+        <button className="mt-2 w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-white border border-dashed border-[#C7D2FE] hover:bg-[#EEF0FF] rounded-xl py-1.5 transition shrink-0">
           <Plus className="w-3.5 h-3.5" /> Upload More Photos
         </button>
       </div>
