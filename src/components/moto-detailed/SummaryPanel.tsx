@@ -59,37 +59,11 @@ const SummaryPanel = ({ state }: { state: JourneyState }) => {
           </div>
 
           {/* Vehicle image */}
-          <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-[hsl(262_83%_58%/0.08)]">
-            {vehicle.imageUrl ? (
-              <img
-                src={vehicle.imageUrl}
-                alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <>
-                <div className="absolute inset-1 rounded-xl bg-gradient-to-br from-slate-50 via-white to-[hsl(215_40%_96%)]" />
-                <div
-                  className="absolute inset-0 opacity-[0.35]"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(hsl(215 20% 65% / 0.35) 1px, transparent 1px)",
-                    backgroundSize: "14px 14px",
-                  }}
-                />
-                <div className="relative flex h-full flex-col items-center justify-center">
-                  <Car
-                    className="h-14 w-14 text-[hsl(262_60%_45%)] opacity-60"
-                    strokeWidth={1.25}
-                  />
-                  <p className="mt-2 text-[11px] font-medium text-slate-400">
-                    Vehicle image pending
-                  </p>
-                </div>
-                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-white to-transparent" />
-              </>
-            )}
-          </div>
+          <VehicleImageCard
+            imageUrl={vehicle.imageUrl}
+            make={vehicle.make}
+            model={vehicle.model}
+          />
 
           {/* Vehicle name */}
           <div className="px-5 pt-4">
