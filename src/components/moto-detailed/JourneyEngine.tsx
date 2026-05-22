@@ -164,7 +164,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className="min-h-screen bg-gradient-to-b from-white via-white to-slate-50"
     >
-      <div className="mx-auto w-full max-w-[1180px] px-4 pb-16 pt-8 lg:px-8 lg:pt-12">
+      <div className={`mx-auto w-full px-4 pb-16 pt-8 lg:px-8 lg:pt-12 ${current.id === "boost_upload" || current.id === "boost_intro" ? "max-w-[1320px]" : "max-w-[1180px]"}`}>
         {/* Mobile stepper */}
         <div className="mb-6 lg:hidden">
           <MobileStepper
