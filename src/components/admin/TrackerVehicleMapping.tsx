@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus,
   Trash2,
@@ -11,6 +11,9 @@ import {
   ChevronDown,
   Monitor,
   Smartphone,
+  Upload,
+  Search,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
@@ -25,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -44,6 +48,16 @@ import { cn } from "@/lib/utils";
 
 type Mode = "oem" | "popular" | "custom";
 
+interface TrackerOptions {
+  color?: string | null;
+  randomize_on_load?: boolean;
+  remove_background?: boolean;
+  use_same_landing_and_tracker?: boolean;
+  rotate_by_session?: boolean;
+  match_to_trade_type?: boolean;
+  use_fallback_on_error?: boolean;
+}
+
 interface TenantOverride {
   tracker_vehicle_mode: Mode;
   tracker_vehicle_year: number | null;
@@ -51,7 +65,20 @@ interface TenantOverride {
   tracker_vehicle_model: string | null;
   tracker_vehicle_style: string | null;
   tracker_vehicle_specs: string | null;
+  tracker_vehicle_image_url: string | null;
+  tracker_vehicle_label: string | null;
+  tracker_vehicle_options: TrackerOptions;
 }
+
+const DEFAULT_OPTIONS: TrackerOptions = {
+  color: null,
+  randomize_on_load: false,
+  remove_background: false,
+  use_same_landing_and_tracker: true,
+  rotate_by_session: false,
+  match_to_trade_type: false,
+  use_fallback_on_error: true,
+};
 
 const DEFAULT_TENANT_OVERRIDE: TenantOverride = {
   tracker_vehicle_mode: "oem",
@@ -60,6 +87,9 @@ const DEFAULT_TENANT_OVERRIDE: TenantOverride = {
   tracker_vehicle_model: null,
   tracker_vehicle_style: null,
   tracker_vehicle_specs: null,
+  tracker_vehicle_image_url: null,
+  tracker_vehicle_label: null,
+  tracker_vehicle_options: DEFAULT_OPTIONS,
 };
 
 type FlagshipMap = Record<string, FlagshipEntry>;
@@ -83,7 +113,7 @@ const SOURCE_CARDS: Array<{
   {
     mode: "popular",
     title: "Popular Fallback",
-    description: "Use a clean, broadly-recognized vehicle as a safe default.",
+    description: "Use a clean, generic vehicle based on body style.",
     bestFor: "Independents and groups without a single OEM identity.",
     icon: Sparkles,
     accent: "from-emerald-500/15 to-teal-500/10 text-emerald-600 dark:text-emerald-300",
@@ -91,24 +121,45 @@ const SOURCE_CARDS: Array<{
   {
     mode: "custom",
     title: "Specific Vehicle",
-    description: "Pin a specific year / make / model — great for campaigns.",
-    bestFor: "Seasonal promotions, featured units, or one-off launches.",
+    description: "Upload a vehicle image or pin a specific unit for a campaign.",
+    bestFor: "Seasonal promotions, featured inventory, or one-off launches.",
     icon: ImageIcon,
     accent: "from-amber-500/15 to-orange-500/10 text-amber-600 dark:text-amber-300",
   },
 ];
 
+const ADDITIONAL_OPTIONS: Array<{
+  key: keyof TrackerOptions;
+  title: string;
+  description: string;
+}> = [
+  {
+    key: "use_same_landing_and_tracker",
+    title: "Use same vehicle across landing and tracker pages",
+    description: "Keep one consistent vehicle image in both the hero and the value-tracker card.",
+  },
+  {
+    key: "rotate_by_session",
+    title: "Rotate vehicle image by visitor session",
+    description: "Show a different vehicle per visitor to add variety on repeat visits.",
+  },
+  {
+    key: "match_to_trade_type",
+    title: "Match landing vehicle to known trade-in type",
+    description: "If we know what the visitor is trading, show a vehicle of the same body style.",
+  },
+  {
+    key: "use_fallback_on_error",
+    title: "Use fallback image if the selected image fails",
+    description: "Show the Popular fallback vehicle if your chosen image can't be loaded.",
+  },
+];
+
 /**
- * Admin screen for the OEM → flagship-vehicle mapping that powers the
- * homepage Value Tracker card. Defaults ship in `src/data/oemFlagships.ts`;
- * this page stores per-tenant overrides on
- * `site_config.tracker_oem_flagships` plus a tenant-level forced vehicle
- * via `tracker_vehicle_mode` and friends.
- *
- * UI: three source cards (OEM / Popular / Specific) drive the tenant
- * forced vehicle. A sticky right-side preview shows what customers see.
- * The full brand-mapping table is preserved behind an Advanced disclosure
- * so power users keep every knob they had before.
+ * Tracker Vehicles tab — three-card source picker (OEM / Popular / Specific)
+ * with a sticky live-preview panel. Persists to `site_config` columns
+ * `tracker_vehicle_*` plus `tracker_oem_flagships` (the brand mapping
+ * table tucked behind an Advanced disclosure).
  */
 const TrackerVehicleMapping = () => {
   const { tenant } = useTenant();
@@ -122,7 +173,9 @@ const TrackerVehicleMapping = () => {
   const [savedTenantOv, setSavedTenantOv] = useState<TenantOverride>(DEFAULT_TENANT_OVERRIDE);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -130,7 +183,7 @@ const TrackerVehicleMapping = () => {
       const { data } = await supabase
         .from("site_config")
         .select(
-          "tracker_oem_flagships, tracker_vehicle_mode, tracker_vehicle_year, tracker_vehicle_make, tracker_vehicle_model, tracker_vehicle_style, tracker_vehicle_specs",
+          "tracker_oem_flagships, tracker_vehicle_mode, tracker_vehicle_year, tracker_vehicle_make, tracker_vehicle_model, tracker_vehicle_style, tracker_vehicle_specs, tracker_vehicle_image_url, tracker_vehicle_label, tracker_vehicle_options",
         )
         .eq("dealership_id", dealershipId)
         .maybeSingle();
@@ -144,6 +197,12 @@ const TrackerVehicleMapping = () => {
         tracker_vehicle_model: data?.tracker_vehicle_model ?? null,
         tracker_vehicle_style: data?.tracker_vehicle_style ?? null,
         tracker_vehicle_specs: (data as any)?.tracker_vehicle_specs ?? null,
+        tracker_vehicle_image_url: (data as any)?.tracker_vehicle_image_url ?? null,
+        tracker_vehicle_label: (data as any)?.tracker_vehicle_label ?? null,
+        tracker_vehicle_options: {
+          ...DEFAULT_OPTIONS,
+          ...(((data as any)?.tracker_vehicle_options as TrackerOptions) || {}),
+        },
       };
       setTenantOv(tov);
       setSavedTenantOv(tov);
@@ -153,7 +212,7 @@ const TrackerVehicleMapping = () => {
 
   const effective = useMemo(() => mergeFlagships(overrides), [overrides]);
 
-  // Brand keys for the OEM dropdown (sorted, dedupe display names)
+  // Brands for the OEM dropdown (deduped by display name)
   const brandOptions = useMemo(() => {
     const seen = new Set<string>();
     return Object.entries(effective)
@@ -167,31 +226,59 @@ const TrackerVehicleMapping = () => {
       .sort((a, b) => a[1].make.localeCompare(b[1].make));
   }, [effective]);
 
-  // Resolved preview vehicle
-  const previewVehicle: FlagshipEntry & { source: string } = useMemo(() => {
+  // Models for the chosen brand
+  const modelOptionsForBrand = useMemo(() => {
+    const targetMake = tenantOv.tracker_vehicle_make?.toLowerCase();
+    if (!targetMake) return [];
+    return Object.values(effective)
+      .filter((v) => v.make.toLowerCase() === targetMake)
+      .map((v) => v.model);
+  }, [effective, tenantOv.tracker_vehicle_make]);
+
+  const previewVehicle = useMemo(() => {
     if (tenantOv.tracker_vehicle_mode === "custom") {
       return {
-        year: tenantOv.tracker_vehicle_year ? String(tenantOv.tracker_vehicle_year) : "2022",
+        year: tenantOv.tracker_vehicle_year ? String(tenantOv.tracker_vehicle_year) : "",
         make: tenantOv.tracker_vehicle_make || "—",
         model: tenantOv.tracker_vehicle_model || "—",
         style: tenantOv.tracker_vehicle_style || "",
         specs: tenantOv.tracker_vehicle_specs || "",
-        source: "Specific vehicle",
+        source: tenantOv.tracker_vehicle_label || "Specific vehicle",
+        imageUrl: tenantOv.tracker_vehicle_image_url || null,
       };
     }
     if (tenantOv.tracker_vehicle_mode === "popular") {
+      const base = effective.toyota || DEFAULT_OEM_FLAGSHIPS.ford;
       return {
-        ...(effective.toyota || DEFAULT_OEM_FLAGSHIPS.ford),
+        ...base,
+        style: tenantOv.tracker_vehicle_style || base.style,
         source: "Popular fallback",
+        imageUrl: null as string | null,
       };
     }
-    // OEM auto-detect from tenant display name
+    // OEM
+    const overrideMake = tenantOv.tracker_vehicle_make?.toLowerCase();
     const display = (tenant?.display_name || "").toLowerCase();
     const matchKey =
+      (overrideMake &&
+        Object.keys(effective).find(
+          (k) => effective[k].make.toLowerCase() === overrideMake,
+        )) ||
       Object.keys(effective)
         .sort((a, b) => b.length - a.length)
-        .find((k) => display.includes(k)) || "ford";
-    return { ...effective[matchKey], source: `OEM match · ${matchKey}` };
+        .find((k) => display.includes(k)) ||
+      "ford";
+    const base = effective[matchKey];
+    // If model override exists, find a matching entry
+    if (tenantOv.tracker_vehicle_model) {
+      const match = Object.values(effective).find(
+        (v) =>
+          v.make.toLowerCase() === base.make.toLowerCase() &&
+          v.model.toLowerCase() === tenantOv.tracker_vehicle_model!.toLowerCase(),
+      );
+      if (match) return { ...match, source: `OEM · ${match.make}`, imageUrl: null };
+    }
+    return { ...base, source: `OEM · ${base.make}`, imageUrl: null };
   }, [tenantOv, effective, tenant?.display_name]);
 
   const updateEntry = (key: string, patch: Partial<FlagshipEntry>) => {
@@ -238,6 +325,35 @@ const TrackerVehicleMapping = () => {
     setNewKey("");
   };
 
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Image required",
+        description: "Pick a PNG, JPG, or WebP file.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `tracker-vehicles/${dealershipId}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("dealer-logos")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (error) {
+      setUploading(false);
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("dealer-logos").getPublicUrl(path);
+    setTenantOv((p) => ({ ...p, tracker_vehicle_image_url: urlData.publicUrl }));
+    setUploading(false);
+  };
+
   const dirty =
     JSON.stringify(overrides) !== JSON.stringify(savedOverrides) ||
     JSON.stringify(tenantOv) !== JSON.stringify(savedTenantOv);
@@ -254,6 +370,9 @@ const TrackerVehicleMapping = () => {
         tracker_vehicle_model: tenantOv.tracker_vehicle_model,
         tracker_vehicle_style: tenantOv.tracker_vehicle_style,
         tracker_vehicle_specs: tenantOv.tracker_vehicle_specs,
+        tracker_vehicle_image_url: tenantOv.tracker_vehicle_image_url,
+        tracker_vehicle_label: tenantOv.tracker_vehicle_label,
+        tracker_vehicle_options: tenantOv.tracker_vehicle_options as any,
         updated_at: new Date().toISOString(),
       } as any)
       .eq("dealership_id", dealershipId);
@@ -288,36 +407,45 @@ const TrackerVehicleMapping = () => {
     [overrides],
   );
 
+  const setOption = <K extends keyof TrackerOptions>(key: K, value: TrackerOptions[K]) =>
+    setTenantOv((p) => ({
+      ...p,
+      tracker_vehicle_options: { ...p.tracker_vehicle_options, [key]: value },
+    }));
+
   if (loading) {
     return <div className="text-sm text-muted-foreground py-8">Loading mapping…</div>;
   }
 
   return (
     <div className="space-y-6">
-      {/* ─────────── Header + Save bar ─────────── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="space-y-1.5">
-          <h2 className="text-lg font-semibold text-card-foreground">
-            Tracker Vehicles
-          </h2>
+      {/* ─────────── Sticky save bar ─────────── */}
+      <div
+        className={cn(
+          "sticky top-0 z-20 -mx-1 px-1 py-3 backdrop-blur",
+          "bg-background/85 border-b border-border/60",
+          "flex items-start justify-between gap-4 flex-wrap",
+        )}
+      >
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold text-card-foreground">Tracker Vehicles</h2>
           <p className="text-sm text-muted-foreground max-w-2xl">
             Choose the vehicle image customers see on your landing page and value
-            tracker experience. You can match your OEM brand, fall back to a popular
-            vehicle, or pin a specific unit for a campaign.
+            tracker experience.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {dirty && (
-            <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
-              Unsaved changes
-            </span>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!dirty || saving}
-            onClick={discard}
+          <span
+            className={cn(
+              "text-xs font-medium px-2 py-1 rounded-md transition-colors",
+              dirty
+                ? "text-amber-700 dark:text-amber-300 bg-amber-500/10"
+                : "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10",
+            )}
           >
+            {dirty ? "Unsaved changes" : "All changes saved"}
+          </span>
+          <Button variant="outline" size="sm" disabled={!dirty || saving} onClick={discard}>
             <RotateCcw className="h-4 w-4 mr-1.5" />
             Discard
           </Button>
@@ -335,9 +463,7 @@ const TrackerVehicleMapping = () => {
           {/* Vehicle source cards */}
           <div>
             <div className="mb-3">
-              <h3 className="text-sm font-semibold text-card-foreground">
-                Vehicle Source
-              </h3>
+              <h3 className="text-sm font-semibold text-card-foreground">Vehicle Source</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Pick how we choose the vehicle shown on the landing page.
               </p>
@@ -373,9 +499,7 @@ const TrackerVehicleMapping = () => {
                     >
                       <Icon className="h-5 w-5" />
                     </div>
-                    <div className="text-sm font-semibold text-card-foreground">
-                      {title}
-                    </div>
+                    <div className="text-sm font-semibold text-card-foreground">{title}</div>
                     <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
                       {description}
                     </div>
@@ -394,32 +518,31 @@ const TrackerVehicleMapping = () => {
             {tenantOv.tracker_vehicle_mode === "oem" && (
               <>
                 <div>
-                  <h4 className="text-sm font-semibold text-card-foreground">
-                    OEM Vehicle Setup
-                  </h4>
+                  <h4 className="text-sm font-semibold text-card-foreground">OEM Vehicle Setup</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     We auto-detect a brand from your dealership name (
                     <span className="font-medium text-foreground/80">
                       {tenant?.display_name || "this dealership"}
                     </span>
-                    ). Override the brand here if needed — the model and trim come from
-                    the brand mapping below.
+                    ). Override the brand, pick a specific model, or fall back to a
+                    body style.
                   </p>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid sm:grid-cols-3 gap-3">
                   <div>
-                    <Label className="text-xs">Brand override (optional)</Label>
+                    <Label className="text-xs">OEM / Brand</Label>
                     <Select
                       value={tenantOv.tracker_vehicle_make ?? "__auto"}
                       onValueChange={(v) =>
                         setTenantOv((p) => ({
                           ...p,
                           tracker_vehicle_make: v === "__auto" ? null : v,
+                          tracker_vehicle_model: null,
                         }))
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Auto-detect from dealership name" />
+                        <SelectValue placeholder="Auto-detect" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="__auto">Auto-detect</SelectItem>
@@ -432,9 +555,34 @@ const TrackerVehicleMapping = () => {
                     </Select>
                   </div>
                   <div>
+                    <Label className="text-xs">Model</Label>
+                    <Select
+                      value={tenantOv.tracker_vehicle_model ?? "__default"}
+                      onValueChange={(v) =>
+                        setTenantOv((p) => ({
+                          ...p,
+                          tracker_vehicle_model: v === "__default" ? null : v,
+                        }))
+                      }
+                      disabled={!tenantOv.tracker_vehicle_make || modelOptionsForBrand.length === 0}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Brand default" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__default">Brand default</SelectItem>
+                        {modelOptionsForBrand.map((m) => (
+                          <SelectItem key={m} value={m}>
+                            {m}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label className="text-xs">Style fallback</Label>
                     <Select
-                      value={tenantOv.tracker_vehicle_style ?? "__suv"}
+                      value={tenantOv.tracker_vehicle_style ?? "SUV"}
                       onValueChange={(v) =>
                         setTenantOv((p) => ({ ...p, tracker_vehicle_style: v }))
                       }
@@ -443,11 +591,11 @@ const TrackerVehicleMapping = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__suv">SUV</SelectItem>
-                        <SelectItem value="__sedan">Sedan</SelectItem>
-                        <SelectItem value="__truck">Truck</SelectItem>
-                        <SelectItem value="__ev">EV</SelectItem>
-                        <SelectItem value="__random">Random</SelectItem>
+                        <SelectItem value="SUV">SUV</SelectItem>
+                        <SelectItem value="Sedan">Sedan</SelectItem>
+                        <SelectItem value="Truck">Truck</SelectItem>
+                        <SelectItem value="EV">EV</SelectItem>
+                        <SelectItem value="Random">Random</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -463,7 +611,6 @@ const TrackerVehicleMapping = () => {
                   </h4>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     A safe, broadly-recognized vehicle shown when no OEM match applies.
-                    Defaults to a Toyota RAV4.
                   </p>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
@@ -489,17 +636,43 @@ const TrackerVehicleMapping = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">Specs line (optional)</Label>
-                    <Input
-                      value={tenantOv.tracker_vehicle_specs ?? ""}
-                      onChange={(e) =>
-                        setTenantOv((p) => ({
-                          ...p,
-                          tracker_vehicle_specs: e.target.value || null,
-                        }))
-                      }
-                      placeholder="4D SUV · 2.5L · 36k mi"
-                    />
+                    <Label className="text-xs">Color preference (optional)</Label>
+                    <Select
+                      value={tenantOv.tracker_vehicle_options.color ?? "__any"}
+                      onValueChange={(v) => setOption("color", v === "__any" ? null : v)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Any color" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__any">Any color</SelectItem>
+                        <SelectItem value="silver">Silver</SelectItem>
+                        <SelectItem value="white">White</SelectItem>
+                        <SelectItem value="black">Black</SelectItem>
+                        <SelectItem value="gray">Gray</SelectItem>
+                        <SelectItem value="blue">Blue</SelectItem>
+                        <SelectItem value="red">Red</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-3">
+                  <Switch
+                    id="randomize-on-load"
+                    checked={!!tenantOv.tracker_vehicle_options.randomize_on_load}
+                    onCheckedChange={(v) => setOption("randomize_on_load", v)}
+                  />
+                  <div className="flex-1 -mt-0.5">
+                    <Label
+                      htmlFor="randomize-on-load"
+                      className="text-sm font-medium cursor-pointer"
+                    >
+                      Randomize on page load
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Pick a different vehicle from the chosen body style every time the
+                      page loads.
+                    </p>
                   </div>
                 </div>
               </>
@@ -508,13 +681,80 @@ const TrackerVehicleMapping = () => {
             {tenantOv.tracker_vehicle_mode === "custom" && (
               <>
                 <div>
-                  <h4 className="text-sm font-semibold text-card-foreground">
-                    Specific Vehicle
-                  </h4>
+                  <h4 className="text-sm font-semibold text-card-foreground">Specific Vehicle</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Pin a year / make / model. Great for campaigns or seasonal promos.
+                    Upload a custom image or pin a specific year / make / model. Ideal for
+                    campaigns and featured units.
                   </p>
                 </div>
+
+                {/* Image upload */}
+                <div className="space-y-2">
+                  <Label className="text-xs">Vehicle image</Label>
+                  <div className="flex items-center gap-3">
+                    <div className="h-20 w-32 rounded-lg border bg-muted/40 overflow-hidden flex items-center justify-center">
+                      {tenantOv.tracker_vehicle_image_url ? (
+                        <img
+                          src={tenantOv.tracker_vehicle_image_url}
+                          alt="Tracker vehicle preview"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleImageUpload(f);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploading}
+                        >
+                          <Upload className="h-3.5 w-3.5 mr-1.5" />
+                          {uploading ? "Uploading…" : "Upload image"}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled
+                          title="Inventory search — coming soon"
+                        >
+                          <Search className="h-3.5 w-3.5 mr-1.5" />
+                          Search inventory
+                        </Button>
+                        {tenantOv.tracker_vehicle_image_url && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              setTenantOv((p) => ({ ...p, tracker_vehicle_image_url: null }))
+                            }
+                          >
+                            <X className="h-3.5 w-3.5 mr-1.5" />
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        PNG, JPG, or WebP. Recommended 1600×900 with a transparent or clean
+                        background.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid sm:grid-cols-5 gap-3">
                   <div>
                     <Label className="text-xs">Year</Label>
@@ -559,7 +799,7 @@ const TrackerVehicleMapping = () => {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Trim / Style</Label>
+                    <Label className="text-xs">Trim</Label>
                     <Input
                       value={tenantOv.tracker_vehicle_style ?? ""}
                       onChange={(e) =>
@@ -585,8 +825,75 @@ const TrackerVehicleMapping = () => {
                     />
                   </div>
                 </div>
+
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Display label (optional)</Label>
+                    <Input
+                      value={tenantOv.tracker_vehicle_label ?? ""}
+                      onChange={(e) =>
+                        setTenantOv((p) => ({
+                          ...p,
+                          tracker_vehicle_label: e.target.value || null,
+                        }))
+                      }
+                      placeholder="Featured trade · Spring Event"
+                    />
+                  </div>
+                  <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-3">
+                    <Switch
+                      id="remove-bg"
+                      checked={!!tenantOv.tracker_vehicle_options.remove_background}
+                      onCheckedChange={(v) => setOption("remove_background", v)}
+                    />
+                    <div className="flex-1 -mt-0.5">
+                      <Label htmlFor="remove-bg" className="text-sm font-medium cursor-pointer">
+                        Remove image background
+                      </Label>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Strip the background so the vehicle floats on your hero. Processed at
+                        upload.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </>
             )}
+          </div>
+
+          {/* ─────────── Additional options ─────────── */}
+          <div className="rounded-2xl border bg-card p-5 space-y-3">
+            <div>
+              <h4 className="text-sm font-semibold text-card-foreground">Additional Options</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Behavior shared across all source modes.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {ADDITIONAL_OPTIONS.map((opt) => (
+                <div
+                  key={opt.key}
+                  className="flex items-start gap-3 rounded-lg border bg-muted/20 p-3"
+                >
+                  <Switch
+                    id={`opt-${opt.key}`}
+                    checked={!!tenantOv.tracker_vehicle_options[opt.key]}
+                    onCheckedChange={(v) => setOption(opt.key, v)}
+                  />
+                  <div className="flex-1 -mt-0.5">
+                    <Label
+                      htmlFor={`opt-${opt.key}`}
+                      className="text-sm font-medium cursor-pointer leading-tight block"
+                    >
+                      {opt.title}
+                    </Label>
+                    <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                      {opt.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ─────────── Advanced: OEM brand mapping table ─────────── */}
@@ -601,8 +908,8 @@ const TrackerVehicleMapping = () => {
                   Advanced · OEM Brand Mapping
                 </div>
                 <div className="text-xs text-muted-foreground mt-0.5">
-                  Per-brand defaults used when "OEM Vehicle" is selected. Most
-                  dealers never need to touch this.
+                  Per-brand defaults used when "OEM Vehicle" is selected. Most dealers
+                  never need to touch this.
                 </div>
               </div>
               <ChevronDown
@@ -744,16 +1051,14 @@ const TrackerVehicleMapping = () => {
 
         {/* ─── Right: sticky preview panel ─── */}
         <aside className="lg:col-span-1">
-          <div className="lg:sticky lg:top-6 space-y-3">
+          <div className="lg:sticky lg:top-32 space-y-3">
             <div className="rounded-2xl border bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-950 dark:to-slate-900 text-slate-50 overflow-hidden shadow-lg">
               <div className="px-5 pt-5 pb-3 flex items-center justify-between">
                 <div>
                   <div className="text-[11px] uppercase tracking-wider text-slate-400">
                     Landing Vehicle Preview
                   </div>
-                  <div className="text-xs text-slate-300 mt-0.5">
-                    {previewVehicle.source}
-                  </div>
+                  <div className="text-xs text-slate-300 mt-0.5">{previewVehicle.source}</div>
                 </div>
                 <Badge
                   variant="secondary"
@@ -774,7 +1079,18 @@ const TrackerVehicleMapping = () => {
                         "radial-gradient(circle at 30% 40%, rgba(99,102,241,0.4), transparent 60%), radial-gradient(circle at 70% 70%, rgba(16,185,129,0.3), transparent 60%)",
                     }}
                   />
-                  <Car className="h-16 w-16 text-slate-300 relative z-10" strokeWidth={1.2} />
+                  {previewVehicle.imageUrl ? (
+                    <img
+                      src={previewVehicle.imageUrl}
+                      alt="Tracker vehicle"
+                      className="relative z-10 max-h-full max-w-full object-contain"
+                    />
+                  ) : (
+                    <Car
+                      className="h-16 w-16 text-slate-300 relative z-10"
+                      strokeWidth={1.2}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -784,14 +1100,10 @@ const TrackerVehicleMapping = () => {
                     {previewVehicle.year} {previewVehicle.make} {previewVehicle.model}
                   </div>
                   {previewVehicle.style && (
-                    <div className="text-xs text-slate-300">
-                      Trim: {previewVehicle.style}
-                    </div>
+                    <div className="text-xs text-slate-300">Trim: {previewVehicle.style}</div>
                   )}
                   {previewVehicle.specs && (
-                    <div className="text-xs text-slate-400 pt-1">
-                      {previewVehicle.specs}
-                    </div>
+                    <div className="text-xs text-slate-400 pt-1">{previewVehicle.specs}</div>
                   )}
                 </div>
 
@@ -801,7 +1113,9 @@ const TrackerVehicleMapping = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Smartphone className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-[11px] text-slate-400">Mobile · Value tracker card</span>
+                  <span className="text-[11px] text-slate-400">
+                    Mobile · Value tracker card
+                  </span>
                 </div>
               </div>
             </div>
