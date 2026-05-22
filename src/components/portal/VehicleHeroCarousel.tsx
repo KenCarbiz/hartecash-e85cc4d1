@@ -4,7 +4,7 @@ import {
   ChevronLeft, ChevronRight, Copy, Check, TrendingUp, Sparkles, Camera,
   ShieldCheck, Gauge, Star, Image as ImageIcon, Wrench, AlertCircle,
   Activity, Flame, Zap, MapPin, Clock, FileText, Truck, Wallet, Trophy,
-  CircleDot, Plus, Brain,
+  CircleDot, Plus, Brain, ArrowRight,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { PORTAL_MOCK as MOCK, fmt } from "./portalMock";
@@ -378,7 +378,7 @@ const ConditionSlide = () => {
 };
 
 /* ---------- 4. Offer Breakdown --------------------------------- */
-const OfferBreakdownSlide = () => {
+const OfferBreakdownSlide = ({ onViewOfferDetails }: { onViewOfferDetails?: () => void }) => {
   const maxAbs = Math.max(...OFFER_FACTORS.map((f) => Math.abs(f.value)));
   return (
     <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-4 h-full">
@@ -414,7 +414,14 @@ const OfferBreakdownSlide = () => {
           <span className="inline-flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1"><ShieldCheck className="w-3 h-3" /> No obligation</span>
           <span className="inline-flex items-center gap-1 bg-white/10 rounded-lg px-2 py-1"><Truck className="w-3 h-3" /> Free pickup</span>
         </div>
-        <div className="mt-auto pt-2 text-[10px] text-[#CBD5F5]">Expires {MOCK.offerExpires}</div>
+        <div className="mt-auto pt-2 flex flex-col gap-1">
+          <div className="text-[10px] text-[#CBD5F5]">Expires {MOCK.offerExpires}</div>
+          {onViewOfferDetails && (
+            <button onClick={onViewOfferDetails} className="self-start inline-flex items-center gap-1 text-[11px] font-semibold text-[#A5B4FC] hover:text-white transition-colors">
+              View offer details <ArrowRight className="w-3 h-3" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -558,7 +565,7 @@ const TimelineSlide = () => (
 /*  Carousel shell                                                 */
 /* ============================================================== */
 
-export const VehicleHeroCarousel = () => {
+export const VehicleHeroCarousel = ({ onViewOfferDetails }: { onViewOfferDetails?: () => void }) => {
   const [slide, setSlide] = useState(0);
   const [direction, setDirection] = useState(1);
   const [copied, setCopied] = useState(false);
@@ -595,7 +602,7 @@ export const VehicleHeroCarousel = () => {
       case 0: return <VehicleOverviewSlide copied={copied} onCopy={copyVin} />;
       case 1: return <PhotoGallerySlide />;
       case 2: return <ConditionSlide />;
-      case 3: return <OfferBreakdownSlide />;
+      case 3: return <OfferBreakdownSlide onViewOfferDetails={onViewOfferDetails} />;
       case 4: return <MarketSlide />;
       case 5: return <TimelineSlide />;
       default: return null;
