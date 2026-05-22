@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ShieldCheck, Truck, BadgeCheck, Camera, X, Lock } from "lucide-react";
+import { ShieldCheck, Truck, BadgeCheck, X, Lock, BookmarkCheck, ArrowRight } from "lucide-react";
+
 import type { StepContext } from "../types";
 import { trackCtaClicked, trackOfferAccepted } from "../analytics";
 
