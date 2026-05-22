@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -84,17 +85,21 @@ const fallbackMeta = (name: string): DocMeta => ({
 /* ---------- Mobile handoff card ------------------------------------ */
 
 const HandoffCard = ({ docName }: { docName: string }) => {
-  /* Build a deep link that would re-open the mobile capture flow at the
-     correct document. The host is a placeholder for the live portal URL. */
+  /* Deep link that re-opens the mobile capture flow scoped to the
+     customer's submission. /docs/:token is the real route mounted in
+     App.tsx (UploadDocs page). On the unauthenticated /portal-preview
+     demo there's no token, so we fall back to the marketing root. */
+  const { token } = useParams<{ token: string }>();
   const session = useMemo(
     () => Math.random().toString(36).slice(2, 10).toUpperCase(),
     [docName]
   );
   const url = useMemo(() => {
     const base = typeof window !== "undefined" ? window.location.origin : "https://portal.moto.app";
+    if (!token) return `${base}/`;
     const slug = encodeURIComponent(docName);
-    return `${base}/m/upload/${slug}?s=${session}`;
-  }, [docName, session]);
+    return `${base}/docs/${token}?doc=${slug}&s=${session}`;
+  }, [docName, session, token]);
 
   const [secondsLeft, setSecondsLeft] = useState(10 * 60);
   const [copied, setCopied] = useState(false);
