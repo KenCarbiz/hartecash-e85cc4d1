@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ShieldCheck, Truck, BadgeCheck, X, Lock, BookmarkCheck, ArrowRight } from "lucide-react";
+import { ShieldCheck, Truck, BadgeCheck, X, Lock, BookmarkCheck, ArrowRight, Sparkles } from "lucide-react";
 
 import type { StepContext } from "../types";
 import { trackCtaClicked, trackOfferAccepted } from "../analytics";
@@ -13,11 +13,10 @@ const DEALER_NAME = "Liberty Automotive";
 /**
  * Firm-offer reveal — final decision moment.
  *
- * - No "Save Offer" button.
- * - No customer-facing AI Boost copy.
- * - "I'm not ready" opens a photo-review invitation modal only.
- *   No increased dollar amount is revealed unless the customer
- *   completes the photo review flow.
+ * - "Accept Offer" locks in the firm offer.
+ * - "Save My Offer" opens the AI Appraisal modal, giving customers
+ *   a clear choice: add photos for a potential better offer, or
+ *   simply save the current offer for later.
  */
 const StepOfferReady = ({ state, update, goTo }: StepContext) => {
   const v = state.valuation;
@@ -32,25 +31,32 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
     ? `${Number(state.contact.mileage).toLocaleString("en-US")} mi`
     : null;
 
-  const [showSaved, setShowSaved] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
 
   const acceptOriginal = () => {
     trackCtaClicked("offer", "Accept Offer");
     trackOfferAccepted(firm);
     update({ branch: "accept" });
-    setShowSaved(false);
+    setShowAiModal(false);
     setTimeout(() => goTo("accepted"), 0);
   };
 
-  const onSaveOffer = () => {
+  const onSaveMyOffer = () => {
     trackCtaClicked("offer", "Save My Offer");
-    setShowSaved(true);
+    setShowAiModal(true);
   };
 
-  const onGoToPortal = () => {
-    trackCtaClicked("offer", "Go to My Offer Portal");
-    setShowSaved(false);
-    window.location.href = "/portal-preview";
+  const onAddPhotos = () => {
+    trackCtaClicked("offer", "Add Photos for a Better Offer");
+    update({ branch: "boost" });
+    setShowAiModal(false);
+    setTimeout(() => goTo("boost_intro"), 0);
+  };
+
+  const onSaveOfferFromModal = () => {
+    trackCtaClicked("offer", "Save Your Offer");
+    update({ saved: true });
+    setShowAiModal(false);
   };
 
 
@@ -108,7 +114,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
           Accept Offer · {fmt(firm)} <ArrowRight className="h-4 w-4" />
         </motion.button>
         <button
-          onClick={onSaveOffer}
+          onClick={onSaveMyOffer}
           className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
         >
           <BookmarkCheck className="h-4 w-4" /> Save My Offer
@@ -118,57 +124,88 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
         </p>
       </div>
 
-      {/* Save confirmation modal */}
+      {/* AI Appraisal modal */}
       <AnimatePresence>
-        {showSaved && (
+        {showAiModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/55 p-4 backdrop-blur-sm sm:items-center"
-            onClick={() => setShowSaved(false)}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-4 backdrop-blur-md sm:items-center"
+            onClick={() => setShowAiModal(false)}
           >
             <motion.div
-              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              initial={{ opacity: 0, y: 28, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 0.98 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              exit={{ opacity: 0, y: 16, scale: 1.01 }}
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+              className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-white p-8 shadow-[0_24px_60px_-16px_rgba(15,23,42,0.35)] sm:p-10"
             >
+              {/* Close */}
               <button
-                onClick={() => setShowSaved(false)}
-                className="absolute right-3 top-3 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                onClick={() => setShowAiModal(false)}
+                className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
                 aria-label="Close"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" strokeWidth={1.5} />
               </button>
 
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                <BookmarkCheck className="h-5 w-5" />
-              </div>
-              <h2 className="mt-3 text-xl font-semibold tracking-tight text-slate-900">
-                Your offer has been saved.
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                You can return to your customer portal anytime to review your offer, upload documents, message the dealer, or continue when you're ready.
-              </p>
+              {/* Decorative top gradient line */}
+              <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-[hsl(262_83%_60%)] via-[hsl(262_70%_55%)] to-[hsl(190_80%_55%)]" />
 
-              <div className="mt-5 space-y-2">
-                <motion.button
-                  whileTap={{ scale: 0.995 }}
-                  onClick={onGoToPortal}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_8px_24px_-10px_hsl(262_83%_58%/0.6)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
+              <div className="flex flex-col items-center text-center">
+                {/* Icon badge */}
+                <motion.div
+                  initial={{ scale: 1 }}
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ delay: 0.5, duration: 0.5, ease: "easeInOut" }}
+                  className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(262_83%_96%)] to-[hsl(262_60%_94%)] text-[hsl(262_60%_45%)] shadow-[0_4px_16px_-6px_hsl(262_60%_45%/0.35)]"
                 >
-                  Go to My Offer Portal <ArrowRight className="h-4 w-4" />
+                  <Sparkles className="h-6 w-6" strokeWidth={1.8} />
+                </motion.div>
+
+                {/* Eyebrow */}
+                <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[hsl(262_60%_45%)]">
+                  AI Appraisal Option
+                </p>
+
+                {/* Headline */}
+                <h2 className="mt-2 text-[26px] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[28px]">
+                  Want to get more<br className="hidden sm:block" /> for your vehicle?
+                </h2>
+
+                {/* Body */}
+                <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-slate-500">
+                  Let our AI agent appraise it.<br className="hidden sm:block" />
+                  Upload a few quick photos and we’ll review your vehicle’s condition and check whether you qualify for a better offer.
+                </p>
+              </div>
+
+              {/* CTAs */}
+              <div className="mt-8 space-y-3">
+                <motion.button
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.995 }}
+                  onClick={onAddPhotos}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] px-6 py-4 text-base font-semibold text-white shadow-[0_10px_32px_-10px_hsl(262_83%_58%/0.55)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
+                >
+                  Add Photos for a Better Offer <ArrowRight className="h-4 w-4" />
                 </motion.button>
+
                 <button
-                  onClick={() => setShowSaved(false)}
+                  onClick={onSaveOfferFromModal}
                   className="w-full rounded-xl px-4 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
                 >
-                  Back to Offer
+                  Save Your Offer
                 </button>
               </div>
+
+              {/* Reassurance */}
+              <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400">
+                Your current offer is still available. No obligation.
+              </p>
             </motion.div>
           </motion.div>
         )}
