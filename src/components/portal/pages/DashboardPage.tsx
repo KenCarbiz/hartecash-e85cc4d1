@@ -130,7 +130,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-4">
         <div>
           <h1 className="text-[22px] sm:text-[26px] font-bold text-[#06194A] leading-tight">
             Hi, {MOCK.customer.name.split(" ")[0]} <span aria-hidden>👋</span>
@@ -140,7 +140,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
       </div>
 
       {/* TOP — four-metric strip */}
-      <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-6 grid grid-cols-2 lg:grid-cols-4">
+      <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] mb-4 grid grid-cols-2 lg:grid-cols-4">
         {[
           <Metric key="ev" label="Estimated Value" value={`${fmt(MOCK.range.low)} – ${fmt(MOCK.range.high)}`}
             sub={<span className="text-[#16A34A] font-medium inline-flex items-center gap-1"><TrendingUp className="w-3 h-3" />Strong Market</span>}
