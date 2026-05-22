@@ -76,30 +76,23 @@ const TypingDots = () => (
 const TransactionHeader = ({ onOffer }: { onOffer: () => void }) => (
   <motion.div
     initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-    className="relative border-b border-[#E6EAF0] bg-gradient-to-r from-[#EEF0FF]/60 via-white to-[#F5F3FF]/60 px-4 py-3"
+    className="border-b border-[#E6EAF0] bg-[#FAFBFE] px-4 py-2"
   >
     <div className="flex items-center gap-3">
-      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#E6EAF0] to-[#F4F6FA] grid place-items-center shrink-0 ring-1 ring-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
-        <ImageIcon className="w-6 h-6 text-[#8893A8]" />
-      </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">Active transaction</div>
         <div className="text-sm font-semibold text-[#06194A] truncate">
           {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
         </div>
-        <div className="mt-1 flex items-center gap-3 flex-wrap text-[11px]">
-          <button onClick={onOffer} className="inline-flex items-center gap-1 font-semibold text-[#4F46E5] hover:underline">
-            <DollarSign className="w-3 h-3" /> {fmt(MOCK.firmOffer)}
-          </button>
-          <span className="inline-flex items-center gap-1 text-[#B45309]">
-            <Truck className="w-3 h-3" /> Pickup pending
-          </span>
-          <span className="inline-flex items-center gap-1 text-[#53627A]">
-            <FileText className="w-3 h-3" /> 2 docs remaining
-          </span>
-          <StatusPill tone="indigo">Stage: Offer Accepted</StatusPill>
+        <div className="text-[11px] text-[#53627A] truncate">
+          Firm offer accepted · 2 docs remaining
         </div>
       </div>
+      <button
+        onClick={onOffer}
+        className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-white border border-[#E0E7FF] rounded-lg px-2.5 py-1.5 hover:bg-[#EEF0FF] transition shrink-0"
+      >
+        <DollarSign className="w-3.5 h-3.5" /> {fmt(MOCK.firmOffer)}
+      </button>
     </div>
   </motion.div>
 );
