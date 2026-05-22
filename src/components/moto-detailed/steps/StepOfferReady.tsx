@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ShieldCheck, Truck, BadgeCheck, X, Lock, BookmarkCheck, ArrowRight, Sparkles } from "lucide-react";
+import { ShieldCheck, Truck, BadgeCheck, X, LockKeyhole, BookmarkCheck, ArrowRight, Sparkles } from "lucide-react";
 
 import type { StepContext } from "../types";
 import { trackCtaClicked, trackOfferAccepted } from "../analytics";
@@ -95,11 +95,15 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
           <Row label="Offer expires" value={expiresLabel} />
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Trust icon={<BadgeCheck className="h-3.5 w-3.5" />} label="No obligation" />
-          <Trust icon={<Lock className="h-3.5 w-3.5" />} label="Secure & private" />
-          <Trust icon={<Truck className="h-3.5 w-3.5" />} label="Free pickup" />
-          <Trust icon={<ShieldCheck className="h-3.5 w-3.5" />} label="Dealer verified" />
+        {/* Premium trust strip */}
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-y-2 rounded-[14px] border border-emerald-100/80 bg-[hsl(150_60%_97%)] px-4 py-2.5">
+          <TrustItem icon={<ShieldCheck className="h-[14px] w-[14px]" />} label="No obligation" />
+          <span className="hidden h-3 w-px bg-emerald-200/60 sm:block" aria-hidden="true" />
+          <TrustItem icon={<LockKeyhole className="h-[14px] w-[14px]" />} label="Secure & private" />
+          <span className="hidden h-3 w-px bg-emerald-200/60 sm:block" aria-hidden="true" />
+          <TrustItem icon={<Truck className="h-[14px] w-[14px]" />} label="Free pickup" />
+          <span className="hidden h-3 w-px bg-emerald-200/60 sm:block" aria-hidden="true" />
+          <TrustItem icon={<BadgeCheck className="h-[14px] w-[14px]" />} label="Dealer verified" />
         </div>
       </motion.div>
 
@@ -222,9 +226,9 @@ const Row = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-const Trust = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
-  <div className="flex items-center gap-1.5 rounded-lg border border-slate-100 bg-white px-2.5 py-2 text-[11px] font-medium text-slate-700">
-    <span className="text-emerald-600">{icon}</span>
+const TrustItem = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
+  <div className="flex items-center gap-1.5 text-[11px] font-medium text-[hsl(210_30%_28%)]">
+    <span className="text-[hsl(160_55%_38%)]">{icon}</span>
     {label}
   </div>
 );
