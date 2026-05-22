@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ShieldCheck, Truck, BadgeCheck, Sparkles, X, Lock } from "lucide-react";
+import { ShieldCheck, Truck, BadgeCheck, Camera, X, Lock } from "lucide-react";
 import type { StepContext } from "../types";
 import { trackCtaClicked, trackOfferAccepted } from "../analytics";
 
@@ -14,14 +14,13 @@ const DEALER_NAME = "Liberty Automotive";
  *
  * - No "Save Offer" button.
  * - No customer-facing AI Boost copy.
- * - The hidden market adjustment is only revealed if the customer
- *   clicks "I'm not ready", surfaced as an "Updated Market Offer".
+ * - "I'm not ready" opens a photo-review invitation modal only.
+ *   No increased dollar amount is revealed unless the customer
+ *   completes the photo review flow.
  */
 const StepOfferReady = ({ state, update, goTo }: StepContext) => {
   const v = state.valuation;
   const firm = v?.firm ?? (v ? Math.round((v.low + v.high) / 2) : 0);
-  // Hidden retention adjustment — surfaced only on "I'm not ready".
-  const updatedOffer = Math.round((firm + 350) / 50) * 50;
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const expiresLabel = expires.toLocaleDateString("en-US", {
     month: "long", day: "numeric", year: "numeric",
@@ -34,15 +33,10 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
 
   const [showRetention, setShowRetention] = useState(false);
 
-  const acceptAt = (amount: number, source: "original" | "updated") => {
-    trackCtaClicked("offer", source === "updated" ? "Accept Updated Offer" : "Accept Offer");
-    trackOfferAccepted(amount);
-    update({
-      branch: "accept",
-      ...(source === "updated"
-        ? { boost: { ...state.boost, boostedFirm: amount, delta: amount - firm, analyzed: true } }
-        : {}),
-    });
+  const acceptOriginal = () => {
+    trackCtaClicked("offer", "Accept Offer");
+    trackOfferAccepted(firm);
+    update({ branch: "accept" });
     setShowRetention(false);
     setTimeout(() => goTo("accepted"), 0);
   };
@@ -50,6 +44,13 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
   const onNotReady = () => {
     trackCtaClicked("offer", "I'm not ready");
     setShowRetention(true);
+  };
+
+  const onAddPhotos = () => {
+    trackCtaClicked("offer", "Add Photos & Review Offer");
+    update({ branch: "boost" });
+    setShowRetention(false);
+    setTimeout(() => goTo("boost_intro"), 0);
   };
 
   return (
@@ -100,7 +101,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
         <motion.button
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.995 }}
-          onClick={() => acceptAt(firm, "original")}
+          onClick={acceptOriginal}
           className="w-full rounded-xl bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] px-6 py-4 text-base font-semibold text-white shadow-[0_8px_24px_-10px_hsl(262_83%_58%/0.6)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
         >
           Accept Offer
@@ -139,52 +140,34 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
                 <X className="h-4 w-4" />
               </button>
 
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(262_83%_58%/0.1)] px-2.5 py-1 text-[11px] font-semibold text-[hsl(262_60%_45%)]">
-                <Sparkles className="h-3 w-3" /> Updated Market Offer
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(262_83%_58%/0.1)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)]">
+                <Camera className="h-3 w-3" /> Photo Review Option
               </div>
               <h2 className="mt-3 text-xl font-semibold tracking-tight text-slate-900">
-                Before you go, we found an updated market adjustment.
+                Want us to review your photos before you decide?
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                Based on current market demand, we may be able to improve your offer.
+                A few quick photos can help us verify your vehicle's condition and check whether an updated market adjustment is available.
               </p>
-
-              <div className="mt-5 rounded-xl border border-slate-100 bg-slate-50/70 p-4">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-xs font-medium text-slate-500">Original offer</span>
-                  <span className="text-sm text-slate-500 line-through">{fmt(firm)}</span>
-                </div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-[hsl(262_60%_45%)]">
-                    Updated offer
-                  </span>
-                  <span className="text-3xl font-semibold tracking-tight text-slate-900">
-                    {fmt(updatedOffer)}
-                  </span>
-                </div>
-                <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                  +{fmt(updatedOffer - firm)} market adjustment
-                </div>
-              </div>
 
               <div className="mt-5 space-y-2">
                 <motion.button
                   whileTap={{ scale: 0.995 }}
-                  onClick={() => acceptAt(updatedOffer, "updated")}
+                  onClick={onAddPhotos}
                   className="w-full rounded-xl bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_8px_24px_-10px_hsl(262_83%_58%/0.6)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
                 >
-                  Accept Updated Offer
+                  Add Photos &amp; Review Offer →
                 </motion.button>
                 <button
                   onClick={() => setShowRetention(false)}
                   className="w-full rounded-xl px-4 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
                 >
-                  Still not ready
+                  Keep Current Offer
                 </button>
               </div>
 
               <p className="mt-3 text-center text-[11px] text-slate-400">
-                No obligation. Your information stays secure.
+                Your current offer is still available. No obligation.
               </p>
             </motion.div>
           </motion.div>
