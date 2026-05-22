@@ -204,97 +204,124 @@ export const DashboardPage = ({ onNavigate }: Props) => {
         </div>
       </div>
 
-      {/* BOTTOM ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.6fr_1fr] gap-4 items-stretch">
+      {/* BOTTOM ROW — polished supporting dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.25fr_1fr] gap-4 items-stretch">
         {/* Dealer Communication */}
-        <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
+        <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-3.5 flex flex-col">
           <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Dealer Communication</div>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#FEF3E2] text-[#F59E0B] grid place-items-center">
+          <div className="flex items-center gap-2.5">
+            <div className="relative w-9 h-9 rounded-full bg-[#FEF3E2] text-[#F59E0B] grid place-items-center shrink-0">
               <Handshake className="w-4 h-4" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#16A34A] ring-2 ring-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold truncate">{MOCK.customer.dealer}</span>
-                <span className="text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-1.5 py-0.5 rounded-full">Active</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[13.5px] font-semibold text-[#06194A] truncate">{MOCK.customer.dealer}</span>
               </div>
-              <div className="text-[11px] text-[#53627A]">Last update: {MOCK.lastUpdate}</div>
+              <div className="flex items-center gap-1.5 text-[11px] text-[#53627A] leading-tight mt-0.5">
+                <span className="inline-flex items-center gap-1 text-[#0F7A3E] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" /> Active now
+                </span>
+                <span className="text-[#CBD5E1]">·</span>
+                <span>Replies quickly</span>
+              </div>
             </div>
           </div>
-          <div className="mt-2 rounded-xl bg-[#F4F6FA] border border-[#EAEDF3] p-2.5 text-[12.5px] text-[#0B1F4A] leading-snug font-medium">
-            {MOCK.dealerMessage}
+          <div className="mt-2.5 rounded-xl bg-[#F4F6FA] border border-[#EAEDF3] px-3 py-2 text-[12.5px] text-[#0B1F4A] leading-snug">
+            <span className="line-clamp-3">“{MOCK.dealerMessage}”</span>
+            <div className="text-[10.5px] text-[#53627A] mt-1.5">{MOCK.lastUpdate}</div>
           </div>
-          <PrimaryButton onClick={() => setShowConv(true)} className="mt-2 w-full py-2.5">
+          <PrimaryButton onClick={() => setShowConv(true)} className="mt-auto pt-2.5 w-full py-2">
             <MessageCircle className="w-4 h-4" /> View Conversation <ArrowRight className="w-4 h-4" />
           </PrimaryButton>
         </div>
 
-        {/* Document Status */}
-        <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
-          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Documents Status</div>
-          <ul className="space-y-2">
-            {MOCK.docs.slice(0, 4).map((d) => (
-              <li key={d.name} className="flex items-center justify-between text-sm">
-                <span className="text-[#0B1F4A] font-medium">{d.name}</span>
-                <span className="inline-flex items-center gap-1.5 text-[12px] text-[#0F7A3E] font-semibold">
-                  {d.status}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <SecondaryButton onClick={() => onNavigate("documents")} className="mt-2 w-full">
-            Manage Documents
-          </SecondaryButton>
-        </div>
+        {/* Documents */}
+        {(() => {
+          const docs = MOCK.docs.slice(0, 4);
+          const approved = docs.filter((d) => d.status === "Approved").length;
+          const pct = Math.round((approved / docs.length) * 100);
+          const statusStyle = (s: string) =>
+            s === "Approved"
+              ? "bg-[#E8F8EE] text-[#0F7A3E]"
+              : s === "Under Review"
+              ? "bg-[#FEF3E2] text-[#B45309]"
+              : "bg-[#EEF0FF] text-[#4F46E5]";
+          return (
+            <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-3.5 flex flex-col">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Documents</div>
+                <span className="text-[11px] font-semibold text-[#06194A]">{approved} of {docs.length} approved</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-[#EEF0F4] overflow-hidden mb-2.5">
+                <div className="h-full rounded-full bg-gradient-to-r from-[#16A34A] to-[#22C55E] transition-all" style={{ width: `${pct}%` }} />
+              </div>
+              <ul className="space-y-1.5">
+                {docs.map((d) => (
+                  <li key={d.name} className="flex items-center justify-between gap-2 text-[12.5px]">
+                    <span className="text-[#0B1F4A] font-medium truncate">{d.name}</span>
+                    <span className={`shrink-0 inline-flex items-center gap-1 text-[10.5px] font-semibold px-1.5 py-0.5 rounded-full ${statusStyle(d.status)}`}>
+                      {d.status === "Approved" && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
+                      {d.status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <SecondaryButton onClick={() => onNavigate("documents")} className="mt-auto pt-2.5 w-full py-2">
+                Manage Documents
+              </SecondaryButton>
+            </div>
+          );
+        })()}
 
-        {/* Market Insights */}
-        <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
+        {/* Market Pulse */}
+        <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-3.5 flex flex-col">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Market Insights</div>
-            <button className="text-[11px] text-[#53627A] inline-flex items-center gap-1 border border-[#E6EAF0] rounded-lg px-2 py-0.5 hover:bg-[#F4F6FA]">
-              7 Days <ChevronDown className="w-3 h-3" />
-            </button>
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Market Pulse</div>
+            <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-[#0F7A3E] bg-[#E8F8EE] px-1.5 py-0.5 rounded-full">
+              <TrendingUp className="w-3 h-3" /> +$550 · 7d
+            </span>
           </div>
-          <div className="grid grid-cols-2 gap-3 mb-1">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><TrendingUp className="w-3.5 h-3.5" /></div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-[#53627A]">Market Trend</div>
-                <div className="text-[13px] font-bold text-[#0B1F4A]">Strong</div>
-              </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-[#F7F8FB] border border-[#EEF0F4] px-2.5 py-1.5">
+              <div className="text-[9.5px] uppercase tracking-wide text-[#53627A] font-semibold">Trend</div>
+              <div className="text-[13px] font-bold text-[#0B1F4A] leading-tight">Strong</div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-[#E8F8EE] text-[#16A34A] grid place-items-center"><LineIcon className="w-3.5 h-3.5" /></div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-[#53627A]">Market Demand</div>
-                <div className="text-[13px] font-bold text-[#0B1F4A]">High</div>
-              </div>
+            <div className="rounded-xl bg-[#F7F8FB] border border-[#EEF0F4] px-2.5 py-1.5">
+              <div className="text-[9.5px] uppercase tracking-wide text-[#53627A] font-semibold">Demand</div>
+              <div className="text-[13px] font-bold text-[#0B1F4A] leading-tight">High</div>
             </div>
           </div>
-          <MarketChart />
+          <div className="mt-2 text-[12px] text-[#06194A] font-medium leading-snug">
+            Similar SUVs are trending upward in your area.
+          </div>
+          <div className="mt-1 flex-1 flex items-center">
+            <MarketChart />
+          </div>
+          <div className="text-[10.5px] text-[#53627A] mt-1">7-day trend · updated recently</div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
-          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Quick Actions</div>
+        {/* Next Best Actions */}
+        <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-3.5">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-1.5">Next Best Actions</div>
           <ul className="divide-y divide-[#EEF0F4]">
             {[
-              { title: "Upload Documents", desc: "Add and manage paperwork.",    Icon: Upload,        tint: "green" as Tint,  onClick: () => onNavigate("documents") },
-              { title: "Message Dealer",   desc: "Chat securely with your dealer.", Icon: MessageSquare, tint: "orange" as Tint, onClick: () => setShowConv(true) },
-              { title: "Track Offer",      desc: "See status and next steps.",    Icon: BarChart3,     tint: "indigo" as Tint, onClick: () => onNavigate("offers") },
-              { title: "Schedule Pickup",  desc: "Pick a date for your handoff.", Icon: Truck,         tint: "indigo" as Tint, onClick: () => onNavigate("pickup") },
+              { title: "Upload Documents", desc: "Finish your paperwork.",   Icon: Upload,        tint: "green" as Tint,   onClick: () => onNavigate("documents") },
+              { title: "Schedule Pickup",  desc: "Pick a handoff date.",     Icon: Truck,         tint: "indigo" as Tint,  onClick: () => onNavigate("pickup") },
+              { title: "Message Dealer",   desc: "Chat with your dealer.",   Icon: MessageSquare, tint: "orange" as Tint,  onClick: () => setShowConv(true) },
+              { title: "Track Offer",      desc: "See status and updates.",  Icon: BarChart3,     tint: "emerald" as Tint, onClick: () => onNavigate("offers") },
             ].map(({ title, desc, Icon, tint, onClick }) => (
               <li key={title}>
                 <button onClick={onClick}
-                  className="group w-full flex items-center gap-3.5 px-3 py-3.5 rounded-xl hover:bg-[#F7F8FB] active:bg-[#EEF0FF] transition text-left">
-                  <div className={`w-10 h-10 rounded-2xl grid place-items-center shrink-0 ${TINTS[tint]} ring-1 ring-inset ring-black/[0.03] group-hover:scale-[1.06] transition-transform`}>
-                    <Icon className="w-[18px] h-[18px]" />
+                  className="group w-full flex items-center gap-2.5 px-1.5 py-2 rounded-lg hover:bg-[#F7F8FB] active:bg-[#EEF0FF] transition text-left">
+                  <div className={`w-8 h-8 rounded-xl grid place-items-center shrink-0 ${TINTS[tint]} ring-1 ring-inset ring-black/[0.03] group-hover:scale-[1.06] transition-transform`}>
+                    <Icon className="w-[15px] h-[15px]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13.5px] font-semibold text-[#06194A] leading-tight group-hover:text-[#4F46E5] transition-colors">{title}</div>
-                    <div className="text-[11.5px] text-[#53627A] truncate mt-1">{desc}</div>
+                    <div className="text-[12.5px] font-semibold text-[#06194A] leading-tight group-hover:text-[#4F46E5] transition-colors">{title}</div>
+                    <div className="text-[10.5px] text-[#53627A] truncate mt-0.5">{desc}</div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition" />
+                  <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8] group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition" />
                 </button>
               </li>
             ))}
