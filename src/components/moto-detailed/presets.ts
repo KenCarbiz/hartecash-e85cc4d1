@@ -99,10 +99,11 @@ const boostIntro = (): StepDefinition => ({
 const boostUpload = (): StepDefinition => ({
   id: "boost_upload", title: "Photos", helper: "Capture key angles",
   pageTitle: "Add a few quick photos",
-  pageSubtitle: "Tap each tile to capture or attach. Our AI analyzes each photo as it comes in.",
+  pageSubtitle: "Use your phone to capture each angle, or upload photos from your device. Clear photos help us verify your vehicle and finalize your offer.",
   Component: StepBoostUpload,
   shouldRender: (state) => state.branch === "boost" && !state.boost.analyzed,
 });
+
 
 const boostResult = (): StepDefinition => ({
   id: "boost_result", title: "AI Result", helper: "See your refined valuation",

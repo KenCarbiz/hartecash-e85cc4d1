@@ -72,6 +72,8 @@ export interface JourneyBoost {
   uploadedCategories: string[];
   /** Per-category AI quality verdicts. */
   qualityByCategory: Record<string, PhotoQualityResult>;
+  /** Per-category local preview URLs (object URLs from real file selection). */
+  previewByCategory: Record<string, string>;
   /** AI-derived confidence 0..1. */
   aiConfidence: number | null;
   /** Boosted firm offer. Null when AI couldn't confidently enhance. */
@@ -85,11 +87,13 @@ export interface JourneyBoost {
 export const emptyBoost: JourneyBoost = {
   uploadedCategories: [],
   qualityByCategory: {},
+  previewByCategory: {},
   aiConfidence: null,
   boostedFirm: null,
   delta: null,
   analyzed: false,
 };
+
 
 export interface JourneyState {
   vehicle: JourneyVehicle | null;
