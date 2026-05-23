@@ -14,7 +14,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Search, Car, ChevronRight, ArrowRight, ShieldCheck,
-  Receipt, FileUp, DollarSign, Truck, HelpCircle, LifeBuoy, Mail,
+  Tag, Upload, TrendingUp, Calendar, HelpCircle, LifeBuoy, Mail,
   LockKeyhole,
 } from "lucide-react";
 import SEO from "@/components/SEO";
@@ -87,10 +87,10 @@ const CustomerLookup = () => {
   };
 
   const reassurance = useMemo(() => ([
-    { icon: Receipt, label: "View your offer" },
-    { icon: FileUp, label: "Upload documents" },
-    { icon: DollarSign, label: "Track payout" },
-    { icon: Truck, label: "Schedule pickup" },
+    { icon: Tag, title: "View Offer", description: "See your current offer and expiration." },
+    { icon: Upload, title: "Upload Documents", description: "Send paperwork securely." },
+    { icon: TrendingUp, title: "Track Payout", description: "Follow payment and handoff progress." },
+    { icon: Calendar, title: "Schedule Pickup", description: "Choose your pickup or visit time." },
   ]), []);
 
   return (
@@ -227,25 +227,29 @@ const CustomerLookup = () => {
             </p>
           </form>
 
-          {/* Reassurance row — transaction workspace, not a generic portal.
-              Tiles describe what's behind the login; clicking focuses the
-              email field so customers know to sign in first. */}
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {reassurance.map(({ icon: Icon, label }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => document.getElementById("signin-email")?.focus()}
-                className="group flex items-center gap-3 rounded-xl border border-border/40 bg-white px-3.5 py-3 hover:border-[#4F46E5]/25 hover:bg-[#F5F3FF] hover:shadow-[0_8px_20px_-10px_rgba(79,70,229,0.25)] transition-all text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/30"
-              >
-                <div className="shrink-2 w-9 h-9 rounded-lg bg-[#EEF0FF] group-hover:bg-[#DDD6FE]/60 grid place-items-center transition-colors">
-                  <Icon className="w-4 h-4 text-[#4F46E5]" strokeWidth={2} />
+          {/* Portal benefits — informational tiles, not buttons. */}
+          <div className="mt-8">
+            <p className="text-center text-[11px] uppercase tracking-[0.14em] font-semibold text-foreground/40 mb-4">
+              Inside your portal
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {reassurance.map(({ icon: Icon, title, description }) => (
+                <div
+                  key={title}
+                  className="rounded-2xl bg-white border border-border/20 p-4 text-center"
+                >
+                  <div className="w-11 h-11 rounded-full bg-[#EEF0FF] mx-auto mb-2.5 grid place-items-center">
+                    <Icon className="w-5 h-5 text-[#4F46E5]" strokeWidth={2} />
+                  </div>
+                  <p className="text-xs font-semibold text-foreground mb-0.5">
+                    {title}
+                  </p>
+                  <p className="text-[11px] text-foreground/50 leading-snug">
+                    {description}
+                  </p>
                 </div>
-                <span className="text-[12px] font-medium text-foreground/75 leading-tight">
-                  {label}
-                </span>
-              </button>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Empty state. */}
