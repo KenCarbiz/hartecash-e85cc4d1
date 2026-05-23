@@ -28,6 +28,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useDocumentConfig } from "@/hooks/useDocumentConfig";
 import { checkTokenStatus, type TokenStatus } from "@/lib/tokenStatus";
 import { PORTAL_MOCK } from "./portalMock";
 
@@ -58,6 +59,7 @@ interface PortalSubmissionRow {
   inspection_started_notified_at: string | null;
   check_ready_at: string | null;
   progress_status: string | null;
+  dealership_id: string | null;
 }
 
 interface ProviderStatus {
@@ -221,12 +223,34 @@ const buildActivity = (
   return out;
 };
 
+/** Per-document file presence + upload date, keyed by doc_id. */
+type DocFiles = Record<string, { uploaded: boolean; uploadedAt: string | null; label: string }>;
+
+/** Format a doc-uploaded date as the activity feed's short "May 12" style. */
+const fmtDocDate = (iso: string | null): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+/** Build the per-doc status array the portal renders. Order follows
+ *  the dealer's customerAllDocs catalog (sort_order). */
+const buildDocsList = (files: DocFiles): PortalShape["docs"] => {
+  return Object.values(files).map((f) => ({
+    name: f.label,
+    status: f.uploaded ? ("Under Review" as const) : ("Needed" as const),
+    date: fmtDocDate(f.uploadedAt),
+  }));
+};
+
 /** Overlay real submission + tenant fields onto the mock shape. */
 const buildPortalShape = (
   row: PortalSubmissionRow | null,
   dealershipName: string,
   guaranteeDays: number,
   pickupOffered: boolean,
+  docFiles: DocFiles | null,
 ): PortalShape => {
   // Deep-clone the mock so per-render mutations never leak between renders.
   const base: PortalShape = JSON.parse(JSON.stringify(PORTAL_MOCK));
@@ -290,6 +314,13 @@ const buildPortalShape = (
   // ── Transaction stage — gates address editability + Pickup UI.
   base.transactionStage = deriveStage(row);
 
+  // ── Per-document status, sourced from the dealer's configured doc
+  // catalog + a storage-bucket scan. Falls back to the mock list when
+  // we haven't fetched yet (initial render) or no docs are configured.
+  if (docFiles && Object.keys(docFiles).length > 0) {
+    base.docs = buildDocsList(docFiles);
+  }
+
   // ── Activity feed — derived entirely from real timestamps. Replace
   // the mock array when we have at least a submission timestamp;
   // otherwise (demo route, half-provisioned tenant) keep the mock.
@@ -326,11 +357,19 @@ interface Props {
 export const PortalDataProvider = ({ token, children }: Props) => {
   const { config } = useSiteConfig();
   const [row, setRow] = useState<PortalSubmissionRow | null>(null);
+  const [docFiles, setDocFiles] = useState<DocFiles | null>(null);
   const [status, setStatus] = useState<ProviderStatus>({
     // No token = demo route (/portal-preview). Render the mock shape
     // immediately, no loading state, no error.
     loading: !!token, error: null, tokenStatus: null,
   });
+
+  // Dealer-configured customer-doc catalog. The hook gates on
+  // dealership_id + loan_status from the submission row.
+  const { customerAllDocs } = useDocumentConfig(
+    row?.dealership_id || "default",
+    row?.loan_status,
+  );
 
   useEffect(() => {
     if (!token) {
@@ -361,14 +400,48 @@ export const PortalDataProvider = ({ token, children }: Props) => {
     return () => { cancelled = true; };
   }, [token]);
 
+  // ── Document status scan. Lists the customer-documents and
+  // submission-photos buckets for this token and reports whether
+  // each configured doc has a file uploaded yet. Mirrors the logic
+  // in EssentialUploads so the portal docs panel reflects reality.
+  useEffect(() => {
+    if (!token || !row || customerAllDocs.length === 0) {
+      setDocFiles(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const out: DocFiles = {};
+      await Promise.all(customerAllDocs.map(async (d) => {
+        const isOdo = d.doc_id === "odometer";
+        const bucket = isOdo ? "submission-photos" : "customer-documents";
+        const prefix = isOdo ? token : `${token}/${d.doc_id}`;
+        const { data } = await supabase.storage.from(bucket).list(prefix, { limit: 5 });
+        const match = (data || []).find((f) => {
+          if (f.name === ".emptyFolderPlaceholder") return false;
+          if (isOdo) return f.name.startsWith(`${d.doc_id}-`);
+          return true;
+        });
+        out[d.doc_id] = {
+          uploaded: !!match,
+          uploadedAt: match?.updated_at || match?.created_at || null,
+          label: d.label,
+        };
+      }));
+      if (!cancelled) setDocFiles(out);
+    })();
+    return () => { cancelled = true; };
+  }, [token, row?.id, customerAllDocs]);
+
   const shape = useMemo(
     () => buildPortalShape(
       row,
       config.dealership_name,
       config.price_guarantee_days,
       config.pickup_offered,
+      docFiles,
     ),
-    [row, config.dealership_name, config.price_guarantee_days, config.pickup_offered],
+    [row, config.dealership_name, config.price_guarantee_days, config.pickup_offered, docFiles],
   );
 
   return (
