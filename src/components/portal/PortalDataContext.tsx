@@ -57,6 +57,7 @@ interface PortalSubmissionRow {
   docs_uploaded: boolean | null;
   inspection_started_notified_at: string | null;
   check_ready_at: string | null;
+  progress_status: string | null;
 }
 
 interface ProviderStatus {
@@ -103,6 +104,38 @@ const fmtExpiry = (
   return base.toLocaleDateString("en-US", {
     month: "long", day: "numeric", year: "numeric",
   });
+};
+
+/** Map admin-managed progress_status + timestamp signals to the
+ *  customer-facing transactionStage enum the portal renders. We prefer
+ *  timestamps over progress_status where both exist (timestamps are
+ *  customer-event accurate, progress_status is admin-managed and can
+ *  lag). Priority order, most-advanced wins:
+ *
+ *    purchase_complete                       -> complete
+ *    check_ready_at | check_request_submitted -> in_transit
+ *    inspection_started_notified_at | inspection_completed-ish
+ *                                             -> driver_assigned
+ *    appointment_set | inspection_scheduled   -> scheduled
+ *    otherwise                                -> pre_schedule
+ */
+type TransactionStage = PortalShape["transactionStage"];
+const INSPECTION_DONE = new Set([
+  "inspection_completed",
+  "title_verified",
+  "ownership_verified",
+  "appraisal_completed",
+  "manager_approval",
+  "deal_finalized",
+  "title_ownership_verified",
+]);
+const deriveStage = (row: PortalSubmissionRow): TransactionStage => {
+  const status = row.progress_status || "";
+  if (status === "purchase_complete") return "complete";
+  if (row.check_ready_at || status === "check_request_submitted") return "in_transit";
+  if (row.inspection_started_notified_at || INSPECTION_DONE.has(status)) return "driver_assigned";
+  if (row.appointment_set || status === "inspection_scheduled") return "scheduled";
+  return "pre_schedule";
 };
 
 /** Format a timestamp into the activity feed's "May 11 • 9:14 AM" style. */
@@ -253,6 +286,9 @@ const buildPortalShape = (
   // ── Offer expiry.
   const expiry = fmtExpiry(row.offer_locked_at, guaranteeDays);
   if (expiry) base.offerExpires = expiry;
+
+  // ── Transaction stage — gates address editability + Pickup UI.
+  base.transactionStage = deriveStage(row);
 
   // ── Activity feed — derived entirely from real timestamps. Replace
   // the mock array when we have at least a submission timestamp;
