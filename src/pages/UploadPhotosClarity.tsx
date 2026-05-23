@@ -498,16 +498,49 @@ const UploadPhotosClarity = () => {
 
           {/* CENTER — guided task card */}
           <section className="lg:col-span-6 space-y-5">
-            {/* Title + intent */}
-            <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-700">Photos · Step 6 of 7</p>
-              <h1 className="font-sans text-[26px] md:text-[32px] font-bold tracking-[-0.02em] leading-[1.1] text-zinc-900">
-                Add a few quick photos
-              </h1>
-              <p className="text-sm md:text-[15px] text-zinc-600 max-w-xl">
-                We'll guide each angle so our AI agent can review your vehicle accurately.
-              </p>
-            </div>
+            {/* AI appraisal hero — the entry point into the photo task.
+                Replaces the prior page-level headline so the customer
+                hits an energized, exciting hero instead of a redundant
+                "Add a few quick photos" title. */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="relative overflow-hidden rounded-2xl border border-violet-200/70 bg-white p-5 md:p-6 shadow-[0_6px_30px_-12px_rgba(124,58,237,0.35)]"
+            >
+              {/* Soft purple gradient/glow */}
+              <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_0%_0%,rgba(139,92,246,0.18),transparent_60%),radial-gradient(100%_80%_at_100%_100%,rgba(192,132,252,0.16),transparent_60%)]" />
+              <div className="relative">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold uppercase tracking-[0.16em] px-2.5 py-1">
+                  <Sparkles className="w-3 h-3" /> AI Photo Appraisal
+                </div>
+                <h1 className="mt-3 font-sans text-[24px] md:text-[28px] font-bold tracking-[-0.02em] leading-[1.15] text-zinc-900">
+                  Add photos to check for a better offer.
+                </h1>
+                <p className="mt-2 text-[14px] md:text-[15px] text-zinc-600 leading-relaxed max-w-xl">
+                  Our AI agent reviews your vehicle photos for condition, options, and market signals that may improve your offer.
+                </p>
+
+                {/* Mint green value callout */}
+                <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-3 flex items-center gap-3">
+                  <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white border border-emerald-200 text-emerald-600 shrink-0">
+                    <TrendingUp className="w-4 h-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700">Average uplift</p>
+                    <p className="text-[15px] md:text-[16px] font-bold text-emerald-900 leading-tight mt-0.5">
+                      $250 – $2,375 <span className="font-semibold text-emerald-700">after photo review</span>
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-[12px] text-zinc-500 inline-flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  Your current offer remains available. No obligation.
+                </p>
+              </div>
+            </motion.div>
+
 
             {error && (
               <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
