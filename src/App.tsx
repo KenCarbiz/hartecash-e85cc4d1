@@ -27,6 +27,7 @@ const RootLanding = () => (isAutocurbHost() ? <AutocurbLanding /> : <Index />);
 
 const UploadPhotos = lazy(() => import("./pages/UploadPhotos"));
 const UploadDocs = lazy(() => import("./pages/UploadDocs"));
+const UploadHub = lazy(() => import("./pages/UploadHub"));
 const BoostOfferClarity = lazy(() => import("./pages/BoostOfferClarity"));
 const CustomerPortal = lazy(() => import("./pages/CustomerPortal"));
 // Legacy submission-aware portal (the maximalist "real data" portal that
@@ -244,6 +245,8 @@ const AnimatedRoutes = () => {
         <Route path="/sell" element={<SellFlow />} />
         <Route path="/upload/:token" element={<UploadPhotos />} />
         <Route path="/docs/:token" element={<UploadDocs />} />
+        <Route path="/upload-hub" element={<UploadHub />} />
+        <Route path="/upload-hub/:token" element={<UploadHub />} />
         <Route path="/boost-offer/:token" element={<BoostOfferClarity />} />
         <Route path="/my-submission" element={<CustomerLookup />} />
         <Route path="/my-submission/:token" element={<CustomerPortal />} />
