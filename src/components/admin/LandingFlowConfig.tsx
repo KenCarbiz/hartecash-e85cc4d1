@@ -174,6 +174,8 @@ const LandingFlowConfig = () => {
           (row?.landing_form_density as FormDensity) || DEFAULTS.landing_form_density,
         pickup_offered:
           row?.pickup_offered === false ? false : DEFAULTS.pickup_offered,
+        handoff_type:
+          (row?.handoff_type as "pickup" | "dropoff" | "both") || DEFAULTS.handoff_type,
         condition_card_style:
           (row?.condition_card_style as ConditionCardStyle) ||
           DEFAULTS.condition_card_style,
