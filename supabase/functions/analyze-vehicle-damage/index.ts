@@ -52,6 +52,28 @@ serve(async (req) => {
       if (subTenant && subTenant.dealership_id !== caller.dealershipId) {
         return forbidden(corsHeaders);
       }
+    } else {
+      // Unauthenticated callers MUST present a valid submission token
+      // that matches the submission_id. Otherwise anonymous attackers
+      // could enumerate submission UUIDs and burn paid Gemini credits.
+      if (!token || typeof token !== "string") {
+        return new Response(JSON.stringify({ error: "Missing submission token" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: tokenMatch } = await supabase
+        .from("submissions")
+        .select("id")
+        .eq("id", submission_id)
+        .eq("token", token)
+        .maybeSingle();
+      if (!tokenMatch) {
+        return new Response(JSON.stringify({ error: "Invalid submission token" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Get signed URL for the photo
