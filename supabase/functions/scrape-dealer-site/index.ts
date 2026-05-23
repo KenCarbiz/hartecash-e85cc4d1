@@ -1,5 +1,6 @@
 // @jwt-required — admin/cron only; default verify_jwt=true is correct.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { resolveCaller } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -76,6 +77,20 @@ serve(async (req) => {
   }
 
   try {
+    // ── Authz — platform admin only. This burns paid Firecrawl + AI credits,
+    // so reject any non-platform-admin caller (incl. regular tenant staff)
+    // before reading body or env config.
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const caller = await resolveCaller(req, supabaseUrl, anonKey, serviceKey);
+    if (caller.kind !== "platform_admin") {
+      return new Response(
+        JSON.stringify({ error: "Forbidden — platform admin required" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { url } = await req.json();
     if (!url) {
       return new Response(JSON.stringify({ error: "URL is required" }), {
