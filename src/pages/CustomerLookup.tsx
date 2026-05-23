@@ -87,10 +87,10 @@ const CustomerLookup = () => {
   };
 
   const reassurance = useMemo(() => ([
-    { icon: Receipt, label: "View your offer" },
-    { icon: FileUp, label: "Upload documents" },
-    { icon: DollarSign, label: "Track payout" },
-    { icon: Truck, label: "Schedule pickup" },
+    { icon: Tag, title: "View Offer", description: "See your current offer and expiration." },
+    { icon: Upload, title: "Upload Documents", description: "Send paperwork securely." },
+    { icon: TrendingUp, title: "Track Payout", description: "Follow payment and handoff progress." },
+    { icon: Calendar, title: "Schedule Pickup", description: "Choose your pickup or visit time." },
   ]), []);
 
   return (
