@@ -6,7 +6,8 @@ import {
   DollarSign, BadgeCheck, Lock, Star, Zap,
   PhoneCall, AlertTriangle, Eye, Sparkles, Image as ImageIcon,
 } from "lucide-react";
-import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
+import { fmt } from "../portalMock";
+import { usePortalData } from "../PortalDataContext";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
 
@@ -184,6 +185,7 @@ const MessageBubble = ({ msg }: { msg: Msg }) => {
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export const MessagesPage = () => {
+  const MOCK = usePortalData();
   const [active, setActive] = useState<string>("liberty");
   const [mobileChat, setMobileChat] = useState(false);
   const [profile, setProfile] = useState(false);

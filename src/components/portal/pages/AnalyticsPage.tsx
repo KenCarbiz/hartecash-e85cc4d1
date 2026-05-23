@@ -9,7 +9,8 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, ReferenceDot,
 } from "recharts";
-import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
+import { fmt } from "../portalMock";
+import { usePortalData } from "../PortalDataContext";
 import {
   PortalPageShell, Card, SectionLabel, StatusPill,
   PrimaryButton,
@@ -164,6 +165,7 @@ const ValueChart = () => {
 type DrawerKind = "comp" | "factors" | "forecast" | "strength" | "region" | null;
 
 export const AnalyticsPage = () => {
+  const MOCK = usePortalData();
   const [drawer, setDrawer] = useState<DrawerKind>(null);
   const [comp, setComp] = useState<typeof COMPS[number] | null>(null);
   const [filters, setFilters] = useState({ radius: 75, status: "all" as "all" | "active" | "sold", source: "all" as "all" | "dealer" | "private" });

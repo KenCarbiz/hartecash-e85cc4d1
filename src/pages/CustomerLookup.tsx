@@ -118,13 +118,15 @@ const CustomerLookup = () => {
             )}
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2 text-sm">
-            <Link to="/support" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
-              <LifeBuoy className="w-4 h-4" /> Support
-            </Link>
-            <Link to="/faq" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
+            {config.phone && (
+              <a href={`tel:${config.phone}`} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
+                <LifeBuoy className="w-4 h-4" /> Support
+              </a>
+            )}
+            <Link to="/#faq" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
               <HelpCircle className="w-4 h-4" /> FAQ
             </Link>
-            <Link to="/contact" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
+            <Link to="/about" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
               <Mail className="w-4 h-4" /> Contact
             </Link>
             <span className="hidden md:inline-flex items-center gap-1.5 ml-2 px-3 py-1.5 rounded-full bg-[#EEF0FF] text-[#4F46E5] text-xs font-semibold">
@@ -225,12 +227,16 @@ const CustomerLookup = () => {
             </p>
           </form>
 
-          {/* Reassurance row — transaction workspace, not a generic portal. */}
+          {/* Reassurance row — transaction workspace, not a generic portal.
+              Tiles describe what's behind the login; clicking focuses the
+              email field so customers know to sign in first. */}
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
             {reassurance.map(({ icon: Icon, label }) => (
-              <div
+              <button
                 key={label}
-                className="group flex items-center gap-3 rounded-xl border border-border/40 bg-white px-3.5 py-3 hover:border-[#4F46E5]/25 hover:bg-[#F5F3FF] hover:shadow-[0_8px_20px_-10px_rgba(79,70,229,0.25)] transition-all cursor-default"
+                type="button"
+                onClick={() => document.getElementById("signin-email")?.focus()}
+                className="group flex items-center gap-3 rounded-xl border border-border/40 bg-white px-3.5 py-3 hover:border-[#4F46E5]/25 hover:bg-[#F5F3FF] hover:shadow-[0_8px_20px_-10px_rgba(79,70,229,0.25)] transition-all text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/30"
               >
                 <div className="shrink-2 w-9 h-9 rounded-lg bg-[#EEF0FF] group-hover:bg-[#DDD6FE]/60 grid place-items-center transition-colors">
                   <Icon className="w-4 h-4 text-[#4F46E5]" strokeWidth={2} />
@@ -238,7 +244,7 @@ const CustomerLookup = () => {
                 <span className="text-[12px] font-medium text-foreground/75 leading-tight">
                   {label}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
 

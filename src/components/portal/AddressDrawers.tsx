@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { SlideOver } from "./SlideOver";
 import { PrimaryButton, SecondaryButton, SectionLabel, StatusPill } from "./PortalPageShell";
-import { PORTAL_MOCK as MOCK } from "./portalMock";
+import { usePortalData } from "./PortalDataContext";
 
 /* ───────────────────────── Types ───────────────────────── */
 
@@ -165,6 +165,7 @@ const fireWorkflowIntelligence = () => {
 /* ═══════════════════════ PROFILE DRAWER ═══════════════════════ */
 
 export const ProfileDrawer = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
+  const MOCK = usePortalData();
   const [first, setFirst] = useState(MOCK.customer.firstName);
   const [last, setLast] = useState(MOCK.customer.lastName);
   const [email, setEmail] = useState(MOCK.customer.email);

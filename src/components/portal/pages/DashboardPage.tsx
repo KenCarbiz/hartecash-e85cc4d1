@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
-import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
+import { fmt } from "../portalMock";
+import { usePortalData } from "../PortalDataContext";
 import { SlideOver } from "../SlideOver";
 import { PrimaryButton, SecondaryButton } from "../PortalPageShell";
 import { VehicleHeroCarousel } from "../VehicleHeroCarousel";
@@ -105,6 +106,7 @@ type Props = {
 };
 
 export const DashboardPage = ({ onNavigate }: Props) => {
+  const MOCK = usePortalData();
   const [copied, setCopied] = useState(false);
   const [slide, setSlide] = useState(0);
   const [showConv, setShowConv] = useState(false);

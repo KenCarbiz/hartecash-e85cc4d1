@@ -36,7 +36,13 @@ import { useEmbedMode } from "@/hooks/useEmbedMode";
 const CustomerLayout = () => {
   const { config } = useSiteConfig();
   const embed = useEmbedMode();
-  const isMoto = config.landing_template === "moto";
+  // BrandFooter is the deliberate "forced flow" footer for both Moto
+  // surfaces — minimal legal row, no NAP grid, no Quick Links column.
+  // SiteFooter (Contact / Our Locations / Quick Links) would pull
+  // customers out of the Instant Offer journey, so we keep it for
+  // legacy/long-scroll templates only.
+  const isMoto = config.landing_template === "moto"
+    || config.landing_template === "moto_detailed";
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

@@ -6,7 +6,7 @@ import {
   DollarSign, Lock, Star, ArrowRight, ArrowLeft, RotateCcw, CheckCircle2,
   AlertCircle, Briefcase, Navigation, MessageSquare,
 } from "lucide-react";
-import { PORTAL_MOCK as MOCK } from "../portalMock";
+import { usePortalData } from "../PortalDataContext";
 import { PortalPageShell, Card, SectionLabel, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
 import { AIInspectionFlow, type InspectionResult } from "../AIInspectionFlow";
@@ -203,6 +203,7 @@ const LiveStatusStrip = () => {
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export const PickupPage = () => {
+  const MOCK = usePortalData();
   const [method, setMethod] = useState<Method>(null);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiStep, setAiStep] = useState(0);

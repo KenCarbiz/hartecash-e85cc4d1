@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -123,10 +124,15 @@ const HandoffPanel = ({
   active,
   onActivate,
 }: { remaining: HubDoc[]; active: boolean; onActivate: () => void }) => {
+  /* Phone-handoff QR — points at /docs/:token, the real route
+     mounted in App.tsx. Reads the submission token from the URL so
+     the phone session loads the same customer's submission. */
+  const { token } = useParams<{ token: string }>();
   const url = useMemo(() => {
-    const token = Math.random().toString(36).slice(2, 10);
-    return `https://hartecash.com/m/upload/${token}`;
-  }, []);
+    const base = typeof window !== "undefined" ? window.location.origin : "https://portal.moto.app";
+    if (!token) return `${base}/`;
+    return `${base}/docs/${token}`;
+  }, [token]);
   const [phone, setPhone] = useState("");
   const [sent, setSent] = useState(false);
   const [copied, setCopied] = useState(false);

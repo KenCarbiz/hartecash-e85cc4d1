@@ -7,7 +7,8 @@ import {
   CircleDot, Plus, Brain, ArrowRight,
 } from "lucide-react";
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
-import { PORTAL_MOCK as MOCK, fmt } from "./portalMock";
+import { fmt } from "./portalMock";
+import { usePortalData } from "./PortalDataContext";
 
 /* ============================================================== */
 /*  Slide data — single source of truth                            */
@@ -75,7 +76,9 @@ const SLIDE_TITLES = [
 const SLIDE_HEIGHT = "h-[280px] md:h-[300px]";
 
 /* ---------- 1. Vehicle Overview --------------------------------- */
-const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () => void }) => (
+const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () => void }) => {
+  const MOCK = usePortalData();
+  return (
   <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-4 items-center h-full">
     <div className="relative h-[140px] md:h-[200px] flex items-center justify-center overflow-hidden group">
       <div className="absolute inset-0 grid place-items-center pointer-events-none">
@@ -121,7 +124,8 @@ const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () 
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const Mini = () => {
   const pts = [10, 16, 14, 22, 26, 24, 32, 30, 38, 42, 46, 52];
@@ -379,6 +383,7 @@ const ConditionSlide = () => {
 
 /* ---------- 4. Offer Breakdown --------------------------------- */
 const OfferBreakdownSlide = ({ onViewOfferDetails }: { onViewOfferDetails?: () => void }) => {
+  const MOCK = usePortalData();
   const maxAbs = Math.max(...OFFER_FACTORS.map((f) => Math.abs(f.value)));
   return (
     <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-4 h-full">
@@ -566,6 +571,7 @@ const TimelineSlide = () => (
 /* ============================================================== */
 
 export const VehicleHeroCarousel = ({ onViewOfferDetails }: { onViewOfferDetails?: () => void }) => {
+  const MOCK = usePortalData();
   const [slide, setSlide] = useState(0);
   const [direction, setDirection] = useState(1);
   const [copied, setCopied] = useState(false);

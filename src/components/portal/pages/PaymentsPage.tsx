@@ -7,7 +7,8 @@ import {
   ScrollText, Receipt, ScanLine, KeyRound, PenTool, ArrowLeftRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PORTAL_MOCK as MOCK, fmt } from "../portalMock";
+import { fmt } from "../portalMock";
+import { usePortalData } from "../PortalDataContext";
 import { PortalPageShell, Card, SectionLabel, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -476,6 +477,7 @@ const Field = ({
 // ── Main page ──────────────────────────────────────────────────────────────
 
 export const PaymentsPage = () => {
+  const MOCK = usePortalData();
   const { config } = useSiteConfig();
   const enabledMap = config.enabled_payout_methods;
 
