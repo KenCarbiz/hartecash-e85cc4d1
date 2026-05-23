@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   QrCode,
   Info,
+  MessageSquare,
+  Link2,
 } from "lucide-react";
 import { usePortalData } from "../PortalDataContext";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, StatusPill, SectionLabel } from "../PortalPageShell";
