@@ -16,6 +16,8 @@ import {
   QrCode,
   ShieldCheck,
   Smartphone,
+  Sparkles,
+  TrendingUp,
   Upload,
   X,
 } from "lucide-react";
