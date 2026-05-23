@@ -60,7 +60,7 @@ const labelClasses = (floated: boolean, focused: boolean) =>
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & BaseProps;
 export const MotoOutlinedInput = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, active, trailing, error, className, id, onFocus, onBlur, placeholder, ...rest }, ref) => {
+  ({ label, active, trailing, error, className, id, onFocus, onBlur, placeholder, required, ...rest }, ref) => {
     const inputId = id || `f-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
     const [focused, setFocused] = useState(false);
     const hasValue = !!(rest.value ?? rest.defaultValue);
