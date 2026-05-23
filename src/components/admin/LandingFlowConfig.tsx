@@ -138,7 +138,7 @@ const LandingFlowConfig = () => {
       let row: any = null;
       const wide = await supabase
         .from("site_config")
-        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, condition_card_style, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default, landing_cta_color, landing_cta_text_color")
+        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, handoff_type, condition_card_style, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default, landing_cta_color, landing_cta_text_color")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
       if (wide.error) {
@@ -147,6 +147,7 @@ const LandingFlowConfig = () => {
           lower.includes("landing_form_variant") ||
           lower.includes("landing_form_density") ||
           lower.includes("pickup_offered") ||
+          lower.includes("handoff_type") ||
           lower.includes("condition_card_style") ||
           lower.includes("ghost_screen") ||
           lower.includes("ghost_headline") ||
