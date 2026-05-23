@@ -120,6 +120,14 @@ export interface SiteConfig {
    */
   pickup_offered: boolean;
   /**
+   * Three-state handoff configuration defining what the dealer offers
+   * customers for vehicle handoff after the sale is accepted:
+   *   pickup  — dealer only offers at-home pickup
+   *   dropoff — dealer only offers in-person drop-off / inspection
+   *   both    — dealer offers both options (default)
+   */
+  handoff_type: "pickup" | "dropoff" | "both";
+  /**
    * Ghost-screen variant shown while the BB lookup is in flight.
    * Premium SaaS-grade transitions, dealer-controlled so it matches
    * the rest of the landing's aesthetic. Defaults to 'pulse-orb'
@@ -355,6 +363,7 @@ const DEFAULTS: SiteConfig = {
   landing_form_variant: "detailed",
   landing_form_density: "simple",
   pickup_offered: true,
+  handoff_type: "both",
   condition_card_style: "basic",
   ghost_screen: "legacy-car",
   ghost_headline: null,
@@ -487,6 +496,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "landing_form_variant",
   "landing_form_density",
   "pickup_offered",
+  "handoff_type",
   "condition_card_style",
   "ghost_screen",
   "ghost_headline",

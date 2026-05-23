@@ -141,6 +141,8 @@ export type VehicleTunerValues = {
   offsetY: number;
   /** Space below the car (px). Positive = pushes content under further down. */
   offsetBottom: number;
+  /** Horizontal nudge (px). Positive = right, negative = left. */
+  offsetX: number;
   /** Camera angle for the generated image. */
   angle: "side" | "three_quarter" | "front";
   /** Horizontal flip (mirror so the car faces the other way). */
@@ -151,6 +153,7 @@ export const VEHICLE_DEFAULTS: VehicleTunerValues = {
   width: 448,
   offsetY: 0,
   offsetBottom: 0,
+  offsetX: 0,
   angle: "side",
   flip: false,
 };
@@ -166,6 +169,7 @@ function mergeVehicle(remote: unknown): VehicleTunerValues {
     width: num(r.width, VEHICLE_DEFAULTS.width),
     offsetY: num(r.offsetY, VEHICLE_DEFAULTS.offsetY),
     offsetBottom: num(r.offsetBottom, VEHICLE_DEFAULTS.offsetBottom),
+    offsetX: num(r.offsetX, VEHICLE_DEFAULTS.offsetX),
     angle,
     flip: typeof r.flip === "boolean" ? r.flip : VEHICLE_DEFAULTS.flip,
   };
@@ -564,7 +568,7 @@ export default function HeroTuner() {
             </div>
             <label className="block">
               <div className="flex justify-between text-zinc-600">
-                <span>Size (width)</span>
+                <span>Size (larger / smaller)</span>
                 <span>{localVehicle.width}px</span>
               </div>
               <input
@@ -576,10 +580,11 @@ export default function HeroTuner() {
                 onChange={(e) => changeVehicle({ width: Number(e.target.value) })}
                 className="w-full"
               />
+              <div className="text-[10px] text-zinc-400">Drag right to make the car larger, left to make it smaller.</div>
             </label>
             <label className="block">
               <div className="flex justify-between text-zinc-600">
-                <span>Space above car</span>
+                <span>Move up / down</span>
                 <span>{localVehicle.offsetY}px</span>
               </div>
               <input
@@ -591,7 +596,23 @@ export default function HeroTuner() {
                 onChange={(e) => changeVehicle({ offsetY: Number(e.target.value) })}
                 className="w-full"
               />
-              <div className="text-[10px] text-zinc-400">Positive = pushes car down, negative = pulls car up.</div>
+              <div className="text-[10px] text-zinc-400">Negative = car moves up, positive = car moves down.</div>
+            </label>
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Move left / right</span>
+                <span>{localVehicle.offsetX}px</span>
+              </div>
+              <input
+                type="range"
+                min={-400}
+                max={400}
+                step={1}
+                value={localVehicle.offsetX}
+                onChange={(e) => changeVehicle({ offsetX: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="text-[10px] text-zinc-400">Negative = car moves left, positive = car moves right.</div>
             </label>
             <label className="block">
               <div className="flex justify-between text-zinc-600">

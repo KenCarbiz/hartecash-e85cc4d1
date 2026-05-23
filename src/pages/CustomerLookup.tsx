@@ -14,8 +14,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Search, Car, ChevronRight, ArrowRight, ShieldCheck,
-  Receipt, FileUp, DollarSign, Truck, HelpCircle, LifeBuoy, Mail,
-  LockKeyhole,
+  FileText, Upload, DollarSign, Truck, HelpCircle, LifeBuoy, Mail,
+  LockKeyhole, Sparkles, Phone as PhoneIcon,
 } from "lucide-react";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -86,12 +86,25 @@ const CustomerLookup = () => {
     setLoading(false);
   };
 
+  const handoffLabel = ((): string => {
+    switch (config.handoff_type) {
+      case "pickup":
+        return "Schedule Pickup";
+      case "dropoff":
+        return "Schedule Drop Off";
+      case "both":
+      default:
+        return "Schedule Pickup / Drop Off";
+    }
+  })();
+
   const reassurance = useMemo(() => ([
-    { icon: Receipt, label: "View your offer" },
-    { icon: FileUp, label: "Upload documents" },
-    { icon: DollarSign, label: "Track payout" },
-    { icon: Truck, label: "Schedule pickup" },
-  ]), []);
+    { icon: FileText, title: "View Offer" },
+    { icon: Upload, title: "Upload Documents" },
+    { icon: DollarSign, title: "Track Payout" },
+    { icon: Truck, title: handoffLabel },
+  ]), [handoffLabel]);
+
 
   return (
     <div
@@ -110,7 +123,7 @@ const CustomerLookup = () => {
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
             {logoUrl ? (
-              <img src={logoUrl} alt={dealerName || "Home"} className="h-8 w-auto" />
+              <img src={logoUrl} alt={dealerName || "Home"} className="h-10 w-auto" />
             ) : (
               <span className="text-base font-bold tracking-tight text-foreground">
                 {dealerName || "Customer Portal"}
@@ -137,16 +150,23 @@ const CustomerLookup = () => {
       </header>
 
       <main className="flex-1 flex items-center px-5 py-10 lg:py-16">
-        <div className="w-full max-w-lg mx-auto">
+        <div className="w-full max-w-[34rem] mx-auto">
           {/* Heading — emotional continuity with the transaction. */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-[52px] h-[52px] rounded-2xl mb-5 bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_10px_28px_-12px_rgba(79,70,229,0.55)] ring-4 ring-[#4F46E5]/10">
-              <LockKeyhole className="w-7 h-7 text-white" strokeWidth={2} />
+            <div className="relative inline-flex items-center justify-center mb-5">
+              <span
+                aria-hidden
+                className="absolute inset-0 -m-3 rounded-full blur-2xl opacity-70"
+                style={{ background: "radial-gradient(closest-side, rgba(124,58,237,0.35), rgba(79,70,229,0.15), transparent 70%)" }}
+              />
+              <span className="relative inline-flex items-center justify-center w-[58px] h-[58px] rounded-2xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_14px_32px_-12px_rgba(124,58,237,0.6)] ring-4 ring-white">
+                <LockKeyhole className="w-7 h-7 text-white" strokeWidth={2} />
+              </span>
             </div>
             <h1 className="text-3xl lg:text-[38px] font-bold text-foreground leading-[1.15] tracking-tight mb-3">
               Continue Your Vehicle Sale
             </h1>
-            <p className="text-base text-foreground/65 leading-relaxed max-w-md mx-auto">
+            <p className="text-base text-foreground/65 leading-relaxed max-w-[520px] mx-auto">
               Access your vehicle dashboard, documents, payout details, and next steps.
             </p>
           </div>
@@ -183,34 +203,40 @@ const CustomerLookup = () => {
               <label htmlFor="signin-email" className="text-sm font-semibold text-foreground mb-2 block">
                 Email
               </label>
-              <input
-                id="signin-email"
-                type="email"
-                autoComplete="email"
-                inputMode="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full h-12 px-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
-              />
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none" strokeWidth={2} />
+                <input
+                  id="signin-email"
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
+                />
+              </div>
             </div>
 
             <div>
               <label htmlFor="signin-phone" className="text-sm font-semibold text-foreground mb-2 block">
                 Phone
               </label>
-              <input
-                id="signin-phone"
-                type="tel"
-                autoComplete="tel"
-                inputMode="tel"
-                placeholder="(555) 123-4567"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-                className="w-full h-12 px-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
-              />
+              <div className="relative">
+                <PhoneIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none" strokeWidth={2} />
+                <input
+                  id="signin-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  placeholder="(555) 123-4567"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
+                />
+              </div>
             </div>
 
             <button
@@ -227,25 +253,32 @@ const CustomerLookup = () => {
             </p>
           </form>
 
-          {/* Reassurance row — transaction workspace, not a generic portal.
-              Tiles describe what's behind the login; clicking focuses the
-              email field so customers know to sign in first. */}
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {reassurance.map(({ icon: Icon, label }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => document.getElementById("signin-email")?.focus()}
-                className="group flex items-center gap-3 rounded-xl border border-border/40 bg-white px-3.5 py-3 hover:border-[#4F46E5]/25 hover:bg-[#F5F3FF] hover:shadow-[0_8px_20px_-10px_rgba(79,70,229,0.25)] transition-all text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/30"
-              >
-                <div className="shrink-2 w-9 h-9 rounded-lg bg-[#EEF0FF] group-hover:bg-[#DDD6FE]/60 grid place-items-center transition-colors">
-                  <Icon className="w-4 h-4 text-[#4F46E5]" strokeWidth={2} />
+          {/* Portal benefits — informational tiles, not buttons. */}
+          <div className="mt-5 lg:mt-6">
+            <div className="flex items-center justify-center gap-3 mb-4" aria-hidden>
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-border/50" />
+              <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
+              <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-foreground/50">
+                Inside your portal
+              </p>
+              <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-border/50" />
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+              {reassurance.map(({ icon: Icon, title }) => (
+                <div
+                  key={title}
+                  className="rounded-2xl border border-border/25 bg-white px-6 py-7 text-center shadow-[0_2px_12px_-6px_rgba(15,23,42,0.06)] flex flex-col items-center justify-center gap-3.5"
+                >
+                  <div className="w-[62px] h-[62px] rounded-full bg-[#F5F3FF] grid place-items-center">
+                    <Icon className="w-[22px] h-[22px] text-[#4F46E5]" strokeWidth={2} />
+                  </div>
+                  <p className="text-[15px] font-extrabold text-foreground leading-tight">
+                    {title}
+                  </p>
                 </div>
-                <span className="text-[12px] font-medium text-foreground/75 leading-tight">
-                  {label}
-                </span>
-              </button>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Empty state. */}
