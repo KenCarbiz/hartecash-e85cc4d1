@@ -254,8 +254,8 @@ const CustomerLookup = () => {
           </form>
 
           {/* Portal benefits — informational tiles, not buttons. */}
-          <div className="mt-8 lg:mt-10">
-            <div className="flex items-center justify-center gap-3 mb-5" aria-hidden>
+          <div className="mt-6 lg:mt-8">
+            <div className="flex items-center justify-center gap-3 mb-4" aria-hidden>
               <span className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-border/50" />
               <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
               <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-foreground/50">
@@ -264,16 +264,16 @@ const CustomerLookup = () => {
               <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
               <span className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-border/50" />
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
               {reassurance.map(({ icon: Icon, title }) => (
                 <div
                   key={title}
-                  className="rounded-2xl border border-border/25 bg-white px-5 py-6 text-center shadow-[0_2px_12px_-6px_rgba(15,23,42,0.06)] flex flex-col items-center justify-center gap-3"
+                  className="rounded-2xl border border-border/25 bg-white px-6 py-7 text-center shadow-[0_2px_12px_-6px_rgba(15,23,42,0.06)] flex flex-col items-center justify-center gap-3.5"
                 >
-                  <div className="w-[52px] h-[52px] rounded-full bg-[#F5F3FF] grid place-items-center">
+                  <div className="w-[58px] h-[58px] rounded-full bg-[#F5F3FF] grid place-items-center">
                     <Icon className="w-5 h-5 text-[#4F46E5]" strokeWidth={2} />
                   </div>
-                  <p className="text-sm font-bold text-foreground leading-tight">
+                  <p className="text-[15px] font-extrabold text-foreground leading-tight">
                     {title}
                   </p>
                 </div>
