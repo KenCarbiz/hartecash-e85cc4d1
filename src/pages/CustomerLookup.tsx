@@ -86,28 +86,18 @@ const CustomerLookup = () => {
     setLoading(false);
   };
 
+  const pickupOffered = config.pickup_offered !== false;
+  const pickupLabel = pickupOffered
+    ? "Schedule Pickup / Drop Off"
+    : "Schedule Drop Off";
+
   const reassurance = useMemo(() => ([
-    {
-      icon: FileText,
-      title: "View Offer",
-      description: "See your current offer and expiration.",
-    },
-    {
-      icon: Upload,
-      title: "Upload Documents",
-      description: "Send paperwork securely.",
-    },
-    {
-      icon: DollarSign,
-      title: "Track Payout",
-      description: "Follow payment and handoff progress.",
-    },
-    {
-      icon: Truck,
-      title: "Schedule Pickup",
-      description: "Choose your pickup or visit time.",
-    },
-  ]), []);
+    { icon: FileText, title: "View Offer" },
+    { icon: Upload, title: "Upload Documents" },
+    { icon: DollarSign, title: "Track Payout" },
+    { icon: Truck, title: pickupLabel },
+  ]), [pickupLabel]);
+
 
   return (
     <div
