@@ -76,20 +76,6 @@ const SellFlow = () => {
       | "after_contact_info"
       | undefined) ?? "after_contact_info";
 
-  if (journeyTemplate === "moto_detailed") {
-    return (
-      <>
-        <SEO
-          title={`Get an Instant Vehicle Valuation | ${config.dealership_name}`}
-          description={`Get a guided, premium offer from ${config.dealership_name}. See your estimated value in seconds.`}
-          path="/sell"
-        />
-        <MotoDetailedFlow offerDisplayMode={detailedOfferMode} />
-      </>
-    );
-  }
-
-
   // Load the dealer's contact placement preference once on mount.
   // Soft-fail to contact_first if offer_settings isn't yet populated
   // for this rooftop — that matches the rest of the flow's default.
@@ -117,6 +103,12 @@ const SellFlow = () => {
     };
   }, [tenant.dealership_id]);
 
+  // Snap to the top whenever the journey advances to a new step, so each
+  // screen starts at the top instead of inheriting the previous scroll.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [state.step]);
+
   const update = useCallback(
     (patch: Partial<MotoFlowState>) => {
       setState((prev) => {
@@ -130,6 +122,19 @@ const SellFlow = () => {
     },
     [revealMode],
   );
+
+  if (journeyTemplate === "moto_detailed") {
+    return (
+      <>
+        <SEO
+          title={`Get an Instant Vehicle Valuation | ${config.dealership_name}`}
+          description={`Get a guided, premium offer from ${config.dealership_name}. See your estimated value in seconds.`}
+          path="/sell"
+        />
+        <MotoDetailedFlow offerDisplayMode={detailedOfferMode} />
+      </>
+    );
+  }
 
   return (
     <MotoShell>

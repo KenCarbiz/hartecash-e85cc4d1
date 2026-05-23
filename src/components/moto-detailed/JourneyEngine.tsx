@@ -56,6 +56,14 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
     };
   }, [current?.id, safeCursor, preview]);
 
+  // Snap to the top when the journey advances to a new step, so each step
+  // starts at the top. Skipped in the admin preview pane (not the scroll
+  // container, and we don't want to yank the editor's scroll position).
+  useEffect(() => {
+    if (preview) return;
+    window.scrollTo(0, 0);
+  }, [safeCursor, preview]);
+
   // Unmount = true abandonment (tab close / nav away).
   useEffect(() => {
     if (preview) return;
