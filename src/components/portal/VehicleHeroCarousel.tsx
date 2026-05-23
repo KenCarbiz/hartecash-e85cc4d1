@@ -9,6 +9,7 @@ import {
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { fmt } from "./portalMock";
 import { usePortalData } from "./PortalDataContext";
+import { useVehicleImage } from "@/hooks/useVehicleImage";
 
 /* ============================================================== */
 /*  Slide data — single source of truth                            */
@@ -78,6 +79,7 @@ const SLIDE_HEIGHT = "h-[280px] md:h-[300px]";
 /* ---------- 1. Vehicle Overview --------------------------------- */
 const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () => void }) => {
   const MOCK = usePortalData();
+  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model);
   return (
   <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-4 items-center h-full">
     <div className="relative h-[140px] md:h-[200px] flex items-center justify-center overflow-hidden group">
@@ -85,7 +87,7 @@ const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () 
         <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
       </div>
       <img
-        src={vehicleHero}
+        src={heroUrl || vehicleHero}
         alt={`${MOCK.vehicle.year} ${MOCK.vehicle.make} ${MOCK.vehicle.model}`}
         loading="lazy"
         className="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_18px_14px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.24]"
@@ -160,6 +162,9 @@ const PHOTO_STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 const PhotoGallerySlide = () => {
+  const MOCK = usePortalData();
+  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model);
+  const heroSrc = heroUrl || vehicleHero;
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const cat = PHOTO_CATEGORIES[active];
@@ -193,7 +198,7 @@ const PhotoGallerySlide = () => {
             </div>
             {/* Vehicle — sits slightly above center, larger hero presence */}
             <img
-              src={vehicleHero}
+              src={heroSrc}
               alt={cat.label}
               loading="lazy"
               className="relative z-10 max-h-[92%] max-w-[94%] w-auto object-contain scale-[1.26] -translate-y-[6%] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.32]"
@@ -300,7 +305,7 @@ const PhotoGallerySlide = () => {
                 </div>
               </div>
               <div className="relative bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] grid place-items-center h-[420px]">
-                <img src={vehicleHero} alt={cat.label}
+                <img src={heroSrc} alt={cat.label}
                   className="max-h-[88%] w-auto object-contain drop-shadow-[0_24px_24px_rgba(15,23,42,0.22)]" />
                 <button onClick={prev} aria-label="Previous"
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg grid place-items-center text-[#06194A]">
