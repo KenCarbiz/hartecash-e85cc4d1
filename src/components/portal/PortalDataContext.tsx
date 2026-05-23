@@ -51,6 +51,12 @@ interface PortalSubmissionRow {
   estimated_offer_high: number | null;
   offer_locked_at: string | null;
   loan_status: string | null;
+  created_at: string | null;
+  appointment_set: boolean | null;
+  photos_uploaded: boolean | null;
+  docs_uploaded: boolean | null;
+  inspection_started_notified_at: string | null;
+  check_ready_at: string | null;
 }
 
 interface ProviderStatus {
@@ -99,14 +105,102 @@ const fmtExpiry = (
   });
 };
 
+/** Format a timestamp into the activity feed's "May 11 • 9:14 AM" style. */
+const fmtActivityTime = (iso: string | null): string => {
+  if (!iso) return "Pending";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Pending";
+  const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return `${date} • ${time}`;
+};
+
+/** Short relative-time string for the dashboard's "Last update" pill. */
+const fmtRelative = (iso: string | null): string => {
+  if (!iso) return "just now";
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "just now";
+  const diffSec = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (diffSec < 60) return `${diffSec || 1}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} min ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr} hr ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+};
+
+/** Build the activity feed from real submission timestamps + state.
+ *  Falls back to the mock array when nothing is set (demo route). */
+const buildActivity = (
+  row: PortalSubmissionRow,
+  vehicleStr: string,
+  dealer: string,
+  range: { low: number; high: number },
+  firmOffer: number,
+): PortalShape["activity"] => {
+  const out: PortalShape["activity"] = [];
+  let id = 0;
+  const push = (
+    type: "submission" | "offer" | "messages" | "documents" | "pickup" | "payments",
+    title: string,
+    iso: string | null,
+    desc: string,
+  ) => out.push({ id: ++id, type, title, time: fmtActivityTime(iso), desc });
+
+  if (row.created_at) {
+    push("submission", "Vehicle submitted", row.created_at,
+      vehicleStr ? `You submitted your ${vehicleStr}.` : "You submitted your vehicle.");
+    if (range.low > 0 && range.high > 0) {
+      push("offer", "Offer generated", row.created_at,
+        `Initial range $${range.low.toLocaleString()} – $${range.high.toLocaleString()}.`);
+    }
+  }
+  if (row.docs_uploaded) {
+    push("documents", "Documents uploaded", null, "Registration, title, and ID on file.");
+  }
+  if (row.photos_uploaded) {
+    push("documents", "Photos uploaded", null, "Vehicle photos received for review.");
+  }
+  if (row.offer_locked_at && firmOffer > 0) {
+    push("offer", "Firm offer issued", row.offer_locked_at,
+      `${dealer} offered $${firmOffer.toLocaleString()}.`);
+  }
+  if (row.appointment_set) {
+    push("pickup", "Pickup scheduled", null, "Your pickup appointment is on the books.");
+  } else if (firmOffer > 0) {
+    push("pickup", "Pickup not scheduled", null,
+      "Schedule pickup after accepting your offer.");
+  }
+  if (row.inspection_started_notified_at) {
+    push("documents", "Inspector arrived",
+      row.inspection_started_notified_at,
+      "Your acquisition specialist started the inspection.");
+  }
+  if (row.check_ready_at) {
+    push("payments", "Payment ready", row.check_ready_at,
+      `Payout prepared by ${dealer}. Confirm pickup to release funds.`);
+  } else if (firmOffer > 0) {
+    push("payments", "Payment pending", null,
+      "Payout released after pickup is confirmed.");
+  }
+
+  return out;
+};
+
 /** Overlay real submission + tenant fields onto the mock shape. */
 const buildPortalShape = (
   row: PortalSubmissionRow | null,
   dealershipName: string,
   guaranteeDays: number,
+  pickupOffered: boolean,
 ): PortalShape => {
   // Deep-clone the mock so per-render mutations never leak between renders.
   const base: PortalShape = JSON.parse(JSON.stringify(PORTAL_MOCK));
+
+  // ── Tenant capabilities from site_config. The customer should never
+  // see a pickup option for a dealer that doesn't offer pickup.
+  base.dealerCapabilities.pickupEnabled = pickupOffered;
 
   // ── Tenant — dealer name always reflects the actual dealership the
   // customer is talking to, even when no submission row is loaded.
@@ -160,6 +254,31 @@ const buildPortalShape = (
   const expiry = fmtExpiry(row.offer_locked_at, guaranteeDays);
   if (expiry) base.offerExpires = expiry;
 
+  // ── Activity feed — derived entirely from real timestamps. Replace
+  // the mock array when we have at least a submission timestamp;
+  // otherwise (demo route, half-provisioned tenant) keep the mock.
+  if (row.created_at) {
+    const vehicleStr = [base.vehicle.year, base.vehicle.make, base.vehicle.model]
+      .filter(Boolean).join(" ").trim();
+    base.activity = buildActivity(
+      row, vehicleStr, dealer, base.range, base.firmOffer,
+    );
+  }
+
+  // ── "Last update" pill — pick the most recent timestamp we have.
+  const candidates = [
+    row.check_ready_at,
+    row.inspection_started_notified_at,
+    row.offer_locked_at,
+    row.created_at,
+  ].filter((s): s is string => !!s);
+  if (candidates.length > 0) {
+    const newest = candidates
+      .map((s) => new Date(s).getTime())
+      .reduce((a, b) => Math.max(a, b), 0);
+    if (newest > 0) base.lastUpdate = fmtRelative(new Date(newest).toISOString());
+  }
+
   return base;
 };
 
@@ -207,8 +326,13 @@ export const PortalDataProvider = ({ token, children }: Props) => {
   }, [token]);
 
   const shape = useMemo(
-    () => buildPortalShape(row, config.dealership_name, config.price_guarantee_days),
-    [row, config.dealership_name, config.price_guarantee_days],
+    () => buildPortalShape(
+      row,
+      config.dealership_name,
+      config.price_guarantee_days,
+      config.pickup_offered,
+    ),
+    [row, config.dealership_name, config.price_guarantee_days, config.pickup_offered],
   );
 
   return (
