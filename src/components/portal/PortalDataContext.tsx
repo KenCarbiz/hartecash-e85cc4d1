@@ -404,6 +404,14 @@ export const PortalDataProvider = ({ token, children }: Props) => {
   // submission-photos buckets for this token and reports whether
   // each configured doc has a file uploaded yet. Mirrors the logic
   // in EssentialUploads so the portal docs panel reflects reality.
+  //
+  // Depend on a stable string key (joined doc_ids) rather than the
+  // customerAllDocs array reference -- useDocumentConfig recomputes
+  // its filter() on every render, returning a new array identity
+  // each time. Using the array as a dep caused the effect to fire
+  // every render, repeatedly calling setDocFiles and producing the
+  // visible "docs list jumping by one line over and over" loop.
+  const docCatalogKey = customerAllDocs.map((d) => d.doc_id).join(",");
   useEffect(() => {
     if (!token || !row || customerAllDocs.length === 0) {
       setDocFiles(null);
@@ -431,7 +439,7 @@ export const PortalDataProvider = ({ token, children }: Props) => {
       if (!cancelled) setDocFiles(out);
     })();
     return () => { cancelled = true; };
-  }, [token, row?.id, customerAllDocs]);
+  }, [token, row?.id, docCatalogKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const shape = useMemo(
     () => buildPortalShape(

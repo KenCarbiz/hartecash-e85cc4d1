@@ -11,6 +11,7 @@ import {
 import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { fmt } from "../portalMock";
 import { usePortalData } from "../PortalDataContext";
+import { useVehicleImage } from "@/hooks/useVehicleImage";
 import {
   PortalPageShell, Card, PrimaryButton, SecondaryButton, StatusPill, SectionLabel,
 } from "../PortalPageShell";
@@ -422,6 +423,8 @@ const AddVehicleWizard = ({ open, onClose }: { open: boolean; onClose: () => voi
    ────────────────────────────────────────────────────────────── */
 export const VehiclesPage = ({ onNavigate }: Props) => {
   const MOCK = usePortalData();
+  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model);
+  const heroSrc = heroUrl || vehicleHero;
   const [edit, setEdit] = useState(false);
   const [upload, setUpload] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -487,7 +490,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
               <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[68%] h-7 bg-[#06194A]/22 blur-2xl rounded-full pointer-events-none" />
               <div className="absolute inset-0 flex items-center justify-center px-6 pt-2 pb-6">
                 <img
-                  src={vehicleHero} alt={`${v.year} ${v.make} ${v.model}`}
+                  src={heroSrc} alt={`${v.year} ${v.make} ${v.model}`}
                   className="max-h-full max-w-full object-contain drop-shadow-[0_18px_14px_rgba(15,23,42,0.18)] transition-transform duration-500 ease-out group-hover:scale-[1.05] -translate-y-1"
                 />
               </div>
