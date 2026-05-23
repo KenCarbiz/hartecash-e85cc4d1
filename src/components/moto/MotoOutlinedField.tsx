@@ -132,7 +132,7 @@ export const MotoOutlinedSelect = forwardRef<HTMLSelectElement, SelectProps>(
             )}
           >
             <label htmlFor={inputId} className={labelClasses(floated, focused)}>
-              {label}
+              {renderLabel(label, required)}
             </label>
             <RSelectValue placeholder="">
               {selected ? <span className="text-zinc-900">{selected.label}</span> : <span />}
