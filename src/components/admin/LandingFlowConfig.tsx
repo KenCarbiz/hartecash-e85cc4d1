@@ -201,6 +201,7 @@ const LandingFlowConfig = () => {
     state.landing_form_variant !== saved.landing_form_variant ||
     state.landing_form_density !== saved.landing_form_density ||
     state.pickup_offered !== saved.pickup_offered ||
+    state.handoff_type !== saved.handoff_type ||
     state.condition_card_style !== saved.condition_card_style ||
     state.ghost_screen !== saved.ghost_screen ||
     state.ghost_headline !== saved.ghost_headline ||
