@@ -91,33 +91,21 @@ const CustomerLookup = () => {
       icon: FileText,
       title: "View Offer",
       description: "See your current offer and expiration.",
-      iconColor: "#4F46E5",
-      iconBg: "#EEF0FF",
-      tileBg: "linear-gradient(180deg, #F8F8FF 0%, #FFFFFF 100%)",
     },
     {
       icon: Upload,
       title: "Upload Documents",
       description: "Send paperwork securely.",
-      iconColor: "#2563EB",
-      iconBg: "#E0EAFF",
-      tileBg: "linear-gradient(180deg, #F5F8FF 0%, #FFFFFF 100%)",
     },
     {
       icon: DollarSign,
       title: "Track Payout",
       description: "Follow payment and handoff progress.",
-      iconColor: "#059669",
-      iconBg: "#DCFCE9",
-      tileBg: "linear-gradient(180deg, #F4FBF6 0%, #FFFFFF 100%)",
     },
     {
       icon: Truck,
       title: "Schedule Pickup",
       description: "Choose your pickup or visit time.",
-      iconColor: "#7C3AED",
-      iconBg: "#F1E9FE",
-      tileBg: "linear-gradient(180deg, #FAF6FF 0%, #FFFFFF 100%)",
     },
   ]), []);
 
