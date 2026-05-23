@@ -86,28 +86,18 @@ const CustomerLookup = () => {
     setLoading(false);
   };
 
+  const pickupOffered = config.pickup_offered !== false;
+  const pickupLabel = pickupOffered
+    ? "Schedule Pickup / Drop Off"
+    : "Schedule Drop Off";
+
   const reassurance = useMemo(() => ([
-    {
-      icon: FileText,
-      title: "View Offer",
-      description: "See your current offer and expiration.",
-    },
-    {
-      icon: Upload,
-      title: "Upload Documents",
-      description: "Send paperwork securely.",
-    },
-    {
-      icon: DollarSign,
-      title: "Track Payout",
-      description: "Follow payment and handoff progress.",
-    },
-    {
-      icon: Truck,
-      title: "Schedule Pickup",
-      description: "Choose your pickup or visit time.",
-    },
-  ]), []);
+    { icon: FileText, title: "View Offer" },
+    { icon: Upload, title: "Upload Documents" },
+    { icon: DollarSign, title: "Track Payout" },
+    { icon: Truck, title: pickupLabel },
+  ]), [pickupLabel]);
+
 
   return (
     <div
@@ -267,22 +257,20 @@ const CustomerLookup = () => {
               <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
               <span className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-border/50" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {reassurance.map(({ icon: Icon, title, description }) => (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-2xl mx-auto">
+              {reassurance.map(({ icon: Icon, title }) => (
                 <div
                   key={title}
-                  className="rounded-2xl border border-border/25 bg-white p-5 text-center shadow-[0_2px_12px_-6px_rgba(15,23,42,0.06)]"
+                  className="rounded-2xl border border-border/25 bg-white px-4 py-5 text-center shadow-[0_2px_12px_-6px_rgba(15,23,42,0.06)] flex flex-col items-center justify-center gap-2.5"
                 >
-                  <div className="w-12 h-12 rounded-full bg-[#F5F3FF] mx-auto mb-3 grid place-items-center">
-                    <Icon className="w-5 h-5 text-[#4F46E5]" strokeWidth={2} />
+                  <div className="w-11 h-11 rounded-full bg-[#F5F3FF] grid place-items-center">
+                    <Icon className="w-[18px] h-[18px] text-[#4F46E5]" strokeWidth={2} />
                   </div>
-                  <p className="text-[13px] font-semibold text-foreground mb-1">
+                  <p className="text-[13px] font-semibold text-foreground leading-tight">
                     {title}
                   </p>
-                  <p className="text-[11.5px] text-foreground/55 leading-snug">
-                    {description}
-                  </p>
                 </div>
+
               ))}
             </div>
           </div>
