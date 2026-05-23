@@ -123,7 +123,7 @@ const CustomerLookup = () => {
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
             {logoUrl ? (
-              <img src={logoUrl} alt={dealerName || "Home"} className="h-8 w-auto" />
+              <img src={logoUrl} alt={dealerName || "Home"} className="h-10 w-auto" />
             ) : (
               <span className="text-base font-bold tracking-tight text-foreground">
                 {dealerName || "Customer Portal"}
@@ -150,7 +150,7 @@ const CustomerLookup = () => {
       </header>
 
       <main className="flex-1 flex items-center px-5 py-10 lg:py-16">
-        <div className="w-full max-w-lg mx-auto">
+        <div className="w-full max-w-[34rem] mx-auto">
           {/* Heading — emotional continuity with the transaction. */}
           <div className="text-center mb-8">
             <div className="relative inline-flex items-center justify-center mb-5">
@@ -254,7 +254,7 @@ const CustomerLookup = () => {
           </form>
 
           {/* Portal benefits — informational tiles, not buttons. */}
-          <div className="mt-6 lg:mt-8">
+          <div className="mt-5 lg:mt-6">
             <div className="flex items-center justify-center gap-3 mb-4" aria-hidden>
               <span className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-border/50" />
               <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
@@ -270,8 +270,8 @@ const CustomerLookup = () => {
                   key={title}
                   className="rounded-2xl border border-border/25 bg-white px-6 py-7 text-center shadow-[0_2px_12px_-6px_rgba(15,23,42,0.06)] flex flex-col items-center justify-center gap-3.5"
                 >
-                  <div className="w-[58px] h-[58px] rounded-full bg-[#F5F3FF] grid place-items-center">
-                    <Icon className="w-5 h-5 text-[#4F46E5]" strokeWidth={2} />
+                  <div className="w-[62px] h-[62px] rounded-full bg-[#F5F3FF] grid place-items-center">
+                    <Icon className="w-[22px] h-[22px] text-[#4F46E5]" strokeWidth={2} />
                   </div>
                   <p className="text-[15px] font-extrabold text-foreground leading-tight">
                     {title}
