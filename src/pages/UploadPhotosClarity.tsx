@@ -711,6 +711,26 @@ const UploadPhotosClarity = () => {
               </div>
             )}
 
+
+            {/* What happens after upload — compact, single line each */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+              <h2 className="text-sm font-bold text-zinc-900 mb-3">What happens after upload</h2>
+              <ul className="space-y-2 text-[13px] text-zinc-600">
+                {[
+                  "Photos checked for clarity",
+                  "AI reviews vehicle condition",
+                  "We check for a stronger offer",
+                ].map((line) => (
+                  <li key={line} className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-violet-100 text-violet-700 shrink-0">
+                      <Check className="w-3 h-3" strokeWidth={3} />
+                    </span>
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Bottom CTA */}
             <div className="rounded-2xl bg-white border border-zinc-200 shadow-sm p-5 sticky bottom-3 z-10">
               <Button
@@ -731,11 +751,21 @@ const UploadPhotosClarity = () => {
                   ctaLabel
                 )}
               </Button>
-              <p className="mt-3 text-center text-[12px] text-zinc-500 inline-flex items-center justify-center gap-1.5 w-full">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                Your current offer remains available while we review your photos.
-              </p>
+              <div className="mt-3 flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/my-submission/${token}`)}
+                  className="text-[13px] font-semibold text-zinc-600 hover:text-zinc-900 underline-offset-4 hover:underline"
+                >
+                  Keep My Current Offer
+                </button>
+                <p className="text-center text-[12px] text-zinc-500 inline-flex items-center justify-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  Your current offer remains available while we review your photos.
+                </p>
+              </div>
             </div>
+
           </section>
 
           {/* RIGHT — vehicle summary */}
