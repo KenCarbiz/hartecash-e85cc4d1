@@ -73,7 +73,7 @@ export const MotoOutlinedInput = forwardRef<HTMLInputElement, InputProps>(
       <div className={className}>
         <div className={wrapperClasses(focused, error)}>
           <label htmlFor={inputId} className={labelClasses(floated, focused)}>
-            {label}
+            {renderLabel(label, required)}
           </label>
           <input
             ref={ref}
