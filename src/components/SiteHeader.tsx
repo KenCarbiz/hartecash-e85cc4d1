@@ -140,14 +140,13 @@ const SiteHeader = () => {
                 ))}
               </div>
               <span className="mx-6 h-4 w-px bg-border/80" aria-hidden />
-              <a
-                href="/#find-offer"
-                onClick={goToHash("find-offer")}
+              <Link
+                to="/my-submission"
                 className="inline-flex items-center gap-1.5 hover:text-primary transition-colors"
               >
                 <LogIn className="w-3.5 h-3.5" strokeWidth={2} />
                 Sign In
-              </a>
+              </Link>
             </nav>
           ) : (
             // Historical nav — preserved unchanged for the 19 other
@@ -230,7 +229,7 @@ const SiteHeader = () => {
                         { hash: "value-tracking", icon: TrendingUp, label: "Value Tracking" },
                         { hash: "reviews", icon: MessageSquare, label: "Reviews" },
                         { hash: "faq", icon: HelpCircle, label: "FAQ" },
-                        { hash: "find-offer", icon: LogIn, label: "Sign In", separated: true },
+                        { to: "/my-submission", icon: LogIn, label: "Sign In", separated: true },
                       ]
                     : [
                         { to: "/trade", icon: ArrowLeftRight, label: "Trade-In" },
