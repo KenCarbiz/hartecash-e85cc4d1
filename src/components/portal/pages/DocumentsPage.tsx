@@ -42,6 +42,7 @@ export const DocumentsPage = () => {
   const MOCK = usePortalData();
   const [hubOpen, setHubOpen] = useState(false);
   const [focus, setFocus] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Seed one rejected doc for realism
   const docs: HubDoc[] = MOCK.docs.map((d, i) =>
@@ -63,6 +64,16 @@ export const DocumentsPage = () => {
   const openHub = (name?: string) => {
     setFocus(name ?? null);
     setHubOpen(true);
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* noop */
+    }
   };
 
   return (
