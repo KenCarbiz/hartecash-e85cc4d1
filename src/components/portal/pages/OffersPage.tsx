@@ -148,6 +148,7 @@ const useRotatingMarketStatus = () => {
 /* ─── Acceptance wizard ──────────────────────────────────────── */
 const ACCEPT_STEPS = ["Terms", "Ownership", "Pickup", "Signature", "Done"];
 const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () => void; onNavigate: (k: NavTarget) => void }) => {
+  const MOCK = usePortalData();
   const [step, setStep] = useState(0);
   useEffect(() => { if (open) setStep(0); }, [open]);
   const next = () => setStep((s) => Math.min(ACCEPT_STEPS.length - 1, s + 1));

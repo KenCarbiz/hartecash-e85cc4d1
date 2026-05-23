@@ -7,7 +7,7 @@ import {
   ChevronRight, Activity as ActivityIcon, Circle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { fmt } from "../portalMock";
+import { fmt, PORTAL_MOCK } from "../portalMock";
 import { usePortalData } from "../PortalDataContext";
 import {
   PortalPageShell, Card, SectionLabel, StatusPill, PrimaryButton, SecondaryButton,
@@ -25,7 +25,7 @@ type Props = { onNavigate?: (k: NavTarget) => void };
 const FILTERS = ["All", "Offers", "Documents", "Messages", "Pickup", "Payments"] as const;
 type Filter = typeof FILTERS[number];
 
-type ActivityItem = (typeof MOCK.activity)[number];
+type ActivityItem = (typeof PORTAL_MOCK.activity)[number];
 
 const TYPE_MAP: Record<string, {
   Icon: LucideIcon; tint: string; ring: string; cat: Filter;

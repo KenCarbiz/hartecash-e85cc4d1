@@ -74,29 +74,32 @@ const TypingDots = () => (
   </div>
 );
 
-const TransactionHeader = ({ onOffer }: { onOffer: () => void }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-    className="border-b border-[#E6EAF0] bg-[#FAFBFE] px-4 py-2"
-  >
-    <div className="flex items-center gap-3">
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold text-[#06194A] truncate">
-          {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
+const TransactionHeader = ({ onOffer }: { onOffer: () => void }) => {
+  const MOCK = usePortalData();
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+      className="border-b border-[#E6EAF0] bg-[#FAFBFE] px-4 py-2"
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold text-[#06194A] truncate">
+            {MOCK.vehicle.year} {MOCK.vehicle.make} {MOCK.vehicle.model} {MOCK.vehicle.trim}
+          </div>
+          <div className="text-[11px] text-[#53627A] truncate">
+            Firm offer accepted · 2 docs remaining
+          </div>
         </div>
-        <div className="text-[11px] text-[#53627A] truncate">
-          Firm offer accepted · 2 docs remaining
-        </div>
+        <button
+          onClick={onOffer}
+          className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-white border border-[#E0E7FF] rounded-lg px-2.5 py-1.5 hover:bg-[#EEF0FF] transition shrink-0"
+        >
+          <DollarSign className="w-3.5 h-3.5" /> {fmt(MOCK.firmOffer)}
+        </button>
       </div>
-      <button
-        onClick={onOffer}
-        className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-white border border-[#E0E7FF] rounded-lg px-2.5 py-1.5 hover:bg-[#EEF0FF] transition shrink-0"
-      >
-        <DollarSign className="w-3.5 h-3.5" /> {fmt(MOCK.firmOffer)}
-      </button>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 const SystemEvent = ({ msg }: { msg: Msg }) => {
   const tones: Record<string, string> = {

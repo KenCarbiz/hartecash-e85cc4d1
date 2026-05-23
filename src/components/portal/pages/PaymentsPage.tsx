@@ -269,6 +269,7 @@ const MethodDetail = ({
 const BankConnectionDrawer = ({
   open, onClose, onConnected,
 }: { open: boolean; onClose: () => void; onConnected: (c: AchConn) => void }) => {
+  const MOCK = usePortalData();
   // Timer cleanup — the "instant bank link" simulation schedules a
   // setInterval + two nested setTimeouts. If the user closes the
   // drawer mid-link (or unmounts the page), all three keep firing
