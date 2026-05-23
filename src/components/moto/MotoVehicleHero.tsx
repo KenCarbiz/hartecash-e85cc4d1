@@ -35,7 +35,7 @@ const MotoVehicleHero = ({
         className="mx-auto aspect-[16/9] w-full"
         style={{
           maxWidth: tuner.width,
-          transform: tuner.flip ? "scaleX(-1)" : undefined,
+          transform: `${tuner.offsetX ? `translateX(${tuner.offsetX}px)` : ""}${tuner.flip ? " scaleX(-1)" : ""}`.trim() || undefined,
         }}
       >
         <VehicleImage
