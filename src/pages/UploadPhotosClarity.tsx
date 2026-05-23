@@ -16,6 +16,8 @@ import {
   QrCode,
   ShieldCheck,
   Smartphone,
+  Sparkles,
+  TrendingUp,
   Upload,
   X,
 } from "lucide-react";
@@ -496,16 +498,49 @@ const UploadPhotosClarity = () => {
 
           {/* CENTER — guided task card */}
           <section className="lg:col-span-6 space-y-5">
-            {/* Title + intent */}
-            <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-700">Photos · Step 6 of 7</p>
-              <h1 className="font-sans text-[26px] md:text-[32px] font-bold tracking-[-0.02em] leading-[1.1] text-zinc-900">
-                Add a few quick photos
-              </h1>
-              <p className="text-sm md:text-[15px] text-zinc-600 max-w-xl">
-                We'll guide each angle so our AI agent can review your vehicle accurately.
-              </p>
-            </div>
+            {/* AI appraisal hero — the entry point into the photo task.
+                Replaces the prior page-level headline so the customer
+                hits an energized, exciting hero instead of a redundant
+                "Add a few quick photos" title. */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="relative overflow-hidden rounded-2xl border border-violet-200/70 bg-white p-5 md:p-6 shadow-[0_6px_30px_-12px_rgba(124,58,237,0.35)]"
+            >
+              {/* Soft purple gradient/glow */}
+              <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_0%_0%,rgba(139,92,246,0.18),transparent_60%),radial-gradient(100%_80%_at_100%_100%,rgba(192,132,252,0.16),transparent_60%)]" />
+              <div className="relative">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold uppercase tracking-[0.16em] px-2.5 py-1">
+                  <Sparkles className="w-3 h-3" /> AI Photo Appraisal
+                </div>
+                <h1 className="mt-3 font-sans text-[24px] md:text-[28px] font-bold tracking-[-0.02em] leading-[1.15] text-zinc-900">
+                  Add photos to check for a better offer.
+                </h1>
+                <p className="mt-2 text-[14px] md:text-[15px] text-zinc-600 leading-relaxed max-w-xl">
+                  Our AI agent reviews your vehicle photos for condition, options, and market signals that may improve your offer.
+                </p>
+
+                {/* Mint green value callout */}
+                <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-3 flex items-center gap-3">
+                  <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white border border-emerald-200 text-emerald-600 shrink-0">
+                    <TrendingUp className="w-4 h-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700">Average uplift</p>
+                    <p className="text-[15px] md:text-[16px] font-bold text-emerald-900 leading-tight mt-0.5">
+                      $250 – $2,375 <span className="font-semibold text-emerald-700">after photo review</span>
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-[12px] text-zinc-500 inline-flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  Your current offer remains available. No obligation.
+                </p>
+              </div>
+            </motion.div>
+
 
             {error && (
               <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -548,26 +583,26 @@ const UploadPhotosClarity = () => {
                     <Smartphone className="w-5 h-5" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[15px] font-bold text-zinc-900 leading-tight">Use your phone camera</p>
+                    <p className="text-[15px] font-bold text-zinc-900 leading-tight">Use your phone for the fastest photo capture</p>
                     <p className="text-[13px] text-zinc-600 mt-1 leading-relaxed">
-                      Scan the QR code or text yourself a secure link to continue from your phone — it's the easiest way to finish.
+                      Scan once and finish the upload from your phone camera.
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowQR((s) => !s)}
+                    onClick={handleTextMeLink}
                     className="inline-flex items-center gap-1.5 rounded-full bg-violet-600 hover:bg-violet-700 text-white text-[13px] font-semibold px-4 h-9 transition-colors"
                   >
-                    <QrCode className="w-4 h-4" /> {showQR ? "Hide QR Code" : "Show QR Code"}
+                    <MessageSquare className="w-4 h-4" /> Send Link to My Phone
                   </button>
                   <button
                     type="button"
-                    onClick={handleTextMeLink}
+                    onClick={() => setShowQR((s) => !s)}
                     className="inline-flex items-center gap-1.5 rounded-full bg-white border border-violet-200 text-violet-700 hover:bg-violet-50 text-[13px] font-semibold px-4 h-9 transition-colors"
                   >
-                    <MessageSquare className="w-4 h-4" /> Text Me Link
+                    <QrCode className="w-4 h-4" /> {showQR ? "Hide QR Code" : "Show QR Code"}
                   </button>
                   <button
                     type="button"
@@ -578,6 +613,7 @@ const UploadPhotosClarity = () => {
                     {copyState === "copied" ? "Copied" : "Copy Secure Link"}
                   </button>
                 </div>
+
                 {showQR && secureLink && (
                   <div className="mt-4 flex items-center gap-4 rounded-xl bg-white border border-violet-200 p-4">
                     <div className="bg-white p-2 rounded-lg border border-zinc-200">
@@ -675,6 +711,26 @@ const UploadPhotosClarity = () => {
               </div>
             )}
 
+
+            {/* What happens after upload — compact, single line each */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+              <h2 className="text-sm font-bold text-zinc-900 mb-3">What happens after upload</h2>
+              <ul className="space-y-2 text-[13px] text-zinc-600">
+                {[
+                  "Photos checked for clarity",
+                  "AI reviews vehicle condition",
+                  "We check for a stronger offer",
+                ].map((line) => (
+                  <li key={line} className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-violet-100 text-violet-700 shrink-0">
+                      <Check className="w-3 h-3" strokeWidth={3} />
+                    </span>
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Bottom CTA */}
             <div className="rounded-2xl bg-white border border-zinc-200 shadow-sm p-5 sticky bottom-3 z-10">
               <Button
@@ -695,11 +751,21 @@ const UploadPhotosClarity = () => {
                   ctaLabel
                 )}
               </Button>
-              <p className="mt-3 text-center text-[12px] text-zinc-500 inline-flex items-center justify-center gap-1.5 w-full">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                Your current offer remains available while we review your photos.
-              </p>
+              <div className="mt-3 flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/my-submission/${token}`)}
+                  className="text-[13px] font-semibold text-zinc-600 hover:text-zinc-900 underline-offset-4 hover:underline"
+                >
+                  Keep My Current Offer
+                </button>
+                <p className="text-center text-[12px] text-zinc-500 inline-flex items-center justify-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  Your current offer remains available while we review your photos.
+                </p>
+              </div>
             </div>
+
           </section>
 
           {/* RIGHT — vehicle summary */}
