@@ -204,22 +204,24 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
                 transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                 className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_40px_-24px_rgba(15,23,42,0.14)] sm:p-8"
               >
-                <header className="mb-6">
-                  <div className="mb-3 inline-flex items-center gap-2">
-                    <span className="inline-flex items-center rounded-full bg-[hsl(262_83%_58%/0.1)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)]">
-                      Step {current.stepBadge?.current ?? safeCursor + 1} of {current.stepBadge?.total ?? activeSteps.length}
-                    </span>
-                    <span className="text-[11px] font-medium text-slate-400">
-                      {current.title}
-                    </span>
-                  </div>
-                  <h1 className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-[26px]">
-                    {current.pageTitle}
-                  </h1>
-                  {current.pageSubtitle && (
-                    <p className="mt-2 text-[15px] leading-relaxed text-slate-500">{current.pageSubtitle}</p>
-                  )}
-                </header>
+                {current.id !== "boost_upload" && (
+                  <header className="mb-6">
+                    <div className="mb-3 inline-flex items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-[hsl(262_83%_58%/0.1)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)]">
+                        Step {current.stepBadge?.current ?? safeCursor + 1} of {current.stepBadge?.total ?? activeSteps.length}
+                      </span>
+                      <span className="text-[11px] font-medium text-slate-400">
+                        {current.title}
+                      </span>
+                    </div>
+                    <h1 className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-[26px]">
+                      {current.pageTitle}
+                    </h1>
+                    {current.pageSubtitle && (
+                      <p className="mt-2 text-[15px] leading-relaxed text-slate-500">{current.pageSubtitle}</p>
+                    )}
+                  </header>
+                )}
 
                 <StepComponent {...ctx} />
 
