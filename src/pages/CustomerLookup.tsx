@@ -86,17 +86,24 @@ const CustomerLookup = () => {
     setLoading(false);
   };
 
-  const pickupOffered = config.pickup_offered !== false;
-  const pickupLabel = pickupOffered
-    ? "Schedule Pickup / Drop Off"
-    : "Schedule Drop Off";
+  const handoffLabel = ((): string => {
+    switch (config.handoff_type) {
+      case "pickup":
+        return "Schedule Pickup";
+      case "dropoff":
+        return "Schedule Drop Off";
+      case "both":
+      default:
+        return "Schedule Pickup / Drop Off";
+    }
+  })();
 
   const reassurance = useMemo(() => ([
     { icon: FileText, title: "View Offer" },
     { icon: Upload, title: "Upload Documents" },
     { icon: DollarSign, title: "Track Payout" },
-    { icon: Truck, title: pickupLabel },
-  ]), [pickupLabel]);
+    { icon: Truck, title: handoffLabel },
+  ]), [handoffLabel]);
 
 
   return (
