@@ -545,6 +545,7 @@ const LandingFlowConfig = () => {
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
       ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
       ...(pickupSkipped ? { pickup_offered: saved.pickup_offered } : {}),
+      ...(handoffSkipped ? { handoff_type: saved.handoff_type } : {}),
       ...(conditionStyleSkipped ? { condition_card_style: saved.condition_card_style } : {}),
       ...(lookupSkipped ? { landing_lookup_default: saved.landing_lookup_default } : {}),
       ...(ctaColorSkipped
