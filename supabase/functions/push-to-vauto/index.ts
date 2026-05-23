@@ -72,7 +72,14 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // ── 0. Authn/Authz — staff-only, tenant-scoped ──────────────────
+    const caller = await resolveCaller(req, supabaseUrl, anonKey, supabaseKey);
+    if (caller.kind !== "platform_admin" && caller.kind !== "tenant_staff") {
+      return forbidden(corsHeaders, "Forbidden — staff authentication required");
+    }
 
     // ── 1. Fetch the submission ──────────────────────────────────────
     const { data: submission, error: subErr } = await supabase
@@ -89,6 +96,12 @@ serve(async (req) => {
     }
 
     const sub = submission as any;
+
+    // Verify tenant ownership — prevents cross-tenant push and credential
+    // disclosure via dealer_accounts read below.
+    if (!callerCanActOnTenant(caller, sub.dealership_id)) {
+      return forbidden(corsHeaders);
+    }
 
     // ── 2. Fetch dealer's vAuto credentials ──────────────────────────
     // Single-tenant deployments key dealer_accounts on dealership_id='default'.
