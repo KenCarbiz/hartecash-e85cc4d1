@@ -13,7 +13,18 @@ import { SlideOver } from "./SlideOver";
    Both share the same sections, drawers, and logout confirmation. */
 
 type Customer = {
-  name: string; email: string; initials: string; dealer: string;
+  name: string;
+  email: string;
+  initials: string;
+  dealer: string;
+  phone?: string;
+  mailingAddress?: {
+    street?: string;
+    unit?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+  };
 };
 
 type Props = {
@@ -86,9 +97,19 @@ const Header = ({ customer }: { customer: Customer }) => (
 /* Lightweight drawer body content — wired to mock data but presentation-only. */
 const DrawerBody = ({ which, customer }: { which: Exclude<DrawerKey, null>; customer: Customer }) => {
   if (which === "profile") {
+    const addr = customer.mailingAddress;
+    const addrLine = addr
+      ? [
+          [addr.street, addr.unit].filter(Boolean).join(" "),
+          [addr.city, addr.state].filter(Boolean).join(", "),
+          addr.zip,
+        ].filter(Boolean).join(", ")
+      : "";
     const fields: [string, string][] = [
-      ["Full name", customer.name], ["Email", customer.email],
-      ["Phone", "(555) 214-9087"], ["Address", "1240 Liberty Ave, Springfield"],
+      ["Full name", customer.name],
+      ["Email", customer.email],
+      ["Phone", customer.phone || "—"],
+      ["Address", addrLine || "—"],
     ];
     return (
       <div className="space-y-3">
