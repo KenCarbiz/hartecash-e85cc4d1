@@ -257,28 +257,24 @@ const CustomerLookup = () => {
           </form>
 
           {/* Portal benefits — informational tiles, not buttons. */}
-          <div className="mt-10">
-            <div className="flex items-center justify-center gap-3 mb-5" aria-hidden>
-              <span className="h-px flex-1 max-w-[60px] bg-gradient-to-r from-transparent to-[#C7D2FE]" />
-              <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" strokeWidth={2.2} />
-              <p className="text-[11px] uppercase tracking-[0.16em] font-semibold text-foreground/55">
-                What you can do after sign-in
+          <div className="mt-10 lg:mt-12">
+            <div className="flex items-center justify-center gap-3 mb-6" aria-hidden>
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-border/50" />
+              <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
+              <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-foreground/50">
+                Inside your portal
               </p>
-              <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" strokeWidth={2.2} />
-              <span className="h-px flex-1 max-w-[60px] bg-gradient-to-l from-transparent to-[#C7D2FE]" />
+              <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-border/50" />
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {reassurance.map(({ icon: Icon, title, description, iconColor, iconBg, tileBg }) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {reassurance.map(({ icon: Icon, title, description }) => (
                 <div
                   key={title}
-                  className="rounded-2xl border border-border/40 p-4 text-center shadow-[0_4px_14px_-8px_rgba(15,23,42,0.08)]"
-                  style={{ background: tileBg }}
+                  className="rounded-2xl border border-border/25 bg-white p-5 text-center shadow-[0_2px_12px_-6px_rgba(15,23,42,0.06)]"
                 >
-                  <div
-                    className="w-12 h-12 rounded-full mx-auto mb-3 grid place-items-center"
-                    style={{ background: iconBg }}
-                  >
-                    <Icon className="w-[22px] h-[22px]" style={{ color: iconColor }} strokeWidth={2} />
+                  <div className="w-12 h-12 rounded-full bg-[#F5F3FF] mx-auto mb-3 grid place-items-center">
+                    <Icon className="w-5 h-5 text-[#4F46E5]" strokeWidth={2} />
                   </div>
                   <p className="text-[13px] font-semibold text-foreground mb-1">
                     {title}
