@@ -7,6 +7,7 @@ import {
   AlertCircle, Briefcase, Navigation, MessageSquare,
 } from "lucide-react";
 import { usePortalData } from "../PortalDataContext";
+import { supabase } from "@/integrations/supabase/client";
 import { PortalPageShell, Card, SectionLabel, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
 import { AIInspectionFlow, type InspectionResult } from "../AIInspectionFlow";
@@ -59,11 +60,60 @@ const CHECKLIST = [
   "Cancel insurance after pickup",
 ];
 
-const DEALERSHIPS = [
-  { id: "liberty",  name: "Liberty Automotive",    distance: "2.4 mi", rating: 4.9, address: "412 Park Ave, Hartford, CT", hours: "Mon–Sat · 8 AM–7 PM", earliest: "Today · 2:00 PM" },
-  { id: "westside", name: "Westside Motors",       distance: "5.1 mi", rating: 4.8, address: "88 Westgate Blvd, Hartford", hours: "Mon–Fri · 9 AM–6 PM", earliest: "Tomorrow · 9:30 AM" },
+// Fallback for the unauthenticated /portal-preview demo route + any
+// half-provisioned tenant. The real list comes from the live
+// dealership_locations table -- see useDealerships() below.
+const DEMO_DEALERSHIPS: Dealership[] = [
+  { id: "liberty",  name: "Liberty Automotive",      distance: "2.4 mi", rating: 4.9, address: "412 Park Ave, Hartford, CT",       hours: "Mon–Sat · 8 AM–7 PM", earliest: "Today · 2:00 PM" },
+  { id: "westside", name: "Westside Motors",         distance: "5.1 mi", rating: 4.8, address: "88 Westgate Blvd, Hartford",        hours: "Mon–Fri · 9 AM–6 PM", earliest: "Tomorrow · 9:30 AM" },
   { id: "premier",  name: "Premier Acquisition Ctr", distance: "7.8 mi", rating: 4.9, address: "1200 Industrial Pkwy, East Hartford", hours: "Mon–Sun · 7 AM–8 PM", earliest: "Today · 4:00 PM" },
 ];
+
+type Dealership = {
+  id: string;
+  name: string;
+  distance: string;
+  rating: number;
+  address: string;
+  hours: string;
+  earliest: string;
+};
+
+interface LocationRow {
+  id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  hours: string | null;
+  rating: number | null;
+}
+
+const useDealerships = (): Dealership[] => {
+  const [rows, setRows] = useState<LocationRow[] | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("dealership_locations" as never)
+        .select("id, name, address, city, state, hours, rating")
+        .eq("is_active", true)
+        .order("sort_order");
+      setRows((data as unknown as LocationRow[]) || []);
+    })();
+  }, []);
+  if (!rows) return [];
+  if (rows.length === 0) return DEMO_DEALERSHIPS;
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    distance: "—",
+    rating: r.rating ?? 0,
+    address: [r.address, [r.city, r.state].filter(Boolean).join(", ")]
+      .filter(Boolean).join(", "),
+    hours: r.hours || "Call for hours",
+    earliest: "Schedule a time",
+  }));
+};
 
 const buildDays = () => {
   const out: { date: Date; available: boolean; avail: "high" | "limited" | "none" }[] = [];
@@ -204,6 +254,7 @@ const LiveStatusStrip = () => {
 
 export const PickupPage = () => {
   const MOCK = usePortalData();
+  const DEALERSHIPS = useDealerships();
   const [method, setMethod] = useState<Method>(null);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiStep, setAiStep] = useState(0);
