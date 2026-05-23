@@ -142,7 +142,7 @@ export const PRESETS: Record<JourneyPresetId, JourneyPreset> = {
       offerDisplayMode: "after_contact_info",
       steps: [
         vehicle(), condition(), usage(), contact(), offer(),
-        accepted(), boostIntro(), boostUpload(), boostResult(),
+        accepted(), boostUpload(), boostResult(),
       ],
     }),
   },
