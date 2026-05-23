@@ -171,13 +171,16 @@ export const DocumentsPage = () => {
               <span className="text-[#4F46E5] font-semibold">Session stays in sync</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <SecondaryButton onClick={() => openHub()} className="px-3 py-2">
               <QrCode className="w-3.5 h-3.5" /> Show QR Code
             </SecondaryButton>
-            <PrimaryButton onClick={() => openHub()} className="px-3 py-2">
-              Open Hub →
-            </PrimaryButton>
+            <SecondaryButton onClick={() => openHub()} className="px-3 py-2">
+              <MessageSquare className="w-3.5 h-3.5" /> Text me the link
+            </SecondaryButton>
+            <SecondaryButton onClick={copyLink} className="px-3 py-2">
+              <Link2 className="w-3.5 h-3.5" /> {copied ? "Copied!" : "Copy secure link"}
+            </SecondaryButton>
           </div>
         </div>
       </Card>
