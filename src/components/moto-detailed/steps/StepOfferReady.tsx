@@ -4,11 +4,10 @@ import { ShieldCheck, Truck, BadgeCheck, X, LockKeyhole, BookmarkCheck, ArrowRig
 
 import type { StepContext } from "../types";
 import { trackCtaClicked, trackOfferAccepted } from "../analytics";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
-
-const DEALER_NAME = "Liberty Automotive";
 
 /**
  * Firm-offer reveal — final decision moment.
@@ -19,6 +18,8 @@ const DEALER_NAME = "Liberty Automotive";
  *   simply save the current offer for later.
  */
 const StepOfferReady = ({ state, update, goTo }: StepContext) => {
+  const { config } = useSiteConfig();
+  const dealerName = (config.dealership_name || "").trim() || "Our Dealership";
   const v = state.valuation;
   const firm = v?.firm ?? (v ? Math.round((v.low + v.high) / 2) : 0);
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -90,7 +91,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
 
         <div className="mt-5 grid gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-4 text-sm sm:grid-cols-2">
           <Row label="Vehicle" value={vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : "—"} />
-          <Row label="Dealer" value={DEALER_NAME} />
+          <Row label="Dealer" value={dealerName} />
           {mileage && <Row label="Mileage" value={mileage} />}
           <Row label="Offer expires" value={expiresLabel} />
         </div>

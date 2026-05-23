@@ -7,28 +7,25 @@
 //   /my-submission/:token         → live customer portal after Sign In
 //                                   lookup or Accept-Offer redirect
 //
-// Both render identical mock-driven UI today. The token is read from
-// useParams and stashed (currently unused) so that when the data-wire
-// PR lands, every page below this shell receives the token via context
-// without a structural refactor.
+// Both routes mount inside <PortalDataProvider token={token}>. On the
+// live route the provider fetches get_submission_portal(token) and
+// overlays real customer/vehicle/offer/dealer fields onto the
+// PORTAL_MOCK shape, so every consumer hook (usePortalData) returns
+// a populated object regardless of which route it's on. The /portal-
+// preview demo (no token) keeps the pure mock shape so designers can
+// iterate on the UI without a live submission.
 //
 // • Sidebar + mobile top bar stay mounted across navigation.
 // • Main content swaps in via Framer Motion AnimatePresence keyed by activeNav.
 // • Sidebar links never open right-side drawers — drawers are reserved for
 //   secondary actions inside each page (edit, upload, accept, etc).
 //
-// IMPORTANT (mock data warning):
-// This route renders fully static mock customer data (Alex Morgan /
-// Liberty Automotive / fake VIN + bank details from
-// src/components/portal/portalMock.ts). The technical review's P0 #1
-// flagged this — the product owner accepted the trade-off and chose
-// to ship the new portal experience for all tenants while real data
-// wiring is in flight. Per CustomerPortal.tsx the route is already
-// `noindex`'d so it doesn't leak via search.
+// Token-error handling: invalid / expired / missing tokens render the
+// shared TokenErrorScreen instead of dropping the customer into a
+// misleading mock dashboard. Loading state renders PortalSkeleton.
 //
 // The legacy submission-aware portal stays available at
-// /my-submission-legacy/:token (renders the same `CustomerPortalLegacy`
-// component this file replaces in the live dispatch).
+// /my-submission-legacy/:token for rollback / reference.
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
