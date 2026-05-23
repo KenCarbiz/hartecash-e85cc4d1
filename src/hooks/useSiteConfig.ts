@@ -496,6 +496,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "landing_form_variant",
   "landing_form_density",
   "pickup_offered",
+  "handoff_type",
   "condition_card_style",
   "ghost_screen",
   "ghost_headline",
