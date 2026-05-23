@@ -14,8 +14,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Search, Car, ChevronRight, ArrowRight, ShieldCheck,
-  Tag, Upload, TrendingUp, Calendar, HelpCircle, LifeBuoy, Mail,
-  LockKeyhole,
+  FileText, Upload, DollarSign, Truck, HelpCircle, LifeBuoy, Mail,
+  LockKeyhole, Sparkles, Phone as PhoneIcon,
 } from "lucide-react";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -87,10 +87,38 @@ const CustomerLookup = () => {
   };
 
   const reassurance = useMemo(() => ([
-    { icon: Tag, title: "View Offer", description: "See your current offer and expiration." },
-    { icon: Upload, title: "Upload Documents", description: "Send paperwork securely." },
-    { icon: TrendingUp, title: "Track Payout", description: "Follow payment and handoff progress." },
-    { icon: Calendar, title: "Schedule Pickup", description: "Choose your pickup or visit time." },
+    {
+      icon: FileText,
+      title: "View Offer",
+      description: "See your current offer and expiration.",
+      iconColor: "#4F46E5",
+      iconBg: "#EEF0FF",
+      tileBg: "linear-gradient(180deg, #F8F8FF 0%, #FFFFFF 100%)",
+    },
+    {
+      icon: Upload,
+      title: "Upload Documents",
+      description: "Send paperwork securely.",
+      iconColor: "#2563EB",
+      iconBg: "#E0EAFF",
+      tileBg: "linear-gradient(180deg, #F5F8FF 0%, #FFFFFF 100%)",
+    },
+    {
+      icon: DollarSign,
+      title: "Track Payout",
+      description: "Follow payment and handoff progress.",
+      iconColor: "#059669",
+      iconBg: "#DCFCE9",
+      tileBg: "linear-gradient(180deg, #F4FBF6 0%, #FFFFFF 100%)",
+    },
+    {
+      icon: Truck,
+      title: "Schedule Pickup",
+      description: "Choose your pickup or visit time.",
+      iconColor: "#7C3AED",
+      iconBg: "#F1E9FE",
+      tileBg: "linear-gradient(180deg, #FAF6FF 0%, #FFFFFF 100%)",
+    },
   ]), []);
 
   return (
@@ -140,13 +168,20 @@ const CustomerLookup = () => {
         <div className="w-full max-w-lg mx-auto">
           {/* Heading — emotional continuity with the transaction. */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-[52px] h-[52px] rounded-2xl mb-5 bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_10px_28px_-12px_rgba(79,70,229,0.55)] ring-4 ring-[#4F46E5]/10">
-              <LockKeyhole className="w-7 h-7 text-white" strokeWidth={2} />
+            <div className="relative inline-flex items-center justify-center mb-5">
+              <span
+                aria-hidden
+                className="absolute inset-0 -m-3 rounded-full blur-2xl opacity-70"
+                style={{ background: "radial-gradient(closest-side, rgba(124,58,237,0.35), rgba(79,70,229,0.15), transparent 70%)" }}
+              />
+              <span className="relative inline-flex items-center justify-center w-[58px] h-[58px] rounded-2xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_14px_32px_-12px_rgba(124,58,237,0.6)] ring-4 ring-white">
+                <LockKeyhole className="w-7 h-7 text-white" strokeWidth={2} />
+              </span>
             </div>
             <h1 className="text-3xl lg:text-[38px] font-bold text-foreground leading-[1.15] tracking-tight mb-3">
               Continue Your Vehicle Sale
             </h1>
-            <p className="text-base text-foreground/65 leading-relaxed max-w-md mx-auto">
+            <p className="text-base text-foreground/65 leading-relaxed max-w-[520px] mx-auto">
               Access your vehicle dashboard, documents, payout details, and next steps.
             </p>
           </div>
@@ -183,34 +218,40 @@ const CustomerLookup = () => {
               <label htmlFor="signin-email" className="text-sm font-semibold text-foreground mb-2 block">
                 Email
               </label>
-              <input
-                id="signin-email"
-                type="email"
-                autoComplete="email"
-                inputMode="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full h-12 px-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
-              />
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none" strokeWidth={2} />
+                <input
+                  id="signin-email"
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
+                />
+              </div>
             </div>
 
             <div>
               <label htmlFor="signin-phone" className="text-sm font-semibold text-foreground mb-2 block">
                 Phone
               </label>
-              <input
-                id="signin-phone"
-                type="tel"
-                autoComplete="tel"
-                inputMode="tel"
-                placeholder="(555) 123-4567"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-                className="w-full h-12 px-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
-              />
+              <div className="relative">
+                <PhoneIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40 pointer-events-none" strokeWidth={2} />
+                <input
+                  id="signin-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  placeholder="(555) 123-4567"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
+                />
+              </div>
             </div>
 
             <button
@@ -228,23 +269,33 @@ const CustomerLookup = () => {
           </form>
 
           {/* Portal benefits — informational tiles, not buttons. */}
-          <div className="mt-8">
-            <p className="text-center text-[11px] uppercase tracking-[0.14em] font-semibold text-foreground/40 mb-4">
-              Inside your portal
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {reassurance.map(({ icon: Icon, title, description }) => (
+          <div className="mt-10">
+            <div className="flex items-center justify-center gap-3 mb-5" aria-hidden>
+              <span className="h-px flex-1 max-w-[60px] bg-gradient-to-r from-transparent to-[#C7D2FE]" />
+              <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" strokeWidth={2.2} />
+              <p className="text-[11px] uppercase tracking-[0.16em] font-semibold text-foreground/55">
+                What you can do after sign-in
+              </p>
+              <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" strokeWidth={2.2} />
+              <span className="h-px flex-1 max-w-[60px] bg-gradient-to-l from-transparent to-[#C7D2FE]" />
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {reassurance.map(({ icon: Icon, title, description, iconColor, iconBg, tileBg }) => (
                 <div
                   key={title}
-                  className="rounded-2xl bg-white border border-border/20 p-4 text-center"
+                  className="rounded-2xl border border-border/40 p-4 text-center shadow-[0_4px_14px_-8px_rgba(15,23,42,0.08)]"
+                  style={{ background: tileBg }}
                 >
-                  <div className="w-11 h-11 rounded-full bg-[#EEF0FF] mx-auto mb-2.5 grid place-items-center">
-                    <Icon className="w-5 h-5 text-[#4F46E5]" strokeWidth={2} />
+                  <div
+                    className="w-12 h-12 rounded-full mx-auto mb-3 grid place-items-center"
+                    style={{ background: iconBg }}
+                  >
+                    <Icon className="w-[22px] h-[22px]" style={{ color: iconColor }} strokeWidth={2} />
                   </div>
-                  <p className="text-xs font-semibold text-foreground mb-0.5">
+                  <p className="text-[13px] font-semibold text-foreground mb-1">
                     {title}
                   </p>
-                  <p className="text-[11px] text-foreground/50 leading-snug">
+                  <p className="text-[11.5px] text-foreground/55 leading-snug">
                     {description}
                   </p>
                 </div>
