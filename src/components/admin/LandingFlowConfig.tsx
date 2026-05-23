@@ -805,41 +805,51 @@ const LandingFlowConfig = () => {
       </section>
 
 
-      {/* ── Pickup toggle ──
-          Drives "We pick up your car" copy on HowItWorks step 3 and the
-          default Why-X-Wins wedge row. When off, those swap to in-person
-          drop-off so the landing stays honest. */}
+      {/* ── Handoff type ──
+          Three-state configuration defining what the dealer offers
+          customers after they accept the offer. Drives portal and
+          landing-page copy site-wide. */}
       <section className="bg-card rounded-xl border border-border p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-base">🚚</span>
-              <h3 className="font-bold">Free At-Home Pickup</h3>
-            </div>
-            <p className="text-xs text-muted-foreground max-w-prose">
-              Toggle on if you offer free pickup of the car after the customer accepts
-              the offer. Drives the "We pick up your car" wording on the landing
-              page (HowItWorks step 3) and the comparison wedge. When off, the page
-              swaps to in-person drop-off copy.
-            </p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={state.pickup_offered}
-            onClick={() =>
-              setState((prev) => ({ ...prev, pickup_offered: !prev.pickup_offered }))
-            }
-            className={`relative inline-flex h-7 w-12 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-              state.pickup_offered ? "bg-primary" : "bg-muted"
-            }`}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-                state.pickup_offered ? "translate-x-6" : "translate-x-1"
-              }`}
-            />
-          </button>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-base">🚚</span>
+          <h3 className="font-bold">Vehicle Handoff Options</h3>
+        </div>
+        <p className="text-xs text-muted-foreground max-w-prose mb-4">
+          Choose how customers can complete their vehicle transaction after accepting
+          the offer. This drives wording across the portal login page, landing page
+          (How It Works), and customer-facing pickup/drop-off flows.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {(
+            [
+              { value: "pickup" as const, label: "Pickup Only", desc: "We pick up the car at the customer\u2019s home or office." },
+              { value: "dropoff" as const, label: "Drop-Off Only", desc: "The customer brings the car to the dealership for inspection." },
+              { value: "both" as const, label: "Both Options", desc: "Customer can choose pickup or in-person drop-off." },
+            ] as const
+          ).map((opt) => {
+            const active = state.handoff_type === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() =>
+                  setState((prev) => ({ ...prev, handoff_type: opt.value }))
+                }
+                className={`rounded-xl border p-4 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                  active
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                    : "border-border bg-background hover:border-primary/30"
+                }`}
+              >
+                <div className={`text-sm font-bold mb-1 ${active ? "text-primary" : "text-foreground"}`}>
+                  {opt.label}
+                </div>
+                <div className="text-[11px] text-muted-foreground leading-snug">
+                  {opt.desc}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </section>
 
