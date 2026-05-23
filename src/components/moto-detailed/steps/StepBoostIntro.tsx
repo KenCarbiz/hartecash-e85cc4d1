@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Clock,
   X,
+  TrendingUp,
 } from "lucide-react";
 import type { StepContext } from "../types";
 import { trackAiBoostStarted, trackCtaClicked } from "../analytics";
@@ -14,9 +15,8 @@ import { trackAiBoostStarted, trackCtaClicked } from "../analytics";
 /**
  * AI Photo Appraisal intro — premium concierge modal.
  *
- * Refined to match approved target: eyebrow concierge label, two-line
- * headline with purple "AI appraisal.", inline payout sentence with mint
- * dollar range (NOT boxed), time pill, tight 3-up benefit panel, premium CTA.
+ * Refined to match approved target: compact premium modal, exact AI Photo
+ * Appraisal hierarchy, polished payout box, tight 3-up benefit panel, CTA.
  */
 const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
   const currentOffer = state.valuation?.firm ?? state.valuation?.high ?? 0;
@@ -43,7 +43,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
     {
       icon: Zap,
       title: "Fast AI review",
-      body: "Advanced AI analyzes your vehicle instantly.",
+      body: "We analyze your photos in seconds.",
     },
     {
       icon: Camera,
@@ -52,49 +52,49 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
     },
     {
       icon: ShieldCheck,
-      title: "No risk to current offer",
-      body: "Your current offer is always protected.",
+      title: "Current offer protected",
+      body: "Your offer stays safe while we review.",
     },
   ];
 
   return (
-    <div className="relative flex w-full justify-center px-4 py-8 sm:py-12">
+    <div className="relative flex w-full justify-center px-4 py-4 sm:py-6">
       {/* Ambient halo */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 flex items-center justify-center"
       >
-        <div className="h-[560px] w-[820px] max-w-[98%] rounded-[60px] bg-[radial-gradient(closest-side,hsl(262_83%_62%/0.16),transparent_70%)] blur-3xl" />
+        <div className="h-[480px] w-[680px] max-w-[95%] rounded-[56px] bg-[radial-gradient(closest-side,hsl(262_83%_62%/0.14),transparent_70%)] blur-3xl" />
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 14, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-[600px]"
+        className="relative w-full max-w-[580px]"
       >
         <div
-          className="relative overflow-hidden rounded-[30px] bg-white px-6 pb-9 pt-10 ring-1 ring-slate-200/70 sm:px-11 sm:pb-10 sm:pt-12"
+          className="relative max-h-[86vh] overflow-y-auto rounded-[28px] bg-white px-5 pb-6 pt-7 ring-1 ring-slate-200/75 sm:px-8 sm:pb-7 sm:pt-8"
           style={{
             boxShadow:
-              "0 1px 2px rgba(15,23,42,0.04), 0 26px 60px -22px rgba(124,58,237,0.28), 0 44px 100px -28px rgba(15,23,42,0.16)",
+              "0 1px 2px rgba(15,23,42,0.04), 0 22px 52px -24px rgba(124,58,237,0.30), 0 36px 82px -34px rgba(15,23,42,0.18)",
           }}
         >
           {/* Subtle lavender / mint corner tints */}
           <div
             aria-hidden
-            className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[hsl(160_70%_75%/0.18)] blur-3xl"
+            className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-[hsl(160_70%_75%/0.16)] blur-3xl"
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-[hsl(262_83%_75%/0.14)] blur-3xl"
+            className="pointer-events-none absolute -bottom-24 -right-24 h-56 w-56 rounded-full bg-[hsl(262_83%_75%/0.13)] blur-3xl"
           />
 
           {/* Close X */}
           <button
             onClick={onKeep}
             aria-label="Close"
-            className="absolute right-5 top-5 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/80 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
+            className="absolute right-5 top-5 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100/75 text-slate-500 ring-1 ring-slate-200/70 transition-colors hover:bg-slate-200 hover:text-slate-800"
           >
             <X className="h-4 w-4" />
           </button>
@@ -133,37 +133,49 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
                 transition={{ duration: 2.2, repeat: Infinity, delay: 0.8 }}
                 className="absolute -right-10 bottom-2 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.6)]"
               />
-              <div className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-[0_14px_36px_-10px_hsl(262_83%_58%/0.55)] ring-1 ring-[hsl(262_83%_62%/0.25)]">
-                <Sparkles className="h-7 w-7" strokeWidth={2.2} fill="currentColor" />
+              <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-[0_13px_32px_-11px_hsl(262_83%_58%/0.55)] ring-1 ring-[hsl(262_83%_62%/0.25)]">
+                <Sparkles className="h-[27px] w-[27px]" strokeWidth={2.2} fill="currentColor" />
               </div>
             </motion.div>
           </div>
 
           {/* Eyebrow */}
-          <p className="mt-5 flex items-center justify-center gap-2 text-center text-[11px] font-semibold uppercase tracking-[0.26em] text-[hsl(262_70%_50%)]">
-            <span aria-hidden className="inline-block h-1 w-1 rounded-full bg-[hsl(262_70%_60%)]" />
-            Personal AI Appraisal Concierge
-            <span aria-hidden className="inline-block h-1 w-1 rounded-full bg-[hsl(262_70%_60%)]" />
+          <p className="mt-4 text-center text-[11px] font-semibold uppercase tracking-[0.28em] text-[hsl(262_83%_50%)]">
+            AI Photo Appraisal
           </p>
 
           {/* Headline — forced two lines */}
-          <h2 className="mt-3 text-center text-[28px] font-bold leading-[1.18] tracking-tight text-slate-900 sm:text-[34px]">
+          <h2 className="mt-2 text-center text-[28px] font-bold leading-[1.12] text-slate-950 sm:text-[40px]">
             Get your strongest offer
             <br />
-            with an <span className="text-[hsl(262_83%_55%)]">AI appraisal.</span>
+            with a <span className="text-[hsl(262_83%_52%)]">photo review.</span>
           </h2>
 
-          {/* Value payout — text-first, not boxed */}
-          <p className="mx-auto mt-4 max-w-[460px] text-center text-[15.5px] leading-relaxed text-slate-500">
-            A quick photo review may increase your offer by{" "}
-            <span className="whitespace-nowrap font-bold text-emerald-600">
-              {hasOffer ? `${fmt(minIncrease)}–${fmt(maxIncrease)}` : "2%–12%"}
-            </span>
-            .
+          <p className="mx-auto mt-4 max-w-[400px] text-center text-[15.5px] leading-relaxed text-slate-600">
+            Our AI agent reviews your vehicle photos to
+            <br className="hidden sm:block" /> check whether your offer can improve.
           </p>
 
+          {/* Value payout */}
+          <div className="mx-auto mt-4 flex max-w-[420px] items-center gap-3 rounded-[16px] border border-[hsl(262_83%_78%/0.28)] bg-[hsl(262_83%_98%/0.58)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_28px_-22px_hsl(262_83%_50%/0.45)] sm:gap-5 sm:px-5">
+            <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-white text-[hsl(262_83%_52%)] shadow-[0_10px_24px_-15px_hsl(262_83%_42%/0.65)] ring-1 ring-[hsl(262_83%_72%/0.35)] sm:h-[58px] sm:w-[58px]">
+              <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={2.7} />
+            </div>
+            <div className="min-w-0 text-left">
+              <p className="text-[13.5px] font-medium leading-tight text-slate-700">
+                Photo-reviewed offers may increase by
+              </p>
+              <p className="mt-1 whitespace-nowrap text-[27px] font-bold leading-none text-[hsl(262_83%_50%)] sm:text-[34px]">
+                {hasOffer ? `${fmt(minIncrease)}–${fmt(maxIncrease)}` : "2%–12%"}
+              </p>
+              <p className="mt-1.5 text-[13px] leading-tight text-slate-500">
+                Based on 2%–12% increase range
+              </p>
+            </div>
+          </div>
+
           {/* Time pill */}
-          <div className="mt-4 flex justify-center">
+          <div className="mt-3 flex justify-center">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5 text-[12.5px] font-semibold text-emerald-700 ring-1 ring-emerald-200/70">
               <Clock className="h-3.5 w-3.5" />
               Takes about 2 minutes
@@ -171,7 +183,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           </div>
 
           {/* Benefits row */}
-          <div className="mt-6 rounded-2xl border border-slate-200/70 bg-white/80 shadow-[0_6px_24px_-12px_rgba(124,58,237,0.10)]">
+          <div className="mt-4 rounded-[18px] border border-slate-200/80 bg-white/90 shadow-[0_8px_26px_-22px_rgba(15,23,42,0.28)]">
             <div className="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
               {benefits.map((b, i) => (
                 <motion.div
@@ -179,12 +191,12 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.22 + i * 0.06, duration: 0.35 }}
-                  className="flex flex-col items-center px-3 py-4 text-center"
+                  className="flex flex-col items-center px-3.5 py-3.5 text-center"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(262_83%_62%/0.10)] text-[hsl(262_70%_48%)]">
+                  <div className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[hsl(262_83%_62%/0.11)] text-[hsl(262_70%_48%)] ring-1 ring-[hsl(262_83%_72%/0.22)]">
                     <b.icon className="h-[18px] w-[18px]" strokeWidth={2.2} />
                   </div>
-                  <p className="mt-2.5 text-[13.5px] font-semibold text-slate-900">
+                  <p className="mt-2 text-[13px] font-bold leading-tight text-slate-950">
                     {b.title}
                   </p>
                   <p className="mt-1 text-[12px] leading-snug text-slate-500">
@@ -196,12 +208,12 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           </div>
 
           {/* CTA */}
-          <div className="mt-6 space-y-3">
+          <div className="mt-4 space-y-2.5">
             <motion.button
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.995 }}
               onClick={onStart}
-              className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[hsl(262_83%_64%)] to-[hsl(262_83%_48%)] px-6 py-[17px] text-[16px] font-semibold text-white shadow-[0_18px_40px_-12px_hsl(262_83%_58%/0.70),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all hover:from-[hsl(262_83%_60%)] hover:to-[hsl(262_83%_44%)]"
+              className="group relative w-full overflow-hidden rounded-[14px] bg-gradient-to-b from-[hsl(262_83%_64%)] to-[hsl(262_83%_48%)] px-6 py-[14px] text-[16px] font-semibold text-white shadow-[0_16px_34px_-16px_hsl(262_83%_50%/0.78),inset_0_1px_0_rgba(255,255,255,0.20)] transition-all hover:from-[hsl(262_83%_60%)] hover:to-[hsl(262_83%_44%)]"
             >
               <span
                 aria-hidden
@@ -217,7 +229,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
             <div className="text-center">
               <button
                 onClick={onKeep}
-                className="text-[14px] font-semibold text-[hsl(262_83%_55%)] underline-offset-4 transition-colors hover:underline"
+                className="text-[14px] font-semibold text-[hsl(262_83%_50%)] underline-offset-4 transition-colors hover:underline"
               >
                 Save Your Offer
               </button>
@@ -227,7 +239,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           {/* Reassurance */}
           <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[12.5px] text-slate-500">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-            Keep your current offer if you'd rather decide later.
+            Your current offer remains available while you decide.
           </p>
         </div>
       </motion.div>
