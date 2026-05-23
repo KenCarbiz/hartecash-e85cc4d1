@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   QrCode,
   Info,
+  MessageSquare,
+  Link2,
 } from "lucide-react";
 import { usePortalData } from "../PortalDataContext";
 import { PortalPageShell, Card, PrimaryButton, SecondaryButton, StatusPill, SectionLabel } from "../PortalPageShell";
@@ -40,6 +42,7 @@ export const DocumentsPage = () => {
   const MOCK = usePortalData();
   const [hubOpen, setHubOpen] = useState(false);
   const [focus, setFocus] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Seed one rejected doc for realism
   const docs: HubDoc[] = MOCK.docs.map((d, i) =>
@@ -61,6 +64,16 @@ export const DocumentsPage = () => {
   const openHub = (name?: string) => {
     setFocus(name ?? null);
     setHubOpen(true);
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* noop */
+    }
   };
 
   return (
@@ -105,11 +118,11 @@ export const DocumentsPage = () => {
             </div>
 
             <div className="mt-4 flex items-center gap-2 flex-wrap">
-              <PrimaryButton onClick={() => openHub()}>
-                <Upload className="w-4 h-4" /> Open Upload Hub
-              </PrimaryButton>
               <SecondaryButton onClick={() => openHub()}>
-                <Smartphone className="w-4 h-4" /> Continue on phone
+                <Smartphone className="w-4 h-4" /> Continue on Phone
+              </SecondaryButton>
+              <SecondaryButton onClick={() => openHub()}>
+                <QrCode className="w-4 h-4" /> Show QR Code
               </SecondaryButton>
             </div>
           </div>
@@ -158,13 +171,16 @@ export const DocumentsPage = () => {
               <span className="text-[#4F46E5] font-semibold">Session stays in sync</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <SecondaryButton onClick={() => openHub()} className="px-3 py-2">
               <QrCode className="w-3.5 h-3.5" /> Show QR Code
             </SecondaryButton>
-            <PrimaryButton onClick={() => openHub()} className="px-3 py-2">
-              Open Hub →
-            </PrimaryButton>
+            <SecondaryButton onClick={() => openHub()} className="px-3 py-2">
+              <MessageSquare className="w-3.5 h-3.5" /> Text me the link
+            </SecondaryButton>
+            <SecondaryButton onClick={copyLink} className="px-3 py-2">
+              <Link2 className="w-3.5 h-3.5" /> {copied ? "Copied!" : "Copy secure link"}
+            </SecondaryButton>
           </div>
         </div>
       </Card>
