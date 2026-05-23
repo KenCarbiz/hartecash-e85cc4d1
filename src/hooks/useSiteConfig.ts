@@ -363,6 +363,7 @@ const DEFAULTS: SiteConfig = {
   landing_form_variant: "detailed",
   landing_form_density: "simple",
   pickup_offered: true,
+  handoff_type: "both",
   condition_card_style: "basic",
   ghost_screen: "legacy-car",
   ghost_headline: null,
