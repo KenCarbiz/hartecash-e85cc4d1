@@ -104,7 +104,7 @@ type SelectProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, "children"> & B
   placeholder?: string;
 };
 export const MotoOutlinedSelect = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, active, options, error, className, placeholder, id, value, onChange, disabled, name }, _ref) => {
+  ({ label, active, options, error, className, placeholder, id, value, onChange, disabled, name, required }, _ref) => {
     const inputId = id || `s-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
     const v = (value ?? "") as string;
     const [open, setOpen] = useState(false);
