@@ -141,6 +141,8 @@ export type VehicleTunerValues = {
   offsetY: number;
   /** Space below the car (px). Positive = pushes content under further down. */
   offsetBottom: number;
+  /** Horizontal nudge (px). Positive = right, negative = left. */
+  offsetX: number;
   /** Camera angle for the generated image. */
   angle: "side" | "three_quarter" | "front";
   /** Horizontal flip (mirror so the car faces the other way). */
@@ -151,6 +153,7 @@ export const VEHICLE_DEFAULTS: VehicleTunerValues = {
   width: 448,
   offsetY: 0,
   offsetBottom: 0,
+  offsetX: 0,
   angle: "side",
   flip: false,
 };
@@ -166,6 +169,7 @@ function mergeVehicle(remote: unknown): VehicleTunerValues {
     width: num(r.width, VEHICLE_DEFAULTS.width),
     offsetY: num(r.offsetY, VEHICLE_DEFAULTS.offsetY),
     offsetBottom: num(r.offsetBottom, VEHICLE_DEFAULTS.offsetBottom),
+    offsetX: num(r.offsetX, VEHICLE_DEFAULTS.offsetX),
     angle,
     flip: typeof r.flip === "boolean" ? r.flip : VEHICLE_DEFAULTS.flip,
   };
