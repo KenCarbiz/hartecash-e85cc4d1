@@ -51,7 +51,9 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
     trackCtaClicked("offer", "Add Photos for a Better Offer");
     update({ branch: "boost" });
     setShowAiModal(false);
-    setTimeout(() => goTo("boost_intro"), 0);
+    // Skip the boost_intro pitch page — the modal IS the pitch. Go
+    // straight to the photo capture / phone handoff task screen.
+    setTimeout(() => goTo("boost_upload"), 0);
   };
 
   const onSaveOfferFromModal = () => {
