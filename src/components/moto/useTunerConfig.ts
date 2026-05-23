@@ -63,7 +63,7 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
       setConfig(remote);
       try {
         localStorage.setItem(LS_KEY, JSON.stringify(remote));
-      } catch {}
+      } catch { /* localStorage unavailable */ }
       setLoaded(true);
     })();
 
@@ -86,7 +86,7 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
             setLastUpdatedAt(Date.now());
             try {
               localStorage.setItem(LS_KEY, JSON.stringify(next));
-            } catch {}
+            } catch { /* localStorage unavailable */ }
           }
         },
       )
@@ -107,7 +107,7 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
     (next: TunerConfig) => {
       try {
         localStorage.setItem(LS_KEY, JSON.stringify(next));
-      } catch {}
+      } catch { /* localStorage unavailable */ }
       if (!dealershipId) return;
       setStatus("saving");
       if (saveTimer.current) clearTimeout(saveTimer.current);

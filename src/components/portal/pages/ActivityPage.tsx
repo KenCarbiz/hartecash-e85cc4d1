@@ -350,7 +350,7 @@ export const ActivityPage = ({ onNavigate }: Props) => {
                         {pending && (
                           <div className="mt-2.5">
                             <button
-                              onClick={(e) => { e.stopPropagation(); cfg.nav && go(cfg.nav); }}
+                              onClick={(e) => { e.stopPropagation(); if (cfg.nav) go(cfg.nav); }}
                               className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] hover:text-[#4338CA] px-2.5 py-1.5 rounded-lg bg-[#EEF0FF] hover:bg-[#E0E4FF] transition"
                             >
                               {a.type === "pickup" ? "Schedule pickup" : a.type === "payments" ? "Track payment" : "Take action"}

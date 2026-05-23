@@ -295,7 +295,7 @@ export const PickupPage = () => {
   };
 
   const toggleCheck = (t: string) =>
-    setChecked((p) => { const n = new Set(p); n.has(t) ? n.delete(t) : n.add(t); return n; });
+    setChecked((p) => { const n = new Set(p); if (n.has(t)) n.delete(t); else n.add(t); return n; });
 
   return (
     <PortalPageShell
