@@ -1395,6 +1395,7 @@ export type Database = {
           facebook_url: string | null
           favicon_url: string | null
           google_review_url: string | null
+          handoff_type: string | null
           hero_headline: string | null
           hero_layout: string | null
           hero_subtext: string | null
@@ -1466,6 +1467,7 @@ export type Database = {
           facebook_url?: string | null
           favicon_url?: string | null
           google_review_url?: string | null
+          handoff_type?: string | null
           hero_headline?: string | null
           hero_layout?: string | null
           hero_subtext?: string | null
@@ -1537,6 +1539,7 @@ export type Database = {
           facebook_url?: string | null
           favicon_url?: string | null
           google_review_url?: string | null
+          handoff_type?: string | null
           hero_headline?: string | null
           hero_layout?: string | null
           hero_subtext?: string | null
@@ -4487,6 +4490,7 @@ export type Database = {
           ghost_screen: string
           ghost_subhead: string | null
           google_review_url: string | null
+          handoff_type: string
           hero_headline: string
           hero_layout: string
           hero_subtext: string
@@ -4619,6 +4623,7 @@ export type Database = {
           ghost_screen?: string
           ghost_subhead?: string | null
           google_review_url?: string | null
+          handoff_type?: string
           hero_headline?: string
           hero_layout?: string
           hero_subtext?: string
@@ -4751,6 +4756,7 @@ export type Database = {
           ghost_screen?: string
           ghost_subhead?: string | null
           google_review_url?: string | null
+          handoff_type?: string
           hero_headline?: string
           hero_layout?: string
           hero_subtext?: string

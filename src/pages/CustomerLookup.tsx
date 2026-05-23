@@ -86,17 +86,24 @@ const CustomerLookup = () => {
     setLoading(false);
   };
 
-  const pickupOffered = config.pickup_offered !== false;
-  const pickupLabel = pickupOffered
-    ? "Schedule Pickup / Drop Off"
-    : "Schedule Drop Off";
+  const handoffLabel = ((): string => {
+    switch (config.handoff_type) {
+      case "pickup":
+        return "Schedule Pickup";
+      case "dropoff":
+        return "Schedule Drop Off";
+      case "both":
+      default:
+        return "Schedule Pickup / Drop Off";
+    }
+  })();
 
   const reassurance = useMemo(() => ([
     { icon: FileText, title: "View Offer" },
     { icon: Upload, title: "Upload Documents" },
     { icon: DollarSign, title: "Track Payout" },
-    { icon: Truck, title: pickupLabel },
-  ]), [pickupLabel]);
+    { icon: Truck, title: handoffLabel },
+  ]), [handoffLabel]);
 
 
   return (
@@ -247,8 +254,8 @@ const CustomerLookup = () => {
           </form>
 
           {/* Portal benefits — informational tiles, not buttons. */}
-          <div className="mt-10 lg:mt-12">
-            <div className="flex items-center justify-center gap-3 mb-6" aria-hidden>
+          <div className="mt-8 lg:mt-10">
+            <div className="flex items-center justify-center gap-3 mb-5" aria-hidden>
               <span className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-border/50" />
               <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
               <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-foreground/50">
@@ -257,20 +264,19 @@ const CustomerLookup = () => {
               <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
               <span className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-border/50" />
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-2xl mx-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {reassurance.map(({ icon: Icon, title }) => (
                 <div
                   key={title}
-                  className="rounded-2xl border border-border/25 bg-white px-4 py-5 text-center shadow-[0_2px_12px_-6px_rgba(15,23,42,0.06)] flex flex-col items-center justify-center gap-2.5"
+                  className="rounded-2xl border border-border/25 bg-white px-5 py-6 text-center shadow-[0_2px_12px_-6px_rgba(15,23,42,0.06)] flex flex-col items-center justify-center gap-3"
                 >
-                  <div className="w-11 h-11 rounded-full bg-[#F5F3FF] grid place-items-center">
-                    <Icon className="w-[18px] h-[18px] text-[#4F46E5]" strokeWidth={2} />
+                  <div className="w-[52px] h-[52px] rounded-full bg-[#F5F3FF] grid place-items-center">
+                    <Icon className="w-5 h-5 text-[#4F46E5]" strokeWidth={2} />
                   </div>
-                  <p className="text-[13px] font-semibold text-foreground leading-tight">
+                  <p className="text-sm font-bold text-foreground leading-tight">
                     {title}
                   </p>
                 </div>
-
               ))}
             </div>
           </div>
