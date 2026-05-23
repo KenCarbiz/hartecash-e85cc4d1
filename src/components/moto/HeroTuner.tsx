@@ -568,7 +568,7 @@ export default function HeroTuner() {
             </div>
             <label className="block">
               <div className="flex justify-between text-zinc-600">
-                <span>Size (width)</span>
+                <span>Size (larger / smaller)</span>
                 <span>{localVehicle.width}px</span>
               </div>
               <input
@@ -580,10 +580,11 @@ export default function HeroTuner() {
                 onChange={(e) => changeVehicle({ width: Number(e.target.value) })}
                 className="w-full"
               />
+              <div className="text-[10px] text-zinc-400">Drag right to make the car larger, left to make it smaller.</div>
             </label>
             <label className="block">
               <div className="flex justify-between text-zinc-600">
-                <span>Space above car</span>
+                <span>Move up / down</span>
                 <span>{localVehicle.offsetY}px</span>
               </div>
               <input
@@ -595,7 +596,23 @@ export default function HeroTuner() {
                 onChange={(e) => changeVehicle({ offsetY: Number(e.target.value) })}
                 className="w-full"
               />
-              <div className="text-[10px] text-zinc-400">Positive = pushes car down, negative = pulls car up.</div>
+              <div className="text-[10px] text-zinc-400">Negative = car moves up, positive = car moves down.</div>
+            </label>
+            <label className="block">
+              <div className="flex justify-between text-zinc-600">
+                <span>Move left / right</span>
+                <span>{localVehicle.offsetX}px</span>
+              </div>
+              <input
+                type="range"
+                min={-400}
+                max={400}
+                step={1}
+                value={localVehicle.offsetX}
+                onChange={(e) => changeVehicle({ offsetX: Number(e.target.value) })}
+                className="w-full"
+              />
+              <div className="text-[10px] text-zinc-400">Negative = car moves left, positive = car moves right.</div>
             </label>
             <label className="block">
               <div className="flex justify-between text-zinc-600">
