@@ -7,15 +7,18 @@ import {
   ArrowRight,
   Clock,
   X,
+  TrendingUp,
 } from "lucide-react";
 import type { StepContext } from "../types";
 import { trackAiBoostStarted, trackCtaClicked } from "../analytics";
 
 /**
- * AI Photo Appraisal intro — premium concierge "moment".
+ * AI Photo Appraisal intro — matches approved mockup.
  *
- * Soft glowing card, centered glowing AI icon, integrated 2–12% increase
- * range in the subheadline, calm 3-column benefit row, big purple CTA.
+ * White card, centered glowing purple sparkle icon, "AI PHOTO APPRAISAL"
+ * eyebrow, headline with purple "photo review", featured lavender value box
+ * with trending-up icon and big purple dollar range, time pill, 3-up benefits,
+ * big purple CTA, "Save Your Offer" link, reassurance line.
  */
 const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
   const currentOffer = state.valuation?.firm ?? state.valuation?.high ?? 0;
@@ -42,7 +45,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
     {
       icon: Zap,
       title: "Fast AI review",
-      body: "Advanced AI analyzes your vehicle instantly.",
+      body: "We analyze your photos in seconds.",
     },
     {
       icon: Camera,
@@ -51,39 +54,35 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
     },
     {
       icon: ShieldCheck,
-      title: "No risk to current offer",
-      body: "Your current offer is always protected.",
+      title: "Current offer protected",
+      body: "Your offer stays safe while we review.",
     },
   ];
 
   return (
     <div className="relative flex w-full justify-center px-4 py-8 sm:py-14">
-      {/* Soft ambient halo — lavender + mint behind the card */}
+      {/* Soft ambient halo behind card */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 flex items-center justify-center"
       >
-        <div className="h-[620px] w-[860px] max-w-[98%] rounded-[60px] bg-[radial-gradient(closest-side,hsl(262_83%_62%/0.28),hsl(262_83%_62%/0.10)_50%,transparent_75%)] blur-3xl" />
-        <div className="absolute h-[460px] w-[700px] max-w-[92%] translate-x-[18%] translate-y-[12%] rounded-[60px] bg-[radial-gradient(closest-side,hsl(160_70%_60%/0.18),transparent_70%)] blur-3xl" />
+        <div className="h-[620px] w-[860px] max-w-[98%] rounded-[60px] bg-[radial-gradient(closest-side,hsl(262_83%_62%/0.18),transparent_70%)] blur-3xl" />
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 14, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-[620px]"
+        className="relative w-full max-w-[640px]"
       >
-        {/* Card */}
         <div
-          className="relative overflow-hidden rounded-[32px] px-6 pb-10 pt-12 ring-1 ring-[hsl(262_40%_90%/0.9)] sm:px-12 sm:pb-12 sm:pt-14"
+          className="relative overflow-hidden rounded-[28px] bg-white px-6 pb-10 pt-12 ring-1 ring-slate-200/70 sm:px-12 sm:pb-12 sm:pt-14"
           style={{
-            background:
-              "radial-gradient(120% 90% at 0% 0%, hsl(262 83% 96%) 0%, transparent 45%), radial-gradient(110% 85% at 100% 100%, hsl(160 70% 95%) 0%, transparent 50%), #ffffff",
             boxShadow:
-              "0 1px 2px rgba(15,23,42,0.04), 0 30px 70px -25px rgba(124,58,237,0.40), 0 50px 110px -30px rgba(15,23,42,0.22)",
+              "0 1px 2px rgba(15,23,42,0.04), 0 30px 70px -25px rgba(124,58,237,0.30), 0 50px 110px -30px rgba(15,23,42,0.18)",
           }}
         >
-          {/* Close X — soft circular */}
+          {/* Close X */}
           <button
             onClick={onKeep}
             aria-label="Close"
@@ -100,77 +99,93 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
               transition={{ delay: 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               className="relative"
             >
-              {/* Outer halo */}
               <div
                 aria-hidden
-                className="absolute inset-0 -m-8 rounded-full bg-[hsl(262_83%_62%/0.32)] blur-3xl"
+                className="absolute inset-0 -m-8 rounded-full bg-[hsl(262_83%_62%/0.28)] blur-3xl"
               />
               <div
                 aria-hidden
-                className="absolute inset-0 -m-3 rounded-full bg-[hsl(262_83%_62%/0.20)] blur-xl"
+                className="absolute inset-0 -m-3 rounded-full bg-[hsl(262_83%_62%/0.18)] blur-xl"
               />
-              {/* Sparkle dots */}
+              {/* Sparkle dots around icon */}
               <motion.span
                 aria-hidden
                 animate={{ opacity: [0.4, 1, 0.4] }}
                 transition={{ duration: 2.4, repeat: Infinity }}
-                className="absolute -left-8 top-2 h-1 w-1 rounded-full bg-[hsl(262_83%_62%)]"
+                className="absolute -left-10 top-2 h-1.5 w-1.5 rounded-full bg-[hsl(262_83%_62%/0.7)]"
               />
               <motion.span
                 aria-hidden
                 animate={{ opacity: [1, 0.3, 1] }}
                 transition={{ duration: 2.8, repeat: Infinity, delay: 0.4 }}
-                className="absolute -right-7 top-4 h-1.5 w-1.5 rounded-full bg-[hsl(262_83%_62%/0.7)]"
+                className="absolute -right-9 top-4 h-1.5 w-1.5 rounded-full bg-[hsl(262_83%_62%/0.7)]"
               />
               <motion.span
                 aria-hidden
                 animate={{ opacity: [0.3, 0.9, 0.3] }}
                 transition={{ duration: 2.2, repeat: Infinity, delay: 0.8 }}
-                className="absolute -right-9 bottom-3 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.6)]"
+                className="absolute -right-11 bottom-3 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.6)]"
               />
               <motion.span
                 aria-hidden
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 2.6, repeat: Infinity, delay: 1.2 }}
-                className="absolute -left-6 bottom-1 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.55)]"
+                className="absolute -left-8 bottom-1 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.55)]"
               />
               {/* Icon disc */}
-              <div className="relative flex h-[84px] w-[84px] items-center justify-center rounded-full bg-gradient-to-br from-white to-[hsl(262_83%_97%)] text-[hsl(262_83%_55%)] shadow-[0_14px_36px_-10px_hsl(262_83%_58%/0.55),inset_0_-2px_6px_rgba(124,58,237,0.08)] ring-1 ring-[hsl(262_83%_62%/0.25)]">
-                <Sparkles className="h-9 w-9" strokeWidth={2.2} />
+              <div className="relative flex h-[78px] w-[78px] items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-[0_14px_36px_-10px_hsl(262_83%_58%/0.55)] ring-1 ring-[hsl(262_83%_62%/0.25)]">
+                <Sparkles className="h-8 w-8" strokeWidth={2.2} fill="currentColor" />
               </div>
             </motion.div>
           </div>
 
           {/* Eyebrow */}
-          <p className="mt-7 text-center text-[11px] font-semibold uppercase tracking-[0.24em] text-[hsl(262_70%_48%)]">
-            Personal AI Appraisal Concierge
+          <p className="mt-7 text-center text-[12px] font-semibold uppercase tracking-[0.24em] text-[hsl(262_70%_48%)]">
+            AI Photo Appraisal
           </p>
 
           {/* Headline */}
           <h2 className="mt-3 text-center text-[28px] font-bold leading-[1.15] tracking-tight text-slate-900 sm:text-[34px]">
-            Get your strongest offer with an{" "}
-            <span className="text-[hsl(262_83%_55%)]">AI appraisal.</span>
+            Get your strongest offer with a{" "}
+            <span className="text-[hsl(262_83%_55%)]">photo review.</span>
           </h2>
 
-          {/* Subheadline w/ integrated mint range */}
-          <p className="mx-auto mt-4 max-w-[500px] text-center text-[16px] leading-relaxed text-slate-500">
-            A quick photo review may increase your offer by{" "}
-            <span className="font-semibold text-emerald-600">
-              {hasOffer ? `${fmt(minIncrease)}–${fmt(maxIncrease)}` : "2–12%"}
-            </span>
-            .
+          {/* Subheadline */}
+          <p className="mx-auto mt-4 max-w-[480px] text-center text-[15.5px] leading-relaxed text-slate-500">
+            Our AI agent reviews your vehicle photos to check whether your offer
+            can improve.
           </p>
+
+          {/* Featured value box */}
+          <div className="mt-6 rounded-2xl bg-[hsl(262_83%_97%)] px-5 py-5 ring-1 ring-[hsl(262_83%_62%/0.18)] sm:px-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-sm ring-1 ring-[hsl(262_83%_62%/0.18)]">
+                <TrendingUp className="h-5 w-5" strokeWidth={2.4} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium text-slate-600">
+                  Photo-reviewed offers may increase by
+                </p>
+                <p className="mt-0.5 text-[28px] font-bold leading-tight tracking-tight text-[hsl(262_83%_55%)] sm:text-[32px]">
+                  {hasOffer ? `${fmt(minIncrease)}–${fmt(maxIncrease)}` : "2%–12%"}
+                </p>
+                <p className="mt-0.5 text-[12px] text-slate-500">
+                  Based on 2%–12% increase range
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Time pill */}
           <div className="mt-5 flex justify-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5 text-[12px] font-semibold text-emerald-700 ring-1 ring-emerald-200/70">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5 text-[12.5px] font-semibold text-emerald-700 ring-1 ring-emerald-200/70">
               <Clock className="h-3.5 w-3.5" />
               Takes about 2 minutes
             </span>
           </div>
 
-          {/* Benefit row — one soft glass card with 3 columns + dividers */}
-          <div className="mt-7 rounded-2xl border border-white/80 bg-white/70 p-1 shadow-[0_6px_24px_-12px_rgba(124,58,237,0.18)] backdrop-blur-sm">
+          {/* Benefits row */}
+          <div className="mt-6 rounded-2xl border border-slate-200/70 bg-white p-1 shadow-[0_6px_24px_-12px_rgba(124,58,237,0.12)]">
             <div className="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
               {benefits.map((b, i) => (
                 <motion.div
@@ -180,10 +195,10 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
                   transition={{ delay: 0.22 + i * 0.06, duration: 0.35 }}
                   className="px-3 py-5 text-center"
                 >
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(262_83%_62%/0.10)] text-[hsl(262_70%_48%)] ring-1 ring-[hsl(262_83%_58%/0.18)]">
-                    <b.icon className="h-[18px] w-[18px]" strokeWidth={2.2} />
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[hsl(262_83%_62%/0.10)] text-[hsl(262_70%_48%)]">
+                    <b.icon className="h-[19px] w-[19px]" strokeWidth={2.2} />
                   </div>
-                  <p className="mt-3 text-[13px] font-semibold text-slate-900">
+                  <p className="mt-3 text-[13.5px] font-semibold text-slate-900">
                     {b.title}
                   </p>
                   <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
@@ -195,7 +210,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           </div>
 
           {/* CTA */}
-          <div className="mt-8 space-y-3">
+          <div className="mt-7 space-y-3">
             <motion.button
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.995 }}
@@ -216,7 +231,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
             <div className="text-center">
               <button
                 onClick={onKeep}
-                className="text-[13px] font-medium text-slate-500 underline-offset-4 transition-colors hover:text-slate-800 hover:underline"
+                className="text-[14px] font-semibold text-[hsl(262_83%_55%)] underline-offset-4 transition-colors hover:underline"
               >
                 Save Your Offer
               </button>
@@ -224,9 +239,9 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           </div>
 
           {/* Reassurance */}
-          <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[12px] text-slate-500">
+          <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[12.5px] text-slate-500">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-            Keep your current offer if you'd rather decide later.
+            Your current offer remains available while you decide.
           </p>
         </div>
       </motion.div>
