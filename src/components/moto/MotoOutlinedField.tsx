@@ -1,4 +1,4 @@
-import { forwardRef, type InputHTMLAttributes, type SelectHTMLAttributes, type ReactNode } from "react";
+import { forwardRef, useState, type InputHTMLAttributes, type SelectHTMLAttributes, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
   Select as RSelect,
@@ -9,51 +9,70 @@ import {
 } from "@/components/ui/select";
 
 /**
- * Material-style outlined field with a floating label that punches
- * through the top border. Matches the MotoAcquire visual exactly.
+ * Premium floating-label outlined field.
  *
- * The label is always at the top-left of the border (not animated)
- * since every field in the MotoAcquire flow is pre-labelled. This
- * keeps the implementation tiny and predictable across input + select
- * variants.
+ * - Empty + unfocused: label sits inside the field as placeholder-style text.
+ * - Focused or filled: label animates up into the top-left border notch,
+ *   shrinks, and the input shows the typed value (or a real placeholder).
  */
 type BaseProps = {
   label: string;
+  /** Force the floated state regardless of focus/value. */
   active?: boolean;
   trailing?: ReactNode;
   error?: string;
   className?: string;
 };
 
-const wrapperClasses = (active: boolean, error?: string) =>
+const wrapperClasses = (focused: boolean, error?: string) =>
   cn(
-    "relative rounded-md border bg-white transition",
-    active
+    "relative rounded-md border bg-white transition-colors",
+    focused
       ? "border-[hsl(var(--cta-offer))] ring-1 ring-[hsl(var(--cta-offer))]"
       : "border-zinc-300 hover:border-zinc-400",
     error && "!border-red-500 !ring-red-300",
   );
 
-const labelClasses = (active: boolean) =>
+const labelClasses = (floated: boolean, focused: boolean) =>
   cn(
-    "absolute -top-2 left-3 bg-white px-1 text-[11px] font-medium",
-    active ? "text-[hsl(var(--cta-offer))]" : "text-zinc-600",
+    "pointer-events-none absolute left-3 bg-white px-1 font-medium transition-all duration-150 ease-out",
+    floated
+      ? cn(
+          "-top-2 text-[11px]",
+          focused ? "text-[hsl(var(--cta-offer))]" : "text-zinc-600",
+        )
+      : "top-1/2 -translate-y-1/2 text-base text-zinc-400",
   );
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & BaseProps;
 export const MotoOutlinedInput = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, active, trailing, error, className, id, ...rest }, ref) => {
+  ({ label, active, trailing, error, className, id, onFocus, onBlur, placeholder, ...rest }, ref) => {
     const inputId = id || `f-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-    const isActive = active ?? !!rest.value;
+    const [focused, setFocused] = useState(false);
+    const hasValue = !!(rest.value ?? rest.defaultValue);
+    const floated = active ?? (focused || hasValue);
+    // Only show the underlying placeholder once the label has floated up,
+    // and only if the caller passed something distinct from the label.
+    const showPlaceholder =
+      floated && placeholder && placeholder.trim().toLowerCase() !== label.trim().toLowerCase();
     return (
       <div className={className}>
-        <div className={wrapperClasses(!!active, error)}>
-          <label htmlFor={inputId} className={labelClasses(isActive)}>
+        <div className={wrapperClasses(focused, error)}>
+          <label htmlFor={inputId} className={labelClasses(floated, focused)}>
             {label}
           </label>
           <input
             ref={ref}
             id={inputId}
+            placeholder={showPlaceholder ? placeholder : undefined}
+            onFocus={(e) => {
+              setFocused(true);
+              onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setFocused(false);
+              onBlur?.(e);
+            }}
             className="h-[52px] w-full bg-transparent px-3 py-3.5 text-base text-zinc-900 outline-none placeholder:text-zinc-400"
             {...rest}
           />
@@ -74,7 +93,10 @@ export const MotoOutlinedSelect = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, active, options, error, className, placeholder, id, value, onChange, disabled, name }, _ref) => {
     const inputId = id || `s-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
     const v = (value ?? "") as string;
-    const isActive = active ?? !!v;
+    const [open, setOpen] = useState(false);
+    const hasValue = !!v;
+    const floated = active ?? (open || hasValue);
+    const focused = open;
     const selected = options.find((o) => o.value === v);
     const handleChange = (next: string) => {
       onChange?.({
@@ -84,24 +106,22 @@ export const MotoOutlinedSelect = forwardRef<HTMLSelectElement, SelectProps>(
     };
     return (
       <div className={className}>
-        <RSelect value={v} onValueChange={handleChange} disabled={disabled}>
+        <RSelect value={v} onValueChange={handleChange} disabled={disabled} onOpenChange={setOpen}>
           <RSelectTrigger
             id={inputId}
             className={cn(
-              "relative h-[52px] w-full justify-between rounded-md border bg-white px-3 py-3.5 pr-8 text-base text-zinc-900 hover:border-zinc-400 focus:ring-0 focus:ring-offset-0",
-              isActive && !error
+              "relative h-[52px] w-full justify-between rounded-md border bg-white px-3 py-3.5 pr-8 text-base text-zinc-900 hover:border-zinc-400 focus:ring-0 focus:ring-offset-0 transition-colors",
+              focused && !error
                 ? "border-[hsl(var(--cta-offer))] ring-1 ring-[hsl(var(--cta-offer))]"
                 : "border-zinc-300",
               error && "!border-red-500 !ring-red-300",
             )}
           >
-            <label htmlFor={inputId} className={labelClasses(isActive)}>
+            <label htmlFor={inputId} className={labelClasses(floated, focused)}>
               {label}
             </label>
-            <RSelectValue placeholder={placeholder ?? ""}>
-              <span className={selected ? "text-zinc-900" : "text-zinc-400"}>
-                {selected?.label ?? placeholder ?? ""}
-              </span>
+            <RSelectValue placeholder="">
+              {selected ? <span className="text-zinc-900">{selected.label}</span> : <span />}
             </RSelectValue>
           </RSelectTrigger>
           <RSelectContent
