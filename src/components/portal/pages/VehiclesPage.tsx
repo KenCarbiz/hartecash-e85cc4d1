@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import {
@@ -36,14 +36,7 @@ const PHOTO_BUCKETS: PhotoBucket[] = [
   { label: "Damage",   count: 0, target: 0, status: "missing"  },
 ];
 
-const GALLERY = [
-  { src: vehicleHero, caption: "Exterior • Front 3/4" },
-  { src: vehicleHero, caption: "Exterior • Rear 3/4" },
-  { src: vehicleHero, caption: "Exterior • Driver side" },
-  { src: vehicleHero, caption: "Interior • Front seats" },
-  { src: vehicleHero, caption: "Odometer • 26,540 mi" },
-  { src: vehicleHero, caption: "Title • Front" },
-];
+type GalleryImage = { src: string; caption: string };
 
 const STATUS_META: Record<PhotoStatus, { label: string; cls: string; Icon: any }> = {
   approved: { label: "Approved",     cls: "text-[#0F7A3E] bg-[#E8F8EE]", Icon: CheckCircle2 },
@@ -201,20 +194,20 @@ const OverflowMenu = ({
 /* ──────────────────────────────────────────────────────────────
    Fullscreen photo gallery modal
    ────────────────────────────────────────────────────────────── */
-const GalleryModal = ({ open, onClose, startIndex = 0 }: { open: boolean; onClose: () => void; startIndex?: number }) => {
+const GalleryModal = ({ open, onClose, startIndex = 0, images }: { open: boolean; onClose: () => void; startIndex?: number; images: GalleryImage[] }) => {
   const [idx, setIdx] = useState(startIndex);
   useEffect(() => { if (open) setIdx(startIndex); }, [open, startIndex]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") setIdx((i) => (i + 1) % GALLERY.length);
-      if (e.key === "ArrowLeft")  setIdx((i) => (i - 1 + GALLERY.length) % GALLERY.length);
+      if (e.key === "ArrowRight") setIdx((i) => (i + 1) % images.length);
+      if (e.key === "ArrowLeft")  setIdx((i) => (i - 1 + images.length) % images.length);
     };
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
-  }, [open, onClose]);
+  }, [open, onClose, images.length]);
 
   return (
     <AnimatePresence>
@@ -227,7 +220,7 @@ const GalleryModal = ({ open, onClose, startIndex = 0 }: { open: boolean; onClos
         >
           <div className="flex items-center justify-between px-5 sm:px-8 pt-5">
             <div className="text-white/90 text-sm font-medium">
-              {idx + 1} / {GALLERY.length} <span className="text-white/50">• {GALLERY[idx].caption}</span>
+              {idx + 1} / {images.length} <span className="text-white/50">• {images[idx].caption}</span>
             </div>
             <button onClick={onClose} aria-label="Close gallery" className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white grid place-items-center transition">
               <X className="w-5 h-5" />
@@ -237,19 +230,19 @@ const GalleryModal = ({ open, onClose, startIndex = 0 }: { open: boolean; onClos
           <div className="flex-1 relative grid place-items-center px-4">
             <motion.img
               key={idx}
-              src={GALLERY[idx].src}
-              alt={GALLERY[idx].caption}
+              src={images[idx].src}
+              alt={images[idx].caption}
               initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.25 }}
               className="max-h-[70vh] max-w-[92vw] object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,0.5)]"
             />
             <button
-              onClick={() => setIdx((i) => (i - 1 + GALLERY.length) % GALLERY.length)}
+              onClick={() => setIdx((i) => (i - 1 + images.length) % images.length)}
               aria-label="Previous"
               className="hidden sm:grid absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white place-items-center transition"
             ><ChevronLeft className="w-6 h-6" /></button>
             <button
-              onClick={() => setIdx((i) => (i + 1) % GALLERY.length)}
+              onClick={() => setIdx((i) => (i + 1) % images.length)}
               aria-label="Next"
               className="hidden sm:grid absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white place-items-center transition"
             ><ChevronRight className="w-6 h-6" /></button>
@@ -257,7 +250,7 @@ const GalleryModal = ({ open, onClose, startIndex = 0 }: { open: boolean; onClos
 
           <div className="px-4 sm:px-8 pb-6">
             <div className="flex gap-2 overflow-x-auto justify-center">
-              {GALLERY.map((g, i) => (
+              {images.map((g, i) => (
                 <button
                   key={i}
                   onClick={() => setIdx(i)}
@@ -434,6 +427,22 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
   const [wizard, setWizard] = useState(false);
   const v = MOCK.vehicle;
 
+  // Gallery reflects the customer's actual vehicle (same resolved image
+  // the dashboard uses) rather than a static demo car. Real per-angle
+  // uploads aren't in the portal data shape yet, so every framed slide
+  // shows their car until uploaded photos are wired in.
+  const galleryImages = useMemo<GalleryImage[]>(
+    () => [
+      { src: heroSrc, caption: "Exterior • Front 3/4" },
+      { src: heroSrc, caption: "Exterior • Rear 3/4" },
+      { src: heroSrc, caption: "Exterior • Driver side" },
+      { src: heroSrc, caption: "Interior • Front seats" },
+      { src: heroSrc, caption: v.miles ? `Odometer • ${v.miles} mi` : "Odometer" },
+      { src: heroSrc, caption: "Title • Front" },
+    ],
+    [heroSrc, v.miles],
+  );
+
   const pendingDocs = MOCK.docs.filter((d) => d.status !== "Approved").length;
   // find() is non-undefined today because PHOTO_BUCKETS is a static
   // local with a guaranteed "Exterior" entry, but the `!` assertion
@@ -496,7 +505,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
               </div>
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_45%,rgba(79,70,229,0.18),transparent_60%)] pointer-events-none" />
               <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/85 backdrop-blur text-[#06194A] border border-white/60 shadow-sm">
-                <ImageIcon className="w-3.5 h-3.5" /> {GALLERY.length} Photos
+                <ImageIcon className="w-3.5 h-3.5" /> {galleryImages.length} Photos
               </span>
               <span className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/85 backdrop-blur grid place-items-center text-[#06194A] opacity-0 group-hover:opacity-100 transition-opacity">
                 <ZoomIn className="w-4 h-4" />
@@ -869,7 +878,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
         </div>
       </SlideOver>
 
-      <GalleryModal open={gallery.open} onClose={() => setGallery({ open: false, idx: 0 })} startIndex={gallery.idx} />
+      <GalleryModal open={gallery.open} onClose={() => setGallery({ open: false, idx: 0 })} startIndex={gallery.idx} images={galleryImages} />
       <AddVehicleWizard open={wizard} onClose={() => setWizard(false)} />
     </PortalPageShell>
   );
