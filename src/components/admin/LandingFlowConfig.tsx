@@ -438,6 +438,34 @@ const LandingFlowConfig = () => {
       }
     }
 
+    // Pass 1.62 — handoff_type (best-effort, may not be deployed yet)
+    const handoffChanged = state.handoff_type !== saved.handoff_type;
+    let handoffSkipped = false;
+    if (handoffChanged) {
+      const { error: hErr } = await supabase
+        .from("site_config")
+        .update({
+          handoff_type: state.handoff_type,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("dealership_id", dealershipId);
+      if (hErr) {
+        const lower = hErr.message?.toLowerCase() || "";
+        const code = hErr.code || "";
+        const missingHandoff =
+          lower.includes("handoff_type") ||
+          lower.includes("schema cache") ||
+          code === "PGRST204" ||
+          (lower.includes("column") && lower.includes("does not exist"));
+        if (!missingHandoff) {
+          setSaving(false);
+          toast({ title: "Save failed", description: hErr.message, variant: "destructive" });
+          return;
+        }
+        handoffSkipped = true;
+      }
+    }
+
     // Pass 1.61 — condition_card_style (best-effort, may not be deployed yet)
     const conditionStyleChanged =
       state.condition_card_style !== saved.condition_card_style;
