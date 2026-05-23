@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Clock,
   X,
+  TrendingUp,
 } from "lucide-react";
 import type { StepContext } from "../types";
 import { trackAiBoostStarted, trackCtaClicked } from "../analytics";
@@ -14,9 +15,8 @@ import { trackAiBoostStarted, trackCtaClicked } from "../analytics";
 /**
  * AI Photo Appraisal intro — premium concierge modal.
  *
- * Refined to match approved target: eyebrow concierge label, two-line
- * headline with purple "AI appraisal.", inline payout sentence with mint
- * dollar range (NOT boxed), time pill, tight 3-up benefit panel, premium CTA.
+ * Refined to match approved target: compact premium modal, exact AI Photo
+ * Appraisal hierarchy, polished payout box, tight 3-up benefit panel, CTA.
  */
 const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
   const currentOffer = state.valuation?.firm ?? state.valuation?.high ?? 0;
@@ -43,7 +43,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
     {
       icon: Zap,
       title: "Fast AI review",
-      body: "Advanced AI analyzes your vehicle instantly.",
+      body: "We analyze your photos in seconds.",
     },
     {
       icon: Camera,
@@ -52,42 +52,42 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
     },
     {
       icon: ShieldCheck,
-      title: "No risk to current offer",
-      body: "Your current offer is always protected.",
+      title: "Current offer protected",
+      body: "Your offer stays safe while we review.",
     },
   ];
 
   return (
-    <div className="relative flex w-full justify-center px-4 py-8 sm:py-12">
+    <div className="relative flex w-full justify-center px-4 py-4 sm:py-6">
       {/* Ambient halo */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 flex items-center justify-center"
       >
-        <div className="h-[560px] w-[820px] max-w-[98%] rounded-[60px] bg-[radial-gradient(closest-side,hsl(262_83%_62%/0.16),transparent_70%)] blur-3xl" />
+        <div className="h-[480px] w-[680px] max-w-[95%] rounded-[56px] bg-[radial-gradient(closest-side,hsl(262_83%_62%/0.14),transparent_70%)] blur-3xl" />
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 14, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-[600px]"
+        className="relative w-full max-w-[580px]"
       >
         <div
-          className="relative overflow-hidden rounded-[30px] bg-white px-6 pb-9 pt-10 ring-1 ring-slate-200/70 sm:px-11 sm:pb-10 sm:pt-12"
+          className="relative max-h-[86vh] overflow-y-auto rounded-[28px] bg-white px-5 pb-6 pt-7 ring-1 ring-slate-200/75 sm:px-8 sm:pb-7 sm:pt-8"
           style={{
             boxShadow:
-              "0 1px 2px rgba(15,23,42,0.04), 0 26px 60px -22px rgba(124,58,237,0.28), 0 44px 100px -28px rgba(15,23,42,0.16)",
+              "0 1px 2px rgba(15,23,42,0.04), 0 22px 52px -24px rgba(124,58,237,0.30), 0 36px 82px -34px rgba(15,23,42,0.18)",
           }}
         >
           {/* Subtle lavender / mint corner tints */}
           <div
             aria-hidden
-            className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[hsl(160_70%_75%/0.18)] blur-3xl"
+            className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-[hsl(160_70%_75%/0.16)] blur-3xl"
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-[hsl(262_83%_75%/0.14)] blur-3xl"
+            className="pointer-events-none absolute -bottom-24 -right-24 h-56 w-56 rounded-full bg-[hsl(262_83%_75%/0.13)] blur-3xl"
           />
 
           {/* Close X */}
