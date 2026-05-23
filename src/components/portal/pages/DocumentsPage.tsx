@@ -118,11 +118,11 @@ export const DocumentsPage = () => {
             </div>
 
             <div className="mt-4 flex items-center gap-2 flex-wrap">
-              <PrimaryButton onClick={() => openHub()}>
-                <Upload className="w-4 h-4" /> Open Upload Hub
-              </PrimaryButton>
               <SecondaryButton onClick={() => openHub()}>
-                <Smartphone className="w-4 h-4" /> Continue on phone
+                <Smartphone className="w-4 h-4" /> Continue on Phone
+              </SecondaryButton>
+              <SecondaryButton onClick={() => openHub()}>
+                <QrCode className="w-4 h-4" /> Show QR Code
               </SecondaryButton>
             </div>
           </div>
