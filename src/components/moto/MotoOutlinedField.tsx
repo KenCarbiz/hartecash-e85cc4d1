@@ -22,6 +22,20 @@ type BaseProps = {
   trailing?: ReactNode;
   error?: string;
   className?: string;
+  required?: boolean;
+};
+
+const renderLabel = (label: string, required?: boolean) => {
+  // Strip a trailing "*" from the label string and let the `required`
+  // prop (or detected asterisk) render a subtle, scaled marker instead.
+  const trimmed = label.replace(/\s*\*\s*$/, "");
+  const isRequired = required ?? label !== trimmed;
+  return (
+    <>
+      {trimmed}
+      {isRequired ? <span className="ml-0.5 text-zinc-400">*</span> : null}
+    </>
+  );
 };
 
 const wrapperClasses = (focused: boolean, error?: string) =>
