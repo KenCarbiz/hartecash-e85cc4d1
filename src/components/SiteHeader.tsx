@@ -46,11 +46,13 @@ const SiteHeader = () => {
   const hasOemLogos = logos.oem_logo_urls && logos.oem_logo_urls.length > 0;
   const isStacked = logos.logo_layout === "stacked";
 
-  // National-brand minimal nav on the Moto template. Other templates
-  // keep the historical 5-item nav until they're individually
-  // retooled — this scopes the change to the surface the design
-  // review covered (Moto-template landing).
-  const useMotoNav = config.landing_template === "moto";
+  // National-brand minimal nav on the Moto templates. Both
+  // "Instant Offer" (moto) and "Instant Offer — Detailed"
+  // (moto_detailed) share the same four-item sticky bar; legacy/
+  // long-scroll templates keep the historical 5-item nav until
+  // they're individually retooled.
+  const useMotoNav = config.landing_template === "moto"
+    || config.landing_template === "moto_detailed";
 
   // Hash anchors need to work from any route. On the home page we
   // smooth-scroll without a route change; from /reviews etc. we
