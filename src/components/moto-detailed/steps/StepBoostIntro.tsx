@@ -94,7 +94,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           <button
             onClick={onKeep}
             aria-label="Close"
-            className="absolute right-5 top-5 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/80 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
+            className="absolute right-5 top-5 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100/75 text-slate-500 ring-1 ring-slate-200/70 transition-colors hover:bg-slate-200 hover:text-slate-800"
           >
             <X className="h-4 w-4" />
           </button>
@@ -133,37 +133,49 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
                 transition={{ duration: 2.2, repeat: Infinity, delay: 0.8 }}
                 className="absolute -right-10 bottom-2 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.6)]"
               />
-              <div className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-[0_14px_36px_-10px_hsl(262_83%_58%/0.55)] ring-1 ring-[hsl(262_83%_62%/0.25)]">
-                <Sparkles className="h-7 w-7" strokeWidth={2.2} fill="currentColor" />
+              <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-[0_13px_32px_-11px_hsl(262_83%_58%/0.55)] ring-1 ring-[hsl(262_83%_62%/0.25)]">
+                <Sparkles className="h-[27px] w-[27px]" strokeWidth={2.2} fill="currentColor" />
               </div>
             </motion.div>
           </div>
 
           {/* Eyebrow */}
-          <p className="mt-5 flex items-center justify-center gap-2 text-center text-[11px] font-semibold uppercase tracking-[0.26em] text-[hsl(262_70%_50%)]">
-            <span aria-hidden className="inline-block h-1 w-1 rounded-full bg-[hsl(262_70%_60%)]" />
-            Personal AI Appraisal Concierge
-            <span aria-hidden className="inline-block h-1 w-1 rounded-full bg-[hsl(262_70%_60%)]" />
+          <p className="mt-4 text-center text-[11px] font-semibold uppercase tracking-[0.28em] text-[hsl(262_83%_50%)]">
+            AI Photo Appraisal
           </p>
 
           {/* Headline — forced two lines */}
-          <h2 className="mt-3 text-center text-[28px] font-bold leading-[1.18] tracking-tight text-slate-900 sm:text-[34px]">
+          <h2 className="mt-2 text-center text-[32px] font-bold leading-[1.12] text-slate-950 sm:text-[40px]">
             Get your strongest offer
             <br />
-            with an <span className="text-[hsl(262_83%_55%)]">AI appraisal.</span>
+            with a <span className="text-[hsl(262_83%_52%)]">photo review.</span>
           </h2>
 
-          {/* Value payout — text-first, not boxed */}
-          <p className="mx-auto mt-4 max-w-[460px] text-center text-[15.5px] leading-relaxed text-slate-500">
-            A quick photo review may increase your offer by{" "}
-            <span className="whitespace-nowrap font-bold text-emerald-600">
-              {hasOffer ? `${fmt(minIncrease)}–${fmt(maxIncrease)}` : "2%–12%"}
-            </span>
-            .
+          <p className="mx-auto mt-4 max-w-[400px] text-center text-[15.5px] leading-relaxed text-slate-600">
+            Our AI agent reviews your vehicle photos to
+            <br className="hidden sm:block" /> check whether your offer can improve.
           </p>
 
+          {/* Value payout */}
+          <div className="mx-auto mt-4 flex max-w-[420px] items-center gap-5 rounded-[16px] border border-[hsl(262_83%_78%/0.28)] bg-[hsl(262_83%_98%/0.58)] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_28px_-22px_hsl(262_83%_50%/0.45)]">
+            <div className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-full bg-white text-[hsl(262_83%_52%)] shadow-[0_10px_24px_-15px_hsl(262_83%_42%/0.65)] ring-1 ring-[hsl(262_83%_72%/0.35)]">
+              <TrendingUp className="h-7 w-7" strokeWidth={2.7} />
+            </div>
+            <div className="min-w-0 text-left">
+              <p className="text-[13.5px] font-medium leading-tight text-slate-700">
+                Photo-reviewed offers may increase by
+              </p>
+              <p className="mt-1 text-[31px] font-bold leading-none text-[hsl(262_83%_50%)] sm:text-[34px]">
+                {hasOffer ? `${fmt(minIncrease)}–${fmt(maxIncrease)}` : "2%–12%"}
+              </p>
+              <p className="mt-1.5 text-[13px] leading-tight text-slate-500">
+                Based on 2%–12% increase range
+              </p>
+            </div>
+          </div>
+
           {/* Time pill */}
-          <div className="mt-4 flex justify-center">
+          <div className="mt-3 flex justify-center">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5 text-[12.5px] font-semibold text-emerald-700 ring-1 ring-emerald-200/70">
               <Clock className="h-3.5 w-3.5" />
               Takes about 2 minutes
