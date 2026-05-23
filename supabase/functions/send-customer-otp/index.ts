@@ -121,9 +121,8 @@ Deno.serve(async (req) => {
         );
       }
     } else {
-      // Demo / preview mode — log the code instead of failing the flow so
-      // we can dev-test without Twilio creds. Never returned to the client.
-      console.warn(`[send-customer-otp] Twilio not configured — code for ${e164}: ${code}`);
+      // Demo / preview mode — never log the plaintext OTP code.
+      console.warn(`[send-customer-otp] Twilio not configured — OTP NOT sent to ${e164}`);
     }
 
     return new Response(
