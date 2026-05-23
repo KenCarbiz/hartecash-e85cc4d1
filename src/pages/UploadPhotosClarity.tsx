@@ -583,26 +583,26 @@ const UploadPhotosClarity = () => {
                     <Smartphone className="w-5 h-5" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[15px] font-bold text-zinc-900 leading-tight">Use your phone camera</p>
+                    <p className="text-[15px] font-bold text-zinc-900 leading-tight">Use your phone for the fastest photo capture</p>
                     <p className="text-[13px] text-zinc-600 mt-1 leading-relaxed">
-                      Scan the QR code or text yourself a secure link to continue from your phone — it's the easiest way to finish.
+                      Scan once and finish the upload from your phone camera.
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowQR((s) => !s)}
+                    onClick={handleTextMeLink}
                     className="inline-flex items-center gap-1.5 rounded-full bg-violet-600 hover:bg-violet-700 text-white text-[13px] font-semibold px-4 h-9 transition-colors"
                   >
-                    <QrCode className="w-4 h-4" /> {showQR ? "Hide QR Code" : "Show QR Code"}
+                    <MessageSquare className="w-4 h-4" /> Send Link to My Phone
                   </button>
                   <button
                     type="button"
-                    onClick={handleTextMeLink}
+                    onClick={() => setShowQR((s) => !s)}
                     className="inline-flex items-center gap-1.5 rounded-full bg-white border border-violet-200 text-violet-700 hover:bg-violet-50 text-[13px] font-semibold px-4 h-9 transition-colors"
                   >
-                    <MessageSquare className="w-4 h-4" /> Text Me Link
+                    <QrCode className="w-4 h-4" /> {showQR ? "Hide QR Code" : "Show QR Code"}
                   </button>
                   <button
                     type="button"
@@ -613,6 +613,7 @@ const UploadPhotosClarity = () => {
                     {copyState === "copied" ? "Copied" : "Copy Secure Link"}
                   </button>
                 </div>
+
                 {showQR && secureLink && (
                   <div className="mt-4 flex items-center gap-4 rounded-xl bg-white border border-violet-200 p-4">
                     <div className="bg-white p-2 rounded-lg border border-zinc-200">
