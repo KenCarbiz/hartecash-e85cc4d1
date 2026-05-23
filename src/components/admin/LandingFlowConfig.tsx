@@ -58,6 +58,9 @@ interface State {
    *  HowItWorks step 3 + the default "Why X Wins" wedge row. When
    *  off, the customer-facing copy switches to in-person drop-off. */
   pickup_offered: boolean;
+  /** Three-state handoff configuration: what the dealer offers
+   *  customers after they accept the offer. */
+  handoff_type: "pickup" | "dropoff" | "both";
   /** Customer-facing condition picker style — "basic" hint per
    *  option vs. "kbb" KBB-style descriptions + key dialog. */
   condition_card_style: ConditionCardStyle;
@@ -79,6 +82,7 @@ const DEFAULTS: State = {
   landing_form_variant: "detailed",
   landing_form_density: "simple",
   pickup_offered: true,
+  handoff_type: "both",
   condition_card_style: "basic",
   ghost_screen: "legacy-car",
   ghost_headline: "",
