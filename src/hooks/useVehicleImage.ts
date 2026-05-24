@@ -12,27 +12,41 @@ import { supabase } from "@/integrations/supabase/client";
  * caller for a new year-make-model triggers an AI generation, which
  * is then cached for every subsequent portal load.
  *
- * Returns `null` while loading or on failure -- callers are
- * expected to fall back to a static placeholder until the URL
- * resolves.
+ * The resolved URL is also cached in localStorage per year-make-model
+ * so repeat portal loads paint the correct car on the first frame
+ * instead of waiting on the edge function (which is what made the
+ * static placeholder flash before the real image arrived). Returns
+ * `null` only when nothing is cached AND the fetch hasn't resolved —
+ * callers should render a neutral skeleton, NOT a stand-in vehicle.
  */
+const cacheKeyFor = (key: string) => `portal-vehicle-img:${key}`;
+const readCache = (key: string): string | null => {
+  try {
+    return localStorage.getItem(cacheKeyFor(key)) || null;
+  } catch {
+    return null;
+  }
+};
+
 export function useVehicleImage(
   year?: number | string | null,
   make?: string | null,
   model?: string | null,
   submissionToken?: string | null,
 ): string | null {
-  const [url, setUrl] = useState<string | null>(null);
-
   // Stable key so we don't re-fetch on every render. Strings normalize
   // away nullish + whitespace so equivalent inputs hit the same key.
   const key = [year, make, model].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
+  const [url, setUrl] = useState<string | null>(() => readCache(key));
 
   useEffect(() => {
     if (!year || !make || !model) {
       setUrl(null);
       return;
     }
+    // Paint the cached image immediately (if any) so the correct car
+    // shows on the first frame; the fetch below only refreshes it.
+    setUrl(readCache(key));
     let cancelled = false;
     (async () => {
       try {
@@ -47,14 +61,17 @@ export function useVehicleImage(
           },
         });
         if (cancelled) return;
-        if (error || !data?.image_url) {
-          setUrl(null);
-          return;
-        }
+        // On failure keep whatever we already have (cached) rather than
+        // dropping back to a placeholder.
+        if (error || !data?.image_url) return;
         setUrl(data.image_url as string);
+        try {
+          localStorage.setItem(cacheKeyFor(key), data.image_url as string);
+        } catch {
+          /* localStorage full / unavailable — non-fatal */
+        }
       } catch {
-        if (cancelled) return;
-        setUrl(null);
+        /* keep cached value on network error */
       }
     })();
     return () => { cancelled = true; };

@@ -8,7 +8,6 @@ import {
   Clock, Search, Sparkles, Settings2, ZoomIn, MoreHorizontal, Archive, Download,
   Pencil, Lightbulb, Fingerprint, History, FileCheck2,
 } from "lucide-react";
-import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { fmt } from "../portalMock";
 import { usePortalData } from "../PortalDataContext";
 import { useVehicleImage } from "@/hooks/useVehicleImage";
@@ -211,7 +210,7 @@ const GalleryModal = ({ open, onClose, startIndex = 0, images }: { open: boolean
 
   return (
     <AnimatePresence>
-      {open && (
+      {open && images.length > 0 && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
@@ -417,7 +416,9 @@ const AddVehicleWizard = ({ open, onClose }: { open: boolean; onClose: () => voi
 export const VehiclesPage = ({ onNavigate }: Props) => {
   const MOCK = usePortalData();
   const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model);
-  const heroSrc = heroUrl || vehicleHero;
+  // Never fall back to a stand-in car — show a neutral placeholder until
+  // the customer's actual vehicle render resolves.
+  const heroSrc = heroUrl;
   const [edit, setEdit] = useState(false);
   const [upload, setUpload] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -432,14 +433,17 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
   // uploads aren't in the portal data shape yet, so every framed slide
   // shows their car until uploaded photos are wired in.
   const galleryImages = useMemo<GalleryImage[]>(
-    () => [
-      { src: heroSrc, caption: "Exterior • Front 3/4" },
-      { src: heroSrc, caption: "Exterior • Rear 3/4" },
-      { src: heroSrc, caption: "Exterior • Driver side" },
-      { src: heroSrc, caption: "Interior • Front seats" },
-      { src: heroSrc, caption: v.miles ? `Odometer • ${v.miles} mi` : "Odometer" },
-      { src: heroSrc, caption: "Title • Front" },
-    ],
+    () =>
+      heroSrc
+        ? [
+            { src: heroSrc, caption: "Exterior • Front 3/4" },
+            { src: heroSrc, caption: "Exterior • Rear 3/4" },
+            { src: heroSrc, caption: "Exterior • Driver side" },
+            { src: heroSrc, caption: "Interior • Front seats" },
+            { src: heroSrc, caption: v.miles ? `Odometer • ${v.miles} mi` : "Odometer" },
+            { src: heroSrc, caption: "Title • Front" },
+          ]
+        : [],
     [heroSrc, v.miles],
   );
 
@@ -498,10 +502,14 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
             >
               <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[68%] h-7 bg-[#06194A]/22 blur-2xl rounded-full pointer-events-none" />
               <div className="absolute inset-0 flex items-center justify-center px-6 pt-2 pb-6">
-                <img
-                  src={heroSrc} alt={`${v.year} ${v.make} ${v.model}`}
-                  className="max-h-full max-w-full object-contain drop-shadow-[0_18px_14px_rgba(15,23,42,0.18)] transition-transform duration-500 ease-out group-hover:scale-[1.05] -translate-y-1"
-                />
+                {heroSrc ? (
+                  <img
+                    src={heroSrc} alt={`${v.year} ${v.make} ${v.model}`}
+                    className="max-h-full max-w-full object-contain drop-shadow-[0_18px_14px_rgba(15,23,42,0.18)] transition-transform duration-500 ease-out group-hover:scale-[1.05] -translate-y-1"
+                  />
+                ) : (
+                  <Car className="h-16 w-16 text-[#C7D2FE] animate-pulse" strokeWidth={1.25} />
+                )}
               </div>
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_45%,rgba(79,70,229,0.18),transparent_60%)] pointer-events-none" />
               <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/85 backdrop-blur text-[#06194A] border border-white/60 shadow-sm">
