@@ -29,6 +29,15 @@ serve(async (req) => {
       );
     }
 
+    // Rate-limit paid AI calls. Valid submission token / staff JWT pass
+    // unmetered; anonymous tokenless callers are capped per-IP.
+    const blocked = await paidApiGuard(req, corsHeaders, {
+      submissionToken,
+      anonMaxPerHour: 10,
+      scope: "parse-title-vin",
+    });
+    if (blocked) return blocked;
+
     // Fetch submission to get VIN on file
     const { data: submission } = await supabase
       .from("submissions")
