@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AutoCurb — Pricing One-Pager</title>
+<style>
+  :root{
+    --indigo:#4F46E5; --violet:#7C3AED; --navy:#06194A; --ink:#1f2937;
+    --slate:#53627A; --line:#E6EAF0; --bg:#F7F8FB; --green:#0F7A3E;
+    --mintbg:#E8F8EE;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ background:#e9eaf0; color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+  /* Toolbar (screen only) */
+  .toolbar{ max-width:8.5in; margin:14px auto 0; display:flex; justify-content:flex-end; gap:8px; }
+  .btn{ cursor:pointer; border:0; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:700;
+    color:#fff; background:linear-gradient(135deg,var(--indigo),var(--violet)); box-shadow:0 6px 16px -6px rgba(79,70,229,.5); }
+  .hint{ color:var(--slate); font-size:12px; align-self:center; margin-right:auto; }
+
+  /* Page */
+  .page{ width:8.5in; min-height:11in; background:#fff; margin:10px auto 40px; padding:0.45in 0.5in 0.4in;
+    box-shadow:0 12px 40px -12px rgba(15,23,42,.35); position:relative; }
+
+  /* Header */
+  .head{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid var(--line); padding-bottom:12px; }
+  .brand{ font-size:21px; font-weight:800; color:var(--navy); letter-spacing:-.3px; }
+  .brand span{ background:linear-gradient(135deg,var(--indigo),var(--violet)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .tag{ font-size:12.5px; color:var(--slate); margin-top:3px; max-width:5in; line-height:1.35; }
+  .pill{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
+    color:var(--indigo); background:#EEF0FF; border:1px solid #C7D2FE; border-radius:999px; padding:5px 10px; white-space:nowrap; }
+
+  /* Tier cards */
+  .tiers{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+  .card{ border:1px solid var(--line); border-radius:14px; padding:16px 16px 14px; position:relative; background:#fff; }
+  .card.premium{ border:2px solid var(--indigo); background:linear-gradient(180deg,#FAFAFF,#fff); box-shadow:0 10px 30px -16px rgba(79,70,229,.45); }
+  .badge{ position:absolute; top:-10px; right:14px; font-size:9.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    color:#fff; background:linear-gradient(135deg,var(--indigo),var(--violet)); border-radius:999px; padding:4px 9px; }
+  .tname{ font-size:15px; font-weight:800; color:var(--navy); }
+  .tsub{ font-size:11.5px; color:var(--slate); font-style:italic; margin-top:1px; }
+  .price{ margin-top:9px; }
+  .price b{ font-size:27px; font-weight:800; color:var(--navy); letter-spacing:-.5px; }
+  .price .per{ font-size:12px; color:var(--slate); font-weight:600; }
+  .price .alt{ display:block; font-size:10.5px; color:#8893A8; margin-top:1px; }
+  ul.feat{ list-style:none; margin-top:11px; display:flex; flex-direction:column; gap:5px; }
+  ul.feat li{ font-size:11.5px; color:var(--ink); line-height:1.3; padding-left:18px; position:relative; }
+  ul.feat li::before{ content:"✓"; position:absolute; left:0; top:0; color:var(--green); font-weight:800; }
+  ul.feat li.ai::before{ content:"✦"; color:var(--violet); }
+  .allow{ margin-top:10px; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:8px 10px; }
+  .allow .lbl{ font-size:9px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#8893A8; }
+  .allow .row{ font-size:11px; color:var(--navy); font-weight:600; margin-top:2px; }
+  .allow .over{ font-size:10px; color:var(--slate); margin-top:2px; }
+  .who{ margin-top:10px; font-size:11px; color:var(--slate); }
+  .who b{ color:var(--navy); }
+
+  /* Enterprise + performance */
+  .ent{ margin-top:14px; border:1px dashed #C7D2FE; background:#F5F6FF; border-radius:12px; padding:12px 14px;
+    display:grid; grid-template-columns:1fr 1fr; gap:10px 22px; }
+  .ent h3{ grid-column:1/-1; font-size:12px; font-weight:800; color:var(--indigo); text-transform:uppercase; letter-spacing:.08em; }
+  .ent p{ font-size:11px; color:var(--ink); line-height:1.4; padding-left:16px; position:relative; }
+  .ent p::before{ content:"•"; position:absolute; left:3px; color:var(--indigo); font-weight:800; }
+
+  /* Value footer */
+  .why{ margin-top:13px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .why .box{ border-radius:12px; padding:11px 13px; }
+  .why .pays{ background:var(--mintbg); border:1px solid #BBE5C6; }
+  .why .alone{ background:#EEF0FF; border:1px solid #C7D2FE; }
+  .why .lbl{ font-size:9.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; margin-bottom:3px; }
+  .why .pays .lbl{ color:var(--green); } .why .alone .lbl{ color:var(--indigo); }
+  .why p{ font-size:11px; line-height:1.42; color:var(--ink); }
+
+  .foot{ margin-top:12px; border-top:1px solid var(--line); padding-top:8px; font-size:9.5px; color:#8893A8; line-height:1.4; }
+
+  @media print{
+    html,body{ background:#fff; }
+    .toolbar{ display:none; }
+    .page{ box-shadow:none; margin:0; width:auto; min-height:auto; padding:0.4in 0.5in; }
+    @page{ size:letter; margin:0; }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <span class="hint">Tip: print → “Save as PDF”, enable “Background graphics”.</span>
+    <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <div class="page">
+    <div class="head">
+      <div>
+        <div class="brand">AutoCurb <span>· MOTO(acquire)</span></div>
+        <div class="tag">Turn your own website into a branded, AI-powered buying center — and buy cars from your own customers before Carvana &amp; CarMax do.</div>
+      </div>
+      <div class="pill">Vehicle Acquisition Platform</div>
+    </div>
+
+    <div class="tiers">
+      <!-- BASIC -->
+      <div class="card">
+        <div class="tname">Basic</div>
+        <div class="tsub">“Own your acquisition funnel”</div>
+        <div class="price"><b>$1,495</b><span class="per"> / rooftop / mo</span>
+          <span class="alt">billed annually · $1,795 month-to-month</span></div>
+        <ul class="feat">
+          <li>White-label consumer funnel (instant offer, VIN / plate)</li>
+          <li>Branded customer portal</li>
+          <li>Driver’s license / title / payoff OCR</li>
+          <li>Appraiser queue + manual click-to-dial re-engagement</li>
+          <li>SMS &amp; email follow-up cadence</li>
+          <li>Multi-rooftop admin + full branding control</li>
+        </ul>
+        <div class="who"><b>For:</b> dealers tired of losing their own customers’ trades to national buyers.</div>
+      </div>
+
+      <!-- PREMIUM -->
+      <div class="card premium">
+        <div class="badge">Most Value · AI</div>
+        <div class="tname">AI-Premium</div>
+        <div class="tsub">“Your funnel closes itself”</div>
+        <div class="price"><b>$2,495</b><span class="per"> / rooftop / mo + metered AI</span>
+          <span class="alt">billed annually · $2,895 month-to-month</span></div>
+        <ul class="feat">
+          <li>Everything in Basic, plus:</li>
+          <li class="ai">AI photo re-appraisal that <b>auto-raises</b> the offer (recovers abandoned deals)</li>
+          <li class="ai">Voice-AI agent that <b>calls customers</b> — consent-gated, recording disclosure, kill-switch, human-gated price moves</li>
+          <li class="ai">AI SMS drafting &amp; AI damage grading</li>
+        </ul>
+        <div class="allow">
+          <div class="lbl">Included AI / rooftop / mo</div>
+          <div class="row">500 voice min · 250 re-appraisals · 200 AI images</div>
+          <div class="over">Overage: $0.35 / voice-min · $1.50 / re-appraisal · $1.00 / image</div>
+        </div>
+        <div class="who"><b>For:</b> dealers who want more acquisitions without adding headcount.</div>
+      </div>
+    </div>
+
+    <!-- ENTERPRISE -->
+    <div class="ent">
+      <h3>Enterprise · Dealer Groups — custom MSA at the group level</h3>
+      <p>50–65% volume discount (≈ $525 Basic / $875 Premium effective per rooftop)</p>
+      <p>Pooled AI allowances across rooftops · group SSO · consolidated billing</p>
+      <p>90-day success-gated pilot (12–20 rooftops) → 24-month rollout</p>
+      <p><b>Optional performance plan:</b> swap part of SaaS for $25–$50 per <b>acquired</b> unit (monthly-capped)</p>
+    </div>
+
+    <!-- WHY -->
+    <div class="why">
+      <div class="box pays">
+        <div class="lbl">Why it pays</div>
+        <p>Customer-sourced cars cost ~$900+ less to market. Retaining just <b>2–4 cars / month</b> that would have gone to Carvana or CarMax covers AI-Premium many times over.</p>
+      </div>
+      <div class="box alone">
+        <div class="lbl">Where we’re alone</div>
+        <p>No competitor bundles a branded funnel + outbound Voice-AI + auto-raising photo re-appraisal + OCR. KBB ICO sends the car back to Cox; CarGurus is exiting acquisition; Edmunds routes sellers to CarMax. <b>You keep the car.</b></p>
+      </div>
+    </div>
+
+    <div class="foot">
+      List pricing for independents / small groups; annual-prepay shown. AI-Premium is a base subscription plus metered AI usage so light users aren’t overcharged and heavy / enterprise usage is captured fairly. Voice-AI requires consent capture and human-in-the-loop on price moves (compliance &amp; brand safety). Competitive benchmarks: Accu-Trade ~$1.5k/mo · VINCUE ~$1.5–2.5k/mo · TradePending ~$0.6–0.7k/mo · KBB ICO ~$0.5–1.5k/mo + per-lead · vAuto/Cox stack ~$0.85–5k/mo (staff-facing, additive). Figures are published-or-estimated market ranges (most dealer-tool pricing is quote-gated).
+    </div>
+  </div>
+</body>
+</html>
