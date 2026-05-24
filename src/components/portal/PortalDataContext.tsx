@@ -277,6 +277,20 @@ const buildPortalShape = (
   const dealer = (dealershipName || "").trim() || base.customer.dealer;
   base.customer.dealer = dealer;
 
+  // The primary dealer conversation (Messages tab) must show the real
+  // dealership, not the mock "Liberty Automotive" brand. Re-derive its
+  // name + avatar initials from the tenant dealer name.
+  const dealerInitials =
+    dealer
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0] || "")
+      .join("")
+      .toUpperCase() || base.conversations[0]?.initials || "DL";
+  base.conversations = base.conversations.map((c) =>
+    c.id === "liberty" ? { ...c, name: dealer, initials: dealerInitials } : c,
+  );
+
   if (!row) return base;
 
   // ── Customer identity from the submission row.
