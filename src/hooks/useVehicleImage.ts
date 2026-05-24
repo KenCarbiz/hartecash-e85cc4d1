@@ -35,22 +35,27 @@ export function useVehicleImage(
     }
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase.functions.invoke("generate-vehicle-image", {
-        body: {
-          year: String(year),
-          make,
-          model,
-          angle: "3q",
-          studio_only: true,
-          submission_token: submissionToken || undefined,
-        },
-      });
-      if (cancelled) return;
-      if (error || !data?.image_url) {
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-vehicle-image", {
+          body: {
+            year: String(year),
+            make,
+            model,
+            angle: "3q",
+            studio_only: true,
+            submission_token: submissionToken || undefined,
+          },
+        });
+        if (cancelled) return;
+        if (error || !data?.image_url) {
+          setUrl(null);
+          return;
+        }
+        setUrl(data.image_url as string);
+      } catch {
+        if (cancelled) return;
         setUrl(null);
-        return;
       }
-      setUrl(data.image_url as string);
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
