@@ -10,6 +10,15 @@ type FieldKey = "firstName" | "lastName" | "email" | "phone" | "zip" | "mileage"
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 const isPhone = (v: string) => v.replace(/\D/g, "").length >= 10;
 const digitsOnly = (v: string) => v.replace(/\D/g, "");
+// Display helper — keeps the phone field formatted as the user types
+// while state stores digits only (lookup matches on digits).
+const formatPhone = (raw: string) => {
+  const d = raw.replace(/\D/g, "").slice(0, 10);
+  if (!d) return "";
+  if (d.length < 4) return `(${d}`;
+  if (d.length < 7) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+};
 const formatMiles = (digits: string) => (digits ? Number(digits).toLocaleString("en-US") : "");
 const formatMoney = (digits: string) => (digits ? Number(digits).toLocaleString("en-US") : "");
 
@@ -74,9 +83,9 @@ const StepContact = ({ state, update, next }: StepContext) => {
           <Field label="Email" type="email" value={c.email} onChange={(v) => set({ email: v })}
             onBlur={() => touch("email")} error={touched.email ? errors.email : undefined}
             className="sm:col-span-2" autoComplete="email" placeholder="you@example.com" Icon={Mail} />
-          <Field label="Phone" type="tel" value={c.phone} onChange={(v) => set({ phone: v })}
+          <Field label="Phone" type="tel" value={formatPhone(c.phone)} onChange={(v) => set({ phone: digitsOnly(v) })}
             onBlur={() => touch("phone")} error={touched.phone ? errors.phone : undefined}
-            autoComplete="tel" placeholder="(555) 555-5555" Icon={Phone} />
+            inputMode="tel" autoComplete="tel" placeholder="(555) 555-5555" Icon={Phone} />
           <Field label="ZIP (optional)" value={c.zip} onChange={(v) => set({ zip: v })}
             onBlur={() => touch("zip")} autoComplete="postal-code" placeholder="90210" Icon={MapPin} />
         </div>
