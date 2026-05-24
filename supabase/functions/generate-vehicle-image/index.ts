@@ -76,7 +76,7 @@ serve(async (req) => {
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
   try {
-    const { year, make, model, style, color, uvc, angle, studio_only, submission_token } = await req.json();
+    const { year, make, model, style, color, uvc, angle, studio_only } = await req.json();
 
     if (!year || !make || !model) {
       return new Response(JSON.stringify({ error: "year, make, and model are required" }), {
