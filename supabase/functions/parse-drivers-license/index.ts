@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { paidApiGuard } from "../_shared/paidApiGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +28,15 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Rate-limit paid AI calls. Valid submission token / staff JWT pass
+    // unmetered; anonymous tokenless callers are capped per-IP.
+    const blocked = await paidApiGuard(req, corsHeaders, {
+      submissionToken,
+      anonMaxPerHour: 10,
+      scope: "parse-drivers-license",
+    });
+    if (blocked) return blocked;
 
     // Fetch submission to get dealership_id and check fields
     const { data: submission } = await supabase
