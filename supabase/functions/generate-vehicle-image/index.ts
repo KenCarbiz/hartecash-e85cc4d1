@@ -79,13 +79,6 @@ serve(async (req) => {
   try {
     const { year, make, model, style, color, uvc, angle, studio_only, submission_token } = await req.json();
 
-    const blocked = await paidApiGuard(req, corsHeaders, {
-      submissionToken: submission_token,
-      anonMaxPerHour: 20,
-      scope: "generate-vehicle-image",
-    });
-    if (blocked) return blocked;
-
     if (!year || !make || !model) {
       return new Response(JSON.stringify({ error: "year, make, and model are required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
