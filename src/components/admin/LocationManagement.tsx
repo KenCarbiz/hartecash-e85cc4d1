@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatPhoneInput } from "@/lib/utils";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -782,7 +783,7 @@ const LocationManagement = () => {
                           </div>
                           <div>
                             <Label className="text-micro text-muted-foreground mb-1 block">Phone</Label>
-                            <Input value={loc.phone || ""} onChange={e => updateLocation(loc.id, "phone", e.target.value || null)} placeholder="Inherit from corporate" />
+                            <Input value={loc.phone || ""} onChange={e => updateLocation(loc.id, "phone", formatPhoneInput(e.target.value) || null)} placeholder="Inherit from corporate" />
                           </div>
                           <div>
                             <Label className="text-micro text-muted-foreground mb-1 block">Email</Label>

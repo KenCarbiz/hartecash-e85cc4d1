@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { formatPhone } from "@/lib/utils";
+import { formatPhone, formatPhoneInput } from "@/lib/utils";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 import { Button } from "@/components/ui/button";
@@ -612,7 +612,7 @@ const StaffManagement = () => {
                     <div className="flex items-center gap-1">
                       <Input
                         value={phoneValue}
-                        onChange={(e) => setPhoneValue(e.target.value)}
+                        onChange={(e) => setPhoneValue(formatPhoneInput(e.target.value))}
                         placeholder="(555) 123-4567"
                         className="h-7 text-xs w-36"
                       />

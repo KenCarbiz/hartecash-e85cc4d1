@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { formatPhone } from "@/lib/utils";
+import { formatPhone, formatPhoneInput } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
@@ -559,7 +559,7 @@ export default function NotificationSettings() {
               )}
             </div>
             <div className="flex gap-2">
-              <Input placeholder="(555) 123-4567" value={newPhone} onChange={e => setNewPhone(e.target.value)} onKeyDown={e => e.key === "Enter" && addPhone()} className="max-w-xs text-sm" />
+              <Input placeholder="(555) 123-4567" value={newPhone} onChange={e => setNewPhone(formatPhoneInput(e.target.value))} onKeyDown={e => e.key === "Enter" && addPhone()} className="max-w-xs text-sm" />
               <Button size="sm" variant="outline" onClick={addPhone}><Plus className="w-3.5 h-3.5 mr-1" /> Add</Button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatPhoneInput } from "@/lib/utils";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -245,7 +246,7 @@ const AppointmentManager = ({
           <div className="space-y-4 pt-2">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label>Name *</Label><Input value={form.customer_name} onChange={(e) => setForm(p => ({ ...p, customer_name: e.target.value }))} placeholder="Customer name" /></div>
-              <div className="space-y-1.5"><Label>Phone *</Label><Input value={form.customer_phone} onChange={(e) => setForm(p => ({ ...p, customer_phone: e.target.value }))} placeholder="(555) 123-4567" /></div>
+              <div className="space-y-1.5"><Label>Phone *</Label><Input value={form.customer_phone} onChange={(e) => setForm(p => ({ ...p, customer_phone: formatPhoneInput(e.target.value) }))} placeholder="(555) 123-4567" /></div>
             </div>
             <div className="space-y-1.5"><Label>Email *</Label><Input type="email" value={form.customer_email} onChange={(e) => setForm(p => ({ ...p, customer_email: e.target.value }))} placeholder="email@example.com" /></div>
             <div className="grid grid-cols-2 gap-3">

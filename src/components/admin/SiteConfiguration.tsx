@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatPhoneInput } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
@@ -600,7 +601,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Phone Number</Label>
-            <Input value={config.phone} onChange={e => update("phone", e.target.value)} placeholder="(860) 555-1234" />
+            <Input value={config.phone} onChange={e => update("phone", formatPhoneInput(e.target.value))} placeholder="(860) 555-1234" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Email</Label>

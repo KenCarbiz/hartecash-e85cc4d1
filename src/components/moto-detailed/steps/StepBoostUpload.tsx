@@ -592,11 +592,20 @@ const PhotoTile = ({
 };
 
 // ── PhoneHandoffModal ────────────────────────────────────────────────
+// Display the entered number as (xxx) xxx-xxxx while keeping digits in state.
+const formatPhone = (raw: string) => {
+  const d = raw.replace(/\D/g, "").slice(0, 10);
+  if (!d) return "";
+  if (d.length < 4) return `(${d}`;
+  if (d.length < 7) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+};
+
 const PhoneHandoffModal = ({
   defaultPhone,
   onClose,
 }: { defaultPhone: string; onClose: () => void }) => {
-  const [phone, setPhone] = useState(defaultPhone || "");
+  const [phone, setPhone] = useState((defaultPhone || "").replace(/\D/g, "").slice(0, 10));
   const [sent, setSent] = useState(false);
   const url = typeof window !== "undefined" ? window.location.href : "https://example.com";
 
@@ -657,8 +666,8 @@ const PhoneHandoffModal = ({
             <input
               type="tel"
               inputMode="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              value={formatPhone(phone)}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
               placeholder="(555) 555-5555"
               className="h-11 flex-1 rounded-xl border border-[#E6EAF0] bg-white px-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[hsl(262_83%_58%)] focus:ring-4 focus:ring-[hsl(262_83%_58%/0.12)]"
             />

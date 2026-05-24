@@ -12,7 +12,7 @@ import {
   MapPin, Plus, Trash2, Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, formatPhoneInput } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import type { LocationEntry, RooftopLandingTemplate, WizardState } from "./types";
 import { createLocationEntry, suggestRooftopSlug } from "./types";
@@ -196,7 +196,7 @@ const LocationSetupStep = ({ state, onChange }: Props) => {
                   </div>
                   <div>
                     <Label className="text-xs font-medium">Phone</Label>
-                    <Input value={loc.phone} onChange={(e) => updateLocation(idx, { phone: e.target.value })} className="mt-1 text-sm" placeholder="(860) 555-1234" />
+                    <Input value={loc.phone} onChange={(e) => updateLocation(idx, { phone: formatPhoneInput(e.target.value) })} className="mt-1 text-sm" placeholder="(860) 555-1234" />
                   </div>
                   <div>
                     <Label className="text-xs font-medium">Email</Label>
