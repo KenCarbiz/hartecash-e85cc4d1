@@ -356,6 +356,45 @@ Deno.serve(async (req) => {
       if (sub?.dealership_id) dealershipId = sub.dealership_id;
     }
 
+    // SECURITY: Authorize non-internal callers against the target submission.
+    // Internal callers (service-role from cron / other edge functions) pass through.
+    // - Tenant staff JWT: dealership_id MUST match the target submission's dealership.
+    // - Anonymous / anon-key callers: only a narrow allow-list of customer-initiated
+    //   triggers may fire, and only when paired with a real submission_id whose
+    //   submission_token is presented as proof of ownership.
+    if (!internal) {
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+      const caller = await resolveCaller(req, supabaseUrl, anonKey, supabaseKey);
+
+      if (caller.kind === "tenant_staff") {
+        if (!sub || sub.dealership_id !== caller.dealershipId) {
+          return new Response(
+            JSON.stringify({ error: "forbidden: cross-tenant submission" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      } else if (caller.kind !== "platform_admin") {
+        // Anonymous / no_role caller. Restrict to customer-initiated triggers and
+        // require a submission_token proof matching the target submission.
+        const ALLOWED_ANON_TRIGGERS = new Set([
+          "customer_offer_accepted",
+        ]);
+        if (!ALLOWED_ANON_TRIGGERS.has(trigger_key)) {
+          return new Response(
+            JSON.stringify({ error: "forbidden: trigger not allowed for anonymous caller" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        const presentedToken = (body as any).submission_token as string | undefined;
+        if (!sub || !presentedToken || presentedToken !== sub.token) {
+          return new Response(
+            JSON.stringify({ error: "forbidden: missing or invalid submission_token" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      }
+    }
+
     // Fetch site config scoped to tenant
     const { data: siteConfig } = await supabase
       .from("site_config")
