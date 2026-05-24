@@ -44,12 +44,7 @@ export const DocumentsPage = () => {
   const [focus, setFocus] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Seed one rejected doc for realism
-  const docs: HubDoc[] = MOCK.docs.map((d, i) =>
-    i === 2
-      ? { ...d, status: "Rejected" as const, reason: "Image blurry — please retake in better light." }
-      : (d as HubDoc)
-  );
+  const docs: HubDoc[] = MOCK.docs.map((d) => d as HubDoc);
 
   const completed = docs.filter((d) => d.status === "Approved" || d.status === "Uploaded").length;
   const total = docs.length;

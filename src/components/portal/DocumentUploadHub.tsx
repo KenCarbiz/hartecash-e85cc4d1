@@ -9,6 +9,11 @@ import {
   Eye, Image as ImageIcon, Sun, Crop, Scan,
 } from "lucide-react";
 import { PrimaryButton, SecondaryButton, SectionLabel, StatusPill } from "./PortalPageShell";
+import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
+import { useDocumentConfig, type DocumentConfig } from "@/hooks/useDocumentConfig";
+import { usePortalIdentity } from "./PortalDataContext";
+import { toast } from "sonner";
 
 /* =========================================================================
    DocumentUploadHub — a single persistent cross-device upload center.
@@ -67,46 +72,95 @@ const useIsMobile = () => {
   return m;
 };
 
-/* ---------- Live sync simulator ----------------------------------------- */
-/* Simulates mobile uploads streaming back to desktop after handoff. */
-const useLiveSync = (docs: HubDoc[], handoffActive: boolean) => {
-  const [synced, setSynced] = useState<HubDoc[]>(docs);
-  const [pulse, setPulse] = useState<string | null>(null);
-  const idx = useRef(0);
+/* ---------- Real upload pipeline ---------------------------------------- */
+/* Uploads a customer document to Supabase storage and fires the same
+   mark-uploaded / notification / OCR hooks as EssentialUploads, so the
+   hub's in-panel uploads behave identically to the standalone uploader.
+   Storage layout: odometer → submission-photos (the AI scorer expects it
+   there); everything else → customer-documents under a doc_id folder. */
+const uploadCustomerDoc = async (
+  doc: DocumentConfig,
+  file: File,
+  token: string,
+  submissionId: string | null,
+) => {
+  const isPhoto = doc.doc_id === "odometer";
+  const bucket: "submission-photos" | "customer-documents" =
+    isPhoto ? "submission-photos" : "customer-documents";
+  const ext = file.name.split(".").pop() || "jpg";
+  const stamp = Date.now();
+  const path = isPhoto
+    ? `${token}/${doc.doc_id}-${stamp}.${ext}`
+    : `${token}/${doc.doc_id}/${stamp}.${ext}`;
 
-  useEffect(() => { setSynced(docs); }, [docs]);
+  const { error: uploadErr } = await supabase.storage
+    .from(bucket)
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (uploadErr) throw uploadErr;
 
-  useEffect(() => {
-    if (!handoffActive) return;
-    const needed = synced
-      .map((d, i) => ({ d, i }))
-      .filter(({ d }) => d.status === "Needed" || d.status === "Rejected");
-    if (needed.length === 0) return;
+  if (isPhoto) {
+    await supabase.rpc("mark_photos_uploaded", { _token: token } as never);
+    safeInvoke("send-notification", {
+      body: { trigger_key: "photos_uploaded", submission_id: submissionId },
+      context: { from: `DocumentUploadHub.${doc.doc_id}` },
+    });
+  } else {
+    await supabase.rpc("mark_docs_uploaded", { _token: token } as never);
+    safeInvoke("send-notification", {
+      body: { trigger_key: "docs_uploaded", submission_id: submissionId },
+      context: { from: `DocumentUploadHub.${doc.doc_id}` },
+    });
+  }
 
-    const t = setInterval(() => {
-      const target = needed[idx.current % needed.length];
-      idx.current += 1;
-      setSynced((prev) =>
-        prev.map((d, i) =>
-          i === target.i
-            ? { ...d, status: "Under Review", date: "Just now", source: "iPhone" }
-            : d
-        )
-      );
-      setPulse(target.d.name);
-      setTimeout(() => {
-        setSynced((prev) =>
-          prev.map((d) =>
-            d.name === target.d.name ? { ...d, status: "Approved" } : d
-          )
-        );
-      }, 1800);
-      setTimeout(() => setPulse(null), 1200);
-    }, 4200);
-    return () => clearInterval(t);
-  }, [handoffActive, synced]);
+  // OCR auto-fill — best-effort, never blocks the upload. Tracked in
+  // ocr_jobs via the token-gated RPC so the customer's other views show
+  // live progress, mirroring EssentialUploads.
+  if (doc.ocr_pipeline) {
+    let jobId: string | null = null;
+    try {
+      const { data: jobIdRaw } = await supabase.rpc("ocr_jobs_upsert_for_token" as never, {
+        p_token: token, p_doc_id: doc.doc_id, p_pipeline: doc.ocr_pipeline,
+        p_storage_bucket: bucket, p_storage_path: path, p_status: "queued",
+      } as never);
+      jobId = (jobIdRaw as string | null) ?? null;
 
-  return { synced, pulse };
+      const { data: signedData } = await supabase.storage
+        .from(bucket)
+        .createSignedUrl(path, 300);
+
+      if (jobId) {
+        await supabase.rpc("ocr_jobs_upsert_for_token" as never, {
+          p_token: token, p_doc_id: doc.doc_id, p_pipeline: doc.ocr_pipeline,
+          p_storage_bucket: bucket, p_storage_path: path, p_status: "running", p_job_id: jobId,
+        } as never);
+      }
+
+      if (signedData?.signedUrl) {
+        const { error: fnErr } = await supabase.functions.invoke(doc.ocr_pipeline, {
+          body: { imageUrl: signedData.signedUrl, submissionToken: token },
+        });
+        if (fnErr) throw fnErr;
+      } else {
+        throw new Error("Could not sign upload for OCR");
+      }
+
+      if (jobId) {
+        await supabase.rpc("ocr_jobs_upsert_for_token" as never, {
+          p_token: token, p_doc_id: doc.doc_id, p_pipeline: doc.ocr_pipeline,
+          p_storage_bucket: bucket, p_storage_path: path, p_status: "completed", p_job_id: jobId,
+        } as never);
+      }
+    } catch (ocrErr) {
+      const msg = ocrErr instanceof Error ? ocrErr.message : "OCR failed";
+      console.warn(`[DocumentUploadHub] OCR skipped (${doc.ocr_pipeline}):`, ocrErr);
+      if (jobId) {
+        await supabase.rpc("ocr_jobs_upsert_for_token" as never, {
+          p_token: token, p_doc_id: doc.doc_id, p_pipeline: doc.ocr_pipeline,
+          p_storage_bucket: bucket, p_storage_path: path, p_status: "failed", p_error: msg, p_job_id: jobId,
+        } as never);
+      }
+    }
+  }
 };
 
 /* ---------- Trust strip -------------------------------------------------- */
@@ -252,23 +306,19 @@ const HandoffPanel = ({
 /* ---------- Mobile camera-first card ------------------------------------ */
 const MobileUploadCard = ({
   doc,
-  onUploaded,
-}: { doc: HubDoc; onUploaded: (name: string) => void }) => {
+  busy,
+  onFile,
+}: { doc: HubDoc; busy: boolean; onFile: (file: File) => void }) => {
   const camRef = useRef<HTMLInputElement>(null);
   const libRef = useRef<HTMLInputElement>(null);
-  const [stage, setStage] = useState<"idle" | "analyzing" | "done">(
-    doc.status === "Approved" || doc.status === "Uploaded" ? "done" : "idle"
-  );
-
-  const handle = () => {
-    setStage("analyzing");
-    setTimeout(() => {
-      setStage("done");
-      onUploaded(doc.name);
-    }, 1600);
+  const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (f) onFile(f);
   };
 
-  const done = stage === "done" || doc.status === "Approved" || doc.status === "Uploaded";
+  const done =
+    doc.status === "Approved" || doc.status === "Uploaded" || doc.status === "Under Review";
 
   return (
     <div className="rounded-2xl border border-[#E6EAF0] bg-white p-4">
@@ -281,21 +331,21 @@ const MobileUploadCard = ({
         <div className="flex-1 min-w-0">
           <div className="text-[14px] font-bold text-[#06194A]">{doc.name}</div>
           <div className="text-[11.5px] text-[#53627A] mt-0.5">
-            {done ? "Captured — ready to submit" : "Tap below to capture"}
+            {done ? "Received — we'll review it shortly" : "Tap below to capture"}
           </div>
         </div>
         <StatusPill tone={TONE[doc.status]}>{ICONS[doc.status]} {doc.status}</StatusPill>
       </div>
 
       <AnimatePresence mode="wait">
-        {stage === "analyzing" ? (
+        {busy ? (
           <motion.div
             key="ana"
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="mt-3 rounded-xl bg-[#EEF0FF] border border-[#C7D2FE] px-3 py-2.5"
           >
             <div className="flex items-center gap-2 text-[12px] font-semibold text-[#4F46E5]">
-              <Sparkles className="w-3.5 h-3.5 animate-pulse" /> AI checking quality…
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…
             </div>
             <div className="mt-2 grid grid-cols-4 gap-2 text-[10px] text-[#53627A]">
               <span className="inline-flex items-center gap-1"><Sun className="w-3 h-3" /> Light</span>
@@ -310,8 +360,8 @@ const MobileUploadCard = ({
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="mt-3 grid grid-cols-2 gap-2"
           >
-            <input ref={camRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handle} />
-            <input ref={libRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handle} />
+            <input ref={camRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={pick} />
+            <input ref={libRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={pick} />
             <button
               onClick={() => camRef.current?.click()}
               className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#06194A] text-white text-[12.5px] font-bold hover:bg-[#1E2B6B] transition"
@@ -334,32 +384,31 @@ const MobileUploadCard = ({
 /* ---------- Desktop document row ---------------------------------------- */
 const DesktopDocRow = ({
   doc,
-  pulse,
   highlight,
-  onUpload,
+  busy,
+  onFile,
   onPreview,
 }: {
   doc: HubDoc;
-  pulse: boolean;
   highlight: boolean;
-  onUpload: () => void;
+  busy: boolean;
+  onFile: (file: File) => void;
   onPreview: () => void;
 }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
   const needs = doc.status === "Needed" || doc.status === "Rejected";
+  const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (f) onFile(f);
+  };
   return (
     <motion.div
-      animate={pulse ? { scale: [1, 1.012, 1] } : {}}
-      transition={{ duration: 0.6 }}
       className={`relative rounded-2xl border bg-white p-3.5 transition-colors ${
         highlight ? "border-[#4F46E5] ring-2 ring-[#4F46E5]/15" : "border-[#E6EAF0]"
       }`}
     >
-      {pulse && (
-        <span className="absolute -top-1 -right-1 inline-flex h-2.5 w-2.5">
-          <span className="absolute inline-flex h-full w-full rounded-full bg-[#4F46E5] opacity-75 animate-ping" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#4F46E5]" />
-        </span>
-      )}
+      <input ref={inputRef} type="file" accept="image/*,.pdf" className="hidden" onChange={pick} />
       <div className="flex items-start gap-3">
         <div className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 ${
           doc.status === "Approved" || doc.status === "Uploaded"
@@ -400,10 +449,12 @@ const DesktopDocRow = ({
           <div className="flex items-center gap-2 mt-2.5">
             {needs ? (
               <button
-                onClick={onUpload}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#06194A] hover:bg-[#1E2B6B] text-white text-[11.5px] font-bold transition"
+                onClick={() => inputRef.current?.click()}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#06194A] hover:bg-[#1E2B6B] text-white text-[11.5px] font-bold transition disabled:opacity-60"
               >
-                <Upload className="w-3 h-3" /> {doc.status === "Rejected" ? "Resubmit" : "Upload"}
+                {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                {busy ? "Uploading…" : doc.status === "Rejected" ? "Resubmit" : "Upload"}
               </button>
             ) : (
               <>
@@ -414,10 +465,12 @@ const DesktopDocRow = ({
                   <Eye className="w-3 h-3" /> Preview
                 </button>
                 <button
-                  onClick={onUpload}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-[#E6EAF0] hover:bg-[#F4F6FA] text-[#53627A] text-[11.5px] font-semibold transition"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-[#E6EAF0] hover:bg-[#F4F6FA] text-[#53627A] text-[11.5px] font-semibold transition disabled:opacity-60"
                 >
-                  <RefreshCw className="w-3 h-3" /> Replace
+                  {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                  {busy ? "Uploading…" : "Replace"}
                 </button>
               </>
             )}
@@ -431,8 +484,11 @@ const DesktopDocRow = ({
 /* ---------- Main hub panel ---------------------------------------------- */
 export const DocumentUploadHub = ({ open, onClose, docs: initialDocs, focusDoc }: Props) => {
   const isMobile = useIsMobile();
+  const { token, submissionId, dealershipId, loanStatus } = usePortalIdentity();
+  const { customerAllDocs } = useDocumentConfig(dealershipId || "default", loanStatus);
   const [handoffActive, setHandoffActive] = useState(false);
   const [docs, setDocs] = useState<HubDoc[]>(initialDocs);
+  const [busy, setBusy] = useState<Record<string, boolean>>({});
 
   useEffect(() => { setDocs(initialDocs); }, [initialDocs]);
   useEffect(() => {
@@ -447,20 +503,52 @@ export const DocumentUploadHub = ({ open, onClose, docs: initialDocs, focusDoc }
     };
   }, [open, onClose]);
 
-  const { synced, pulse } = useLiveSync(docs, handoffActive);
-  const completed = synced.filter((d) => d.status === "Approved" || d.status === "Uploaded").length;
-  const total = synced.length;
+  // Match each visible doc (keyed by its label) to the dealer's doc
+  // catalog so uploads land in the right bucket / doc_id folder and fire
+  // the same OCR + notification hooks as the standalone uploader.
+  const catalogByName = useMemo(() => {
+    const m = new Map<string, DocumentConfig>();
+    for (const d of customerAllDocs) m.set(d.label, d);
+    return m;
+  }, [customerAllDocs]);
+
+  const completed = docs.filter((d) => d.status === "Approved" || d.status === "Uploaded").length;
+  const total = docs.length;
   const pct = total ? (completed / total) * 100 : 0;
-  const remaining = synced.filter((d) => d.status === "Needed" || d.status === "Rejected");
+  const remaining = docs.filter((d) => d.status === "Needed" || d.status === "Rejected");
   const eta = Math.max(1, remaining.length * 2);
 
-  const handleDesktopUpload = (name: string) => {
-    setDocs((p) =>
-      p.map((d) => (d.name === name ? { ...d, status: "Under Review", date: "Just now", source: "Desktop" } : d))
-    );
-    setTimeout(() => {
-      setDocs((p) => p.map((d) => (d.name === name ? { ...d, status: "Approved" } : d)));
-    }, 1800);
+  const handleUpload = async (name: string, file: File) => {
+    if (!token) {
+      toast.error("Upload unavailable here", {
+        description: "Open the portal from your secure link to upload documents.",
+      });
+      return;
+    }
+    const doc = catalogByName.get(name);
+    if (!doc) {
+      toast.error("Can't upload this item online", {
+        description: "Please contact your dealer to submit this document.",
+      });
+      return;
+    }
+    setBusy((b) => ({ ...b, [name]: true }));
+    try {
+      await uploadCustomerDoc(doc, file, token, submissionId);
+      setDocs((p) =>
+        p.map((d) =>
+          d.name === name
+            ? { ...d, status: "Under Review", date: "Just now", source: isMobile ? "iPhone" : "Desktop" }
+            : d,
+        ),
+      );
+      toast.success("Uploaded", { description: `${doc.label} received — we'll review it shortly.` });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Please try again or use the phone handoff.";
+      toast.error("Upload failed", { description: msg });
+    } finally {
+      setBusy((b) => ({ ...b, [name]: false }));
+    }
   };
 
   return (
@@ -552,8 +640,13 @@ export const DocumentUploadHub = ({ open, onClose, docs: initialDocs, focusDoc }
                     </p>
                   </div>
                   <div className="space-y-3">
-                    {synced.map((d) => (
-                      <MobileUploadCard key={d.name} doc={d} onUploaded={handleDesktopUpload} />
+                    {docs.map((d) => (
+                      <MobileUploadCard
+                        key={d.name}
+                        doc={d}
+                        busy={!!busy[d.name]}
+                        onFile={(file) => handleUpload(d.name, file)}
+                      />
                     ))}
                   </div>
                 </>
@@ -566,25 +659,6 @@ export const DocumentUploadHub = ({ open, onClose, docs: initialDocs, focusDoc }
                     onActivate={() => setHandoffActive(true)}
                   />
 
-                  {/* Live activity rail */}
-                  <AnimatePresence>
-                    {handoffActive && pulse && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        className="rounded-xl bg-[#06194A] text-white px-3.5 py-2.5 flex items-center gap-2 text-[12px]"
-                      >
-                        <Smartphone className="w-3.5 h-3.5 text-[#86efac]" />
-                        <span className="font-semibold">Uploading from iPhone:</span>
-                        <span className="text-white/85 truncate">{pulse}</span>
-                        <span className="ml-auto inline-flex items-center gap-1 text-[10.5px] text-[#86efac]">
-                          <Loader2 className="w-3 h-3 animate-spin" /> AI reviewing
-                        </span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
                   {/* Checklist */}
                   <div>
                     <div className="flex items-center justify-between mb-2.5">
@@ -592,25 +666,26 @@ export const DocumentUploadHub = ({ open, onClose, docs: initialDocs, focusDoc }
                       <span className="text-[11px] text-[#53627A]">{remaining.length} remaining</span>
                     </div>
                     <div className="space-y-2.5">
-                      {synced.map((d) => (
+                      {docs.map((d) => (
                         <DesktopDocRow
                           key={d.name}
                           doc={d}
-                          pulse={pulse === d.name}
                           highlight={focusDoc === d.name}
-                          onUpload={() => handleDesktopUpload(d.name)}
+                          busy={!!busy[d.name]}
+                          onFile={(file) => handleUpload(d.name, file)}
                           onPreview={() => {}}
                         />
                       ))}
                     </div>
                   </div>
 
-                  {/* Direct upload (desktop fallback) */}
+                  {/* Direct upload hint — each row's Upload button opens a
+                      file picker from this computer. */}
                   <div className="rounded-2xl border-2 border-dashed border-[#C7D2FE] bg-white p-5 text-center">
                     <Upload className="w-7 h-7 mx-auto text-[#4F46E5]" />
-                    <div className="text-[13px] font-bold text-[#06194A] mt-2">Or drop files here from this computer</div>
+                    <div className="text-[13px] font-bold text-[#06194A] mt-2">Upload from this computer</div>
                     <div className="text-[11px] text-[#53627A] mt-1">
-                      AI auto-detects document type and routes to the right slot.
+                      Use the Upload button on each document above, or scan the code to continue on your phone.
                     </div>
                   </div>
                 </>

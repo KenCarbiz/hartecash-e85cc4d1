@@ -73,6 +73,19 @@ const PortalStatusCtx = createContext<ProviderStatus>({
   loading: true, error: null, tokenStatus: null,
 });
 
+/** Raw submission identity the real upload pipeline needs (storage paths,
+ *  mark_docs_uploaded, notifications). Null on the token-less demo route. */
+export interface PortalIdentity {
+  token: string | null;
+  submissionId: string | null;
+  dealershipId: string | null;
+  loanStatus: string | null;
+}
+const PortalIdentityCtx = createContext<PortalIdentity>({
+  token: null, submissionId: null, dealershipId: null, loanStatus: null,
+});
+
+
 /** Split a full name into firstName / lastName / initials. */
 const splitName = (full: string | null) => {
   const trimmed = (full || "").trim();
@@ -452,11 +465,23 @@ export const PortalDataProvider = ({ token, children }: Props) => {
     [row, config.dealership_name, config.price_guarantee_days, config.pickup_offered, docFiles],
   );
 
+  const identity = useMemo<PortalIdentity>(
+    () => ({
+      token: token ?? null,
+      submissionId: row?.id ?? null,
+      dealershipId: row?.dealership_id ?? null,
+      loanStatus: row?.loan_status ?? null,
+    }),
+    [token, row?.id, row?.dealership_id, row?.loan_status],
+  );
+
   return (
     <PortalStatusCtx.Provider value={status}>
-      <PortalDataCtx.Provider value={shape}>
-        {children}
-      </PortalDataCtx.Provider>
+      <PortalIdentityCtx.Provider value={identity}>
+        <PortalDataCtx.Provider value={shape}>
+          {children}
+        </PortalDataCtx.Provider>
+      </PortalIdentityCtx.Provider>
     </PortalStatusCtx.Provider>
   );
 };
@@ -471,3 +496,6 @@ export const usePortalData = (): PortalShape => {
 
 export const usePortalDataStatus = (): ProviderStatus =>
   useContext(PortalStatusCtx);
+
+export const usePortalIdentity = (): PortalIdentity =>
+  useContext(PortalIdentityCtx);
