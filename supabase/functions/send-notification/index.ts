@@ -5,6 +5,7 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 import { mascotUrlForTrigger } from '../_shared/dealer-mascot.ts'
 import { isInternalCaller } from '../_shared/internal-auth.ts'
+import { resolveCaller } from '../_shared/auth.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
