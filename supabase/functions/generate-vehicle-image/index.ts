@@ -79,13 +79,6 @@ serve(async (req) => {
   try {
     const { year, make, model, style, color, uvc, angle, studio_only, submission_token } = await req.json();
 
-    const blocked = await paidApiGuard(req, corsHeaders, {
-      submissionToken: submission_token,
-      anonMaxPerHour: 20,
-      scope: "generate-vehicle-image",
-    });
-    if (blocked) return blocked;
-
     if (!year || !make || !model) {
       return new Response(JSON.stringify({ error: "year, make, and model are required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -159,6 +152,15 @@ serve(async (req) => {
         });
       }
     }
+
+    // Cache miss — about to hit paid upstream APIs (BB / Wikipedia / AI).
+    // Rate-limit anonymous callers here so cached lookups stay unmetered.
+    const blocked = await paidApiGuard(req, corsHeaders, {
+      submissionToken: submission_token,
+      anonMaxPerHour: 60,
+      scope: "generate-vehicle-image",
+    });
+    if (blocked) return blocked;
 
     // 2. Try Black Book photo API first (if UVC provided and year >= 2001)
     let imageBytes: Uint8Array | null = null;
