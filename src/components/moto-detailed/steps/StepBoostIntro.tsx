@@ -157,18 +157,18 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           </p>
 
           {/* Value payout */}
-          <div className="mx-auto mt-4 max-w-[420px] overflow-hidden rounded-[18px] border border-[hsl(262_83%_74%/0.34)] bg-[linear-gradient(180deg,hsl(262_83%_99%/0.92),hsl(262_83%_96%/0.72))] px-5 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.82),0_14px_34px_-24px_hsl(262_83%_50%/0.55)]">
-            <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-[12.5px] font-semibold text-slate-700 ring-1 ring-[hsl(262_83%_74%/0.26)]">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(262_83%_62%/0.12)] text-[hsl(262_83%_52%)]">
-                <TrendingUp className="h-3 w-3" strokeWidth={2.8} />
-              </span>
-              Photo-reviewed offer boost
-            </div>
-            <div className="mt-3 flex flex-col items-center justify-center">
-              <p className="whitespace-nowrap text-center text-[34px] font-bold leading-none text-[hsl(262_83%_50%)] sm:text-[40px]">
+          <div className="mx-auto mt-4 w-full max-w-[420px] overflow-hidden rounded-[18px] border border-[hsl(262_83%_74%/0.34)] bg-[linear-gradient(180deg,hsl(262_83%_99%/0.92),hsl(262_83%_96%/0.72))] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82),0_14px_34px_-24px_hsl(262_83%_50%/0.55)]">
+            <div className="flex flex-col items-center justify-center gap-3 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-[12.5px] font-semibold text-slate-700 ring-1 ring-[hsl(262_83%_74%/0.26)]">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(262_83%_62%/0.12)] text-[hsl(262_83%_52%)]">
+                  <TrendingUp className="h-3 w-3" strokeWidth={2.8} />
+                </span>
+                Photo-reviewed offer boost
+              </div>
+              <p className="whitespace-nowrap text-[30px] font-bold leading-none text-[hsl(262_83%_50%)] sm:text-[38px]">
                 {hasOffer ? `${fmt(minIncrease)}–${fmt(maxIncrease)}` : "2%–12%"}
               </p>
-              <p className="mt-2 text-center text-[12.5px] font-medium leading-tight text-slate-500">
+              <p className="max-w-[300px] text-[12.5px] font-medium leading-tight text-slate-500">
                 Potential increase based on a 2%–12% photo review range
               </p>
             </div>
