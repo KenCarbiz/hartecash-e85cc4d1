@@ -25,6 +25,7 @@ const TEMPLATE_EXEMPTIONS = new Set<string>([
   "CarouselTemplate.tsx", // photo-rotator hero, headline is image-based
   "CircularTemplate.tsx", // brand mark hero, no copy
   "MotoTemplate.tsx", // instant-offer form IS the page — intentionally hero-less
+  "MotoDetailedTemplate.tsx", // same as MotoTemplate — the guided flow IS the page, hero copy lives in the flow's search step
 ]);
 
 const read = (p: string) => readFileSync(p, "utf8");

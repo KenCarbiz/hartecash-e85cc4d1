@@ -101,6 +101,7 @@ const SKIP = new Set([
   "CarouselTemplate.tsx",
   "CircularTemplate.tsx",
   "MotoTemplate.tsx", // instant-offer form IS the page — intentionally hero-less
+  "MotoDetailedTemplate.tsx", // same as MotoTemplate — the guided flow IS the page, hero copy lives in the flow's search step
 ]);
 
 const templateFiles = readdirSync(TEMPLATES_DIR)

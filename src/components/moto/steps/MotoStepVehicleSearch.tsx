@@ -10,9 +10,7 @@ import type { BBVehicle } from "@/components/sell-form/types";
 import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "../ymmData";
 import { cn } from "@/lib/utils";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
-import { useHeroTuner } from "../HeroTuner";
-import { useTunerConfig } from "../useTunerConfig";
-import { useIsPlatformAdmin } from "@/hooks/useIsPlatformAdmin";
+import { useHeroTuner, useVehicleTuner } from "../HeroTuner";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
@@ -324,7 +322,7 @@ const MotoStepVehicleSearch = ({
               </div>
             </div>
 
-            <HeroVehicleTuner src={tenantHeroVehicle} />
+            <HeroVehicleImage src={tenantHeroVehicle} />
           </div>
         </div>
       </div>
@@ -332,175 +330,35 @@ const MotoStepVehicleSearch = ({
   );
 };
 
-// ----- Dev tuner for hero vehicle (width + gap from card, per breakpoint) -----
-type BP = "base" | "sm" | "md" | "lg" | "xl" | "2xl";
-const BP_MIN: Record<BP, number> = { base: 0, sm: 640, md: 768, lg: 1024, xl: 1280, "2xl": 1536 };
-const BP_ORDER: BP[] = ["base", "sm", "md", "lg", "xl", "2xl"];
-const TUNER_DEFAULTS: Record<BP, { w: number; gap: number }> = {
-  base: { w: 420, gap: 0 },
-  sm: { w: 520, gap: 0 },
-  md: { w: 620, gap: 0 },
-  lg: { w: 680, gap: 0 },
-  xl: { w: 780, gap: 0 },
-  "2xl": { w: 880, gap: 0 },
-};
-const TUNER_STORAGE_KEY = "heroVehicleTuner.v1";
-
-const useCurrentBreakpoint = (): BP => {
-  const [bp, setBp] = useState<BP>("base");
-  useEffect(() => {
-    const compute = () => {
-      const w = window.innerWidth;
-      let current: BP = "base";
-      for (const b of BP_ORDER) if (w >= BP_MIN[b]) current = b;
-      setBp(current);
-    };
-    compute();
-    window.addEventListener("resize", compute);
-    return () => window.removeEventListener("resize", compute);
-  }, []);
-  return bp;
-};
-
-const HeroVehicleTuner = ({ src }: { src: string }) => {
-  const bp = useCurrentBreakpoint();
-  const { isPlatformAdmin } = useIsPlatformAdmin();
-  const { tenant } = useTenant();
-  const { config, update, status, realtime, lastUpdatedAt } = useTunerConfig(tenant.dealership_id);
-  const remote = (config.vehicle ?? {}) as Partial<Record<BP, { w: number; gap: number }>>;
-  const settings: Record<BP, { w: number; gap: number }> = {
-    ...TUNER_DEFAULTS,
-    ...remote,
-  };
-  const setSettings = (
-    updater:
-      | Record<BP, { w: number; gap: number }>
-      | ((s: Record<BP, { w: number; gap: number }>) => Record<BP, { w: number; gap: number }>),
-  ) => {
-    const next = typeof updater === "function" ? updater(settings) : updater;
-    update("vehicle", next as unknown as Record<string, unknown>);
-  };
-  const [open, setOpen] = useState(false);
-
-
-  const { w, gap } = settings[bp];
-  const updateBp = (key: "w" | "gap", value: number) =>
-    setSettings((s) => {
-      if (key === "w") {
-        const currentWidth = s[bp]?.w || value;
-        const ratio = currentWidth > 0 ? value / currentWidth : 1;
-        return BP_ORDER.reduce((next, breakpoint) => {
-          const existing = s[breakpoint] ?? TUNER_DEFAULTS[breakpoint];
-          const scaledWidth = breakpoint === bp ? value : Math.round((existing.w * ratio) / 10) * 10;
-          next[breakpoint] = {
-            ...existing,
-            w: Math.min(1800, Math.max(120, scaledWidth)),
-          };
-          return next;
-        }, {} as Record<BP, { w: number; gap: number }>);
-      }
-
-      return BP_ORDER.reduce((next, breakpoint) => {
-        const existing = s[breakpoint] ?? TUNER_DEFAULTS[breakpoint];
-        next[breakpoint] = { ...existing, gap: value };
-        return next;
-      }, {} as Record<BP, { w: number; gap: number }>);
-    });
-
-
+// Landing hero vehicle. Sizing + positioning are driven by the shared
+// Hero Tuner "Vehicle image" config (heroVehicle), so the dealer tunes
+// the same car here and on the post-search steps from one panel. The
+// camera-angle control only affects the generated images on later steps
+// — this hero is a fixed studio asset, so angle is a no-op here.
+const HeroVehicleImage = ({ src }: { src: string }) => {
+  const tuner = useVehicleTuner();
+  const transform = [
+    tuner.offsetX ? `translateX(${tuner.offsetX}px)` : "",
+    tuner.flip ? "scaleX(-1)" : "",
+  ].filter(Boolean).join(" ") || undefined;
   return (
-    <>
-      <div
-        className="flex flex-none items-center justify-center overflow-visible xl:justify-start"
-        style={{ marginLeft: gap, width: w, maxWidth: "none" }}
-      >
-        <img
-          src={src}
-          alt="Featured vehicle"
-          className="h-auto max-w-none object-contain"
-          style={{ width: w, minWidth: w }}
-          loading="eager"
-        />
-      </div>
-
-      {isPlatformAdmin ? (
-        <div className="fixed bottom-4 right-4 z-50">
-          {open ? (
-            <div className="w-72 rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl">
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-700">
-                    Vehicle Tuner · <span className="text-[hsl(var(--cta-offer))]">{bp}</span>
-                  </div>
-                  <div className="mt-1 flex items-center gap-1.5 text-[10px] text-zinc-500">
-                    <span
-                      className={cn(
-                        "inline-block h-1.5 w-1.5 rounded-full",
-                        realtime === "live" && "animate-pulse bg-emerald-500",
-                        realtime === "connecting" && "bg-amber-400",
-                        realtime === "error" && "bg-red-500",
-                        realtime === "closed" && "bg-zinc-400",
-                      )}
-                    />
-                    <span>{realtime}</span>
-                    <span className="text-zinc-300">·</span>
-                    <span>{status}</span>
-                    <span className="text-zinc-300">·</span>
-                    <span>
-                      {lastUpdatedAt
-                        ? new Date(lastUpdatedAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          })
-                        : "—"}
-                    </span>
-                  </div>
-                </div>
-                <button type="button" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-zinc-700">×</button>
-              </div>
-              <label className="block text-xs font-medium text-zinc-600">
-                Image width: <span className="font-mono">{w}px</span>
-              </label>
-              <input
-                type="range" min={120} max={1800} step={10}
-                value={w}
-                onChange={(e) => updateBp("w", Number(e.target.value))}
-                className="mb-3 w-full"
-              />
-              <label className="block text-xs font-medium text-zinc-600">
-                Gap from card: <span className="font-mono">{gap}px</span>
-                <span className="ml-1 text-zinc-400">(negative = closer)</span>
-              </label>
-              <input
-                type="range" min={-400} max={400} step={4}
-                value={gap}
-                onChange={(e) => updateBp("gap", Number(e.target.value))}
-                className="mb-3 w-full"
-              />
-              <button
-                type="button"
-                onClick={() => setSettings((s) => ({ ...s, [bp]: TUNER_DEFAULTS[bp] }))}
-                className="w-full rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-              >
-                Reset {bp}
-              </button>
-              <div className="mt-2 text-[10px] leading-snug text-zinc-400">
-                Saves to the live site and keeps desktop sizes in sync.
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="rounded-full bg-zinc-900 px-3 py-2 text-xs font-semibold text-white shadow-lg hover:bg-zinc-800"
-            >
-              🚗 Tune ({bp})
-            </button>
-          )}
-        </div>
-      ) : null}
-    </>
+    <div
+      className="flex flex-none items-center justify-center overflow-visible xl:justify-start"
+      style={{
+        width: tuner.width,
+        maxWidth: "100%",
+        marginTop: tuner.offsetY,
+        marginBottom: tuner.offsetBottom,
+        transform,
+      }}
+    >
+      <img
+        src={src}
+        alt="Featured vehicle"
+        className="h-auto w-full max-w-none object-contain"
+        loading="eager"
+      />
+    </div>
   );
 };
 

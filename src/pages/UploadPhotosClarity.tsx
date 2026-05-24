@@ -229,7 +229,7 @@ const UploadPhotosClarity = () => {
     reader.readAsDataURL(file);
     parsePhotoExif(file, expectedCoords).then((exif) => {
       setShotExif((prev) => ({ ...prev, [shotId]: exif }));
-    }).catch(() => {});
+    }).catch((err) => console.warn("[UploadPhotosClarity] EXIF parse failed:", err));
     setActiveShot(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -265,7 +265,7 @@ const UploadPhotosClarity = () => {
       reader.readAsDataURL(f);
       parsePhotoExif(f, expectedCoords).then((exif) => {
         setExtraExif((prev) => ({ ...prev, [baseIdx + i]: exif }));
-      }).catch(() => {});
+      }).catch((err) => console.warn("[UploadPhotosClarity] EXIF parse failed:", err));
     });
   };
 

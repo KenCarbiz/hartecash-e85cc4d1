@@ -73,6 +73,17 @@ const CustomerLookup = () => {
     : null;
   const logoUrl = (config as { logo_url?: string }).logo_url || null;
 
+  // Header links resolve to the tenant's real contact channels. Support
+  // dials the dealer; Contact opens email (falling back to phone); FAQ
+  // uses a full-page anchor so it actually scrolls to the landing's #faq
+  // section (a React-Router <Link> to a hash does not scroll).
+  const phoneDigits = (config.phone || "").replace(/\D/g, "");
+  const contactHref = config.email
+    ? `mailto:${config.email}`
+    : phoneDigits
+      ? `tel:${phoneDigits}`
+      : null;
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !phone.trim()) return;
@@ -131,17 +142,23 @@ const CustomerLookup = () => {
             )}
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2 text-sm">
-            {config.phone && (
-              <a href={`tel:${config.phone}`} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
+            {phoneDigits && (
+              <a href={`tel:${phoneDigits}`} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
                 <LifeBuoy className="w-4 h-4" /> Support
               </a>
             )}
-            <Link to="/#faq" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
+            <a href="/#faq" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
               <HelpCircle className="w-4 h-4" /> FAQ
-            </Link>
-            <Link to="/about" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
-              <Mail className="w-4 h-4" /> Contact
-            </Link>
+            </a>
+            {contactHref ? (
+              <a href={contactHref} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
+                <Mail className="w-4 h-4" /> Contact
+              </a>
+            ) : (
+              <Link to="/about" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
+                <Mail className="w-4 h-4" /> Contact
+              </Link>
+            )}
             <span className="hidden md:inline-flex items-center gap-1.5 ml-2 px-3 py-1.5 rounded-full bg-[#EEF0FF] text-[#4F46E5] text-xs font-semibold">
               <ShieldCheck className="w-3.5 h-3.5" /> Secure Login
             </span>
