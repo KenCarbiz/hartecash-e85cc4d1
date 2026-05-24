@@ -153,6 +153,15 @@ serve(async (req) => {
       }
     }
 
+    // Cache miss — about to hit paid upstream APIs (BB / Wikipedia / AI).
+    // Rate-limit anonymous callers here so cached lookups stay unmetered.
+    const blocked = await paidApiGuard(req, corsHeaders, {
+      submissionToken: submission_token,
+      anonMaxPerHour: 60,
+      scope: "generate-vehicle-image",
+    });
+    if (blocked) return blocked;
+
     // 2. Try Black Book photo API first (if UVC provided and year >= 2001)
     let imageBytes: Uint8Array | null = null;
     let imageSource = "ai";
