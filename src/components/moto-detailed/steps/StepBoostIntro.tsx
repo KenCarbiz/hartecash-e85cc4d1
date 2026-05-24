@@ -157,21 +157,19 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           </p>
 
           {/* Value payout */}
-          <div className="mx-auto mt-4 flex max-w-[420px] items-center gap-3 rounded-[16px] border border-[hsl(262_83%_78%/0.28)] bg-[hsl(262_83%_98%/0.58)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_28px_-22px_hsl(262_83%_50%/0.45)] sm:gap-5 sm:px-5">
-            <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-white text-[hsl(262_83%_52%)] shadow-[0_10px_24px_-15px_hsl(262_83%_42%/0.65)] ring-1 ring-[hsl(262_83%_72%/0.35)] sm:h-[58px] sm:w-[58px]">
-              <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={2.7} />
+          <div className="mx-auto mt-4 max-w-[420px] rounded-[16px] border border-[hsl(262_83%_78%/0.28)] bg-[hsl(262_83%_98%/0.58)] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_28px_-22px_hsl(262_83%_50%/0.45)]">
+            <div className="flex items-center justify-center gap-2 text-[13px] font-medium text-slate-700">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-[hsl(262_83%_52%)] ring-1 ring-[hsl(262_83%_72%/0.35)]">
+                <TrendingUp className="h-3.5 w-3.5" strokeWidth={2.8} />
+              </span>
+              Photo-reviewed offers may increase by
             </div>
-            <div className="min-w-0 text-left">
-              <p className="text-[13.5px] font-medium leading-tight text-slate-700">
-                Photo-reviewed offers may increase by
-              </p>
-              <p className="mt-1 whitespace-nowrap text-[27px] font-bold leading-none text-[hsl(262_83%_50%)] sm:text-[34px]">
-                {hasOffer ? `${fmt(minIncrease)}–${fmt(maxIncrease)}` : "2%–12%"}
-              </p>
-              <p className="mt-1.5 text-[13px] leading-tight text-slate-500">
-                Based on 2%–12% increase range
-              </p>
-            </div>
+            <p className="mt-2 whitespace-nowrap text-center text-[30px] font-bold leading-none text-[hsl(262_83%_50%)] sm:text-[36px]">
+              {hasOffer ? `${fmt(minIncrease)}–${fmt(maxIncrease)}` : "2%–12%"}
+            </p>
+            <p className="mt-2 text-center text-[12.5px] leading-tight text-slate-500">
+              Based on 2%–12% increase range
+            </p>
           </div>
 
           {/* Time pill */}
