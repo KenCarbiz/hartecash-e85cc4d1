@@ -157,19 +157,21 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           </p>
 
           {/* Value payout */}
-          <div className="mx-auto mt-4 max-w-[420px] rounded-[16px] border border-[hsl(262_83%_78%/0.28)] bg-[hsl(262_83%_98%/0.58)] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_28px_-22px_hsl(262_83%_50%/0.45)]">
-            <div className="flex items-center justify-center gap-2 text-[13px] font-medium text-slate-700">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-[hsl(262_83%_52%)] ring-1 ring-[hsl(262_83%_72%/0.35)]">
-                <TrendingUp className="h-3.5 w-3.5" strokeWidth={2.8} />
+          <div className="mx-auto mt-4 max-w-[420px] overflow-hidden rounded-[18px] border border-[hsl(262_83%_74%/0.34)] bg-[linear-gradient(180deg,hsl(262_83%_99%/0.92),hsl(262_83%_96%/0.72))] px-5 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.82),0_14px_34px_-24px_hsl(262_83%_50%/0.55)]">
+            <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-[12.5px] font-semibold text-slate-700 ring-1 ring-[hsl(262_83%_74%/0.26)]">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(262_83%_62%/0.12)] text-[hsl(262_83%_52%)]">
+                <TrendingUp className="h-3 w-3" strokeWidth={2.8} />
               </span>
-              Photo-reviewed offers may increase by
+              Photo-reviewed offer boost
             </div>
-            <p className="mt-2 whitespace-nowrap text-center text-[30px] font-bold leading-none text-[hsl(262_83%_50%)] sm:text-[36px]">
-              {hasOffer ? `${fmt(minIncrease)}–${fmt(maxIncrease)}` : "2%–12%"}
-            </p>
-            <p className="mt-2 text-center text-[12.5px] leading-tight text-slate-500">
-              Based on 2%–12% increase range
-            </p>
+            <div className="mt-3 flex flex-col items-center justify-center">
+              <p className="whitespace-nowrap text-center text-[34px] font-bold leading-none text-[hsl(262_83%_50%)] sm:text-[40px]">
+                {hasOffer ? `${fmt(minIncrease)}–${fmt(maxIncrease)}` : "2%–12%"}
+              </p>
+              <p className="mt-2 text-center text-[12.5px] font-medium leading-tight text-slate-500">
+                Potential increase based on a 2%–12% photo review range
+              </p>
+            </div>
           </div>
 
           {/* Time pill */}
