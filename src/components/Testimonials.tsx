@@ -3,6 +3,7 @@ import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface Testimonial {
   id: string;
@@ -22,6 +23,7 @@ const FALLBACK: Testimonial[] = [
 
 const Testimonials = () => {
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   // null = still loading, [] = loaded but empty (hide section), [...] = real
   const [testimonials, setTestimonials] = useState<Testimonial[] | null>(null);
   const [current, setCurrent] = useState(0);
@@ -32,6 +34,7 @@ const Testimonials = () => {
       .from("testimonials")
       .select("id, author_name, location, vehicle, review_text, rating")
       .eq("is_active", true)
+      .eq("dealership_id", tenant.dealership_id)
       .order("sort_order", { ascending: true })
       .then(({ data }) => {
         // For new dealers with no real reviews, only show the FALLBACK on the
@@ -45,7 +48,7 @@ const Testimonials = () => {
           setTestimonials([]);
         }
       });
-  }, [config.dealership_name]);
+  }, [config.dealership_name, tenant.dealership_id]);
 
   useEffect(() => {
     if (!testimonials || testimonials.length <= 1) return;

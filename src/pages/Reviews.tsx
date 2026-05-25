@@ -27,6 +27,7 @@ import { Star, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import SEO from "@/components/SEO";
 import BrandStructuredData from "@/components/BrandStructuredData";
 
@@ -42,6 +43,7 @@ interface Testimonial {
 
 const Reviews = () => {
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const [testimonials, setTestimonials] = useState<Testimonial[] | null>(null);
 
   useEffect(() => {
@@ -49,11 +51,12 @@ const Reviews = () => {
       .from("testimonials")
       .select("id, author_name, location, vehicle, review_text, rating, created_at")
       .eq("is_active", true)
+      .eq("dealership_id", tenant.dealership_id)
       .order("sort_order", { ascending: true })
       .then(({ data }) => {
         setTestimonials((data as Testimonial[] | null) ?? []);
       });
-  }, []);
+  }, [tenant.dealership_id]);
 
   const dealerName = (config.dealership_name || "").trim();
   const displayName =
@@ -136,6 +139,15 @@ const Reviews = () => {
             </div>
             <span className="font-semibold text-foreground">{ratingVal}</span>
             <span>· {reviewsCount} reviews</span>
+          </div>
+          <div className="mt-6">
+            <Link
+              to="/leave-a-review"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+            >
+              Sold your car with us? Leave a review
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </section>
