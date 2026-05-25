@@ -44,6 +44,12 @@ const SOURCE_LABEL: Record<ReviewSource, string> = {
   admin: "Manual",
 };
 
+// True when a write failed because a column is missing from PostgREST's schema
+// cache (PGRST204) — i.e. the moderation migration hasn't been applied yet.
+// Lets the queue degrade to is_active-only behavior instead of erroring.
+const isMissingColumnError = (err: { code?: string; message?: string } | null): boolean =>
+  !!err && (err.code === "PGRST204" || /schema cache|column/i.test(err.message ?? ""));
+
 const TestimonialManagement = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +75,13 @@ const TestimonialManagement = () => {
       .eq("dealership_id", dealershipId)
       .order("created_at", { ascending: false });
     if (!error && data) {
-      const rows = data as Testimonial[];
+      // Derive moderation state when the migration hasn't been applied yet:
+      // an inactive review with no status is a pending customer submission.
+      const rows = (data as Record<string, unknown>[]).map((r) => ({
+        ...r,
+        status: (r.status as ReviewStatus | undefined) ?? (r.is_active ? "approved" : "pending"),
+        source: (r.source as ReviewSource | undefined) ?? "admin",
+      })) as unknown as Testimonial[];
       setTestimonials(rows);
       // On first load only, drop the admin onto the moderation queue when
       // reviews are waiting — don't yank them back after each action.
@@ -108,11 +120,11 @@ const TestimonialManagement = () => {
         .update({ ...form, updated_at: new Date().toISOString() })
         .eq("id", editing.id));
     } else {
-      // Admin-authored testimonials are approved on creation.
+      // Admin-authored testimonials are approved on creation. status/source
+      // are omitted so the DB column defaults ('approved'/'admin') apply —
+      // and so the insert still works if the migration isn't applied yet.
       ({ error } = await supabase.from("testimonials").insert({
         ...form,
-        status: "approved",
-        source: "admin",
         dealership_id: dealershipId,
         updated_at: new Date().toISOString(),
       }));
@@ -132,16 +144,25 @@ const TestimonialManagement = () => {
   const moderate = async (t: Testimonial, status: ReviewStatus) => {
     setActingId(t.id);
     const { data: userData } = await supabase.auth.getUser();
-    const { error } = await supabase
+    const now = new Date().toISOString();
+    // Try the full moderation write; if the migration isn't applied yet,
+    // fall back to flipping is_active so Approve still publishes / Deny hides.
+    let { error } = await supabase
       .from("testimonials")
       .update({
         status,
         is_active: status === "approved",
-        moderated_at: new Date().toISOString(),
+        moderated_at: now,
         moderated_by: userData.user?.id ?? null,
-        updated_at: new Date().toISOString(),
+        updated_at: now,
       })
       .eq("id", t.id);
+    if (error && isMissingColumnError(error)) {
+      ({ error } = await supabase
+        .from("testimonials")
+        .update({ is_active: status === "approved", updated_at: now })
+        .eq("id", t.id));
+    }
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {

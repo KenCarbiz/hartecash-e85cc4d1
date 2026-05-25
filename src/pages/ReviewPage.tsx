@@ -19,6 +19,12 @@ import { useTenant } from "@/contexts/TenantContext";
 const RATE_LIMIT_MS = 30_000;
 const RATE_LIMIT_KEY = "review_last_submit";
 
+// PostgREST raises PGRST204 ("could not find the 'X' column ... in the schema
+// cache") when a column referenced in a write doesn't exist yet — e.g. before
+// the moderation migration is applied. Used to fall back to a bare insert.
+const isMissingColumnError = (err: { code?: string; message?: string } | null): boolean =>
+  !!err && (err.code === "PGRST204" || /schema cache|column/i.test(err.message ?? ""));
+
 const ReviewPage = () => {
   const { token } = useParams<{ token: string }>();
   const { config } = useSiteConfig();
@@ -74,18 +80,29 @@ const ReviewPage = () => {
 
     setSubmitting(true);
 
-    const { error: insertError } = await supabase.from("testimonials").insert({
+    const base = {
       author_name: displayName.trim() || "Anonymous",
       location: location.trim(),
       vehicle: vehicle.trim(),
       review_text: reviewText.trim(),
       rating,
       is_active: false, // hidden until a tenant admin approves
-      status: "pending",
-      source: isTokenFlow ? "token" : "public",
       dealership_id: tenant.dealership_id,
       sort_order: 99,
+    };
+
+    // Try with the moderation columns. If the DB hasn't had the moderation
+    // migration applied yet (status/source missing), PostgREST returns a
+    // schema-cache error — fall back to a bare insert so the customer's
+    // review is never lost. is_active=false still keeps it off the site.
+    let { error: insertError } = await supabase.from("testimonials").insert({
+      ...base,
+      status: "pending",
+      source: isTokenFlow ? "token" : "public",
     });
+    if (insertError && isMissingColumnError(insertError)) {
+      ({ error: insertError } = await supabase.from("testimonials").insert(base));
+    }
 
     if (insertError) {
       setError("Something went wrong. Please try again.");
