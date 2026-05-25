@@ -95,15 +95,15 @@ const SuperAdminDashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/admin/login"); return; }
 
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role, dealership_id")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .eq("dealership_id", "default")
-        .maybeSingle();
+      // Authorize on the server-verified platform-admin flag, NOT the
+      // spoofable role='admin' AND dealership_id='default' convention
+      // (a dealer admin whose row defaulted to 'default' would pass that).
+      const { data: isPlatform, error: padminErr } = await supabase.rpc(
+        "is_platform_admin",
+        { _user_id: user.id },
+      );
 
-      if (!roleData) {
+      if (padminErr || isPlatform !== true) {
         toast.error("You don't have super-admin access.");
         navigate("/admin");
         return;

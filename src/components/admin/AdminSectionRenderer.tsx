@@ -138,6 +138,10 @@ interface AdminSectionRendererProps {
   canApprove: boolean;
   canDelete: boolean;
   canManageAccess: boolean;
+  /** Server-verified cross-tenant super-admin flag (is_platform_admin RPC).
+   *  Gates platform-only sections — must NOT be derived from the spoofable
+   *  dealership_id === "default" convention. */
+  isPlatformAdmin: boolean;
   auditLabel: string;
   userName: string;
   userRole: string;
@@ -203,7 +207,7 @@ const submissionsTableProps = (
 const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
   const {
     activeSection: rawActiveSection, setActiveSection, submissions, appointments, setAppointments,
-    canManageAccess, userRole, userId, pendingRequests, approveRole, setApproveRole,
+    canManageAccess, isPlatformAdmin, userRole, userId, pendingRequests, approveRole, setApproveRole,
     onboardingDealershipId, setOnboardingDealershipId, onboardingDealerName, setOnboardingDealerName,
     tenant, handleView, handleApprove, handleReject, fetchSubmissions, fetchAppointments, toast,
     dealerLocations,
@@ -740,7 +744,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
         </div>
       )}
       {activeSection === "changelog" && canManageAccess && <ChangelogManagement />}
-      {activeSection === "pricing-model" && canManageAccess && tenant.dealership_id === "default" && (
+      {activeSection === "pricing-model" && isPlatformAdmin && tenant.dealership_id === "default" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <PlatformPricingManager />
         </React.Suspense>
@@ -750,7 +754,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           their own rooftop shouldn't see other dealers' tenant records.
           Rooftop management (locations within THIS dealership) lives
           in the Locations section, which stays admin-accessible. */}
-      {activeSection === "tenants" && canManageAccess && tenant.dealership_id === "default" && (
+      {activeSection === "tenants" && isPlatformAdmin && tenant.dealership_id === "default" && (
         <TenantManagement
           onSetupDealer={(dealerId) => {
             setOnboardingDealershipId(dealerId);
@@ -785,27 +789,29 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "my-lead-link" && <MyLeadLink />}
       {activeSection === "my-availability" && <MyAvailability />}
       {activeSection === "embed-toolkit" && canManageAccess && <EmbedToolkit />}
-      {activeSection === "prospect-demo" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "prospect-demo" && isPlatformAdmin && props.tenant.dealership_id === "default" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <ProspectDemo />
         </React.Suspense>
       )}
-      {activeSection === "groups" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "groups" && isPlatformAdmin && props.tenant.dealership_id === "default" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <GroupManagement />
         </React.Suspense>
       )}
-      {activeSection === "stripe-webhooks" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "stripe-webhooks" && isPlatformAdmin && props.tenant.dealership_id === "default" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <StripeWebhookReprocessor />
         </React.Suspense>
       )}
-      {activeSection === "audit-log" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "audit-log" && isPlatformAdmin && props.tenant.dealership_id === "default" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <UnifiedAuditLog />
         </React.Suspense>
       )}
-      {activeSection === "data-egress" && (
+      {/* Bulk PII export — admin-tier only in the UI; the edge function
+          enforces an admin/GM role check as the real backstop. */}
+      {activeSection === "data-egress" && canManageAccess && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <DataEgressPanel />
         </React.Suspense>

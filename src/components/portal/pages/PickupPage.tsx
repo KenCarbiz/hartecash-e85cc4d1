@@ -7,6 +7,8 @@ import {
   AlertCircle, Briefcase, Navigation, MessageSquare,
 } from "lucide-react";
 import { usePortalData } from "../PortalDataContext";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { PortalPageShell, Card, SectionLabel, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
@@ -60,15 +62,6 @@ const CHECKLIST = [
   "Cancel insurance after pickup",
 ];
 
-// Fallback for the unauthenticated /portal-preview demo route + any
-// half-provisioned tenant. The real list comes from the live
-// dealership_locations table -- see useDealerships() below.
-const DEMO_DEALERSHIPS: Dealership[] = [
-  { id: "liberty",  name: "Liberty Automotive",      distance: "2.4 mi", rating: 4.9, address: "412 Park Ave, Hartford, CT",       hours: "Mon–Sat · 8 AM–7 PM", earliest: "Today · 2:00 PM" },
-  { id: "westside", name: "Westside Motors",         distance: "5.1 mi", rating: 4.8, address: "88 Westgate Blvd, Hartford",        hours: "Mon–Fri · 9 AM–6 PM", earliest: "Tomorrow · 9:30 AM" },
-  { id: "premier",  name: "Premier Acquisition Ctr", distance: "7.8 mi", rating: 4.9, address: "1200 Industrial Pkwy, East Hartford", hours: "Mon–Sun · 7 AM–8 PM", earliest: "Today · 4:00 PM" },
-];
-
 type Dealership = {
   id: string;
   name: string;
@@ -90,19 +83,39 @@ interface LocationRow {
 }
 
 const useDealerships = (): Dealership[] => {
+  const { tenant } = useTenant();
+  const { config } = useSiteConfig();
   const [rows, setRows] = useState<LocationRow[] | null>(null);
   useEffect(() => {
     (async () => {
+      // Scope to the customer's dealer (tenant) — never surface another
+      // dealership's locations in the portal.
       const { data } = await supabase
         .from("dealership_locations" as never)
         .select("id, name, address, city, state, hours, rating")
+        .eq("dealership_id", tenant.dealership_id)
         .eq("is_active", true)
         .order("sort_order");
       setRows((data as unknown as LocationRow[]) || []);
     })();
-  }, []);
+  }, [tenant.dealership_id]);
   if (!rows) return [];
-  if (rows.length === 0) return DEMO_DEALERSHIPS;
+  if (rows.length === 0) {
+    // No locations configured yet — show the customer's own dealer from
+    // site_config rather than any placeholder/demo dealership.
+    const hours = config.business_hours?.[0]
+      ? `${config.business_hours[0].days} · ${config.business_hours[0].hours}`
+      : "Call for hours";
+    return [{
+      id: "primary",
+      name: config.dealership_name || "Your dealership",
+      distance: "—",
+      rating: 0,
+      address: config.address || "Address shared during scheduling",
+      hours,
+      earliest: "Schedule a time",
+    }];
+  }
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
@@ -386,9 +399,11 @@ export const PickupPage = () => {
                   }`}>
                   <div className="h-24 bg-gradient-to-br from-[#EEF0FF] via-[#F5F3FF] to-[#FAFBFE] relative">
                     <div className="absolute inset-0 grid place-items-center text-[#4F46E5]/40"><Building2 className="w-10 h-10" /></div>
-                    <div className="absolute top-2 right-2 inline-flex items-center gap-1 bg-white/90 backdrop-blur rounded-full px-2 py-0.5 text-[10px] font-bold text-[#06194A]">
-                      <Star className="w-3 h-3 fill-[#F59E0B] text-[#F59E0B]" /> {d.rating}
-                    </div>
+                    {d.rating > 0 && (
+                      <div className="absolute top-2 right-2 inline-flex items-center gap-1 bg-white/90 backdrop-blur rounded-full px-2 py-0.5 text-[10px] font-bold text-[#06194A]">
+                        <Star className="w-3 h-3 fill-[#F59E0B] text-[#F59E0B]" /> {d.rating}
+                      </div>
+                    )}
                   </div>
                   <div className="p-3">
                     <div className="flex items-center justify-between">
@@ -534,7 +549,14 @@ export const PickupPage = () => {
                     </div>
                     <div className="text-sm">
                       <div className="font-semibold text-[#06194A]">{pickupSpot === "home" ? "Home address" : pickupSpot === "work" ? "Work address" : "Dealership drop-off"}</div>
-                      <div className="text-[#53627A] text-xs">128 Oakridge Lane, Hartford, CT 06105</div>
+                      {(() => {
+                        const a = MOCK.customer.mailingAddress;
+                        const line = [a.street, a.unit, [a.city, a.state].filter(Boolean).join(", "), a.zip]
+                          .filter(Boolean).join(", ");
+                        return line
+                          ? <div className="text-[#53627A] text-xs">{line}</div>
+                          : <div className="text-[#8893A8] text-xs italic">Add your address or upload your license to fill this in</div>;
+                      })()}
                     </div>
                   </div>
                 </Card>
@@ -682,16 +704,16 @@ export const PickupPage = () => {
         footer={<div className="flex gap-2"><SecondaryButton onClick={() => setEditLoc(false)} className="flex-1">Cancel</SecondaryButton><PrimaryButton onClick={() => setEditLoc(false)} className="flex-1">Save</PrimaryButton></div>}>
         <label className="block">
           <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">Address</span>
-          <input defaultValue="128 Oakridge Lane" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+          <input defaultValue={[MOCK.customer.mailingAddress.street, MOCK.customer.mailingAddress.unit].filter(Boolean).join(", ")} placeholder="Street address" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
         </label>
         <div className="grid grid-cols-2 gap-2 mt-3">
           <label className="block">
             <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">City</span>
-            <input defaultValue="Hartford" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+            <input defaultValue={MOCK.customer.mailingAddress.city} placeholder="City" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
           </label>
           <label className="block">
             <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">ZIP</span>
-            <input defaultValue="06105" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+            <input defaultValue={MOCK.customer.mailingAddress.zip} placeholder="ZIP" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
           </label>
         </div>
         <label className="block mt-3">

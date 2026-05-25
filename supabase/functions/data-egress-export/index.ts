@@ -77,6 +77,14 @@ Deno.serve(async (req) => {
   const authed = await authenticate(req);
   if (authed instanceof Response) return authed;
 
+  // Bulk PII export is admin-tier only. authenticate() resolves the caller's
+  // highest role across their dealerships; sales/BDC/appraiser/receptionist
+  // must never be able to export the tenant's customer data.
+  const EXPORT_ROLES = new Set(["admin", "gsm_gm", "gm"]);
+  if (!EXPORT_ROLES.has(authed.role)) {
+    return errorResponse("forbidden: data export requires an admin or GM role", 403);
+  }
+
   let body: Body;
   try {
     body = await req.json();

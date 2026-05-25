@@ -28,6 +28,7 @@ import {
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { TenantOverrideProvider } from "@/contexts/TenantContext";
 import { useDocumentConfig } from "@/hooks/useDocumentConfig";
 import { checkTokenStatus, type TokenStatus } from "@/lib/tokenStatus";
 import { PORTAL_MOCK } from "./portalMock";
@@ -84,6 +85,14 @@ const splitName = (full: string | null) => {
     (firstName[0] || "") + (lastName[0] || "")
   ).toUpperCase() || (firstName[0] || "").toUpperCase();
   return { firstName, lastName, initials };
+};
+
+/** Up-to-two-letter avatar initials for a dealership name. */
+const dealerInitials = (name: string): string => {
+  const words = (name || "").trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "DL";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
 };
 
 /** Format mileage as comma-separated (mock uses "26,540"). */
@@ -264,6 +273,14 @@ const buildPortalShape = (
   const dealer = (dealershipName || "").trim() || base.customer.dealer;
   base.customer.dealer = dealer;
 
+  // The primary message thread IS the dealership — name + avatar initials
+  // must be the real tenant, never the mock's placeholder ("Liberty
+  // Automotive"). Applied even on the demo route so nothing dummy shows.
+  if (Array.isArray(base.conversations) && base.conversations.length > 0) {
+    base.conversations[0].name = dealer;
+    base.conversations[0].initials = dealerInitials(dealer);
+  }
+
   if (!row) return base;
 
   // ── Customer identity from the submission row.
@@ -275,8 +292,11 @@ const buildPortalShape = (
   base.customer.email = (row.email || "").trim() || base.customer.email;
   base.customer.phone = (row.phone || "").trim() || base.customer.phone;
 
-  // Mailing address — only zip / state are on submissions today. Keep
-  // the mock street/city/unit until we add address columns.
+  // Mailing address — the customer's street address is unknown until they
+  // enter it themselves or we OCR it from an uploaded driver's license, so
+  // start blank for a real submission rather than carrying the mock's
+  // placeholder address. Only zip / state may be known from the lead.
+  base.customer.mailingAddress = { street: "", unit: "", city: "", state: "", zip: "" };
   if (row.zip) base.customer.mailingAddress.zip = row.zip;
   if (row.state) base.customer.mailingAddress.state = row.state;
 
@@ -354,8 +374,33 @@ interface Props {
   children: ReactNode;
 }
 
-export const PortalDataProvider = ({ token, children }: Props) => {
+// Builds the portal shape from site_config. Rendered *inside* the
+// TenantOverrideProvider below, so useSiteConfig() here resolves to the
+// dealership on the customer's submission — never the ambient domain.
+const PortalShapeLayer = ({
+  row,
+  docFiles,
+  children,
+}: {
+  row: PortalSubmissionRow | null;
+  docFiles: DocFiles | null;
+  children: ReactNode;
+}) => {
   const { config } = useSiteConfig();
+  const shape = useMemo(
+    () => buildPortalShape(
+      row,
+      config.dealership_name,
+      config.price_guarantee_days,
+      config.pickup_offered,
+      docFiles,
+    ),
+    [row, config.dealership_name, config.price_guarantee_days, config.pickup_offered, docFiles],
+  );
+  return <PortalDataCtx.Provider value={shape}>{children}</PortalDataCtx.Provider>;
+};
+
+export const PortalDataProvider = ({ token, children }: Props) => {
   const [row, setRow] = useState<PortalSubmissionRow | null>(null);
   const [docFiles, setDocFiles] = useState<DocFiles | null>(null);
   const [status, setStatus] = useState<ProviderStatus>({
@@ -441,22 +486,27 @@ export const PortalDataProvider = ({ token, children }: Props) => {
     return () => { cancelled = true; };
   }, [token, row?.id, docCatalogKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const shape = useMemo(
-    () => buildPortalShape(
-      row,
-      config.dealership_name,
-      config.price_guarantee_days,
-      config.pickup_offered,
-      docFiles,
-    ),
-    [row, config.dealership_name, config.price_guarantee_days, config.pickup_offered, docFiles],
+  // Everything below the status provider is scoped to the dealership on
+  // the customer's submission. Overriding the tenant here means every
+  // useSiteConfig() / useTenant() call in the shape layer AND in every
+  // portal page/card resolves to the dealer the customer actually worked
+  // with — not whatever domain they happen to be viewing the portal on.
+  const shapeLayer = (
+    <PortalShapeLayer row={row} docFiles={docFiles}>
+      {children}
+    </PortalShapeLayer>
   );
 
   return (
     <PortalStatusCtx.Provider value={status}>
-      <PortalDataCtx.Provider value={shape}>
-        {children}
-      </PortalDataCtx.Provider>
+      {row?.dealership_id ? (
+        <TenantOverrideProvider dealershipId={row.dealership_id}>
+          {shapeLayer}
+        </TenantOverrideProvider>
+      ) : (
+        // Demo route (no submission) — keep the ambient tenant + mock shape.
+        shapeLayer
+      )}
     </PortalStatusCtx.Provider>
   );
 };
