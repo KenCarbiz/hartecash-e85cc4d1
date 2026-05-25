@@ -16,6 +16,7 @@ import { Star, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface Testimonial {
   id: string;
@@ -35,6 +36,7 @@ const FALLBACK: Testimonial[] = [
 
 const TestimonialsLean = () => {
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const [testimonials, setTestimonials] = useState<Testimonial[] | null>(null);
 
   useEffect(() => {
@@ -42,6 +44,7 @@ const TestimonialsLean = () => {
       .from("testimonials")
       .select("id, author_name, location, vehicle, review_text, rating")
       .eq("is_active", true)
+      .eq("dealership_id", tenant.dealership_id)
       .order("sort_order", { ascending: true })
       .then(({ data }) => {
         if (data && data.length > 0) {
@@ -52,7 +55,7 @@ const TestimonialsLean = () => {
           setTestimonials([]);
         }
       });
-  }, [config.dealership_name]);
+  }, [config.dealership_name, tenant.dealership_id]);
 
   if (testimonials === null || testimonials.length === 0) return null;
 
