@@ -78,7 +78,7 @@ const AutocurbLanding = () => {
     >
       <SEO
         title="AutoCurb — Stop Losing Trades to CarMax"
-        description="Dealers lose 7 of every 10 trade-ins to CarMax, Carvana, and ICO buyers. AutoCurb is the trade-defense OS that beats their offer before your customer ever clicks 'get my number.'"
+        description="CarMax & Carvana buy ~2M cars a year straight from your customers. AutoCurb is the AI trade-defense OS — it fires a higher, dealer-branded offer in 90 seconds and calls the customer back (TCPA-safe) to keep the trade, the finance deal, and the next sale inside your rooftop."
         path="/"
         siteName="AutoCurb"
       />
@@ -149,7 +149,7 @@ const AutocurbLanding = () => {
             </h1>
 
             <p className="mt-6 text-xl text-white/70 max-w-xl leading-relaxed">
-              7 of every 10 trade-ins walk off your lot and end up at <span className="text-white font-medium">CarMax, Carvana, or KBB ICO</span>. AutoCurb is the trade-defense OS that beats their offer at the curb — before your customer ever opens their phone.
+              <span className="text-white font-medium">CarMax &amp; Carvana buy ~2 million cars a year</span> straight from your customers — while used inventory stays scarcer than any time since the chip crisis. AutoCurb is the <span className="text-white font-medium">AI trade-defense OS</span>: it fires a higher, dealer-branded offer in 90 seconds and calls the customer back to lock it — TCPA-safe — so the trade, the finance deal, and the next sale stay in <span style={{ color: LIME }}>your</span> rooftop.
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -163,8 +163,8 @@ const AutocurbLanding = () => {
             </div>
 
             <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-white/50">
-              <div className="flex items-center gap-2"><Check /> Beats ICO offers in real-time</div>
-              <div className="flex items-center gap-2"><Check /> 30-day money back</div>
+              <div className="flex items-center gap-2"><Check /> AI counter-offer in 90 sec</div>
+              <div className="flex items-center gap-2"><Check /> Consent-gated AI callback (TCPA-safe)</div>
               <div className="flex items-center gap-2"><Check /> Onboard in 7 days</div>
             </div>
           </div>
@@ -328,10 +328,10 @@ const AutocurbLanding = () => {
                   <div className="space-y-2 text-sm">
                     {[
                       ["1", "Your branded offer widget intercepts the Saturday-night search"],
-                      ["2", "AI fires a counter-offer in 90 seconds — beats KBB ICO by 2:1 rule"],
-                      ["3", "Service drive scan flags every customer in equity right now"],
+                      ["2", "AI fires a higher counter-offer in 90 seconds — auditable, capped"],
+                      ["3", "Consent-gated AI voice agent calls the customer back to lock it"],
                       ["4", "Manager appraisal waterfall — no low-ball, no leaks"],
-                      ["5", "Customer signs at the curb, check cut, vAuto + DMS auto-push"],
+                      ["5", "Customer signs at the curb, check cut, structured desk handoff"],
                     ].map(([n, t]) => (
                       <div key={t} className="flex items-start gap-3 text-white/85">
                         <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: LIME, color: INK }}>{n}</span>
@@ -374,14 +374,14 @@ const AutocurbLanding = () => {
               {
                 num: "02 · Outbid",
                 title: "Beat the ICO offer in real-time.",
-                desc: "Live Black Book + Manheim + AI photo grade gives your appraiser the number to beat CarMax — instantly. Brian Kramer's 2:1 rule built in: defend the trade or release it with full intel.",
-                items: ["2:1 appraisal rule engine", "Live Black Book + Manheim", "AI photo damage grade", "CarMax / Carvana ICO match"],
+                desc: "Live Black Book + Manheim + AI photo grade gives your appraiser the number to beat CarMax — instantly. AI re-appraises the customer's photos and raises the offer (auditable, capped); a consent-gated voice agent calls them back to lock it.",
+                items: ["AI photo re-appraisal (auto-raise, capped)", "Consent-gated AI voice callback", "Live Black Book + Manheim", "CarMax / Carvana ICO match"],
               },
               {
                 num: "03 · Close",
                 title: "Sign at the curb, not at CarMax.",
-                desc: "Manager appraisal → customer accepts → check request → DMS push — all on the lot, in minutes. The customer never leaves with the trade on the table.",
-                items: ["100+ inspection items", "Appraisal waterfall", "Check request gen", "vAuto / DMS push"],
+                desc: "Manager appraisal → customer accepts → check request → structured desk handoff — all on the lot, in minutes. The customer never leaves with the trade on the table.",
+                items: ["100+ inspection items", "Appraisal waterfall", "Check request gen", "vAuto export (beta)"],
               },
             ].map((p) => (
               <div key={p.num} className="rounded-2xl p-8 transition group border" style={{ background: "#1A1A1A", borderColor: "rgba(255,255,255,0.1)" }}>
@@ -517,11 +517,11 @@ const AutocurbLanding = () => {
               ctaHref="#demo"
               features={[
                 "Everything in Starter",
-                "AI lead scoring",
-                "AI photo damage scoring",
+                "AI photo re-appraisal (auto-raise)",
+                "Consent-gated AI voice callback",
+                "AI lead scoring + damage scoring",
                 "Service drive equity mining",
-                "Multi-location",
-                "Advanced analytics",
+                "Multi-location + advanced analytics",
               ]}
             />
             <PricingCard
@@ -534,7 +534,7 @@ const AutocurbLanding = () => {
                 "Everything in Professional",
                 "API access + webhooks",
                 "White-label removal",
-                "vAuto / DMS push",
+                "vAuto export (beta) + DMS handoff",
                 "SSO + RBAC",
                 "Priority support",
               ]}

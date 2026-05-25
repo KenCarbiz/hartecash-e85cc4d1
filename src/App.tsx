@@ -21,7 +21,10 @@ const SellFlow = lazy(() => import("./pages/SellFlow"));
 const isAutocurbHost = () => {
   if (typeof window === "undefined") return false;
   const h = window.location.hostname.toLowerCase();
-  return h === "autocurb.io" || h === "www.autocurb.io";
+  return (
+    h === "autocurb.io" || h === "www.autocurb.io" ||
+    h === "rooftopos.io" || h === "www.rooftopos.io"
+  );
 };
 const RootLanding = () => (isAutocurbHost() ? <AutocurbLanding /> : <Index />);
 
