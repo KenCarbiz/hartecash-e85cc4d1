@@ -49,6 +49,8 @@ export function getAdmin(): SupabaseClient {
 export type AuthedCaller = {
   admin: SupabaseClient;
   user: { id: string; email: string };
+  /** The caller's resolved role for the picked dealership (user_roles.role). */
+  role: string;
   tenant: {
     id: string;              // tenants.id (uuid)
     dealership_id: string;   // tenants.dealership_id (text — the FK target everywhere else)
@@ -136,6 +138,7 @@ export async function authenticate(
   return {
     admin,
     user: { id: user.id, email: user.email },
+    role: picked.role,
     tenant: {
       id: (tenant as any).id,
       dealership_id: (tenant as any).dealership_id,

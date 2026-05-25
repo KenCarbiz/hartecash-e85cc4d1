@@ -179,6 +179,7 @@ const AdminDashboard = () => {
                 canApprove={db.canApprove}
                 canDelete={db.canDelete}
                 canManageAccess={db.canManageAccess}
+                isPlatformAdmin={isPlatformAdmin}
                 auditLabel={db.auditLabel}
                 userName={db.userName}
                 userRole={db.userRole}
