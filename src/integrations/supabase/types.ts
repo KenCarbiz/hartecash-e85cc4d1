@@ -5807,9 +5807,13 @@ export type Database = {
           id: string
           is_active: boolean
           location: string
+          moderated_at: string | null
+          moderated_by: string | null
           rating: number
           review_text: string
           sort_order: number
+          source: string
+          status: string
           updated_at: string
           vehicle: string | null
         }
@@ -5820,9 +5824,13 @@ export type Database = {
           id?: string
           is_active?: boolean
           location?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
           rating?: number
           review_text: string
           sort_order?: number
+          source?: string
+          status?: string
           updated_at?: string
           vehicle?: string | null
         }
@@ -5833,9 +5841,13 @@ export type Database = {
           id?: string
           is_active?: boolean
           location?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
           rating?: number
           review_text?: string
           sort_order?: number
+          source?: string
+          status?: string
           updated_at?: string
           vehicle?: string | null
         }
