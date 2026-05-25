@@ -278,8 +278,10 @@ const AnimatedRoutes = () => {
         <Route path="/sitemap" element={<Sitemap />} />
         <Route path="/review/:token" element={<ReviewPage />} />
         {/* Public review page — any visitor can leave a review; it lands
-            pending and a tenant admin approves it before it goes live. */}
+            pending and a tenant admin approves it before it goes live.
+            Bare /review is a convenience alias for the public page. */}
         <Route path="/leave-a-review" element={<ReviewPage />} />
+        <Route path="/review" element={<Navigate to="/leave-a-review" replace />} />
         <Route path="/unsubscribe" element={<Unsubscribe />} />
         <Route path="/trade" element={<TradeLanding />} />
         <Route path="/trade-in" element={<TradeIframe />} />
