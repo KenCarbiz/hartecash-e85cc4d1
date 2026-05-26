@@ -580,7 +580,8 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                     } : {}),
                   }));
                 }}
-                placeholder="Smith Motors"
+                 placeholder="e.g. Smith Motors"
+                 autoFocus
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
