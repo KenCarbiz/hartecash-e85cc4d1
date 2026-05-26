@@ -901,34 +901,41 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                     Updates as you edit
                   </span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {/* Landing hero mock */}
-                  <div
-                    className="rounded-xl p-5 overflow-hidden relative"
-                    style={{ background: `linear-gradient(135deg, ${primaryBg}, ${primaryBg} 60%, hsl(0 0% 0% / 0.4))` }}
-                  >
-                    <div className="text-micro font-bold uppercase tracking-widest text-white/60 mb-2">
-                      Landing page · /
-                    </div>
-                    <div className="text-white font-display text-lg font-bold leading-tight mb-1">
-                      {config.hero_headline || "Sell Your Car The Easy Way"}
-                    </div>
-                    <div className="text-white/70 text-xs mb-4 line-clamp-2">
-                      {config.hero_subtext || "Real cash offer in 60 seconds."}
-                    </div>
-                    <div className="bg-white/95 rounded-lg p-2.5 flex gap-2 items-center">
-                      <div className="flex-1 h-7 rounded bg-muted/40 flex items-center px-2 text-micro text-muted-foreground">
-                        ABC-1234
-                      </div>
-                      <button
-                        type="button"
-                        className="h-7 px-3 rounded text-[11px] font-bold text-white shadow-sm cursor-default"
-                        style={{ backgroundColor: offerBg }}
+                {/* Resolve hero preview colors */}
+                {(() => {
+                  const heroBg = config.hero_bg_color?.trim()
+                    ? config.hero_bg_color
+                    : `linear-gradient(135deg, ${primaryBg}, ${primaryBg} 60%, hsl(0 0% 0% / 0.4))`;
+                  const heroText = config.hero_text_color?.trim() || "#ffffff";
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* Landing hero mock */}
+                      <div
+                        className="rounded-xl p-5 overflow-hidden relative"
+                        style={{ background: heroBg, color: heroText }}
                       >
-                        Get My Offer
-                      </button>
-                    </div>
-                  </div>
+                        <div className="text-micro font-bold uppercase tracking-widest mb-2" style={{ opacity: 0.6 }}>
+                          Landing page · /
+                        </div>
+                        <div className="font-display text-lg font-bold leading-tight mb-1">
+                          {config.hero_headline || "Sell Your Car The Easy Way"}
+                        </div>
+                        <div className="text-xs mb-4 line-clamp-2" style={{ opacity: 0.7 }}>
+                          {config.hero_subtext || "Real cash offer in 60 seconds."}
+                        </div>
+                        <div className="bg-white/95 rounded-lg p-2.5 flex gap-2 items-center">
+                          <div className="flex-1 h-7 rounded bg-muted/40 flex items-center px-2 text-micro text-muted-foreground">
+                            ABC-1234
+                          </div>
+                          <button
+                            type="button"
+                            className="h-7 px-3 rounded text-[11px] font-bold text-white shadow-sm cursor-default"
+                            style={{ backgroundColor: offerBg }}
+                          >
+                            Get My Offer
+                          </button>
+                        </div>
+                      </div>
 
                   {/* Offer page mock */}
                   <div className="rounded-xl p-5 bg-card border border-border">
