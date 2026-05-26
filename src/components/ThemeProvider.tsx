@@ -148,6 +148,13 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     root.style.setProperty("--cta-offer-text", landingCtaText);
     root.style.setProperty("--cta-accept-text", landingCtaText);
 
+    // Hero color overrides — applied as CSS custom properties so templates
+    // can reference them via var(--hero-bg) / var(--hero-text).
+    const heroBg = (config as any).hero_bg_color?.trim?.() || "";
+    const heroText = (config as any).hero_text_color?.trim?.() || "";
+    if (heroBg) root.style.setProperty("--hero-bg", heroBg);
+    if (heroText) root.style.setProperty("--hero-text", heroText);
+
     // Persist the resolved set for next visit's synchronous paint.
     // Only write when the live config has actually loaded (skip while
     // the React Query is still in flight — otherwise we'd cache the
