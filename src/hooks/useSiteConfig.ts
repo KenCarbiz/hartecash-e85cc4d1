@@ -93,6 +93,8 @@ export interface SiteConfig {
   hero_headline: string;
   hero_subtext: string;
   hero_layout: string;
+  hero_bg_color: string | null;
+  hero_text_color: string | null;
   landing_template: LandingTemplate;
   /**
    * Public sell-flow variant. 'detailed' renders the full multi-step
@@ -359,6 +361,8 @@ const DEFAULTS: SiteConfig = {
   // truncates the default. Dealer admins can still override.
   hero_subtext: "Real cash offer in 60 seconds. No store visit. No 7-day wait.",
   hero_layout: "offset_right",
+  hero_bg_color: null,
+  hero_text_color: null,
   landing_template: "classic",
   landing_form_variant: "detailed",
   landing_form_density: "simple",

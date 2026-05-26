@@ -1,0 +1,1 @@
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS hero_bg_color text; ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS hero_text_color text; NOTIFY pgrst, 'reload schema';

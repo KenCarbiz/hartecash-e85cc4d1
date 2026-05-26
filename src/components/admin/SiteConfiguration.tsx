@@ -39,6 +39,8 @@ interface SiteConfig {
   hero_headline: string;
   hero_subtext: string;
   hero_layout: string;
+  hero_bg_color: string;
+  hero_text_color: string;
   price_guarantee_days: number;
   stats_cars_purchased: string;
   stats_years_in_business: string;
@@ -115,6 +117,8 @@ const DEFAULT_CONFIG: SiteConfig = {
   hero_headline: "Sell Your Car The Easy Way",
   hero_subtext: "Get a top-dollar cash offer in 2 minutes. No haggling, no stress.",
   hero_layout: "centered",
+  hero_bg_color: "",
+  hero_text_color: "",
   price_guarantee_days: 8,
   stats_cars_purchased: "14,721+",
   stats_years_in_business: "78 yrs",
@@ -897,56 +901,65 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                     Updates as you edit
                   </span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {/* Landing hero mock */}
-                  <div
-                    className="rounded-xl p-5 overflow-hidden relative"
-                    style={{ background: `linear-gradient(135deg, ${primaryBg}, ${primaryBg} 60%, hsl(0 0% 0% / 0.4))` }}
-                  >
-                    <div className="text-micro font-bold uppercase tracking-widest text-white/60 mb-2">
-                      Landing page · /
-                    </div>
-                    <div className="text-white font-display text-lg font-bold leading-tight mb-1">
-                      {config.hero_headline || "Sell Your Car The Easy Way"}
-                    </div>
-                    <div className="text-white/70 text-xs mb-4 line-clamp-2">
-                      {config.hero_subtext || "Real cash offer in 60 seconds."}
-                    </div>
-                    <div className="bg-white/95 rounded-lg p-2.5 flex gap-2 items-center">
-                      <div className="flex-1 h-7 rounded bg-muted/40 flex items-center px-2 text-micro text-muted-foreground">
-                        ABC-1234
-                      </div>
-                      <button
-                        type="button"
-                        className="h-7 px-3 rounded text-[11px] font-bold text-white shadow-sm cursor-default"
-                        style={{ backgroundColor: offerBg }}
+                {/* Resolve hero preview colors */}
+                {(() => {
+                  const heroBg = config.hero_bg_color?.trim()
+                    ? config.hero_bg_color
+                    : `linear-gradient(135deg, ${primaryBg}, ${primaryBg} 60%, hsl(0 0% 0% / 0.4))`;
+                  const heroText = config.hero_text_color?.trim() || "#ffffff";
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* Landing hero mock */}
+                      <div
+                        className="rounded-xl p-5 overflow-hidden relative"
+                        style={{ background: heroBg, color: heroText }}
                       >
-                        Get My Offer
-                      </button>
-                    </div>
-                  </div>
+                        <div className="text-micro font-bold uppercase tracking-widest mb-2" style={{ opacity: 0.6 }}>
+                          Landing page · /
+                        </div>
+                        <div className="font-display text-lg font-bold leading-tight mb-1">
+                          {config.hero_headline || "Sell Your Car The Easy Way"}
+                        </div>
+                        <div className="text-xs mb-4 line-clamp-2" style={{ opacity: 0.7 }}>
+                          {config.hero_subtext || "Real cash offer in 60 seconds."}
+                        </div>
+                        <div className="bg-white/95 rounded-lg p-2.5 flex gap-2 items-center">
+                          <div className="flex-1 h-7 rounded bg-muted/40 flex items-center px-2 text-micro text-muted-foreground">
+                            ABC-1234
+                          </div>
+                          <button
+                            type="button"
+                            className="h-7 px-3 rounded text-[11px] font-bold text-white shadow-sm cursor-default"
+                            style={{ backgroundColor: offerBg }}
+                          >
+                            Get My Offer
+                          </button>
+                        </div>
+                      </div>
 
-                  {/* Offer page mock */}
-                  <div className="rounded-xl p-5 bg-card border border-border">
-                    <div className="text-micro font-bold uppercase tracking-widest text-muted-foreground mb-2">
-                      Offer page · /offer
+                      {/* Offer page mock */}
+                      <div className="rounded-xl p-5 bg-card border border-border">
+                        <div className="text-micro font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                          Offer page · /offer
+                        </div>
+                        <div className="text-card-foreground font-bold text-base mb-1">Your Cash Offer</div>
+                        <div className="font-display text-2xl font-bold mb-3" style={{ color: primaryBg }}>
+                          $18,500
+                        </div>
+                        <button
+                          type="button"
+                          className="w-full h-10 rounded-lg text-sm font-bold text-white shadow-md cursor-default flex items-center justify-center gap-2"
+                          style={{ backgroundColor: acceptBg, boxShadow: `0 6px 16px ${acceptBg}40` }}
+                        >
+                          → Accept Offer
+                        </button>
+                        <p className="text-micro text-muted-foreground text-center mt-2">
+                          Slide-to-accept on the live page
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-card-foreground font-bold text-base mb-1">Your Cash Offer</div>
-                    <div className="font-display text-2xl font-bold mb-3" style={{ color: primaryBg }}>
-                      $18,500
-                    </div>
-                    <button
-                      type="button"
-                      className="w-full h-10 rounded-lg text-sm font-bold text-white shadow-md cursor-default flex items-center justify-center gap-2"
-                      style={{ backgroundColor: acceptBg, boxShadow: `0 6px 16px ${acceptBg}40` }}
-                    >
-                      → Accept Offer
-                    </button>
-                    <p className="text-micro text-muted-foreground text-center mt-2">
-                      Slide-to-accept on the live page
-                    </p>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
             );
           })()}
@@ -979,6 +992,50 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               ))}
             </div>
           </div>
+          {/* Hero Colors */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Hero Background</Label>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded-md border border-border shrink-0"
+                  style={{
+                    background: config.hero_bg_color?.trim()
+                      ? config.hero_bg_color
+                      : `linear-gradient(135deg, hsl(${config.primary_color}), hsl(210,100%,32%))`,
+                  }}
+                />
+                <Input
+                  value={config.hero_bg_color}
+                  onChange={e => update("hero_bg_color", e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="#0F172A or linear-gradient(...)"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Solid (#hex), gradient, or leave blank for brand default.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Hero Text Color</Label>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded-md border border-border shrink-0"
+                  style={{ backgroundColor: config.hero_text_color?.trim() || "#ffffff" }}
+                />
+                <Input
+                  value={config.hero_text_color}
+                  onChange={e => update("hero_text_color", e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="#FFFFFF"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Text and icon color on the hero section. Leave blank for brand default.
+              </p>
+            </div>
+          </div>
+
           {/* Main Landing Page (/) */}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Main Page Headline <span className="text-muted-foreground font-normal">(/)</span></Label>

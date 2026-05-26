@@ -16,6 +16,16 @@ const HeroOffset = ({ side, leadSource, headlineOverride, subtextOverride }: Her
   const headline = headlineOverride || config.hero_headline || "Sell Your Car\nThe Easy Way";
   const subtext = subtextOverride || config.hero_subtext || "Real cash offer in 60 seconds. No store visit. No 7-day wait.";
 
+  // Resolve hero background: dealer override → brand-primary gradient
+  const heroBg = config.hero_bg_color?.trim()
+    ? config.hero_bg_color
+    : "linear-gradient(to bottom, hsl(var(--primary)), hsl(210,100%,36%))";
+
+  // Resolve hero text color: dealer override → primary-foreground
+  const heroTextColor = config.hero_text_color?.trim()
+    ? config.hero_text_color
+    : "hsl(var(--primary-foreground))";
+
   const benefits = [
     "Faster: Get cash in 24 hours, not weeks of meetups",
     "More Convenient: One visit, we handle all paperwork",
@@ -115,7 +125,13 @@ const HeroOffset = ({ side, leadSource, headlineOverride, subtextOverride }: Her
   );
 
   return (
-    <section className="bg-gradient-to-b from-primary to-[hsl(210,100%,36%)] text-primary-foreground relative overflow-hidden">
+    <section
+      className="relative overflow-hidden"
+      style={{
+        background: heroBg,
+        color: heroTextColor,
+      }}
+    >
       {/* Subtle background texture */}
       <div className="absolute inset-0 opacity-[0.04]" style={{
         backgroundImage: "radial-gradient(circle at 20% 50%, hsl(0 0% 100%) 1px, transparent 1px)",
@@ -132,13 +148,13 @@ const HeroOffset = ({ side, leadSource, headlineOverride, subtextOverride }: Her
             {side === "right" ? (
               <>
                 {desktopTextContent}
-                <div className="w-px self-stretch bg-primary-foreground/15 mx-2" />
+                <div className="w-px self-stretch mx-2" style={{ backgroundColor: `${heroTextColor}26` }} />
                 {desktopFormContent}
               </>
             ) : (
               <>
                 {desktopFormContent}
-                <div className="w-px self-stretch bg-primary-foreground/15 mx-2" />
+                <div className="w-px self-stretch mx-2" style={{ backgroundColor: `${heroTextColor}26` }} />
                 {desktopTextContent}
               </>
             )}

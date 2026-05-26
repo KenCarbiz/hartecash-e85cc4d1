@@ -53,6 +53,8 @@ interface CachedTheme {
   ctaAccept?: string | null;
   ctaOfferText?: string | null;
   ctaAcceptText?: string | null;
+  heroBg?: string | null;
+  heroText?: string | null;
 }
 
 function readCachedTheme(): CachedTheme | null {
@@ -81,6 +83,8 @@ function applyTheme(root: HTMLElement, t: CachedTheme) {
   if (t.ctaAccept) root.style.setProperty("--cta-accept", t.ctaAccept);
   if (t.ctaOfferText) root.style.setProperty("--cta-offer-text", t.ctaOfferText);
   if (t.ctaAcceptText) root.style.setProperty("--cta-accept-text", t.ctaAcceptText);
+  if (t.heroBg) root.style.setProperty("--hero-bg", t.heroBg);
+  if (t.heroText) root.style.setProperty("--hero-text", t.heroText);
 }
 
 /**
@@ -148,6 +152,13 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     root.style.setProperty("--cta-offer-text", landingCtaText);
     root.style.setProperty("--cta-accept-text", landingCtaText);
 
+    // Hero color overrides — applied as CSS custom properties so templates
+    // can reference them via var(--hero-bg) / var(--hero-text).
+    const heroBg = (config as any).hero_bg_color?.trim?.() || "";
+    const heroText = (config as any).hero_text_color?.trim?.() || "";
+    if (heroBg) root.style.setProperty("--hero-bg", heroBg);
+    if (heroText) root.style.setProperty("--hero-text", heroText);
+
     // Persist the resolved set for next visit's synchronous paint.
     // Only write when the live config has actually loaded (skip while
     // the React Query is still in flight — otherwise we'd cache the
@@ -162,6 +173,8 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
           ctaAccept: ctaAccept ?? null,
           ctaOfferText: landingCtaText,
           ctaAcceptText: landingCtaText,
+          heroBg: heroBg || null,
+          heroText: heroText || null,
         };
         localStorage.setItem(LS_THEME_KEY, JSON.stringify(next));
       } catch (e) {

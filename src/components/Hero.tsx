@@ -11,16 +11,36 @@ const Hero = () => {
     { label: "Privacy Protected", desc: "We never share your address, name, or phone number" },
   ];
 
+  // Resolve hero background: dealer override → brand-primary gradient
+  const heroBg = config.hero_bg_color?.trim()
+    ? config.hero_bg_color
+    : "linear-gradient(to bottom, hsl(var(--primary)), hsl(var(--primary)), hsl(210,100%,32%))";
+
+  // Resolve hero text color: dealer override → primary-foreground
+  const heroTextColor = config.hero_text_color?.trim()
+    ? config.hero_text_color
+    : "hsl(var(--primary-foreground))";
+
+  const isCustomBg = !!config.hero_bg_color?.trim();
+
   return (
-    <section className="bg-gradient-to-b from-primary via-primary to-[hsl(210,100%,32%)] text-primary-foreground px-5 py-12 lg:py-20 pb-16 lg:pb-24 text-center relative overflow-hidden">
-      {/* Ambient glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[hsl(210,100%,50%,0.08)] rounded-full blur-[100px] pointer-events-none" />
-      
+    <section
+      className="px-5 py-12 lg:py-20 pb-16 lg:pb-24 text-center relative overflow-hidden"
+      style={{
+        background: heroBg,
+        color: heroTextColor,
+      }}
+    >
+      {/* Ambient glow — only when using default gradient */}
+      {!isCustomBg && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[hsl(210,100%,50%,0.08)] rounded-full blur-[100px] pointer-events-none" />
+      )}
+
       <div className="max-w-4xl mx-auto relative">
         {/* Price Guarantee Badge */}
         <div className="inline-flex items-center gap-2 bg-success/20 backdrop-blur-sm border border-success/40 rounded-full px-5 py-1.5 mb-5 shadow-lg shadow-success/10">
           <Shield className="w-4 h-4 text-success fill-success/30" />
-          <span className="text-sm font-bold tracking-wide text-success-foreground">
+          <span className="text-sm font-bold tracking-wide" style={{ color: heroTextColor }}>
             {config.price_guarantee_days}-DAY PRICE GUARANTEE
           </span>
         </div>
