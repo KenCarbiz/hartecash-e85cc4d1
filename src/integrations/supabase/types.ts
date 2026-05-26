@@ -4491,9 +4491,11 @@ export type Database = {
           ghost_subhead: string | null
           google_review_url: string | null
           handoff_type: string
+          hero_bg_color: string | null
           hero_headline: string
           hero_layout: string
           hero_subtext: string
+          hero_text_color: string | null
           hero_tuner_config: Json
           id: string
           instagram_url: string | null
@@ -4624,9 +4626,11 @@ export type Database = {
           ghost_subhead?: string | null
           google_review_url?: string | null
           handoff_type?: string
+          hero_bg_color?: string | null
           hero_headline?: string
           hero_layout?: string
           hero_subtext?: string
+          hero_text_color?: string | null
           hero_tuner_config?: Json
           id?: string
           instagram_url?: string | null
@@ -4757,9 +4761,11 @@ export type Database = {
           ghost_subhead?: string | null
           google_review_url?: string | null
           handoff_type?: string
+          hero_bg_color?: string | null
           hero_headline?: string
           hero_layout?: string
           hero_subtext?: string
+          hero_text_color?: string | null
           hero_tuner_config?: Json
           id?: string
           instagram_url?: string | null
