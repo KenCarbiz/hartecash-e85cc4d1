@@ -747,7 +747,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
         </div>
       )}
       {activeSection === "changelog" && canManageAccess && <ChangelogManagement />}
-      {activeSection === "pricing-model" && canManageAccess && tenant.dealership_id === "default" && (
+      {activeSection === "pricing-model" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <PlatformPricingManager />
         </React.Suspense>
@@ -757,7 +757,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           their own rooftop shouldn't see other dealers' tenant records.
           Rooftop management (locations within THIS dealership) lives
           in the Locations section, which stays admin-accessible. */}
-      {activeSection === "tenants" && canManageAccess && tenant.dealership_id === "default" && (
+      {activeSection === "tenants" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <TenantManagement
             onSetupDealer={(dealerId) => {
@@ -794,22 +794,22 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "my-lead-link" && <MyLeadLink />}
       {activeSection === "my-availability" && <MyAvailability />}
       {activeSection === "embed-toolkit" && canManageAccess && <EmbedToolkit />}
-      {activeSection === "prospect-demo" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "prospect-demo" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <ProspectDemo />
         </React.Suspense>
       )}
-      {activeSection === "groups" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "groups" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <GroupManagement />
         </React.Suspense>
       )}
-      {activeSection === "stripe-webhooks" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "stripe-webhooks" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <StripeWebhookReprocessor />
         </React.Suspense>
       )}
-      {activeSection === "audit-log" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "audit-log" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <UnifiedAuditLog />
         </React.Suspense>
