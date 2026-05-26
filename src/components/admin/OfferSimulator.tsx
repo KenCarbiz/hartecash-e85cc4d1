@@ -545,29 +545,98 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     );
   };
 
+  // === Pricing Command Bar metrics (derived) ===
+  const cmdRetailAvg = liveBbVehicle ? Number(liveBbVehicle.retail?.avg || 0) : 0;
+  const cmdProfitSpread = (liveResult && liveBbVehicle)
+    ? cmdRetailAvg - liveResult.high - (activeSettings.recon_cost || 0) - (activeSettings.dealer_pack || 0)
+    : null;
+  const cmdMarketOn = !!activeSettings.market_adjustment?.enabled;
+
   return (
-    <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
+    <div className="space-y-3">
+      {/* ═══════════════════════════════════════════════════════
+          STICKY PRICING COMMAND BAR
+          Always shows current vehicle, tier, offer, retail, spread,
+          and live market status. Acts as the dealer's confidence
+          anchor while they edit pricing below.
+          ═══════════════════════════════════════════════════════ */}
+      <div className="sticky top-0 z-30 -mx-1 px-1 py-1.5 bg-slate-50/95 dark:bg-background/95 backdrop-blur-sm">
+        <div className="rounded-2xl border border-border/80 bg-card shadow-sm px-4 py-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <div className="flex items-center gap-2 min-w-0 max-w-[260px]">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Car className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Vehicle</div>
+              <div className="text-xs font-bold truncate">
+                {liveBbVehicle ? `${liveBbVehicle.year} ${liveBbVehicle.make} ${liveBbVehicle.model}` : "No VIN loaded"}
+              </div>
+            </div>
+          </div>
+          <div className="hidden md:block h-8 w-px bg-border" />
+          <div>
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Condition</div>
+            <div className="text-xs font-bold text-primary">{CONDITION_LABELS[liveCondition]}</div>
+          </div>
+          <div className="hidden md:block h-8 w-px bg-border" />
+          <div>
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Configured Offer</div>
+            <div className="text-base font-bold text-primary leading-tight">
+              {liveResult ? `$${liveResult.high.toLocaleString()}` : "—"}
+            </div>
+          </div>
+          <div className="hidden md:block h-8 w-px bg-border" />
+          <div>
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Retail Avg</div>
+            <div className="text-xs font-bold">{cmdRetailAvg ? `$${cmdRetailAvg.toLocaleString()}` : "—"}</div>
+          </div>
+          <div className="hidden lg:block h-8 w-px bg-border" />
+          <div className="hidden lg:block">
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Profit Spread</div>
+            <div className={`text-xs font-bold ${cmdProfitSpread == null ? "text-muted-foreground" : cmdProfitSpread > 0 ? "text-success" : "text-destructive"}`}>
+              {cmdProfitSpread == null ? "—" : `${cmdProfitSpread >= 0 ? "+" : ""}$${cmdProfitSpread.toLocaleString()}`}
+            </div>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <span className={`hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full ${
+              cmdMarketOn
+                ? "bg-success/10 text-success border border-success/30"
+                : "bg-muted text-muted-foreground border border-border"
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${cmdMarketOn ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
+              Live Market {cmdMarketOn ? "ON" : "OFF"}
+            </span>
+            {liveResult?.isHotLead && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/30">
+                🔥 Hot
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* ── VIN + Mileage Input ── */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-4 flex flex-col sm:flex-row gap-3">
         <div className="flex-1">
           <Label className="text-xs font-semibold">VIN</Label>
           <Input value={liveVin} onChange={e => setLiveVin(e.target.value.toUpperCase())} placeholder="Enter 17-character VIN" maxLength={17} className="h-9 font-mono tracking-wider" />
         </div>
-        <div className="w-32">
+        <div className="w-full sm:w-32">
           <Label className="text-xs font-semibold">Mileage</Label>
           <Input type="number" value={liveMileage} onChange={e => setLiveMileage(e.target.value)} step="5000" className="h-9" />
         </div>
-        <div className="w-24">
+        <div className="w-full sm:w-24">
           <Label className="text-xs font-semibold">ZIP Code</Label>
           <Input value={liveZip} onChange={e => setLiveZip(e.target.value.replace(/\D/g, "").slice(0, 5))} placeholder="06001" maxLength={5} className="h-9" />
         </div>
         <div className="flex items-end">
-          <Button onClick={handleVinLookup} disabled={liveLoading || liveVin.trim().length !== 17} className="h-9 gap-1.5">
+          <Button onClick={handleVinLookup} disabled={liveLoading || liveVin.trim().length !== 17} className="h-9 w-full sm:w-auto gap-1.5">
             {liveLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
             {liveLoading ? "Looking up…" : "Look Up"}
           </Button>
         </div>
       </div>
+
 
       {!liveBbVehicle && !liveLoading && (
         <div className="bg-muted/40 rounded-lg p-8 text-sm text-muted-foreground text-center">
