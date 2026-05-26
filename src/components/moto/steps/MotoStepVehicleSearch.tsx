@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/contexts/TenantContext";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import MotoCard from "../MotoCard";
 import MotoPrimaryButton from "../MotoPrimaryButton";
 import { MotoOutlinedInput, MotoOutlinedSelect } from "../MotoOutlinedField";
@@ -11,6 +12,7 @@ import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "../ymmData";
 import { cn } from "@/lib/utils";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
 import { useHeroTuner, useVehicleTuner } from "../HeroTuner";
+
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
@@ -32,6 +34,10 @@ const MotoStepVehicleSearch = ({
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
   const tuner = useHeroTuner();
+  const { config } = useSiteConfig();
+  const customHeadline = config.hero_headline?.trim();
+  const customSubtext = config.hero_subtext?.trim();
+
 
 
   const [tab, setTab] = useState<Exclude<LookupMode, "ymm">>(
@@ -173,15 +179,23 @@ const MotoStepVehicleSearch = ({
                   marginTop: `${4 + tuner.offsetY}px`,
                 }}
               >
-                <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
-                  Get an
-                </span>{" "}
-                <span style={{ color: tuner.instantColor, fontWeight: tuner.instantWeight }}>
-                  Instant
-                </span>{" "}
-                <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
-                  Vehicle Valuation
-                </span>
+                {customHeadline ? (
+                  <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
+                    {customHeadline}
+                  </span>
+                ) : (
+                  <>
+                    <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
+                      Get an
+                    </span>{" "}
+                    <span style={{ color: tuner.instantColor, fontWeight: tuner.instantWeight }}>
+                      Instant
+                    </span>{" "}
+                    <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
+                      Vehicle Valuation
+                    </span>
+                  </>
+                )}
               </h1>
               <p
                 className="mt-3 lg:whitespace-nowrap"
@@ -191,8 +205,9 @@ const MotoStepVehicleSearch = ({
                   fontFamily: tuner.font,
                 }}
               >
-                Get an instant valuation &amp; then add more info to get a firm offer.
+                {customSubtext || "Get an instant valuation & then add more info to get a firm offer."}
               </p>
+
               <div style={{ marginTop: `${tuner.subGap}px` }}>
               <MotoCard className="p-6">
             <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
