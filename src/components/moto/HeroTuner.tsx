@@ -274,6 +274,40 @@ export default function HeroTuner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(vehicleValues)]);
 
+  // Page hero background + text color — stored on site_config columns so
+  // every visitor of the published site picks them up via ThemeProvider.
+  const [heroBg, setHeroBg] = useState<string>("");
+  const [heroText, setHeroText] = useState<string>("");
+  const heroColorSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!tenant.dealership_id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("site_config")
+        .select("hero_bg_color, hero_text_color")
+        .eq("dealership_id", tenant.dealership_id)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      setHeroBg(((data as { hero_bg_color?: string | null }).hero_bg_color ?? "") as string);
+      setHeroText(((data as { hero_text_color?: string | null }).hero_text_color ?? "") as string);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tenant.dealership_id]);
+
+  const persistHeroColors = (next: { hero_bg_color?: string | null; hero_text_color?: string | null }) => {
+    if (!tenant.dealership_id) return;
+    if (heroColorSaveTimer.current) clearTimeout(heroColorSaveTimer.current);
+    heroColorSaveTimer.current = setTimeout(async () => {
+      await supabase
+        .from("site_config")
+        .update(next)
+        .eq("dealership_id", tenant.dealership_id);
+    }, 350);
+  };
+
   const change = (patch: Partial<HeroTunerValues>) => {
     const next = { ...local, ...patch };
     setLocal(next);
@@ -395,6 +429,54 @@ export default function HeroTuner() {
           </div>
 
           <div className="space-y-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Page hero background
+            </div>
+            <ColorField
+              label="Background color"
+              value={heroBg && HEX_RE.test(heroBg) ? heroBg : "#ffffff"}
+              onChange={(next) => {
+                setHeroBg(next);
+                persistHeroColors({ hero_bg_color: next });
+              }}
+            />
+            <label className="block">
+              <span className="text-zinc-600">Background (advanced — hex or CSS gradient)</span>
+              <input
+                type="text"
+                value={heroBg}
+                placeholder="e.g. #0f172a or linear-gradient(...)"
+                onChange={(e) => {
+                  setHeroBg(e.target.value);
+                  persistHeroColors({ hero_bg_color: e.target.value || null });
+                }}
+                spellCheck={false}
+                className="mt-1 w-full rounded border border-zinc-300 px-2 py-1 font-mono text-[11px]"
+              />
+              <div className="text-[10px] text-zinc-400">Leave blank to use the brand default.</div>
+            </label>
+            <ColorField
+              label="Text color"
+              value={heroText && HEX_RE.test(heroText) ? heroText : "#ffffff"}
+              onChange={(next) => {
+                setHeroText(next);
+                persistHeroColors({ hero_text_color: next });
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setHeroBg("");
+                setHeroText("");
+                persistHeroColors({ hero_bg_color: null, hero_text_color: null });
+              }}
+              className="w-full rounded border border-zinc-200 py-1 text-[11px] text-zinc-500 hover:bg-zinc-50"
+            >
+              Reset hero colors to brand default
+            </button>
+
+            <hr className="border-zinc-200" />
+
             <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
               Headline
             </div>
