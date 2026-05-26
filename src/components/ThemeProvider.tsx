@@ -53,6 +53,8 @@ interface CachedTheme {
   ctaAccept?: string | null;
   ctaOfferText?: string | null;
   ctaAcceptText?: string | null;
+  heroBg?: string | null;
+  heroText?: string | null;
 }
 
 function readCachedTheme(): CachedTheme | null {
@@ -81,6 +83,8 @@ function applyTheme(root: HTMLElement, t: CachedTheme) {
   if (t.ctaAccept) root.style.setProperty("--cta-accept", t.ctaAccept);
   if (t.ctaOfferText) root.style.setProperty("--cta-offer-text", t.ctaOfferText);
   if (t.ctaAcceptText) root.style.setProperty("--cta-accept-text", t.ctaAcceptText);
+  if (t.heroBg) root.style.setProperty("--hero-bg", t.heroBg);
+  if (t.heroText) root.style.setProperty("--hero-text", t.heroText);
 }
 
 /**
