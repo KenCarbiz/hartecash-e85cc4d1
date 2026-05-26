@@ -179,15 +179,23 @@ const MotoStepVehicleSearch = ({
                   marginTop: `${4 + tuner.offsetY}px`,
                 }}
               >
-                <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
-                  Get an
-                </span>{" "}
-                <span style={{ color: tuner.instantColor, fontWeight: tuner.instantWeight }}>
-                  Instant
-                </span>{" "}
-                <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
-                  Vehicle Valuation
-                </span>
+                {customHeadline ? (
+                  <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
+                    {customHeadline}
+                  </span>
+                ) : (
+                  <>
+                    <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
+                      Get an
+                    </span>{" "}
+                    <span style={{ color: tuner.instantColor, fontWeight: tuner.instantWeight }}>
+                      Instant
+                    </span>{" "}
+                    <span style={{ color: tuner.accentColor, fontWeight: tuner.accentWeight }}>
+                      Vehicle Valuation
+                    </span>
+                  </>
+                )}
               </h1>
               <p
                 className="mt-3 lg:whitespace-nowrap"
@@ -197,8 +205,9 @@ const MotoStepVehicleSearch = ({
                   fontFamily: tuner.font,
                 }}
               >
-                Get an instant valuation &amp; then add more info to get a firm offer.
+                {customSubtext || "Get an instant valuation & then add more info to get a firm offer."}
               </p>
+
               <div style={{ marginTop: `${tuner.subGap}px` }}>
               <MotoCard className="p-6">
             <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
