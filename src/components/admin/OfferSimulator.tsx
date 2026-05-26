@@ -1515,8 +1515,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
               )}
             </div>
 
-            {/* ── RIGHT: Results + Profit + Market ── */}
-            <div className="space-y-4">
+            {/* ── RIGHT: Final Offer + Live Market (elevated) + Profit — sticky on desktop ── */}
+            <div className="space-y-3 lg:sticky lg:top-24 lg:self-start">
+
               {liveResult && (
                 <>
                   {/* Final Offer Card */}
