@@ -274,6 +274,40 @@ export default function HeroTuner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(vehicleValues)]);
 
+  // Page hero background + text color — stored on site_config columns so
+  // every visitor of the published site picks them up via ThemeProvider.
+  const [heroBg, setHeroBg] = useState<string>("");
+  const [heroText, setHeroText] = useState<string>("");
+  const heroColorSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!tenant.dealership_id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("site_config")
+        .select("hero_bg_color, hero_text_color")
+        .eq("dealership_id", tenant.dealership_id)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      setHeroBg(((data as { hero_bg_color?: string | null }).hero_bg_color ?? "") as string);
+      setHeroText(((data as { hero_text_color?: string | null }).hero_text_color ?? "") as string);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tenant.dealership_id]);
+
+  const persistHeroColors = (next: { hero_bg_color?: string | null; hero_text_color?: string | null }) => {
+    if (!tenant.dealership_id) return;
+    if (heroColorSaveTimer.current) clearTimeout(heroColorSaveTimer.current);
+    heroColorSaveTimer.current = setTimeout(async () => {
+      await supabase
+        .from("site_config")
+        .update(next)
+        .eq("dealership_id", tenant.dealership_id);
+    }, 350);
+  };
+
   const change = (patch: Partial<HeroTunerValues>) => {
     const next = { ...local, ...patch };
     setLocal(next);
