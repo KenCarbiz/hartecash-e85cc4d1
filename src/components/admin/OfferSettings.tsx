@@ -559,6 +559,40 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         </div>
       </div>
 
+      {/* ══════════════════════════════════════════════════════════
+           PRICING ENGINE CONFIGURATION — tabbed control center
+           ══════════════════════════════════════════════════════════ */}
+      <Tabs defaultValue="strategy" className="w-full">
+        <div className="sticky top-[64px] z-20 -mx-1 px-1 py-2 bg-slate-50/95 dark:bg-background/95 backdrop-blur-sm border-b border-border/50 mb-3">
+          <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-1 h-auto w-full bg-muted/60 p-1 rounded-xl">
+            <TabsTrigger value="strategy" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
+              <Shield className="w-3.5 h-3.5" /> Strategy
+            </TabsTrigger>
+            <TabsTrigger value="ai" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> AI Bumps
+            </TabsTrigger>
+            <TabsTrigger value="market" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5" /> Market
+            </TabsTrigger>
+            <TabsTrigger value="costs" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
+              <DollarSign className="w-3.5 h-3.5" /> Costs
+            </TabsTrigger>
+            <TabsTrigger value="guardrails" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-destructive" /> Guardrails
+            </TabsTrigger>
+            <TabsTrigger value="archetypes" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
+              <Truck className="w-3.5 h-3.5" /> Vehicles
+            </TabsTrigger>
+            <TabsTrigger value="learning" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
+              <Brain className="w-3.5 h-3.5" /> Learning
+            </TabsTrigger>
+            <TabsTrigger value="rules" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
+              <Target className="w-3.5 h-3.5" /> Rules
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="strategy" className="space-y-3 mt-0">
       {/* ── Strategy Mode Selector ── */}
       <Section
         icon={<Shield className="w-5 h-5 text-primary" />}
@@ -607,7 +641,9 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           </div>
         )}
       </Section>
+        </TabsContent>
 
+        <TabsContent value="ai" className="space-y-3 mt-0">
       {/* ── Boost-Offer Rules ── per-dealer overrides for the AI
             signals that fire on the boost-offer page. */}
       <Section
@@ -617,7 +653,9 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       >
         <BoostRulesEditor />
       </Section>
+        </TabsContent>
 
+        <TabsContent value="market" className="space-y-3 mt-0">
       {/* ── Live Market Adjustment ── */}
       <Section
         icon={<TrendingUp className="w-5 h-5 text-primary" />}
@@ -676,7 +714,9 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           </div>
         </Section>
       )}
+        </TabsContent>
 
+        <TabsContent value="costs" className="space-y-3 mt-0">
       {/* ── Dealer Costs (Internal Only) ── */}
       {settings && (
         <Section
@@ -859,7 +899,9 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           </div>
         </Section>
       )}
+        </TabsContent>
 
+        <TabsContent value="guardrails" className="space-y-3 mt-0">
       {/* ── Safety Caps ── */}
       {settings && (
         <Section
@@ -924,7 +966,9 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           </div>
         </Section>
       )}
+        </TabsContent>
 
+        <TabsContent value="archetypes" className="space-y-3 mt-0">
       {/* ── Archetype Overrides ── */}
       {settings && (
         <Section
@@ -954,7 +998,9 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           </div>
         </Section>
       )}
+        </TabsContent>
 
+        <TabsContent value="learning" className="space-y-3 mt-0">
       {/* ── Intelligence Learning Layer ── */}
       {settings && (
         <Section
@@ -991,7 +1037,9 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           </div>
         </Section>
       )}
+        </TabsContent>
 
+        <TabsContent value="rules" className="space-y-3 mt-0">
       {/* ── Section 5: Criteria-Based Rules ── */}
       <Section
         icon={<Target className="w-5 h-5 text-primary" />}
@@ -1012,6 +1060,8 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           </div>
         )}
       </Section>
+        </TabsContent>
+      </Tabs>
 
       {/* ── Rule Dialog ── */}
       <Dialog open={showRuleDialog} onOpenChange={setShowRuleDialog}>
