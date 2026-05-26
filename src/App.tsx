@@ -15,15 +15,12 @@ const Index = lazy(() => import("./pages/Index"));
 const AutocurbLanding = lazy(() => import("./pages/AutocurbLanding"));
 const SellFlow = lazy(() => import("./pages/SellFlow"));
 
-// Hostname check for the AutoCurb SaaS marketing landing. All other
-// hosts (hartecash.com, sell2harte.com, *.lovable.app previews, and
-// every tenant custom domain) keep falling through to <Index />.
-const isAutocurbHost = () => {
-  if (typeof window === "undefined") return false;
-  const h = window.location.hostname.toLowerCase();
-  return h === "autocurb.io" || h === "www.autocurb.io";
-};
-const RootLanding = () => (isAutocurbHost() ? <AutocurbLanding /> : <Index />);
+// autocurb.io now resolves as its own tenant (the AUTO(curb) branded
+// valuation page) — same as hartecash.com / sell2harte.com. The SaaS
+// marketing landing is reachable at /platform.
+const RootLanding = () => <Index />;
+// Kept for /platform route below.
+void AutocurbLanding;
 
 const UploadPhotos = lazy(() => import("./pages/UploadPhotos"));
 const UploadDocs = lazy(() => import("./pages/UploadDocs"));
