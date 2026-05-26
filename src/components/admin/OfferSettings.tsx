@@ -320,7 +320,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         age_tiers: Array.isArray(d.age_tiers) ? d.age_tiers : [],
         mileage_tiers: Array.isArray(d.mileage_tiers) ? d.mileage_tiers : [],
         regional_adjustment_pct: d.regional_adjustment_pct ?? 0,
-        retail_search_radius: d.retail_search_radius ?? 100,
+        retail_search_radius: d.retail_search_radius ?? 50,
         retail_search_zip: d.retail_search_zip || "",
         dealer_pack: d.dealer_pack ?? 0,
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
@@ -348,7 +348,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         age_tiers: Array.isArray(d.age_tiers) ? d.age_tiers : [],
         mileage_tiers: Array.isArray(d.mileage_tiers) ? d.mileage_tiers : [],
         regional_adjustment_pct: d.regional_adjustment_pct ?? 0,
-        retail_search_radius: d.retail_search_radius ?? 100,
+        retail_search_radius: d.retail_search_radius ?? 50,
         retail_search_zip: d.retail_search_zip || "",
         dealer_pack: d.dealer_pack ?? 0,
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
@@ -389,7 +389,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       age_tiers: settings.age_tiers,
       mileage_tiers: settings.mileage_tiers,
       regional_adjustment_pct: settings.regional_adjustment_pct,
-      retail_search_radius: settings.retail_search_radius ?? 100,
+      retail_search_radius: settings.retail_search_radius ?? 50,
       retail_search_zip: settings.retail_search_zip || null,
       dealer_pack: settings.dealer_pack ?? 0,
       hide_pack_from_appraisal: settings.hide_pack_from_appraisal ?? false,
@@ -662,14 +662,14 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
               </p>
               <div className="flex items-center gap-4">
                 <Slider
-                  value={[settings.retail_search_radius ?? 100]}
+                  value={[settings.retail_search_radius ?? 50]}
                   min={25}
                   max={500}
                   step={25}
                   onValueChange={([v]) => setSettings({ ...settings, retail_search_radius: v })}
                   className="flex-1"
                 />
-                <span className="text-sm font-bold text-card-foreground w-20 text-right">{settings.retail_search_radius ?? 100} mi</span>
+                <span className="text-sm font-bold text-card-foreground w-20 text-right">{settings.retail_search_radius ?? 50} mi</span>
               </div>
             </div>
           </div>
