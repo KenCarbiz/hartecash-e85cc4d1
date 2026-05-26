@@ -548,7 +548,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   // === Pricing Command Bar metrics (derived) ===
   const cmdRetailAvg = liveBbVehicle ? Number(liveBbVehicle.retail?.avg || 0) : 0;
   const cmdProfitSpread = (liveResult && liveBbVehicle)
-    ? cmdRetailAvg - liveResult.high - (activeSettings.recon_cost || 0) - (activeSettings.dealer_pack || 0)
+    ? cmdRetailAvg - liveResult.high - (activeSettings.recon_cost || 0) - ((activeSettings as { dealer_pack?: number }).dealer_pack || 0)
     : null;
   const cmdMarketOn = !!activeSettings.market_adjustment?.enabled;
 
