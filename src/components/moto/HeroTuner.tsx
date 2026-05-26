@@ -430,6 +430,89 @@ export default function HeroTuner() {
 
           <div className="space-y-3">
             <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Hero + button preset
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                {
+                  name: "Indigo → Violet",
+                  bg: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)",
+                  text: "#ffffff",
+                  cta: "#4F46E5",
+                  ctaText: "#ffffff",
+                },
+                {
+                  name: "Slate Pro",
+                  bg: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+                  text: "#ffffff",
+                  cta: "#3b82f6",
+                  ctaText: "#ffffff",
+                },
+                {
+                  name: "Ocean",
+                  bg: "linear-gradient(135deg, #0c2340 0%, #2d8a9e 100%)",
+                  text: "#ffffff",
+                  cta: "#5cbdb9",
+                  ctaText: "#0c2340",
+                },
+                {
+                  name: "Sunset",
+                  bg: "linear-gradient(135deg, #ff6b35 0%, #e84393 100%)",
+                  text: "#ffffff",
+                  cta: "#facc15",
+                  ctaText: "#1f2937",
+                },
+                {
+                  name: "Emerald",
+                  bg: "linear-gradient(135deg, #064e3b 0%, #0d7a5f 100%)",
+                  text: "#ffffff",
+                  cta: "#c9a84c",
+                  ctaText: "#0d2818",
+                },
+                {
+                  name: "Off-white (reset)",
+                  bg: "",
+                  text: "",
+                  cta: BRAND_YELLOW,
+                  ctaText: BRAND_YELLOW_INK,
+                },
+              ].map((preset) => (
+                <button
+                  key={preset.name}
+                  type="button"
+                  onClick={() => {
+                    setHeroBg(preset.bg);
+                    setHeroText(preset.text);
+                    persistHeroColors({
+                      hero_bg_color: preset.bg || null,
+                      hero_text_color: preset.text || null,
+                    });
+                    change({ ctaColor: preset.cta, ctaTextColor: preset.ctaText });
+                  }}
+                  className="group relative overflow-hidden rounded-lg border border-zinc-200 hover:border-zinc-400 transition-all"
+                  title={`Apply ${preset.name}`}
+                >
+                  <div
+                    className="h-10 w-full"
+                    style={{ background: preset.bg || "hsl(220 20% 97%)" }}
+                  />
+                  <div className="flex items-center justify-between gap-1 px-2 py-1 bg-white">
+                    <span className="text-[10px] font-medium text-zinc-700 truncate">{preset.name}</span>
+                    <span
+                      className="inline-block h-3 w-3 rounded-full border border-zinc-300 shrink-0"
+                      style={{ backgroundColor: preset.cta }}
+                    />
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="text-[10px] text-zinc-400">
+              One click applies the hero background, text, and button colors together. Fine-tune below.
+            </div>
+
+            <hr className="border-zinc-200" />
+
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
               Page hero background
             </div>
             <ColorField
