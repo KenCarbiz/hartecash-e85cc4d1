@@ -580,7 +580,8 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                     } : {}),
                   }));
                 }}
-                placeholder="Smith Motors"
+                 placeholder="e.g. Smith Motors"
+                 autoFocus
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -589,7 +590,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                 <Input
                   value={form.dealership_id}
                   onChange={e => setForm(prev => ({ ...prev, dealership_id: e.target.value }))}
-                  placeholder="smith_motors"
+                  placeholder="e.g. smith_motors"
                   disabled={!!editing}
                 />
                 <p className="text-micro text-muted-foreground">Internal key — cannot change after creation</p>
@@ -599,7 +600,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                 <Input
                   value={form.slug}
                   onChange={e => setForm(prev => ({ ...prev, slug: e.target.value }))}
-                  placeholder="smith"
+                  placeholder="e.g. smith"
                 />
                 <p className="text-micro text-muted-foreground">Used for subdomain: smith.yourdomain.com</p>
               </div>
@@ -609,7 +610,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
               <Input
                 value={form.custom_domain || ""}
                 onChange={e => setForm(prev => ({ ...prev, custom_domain: e.target.value || null }))}
-                placeholder="sellmycar.smithmotors.com"
+                placeholder="e.g. sellmycar.smithmotors.com"
               />
               <p className="text-micro text-muted-foreground">Dealer must point DNS to your server for this to work</p>
             </div>
