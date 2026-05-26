@@ -902,6 +902,16 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         </TabsContent>
 
         <TabsContent value="guardrails" className="space-y-3 mt-0">
+          <div className="rounded-2xl border-2 border-destructive/30 bg-gradient-to-br from-destructive/5 via-card to-card p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-1">
+              <Shield className="w-5 h-5 text-destructive" />
+              <h2 className="font-bold text-card-foreground">Risk Controls</h2>
+              <Badge variant="outline" className="text-[9px] border-destructive/40 text-destructive bg-destructive/5 ml-auto">PROTECTED</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Hard limits that override every other calculation. Offers can never breach these caps regardless of strategy mode, market bumps, or rules.
+            </p>
+          </div>
       {/* ── Safety Caps ── */}
       {settings && (
         <Section
