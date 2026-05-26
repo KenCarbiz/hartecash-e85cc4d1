@@ -209,6 +209,12 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     dealerLocations,
   } = props;
   const navigate = useNavigate();
+  // Super-admin (Ken) may be scoped to ANY tenant via the rooftop
+  // switcher, so the Platform Admin gates can't key off
+  // `tenant.dealership_id === "default"` — that hides every panel
+  // the moment he switches to e.g. autocurb.io's `auto_curb_` tenant.
+  // Use the server-driven platform-admin flag instead.
+  const { isPlatformAdmin } = useIsPlatformAdmin();
 
   // Parse compound section keys like "site-config:logos"
   const colonIdx = rawActiveSection.indexOf(":");
