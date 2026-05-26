@@ -610,7 +610,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
               <Input
                 value={form.custom_domain || ""}
                 onChange={e => setForm(prev => ({ ...prev, custom_domain: e.target.value || null }))}
-                placeholder="sellmycar.smithmotors.com"
+                placeholder="e.g. sellmycar.smithmotors.com"
               />
               <p className="text-micro text-muted-foreground">Dealer must point DNS to your server for this to work</p>
             </div>
