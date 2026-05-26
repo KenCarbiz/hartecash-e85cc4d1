@@ -751,14 +751,16 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           Rooftop management (locations within THIS dealership) lives
           in the Locations section, which stays admin-accessible. */}
       {activeSection === "tenants" && canManageAccess && tenant.dealership_id === "default" && (
-        <TenantManagement
-          onSetupDealer={(dealerId) => {
-            setOnboardingDealershipId(dealerId);
-            supabase.from("tenants").select("display_name").eq("dealership_id", dealerId).maybeSingle()
-              .then(({ data }) => setOnboardingDealerName((data as any)?.display_name || dealerId));
-            setActiveSection("onboarding");
-          }}
-        />
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <TenantManagement
+            onSetupDealer={(dealerId) => {
+              setOnboardingDealershipId(dealerId);
+              supabase.from("tenants").select("display_name").eq("dealership_id", dealerId).maybeSingle()
+                .then(({ data }) => setOnboardingDealerName((data as any)?.display_name || dealerId));
+              setActiveSection("onboarding");
+            }}
+          />
+        </React.Suspense>
       )}
       {activeSection === "onboarding" && (
         <DealerOnboarding
