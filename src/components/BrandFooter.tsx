@@ -127,9 +127,9 @@ const BrandFooter = () => {
           <img
             src={config.logo_url}
             alt={showDealerName ? dealerName : "Logo"}
-            className="h-9 lg:h-10 w-auto mx-auto mb-3 opacity-90"
-            width={100}
-            height={40}
+            className="h-11 lg:h-[3.125rem] w-auto mx-auto mb-3 opacity-90"
+            width={125}
+            height={50}
             loading="lazy"
           />
         ) : showDealerName ? (
