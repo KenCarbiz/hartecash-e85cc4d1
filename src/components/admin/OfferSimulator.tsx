@@ -798,6 +798,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                           value={[Math.round(Math.max(50, Math.min(150, mult * 100)))]}
                           min={50} max={150} step={1}
                           onValueChange={([v]) => updateLocalSetting("condition_multipliers", {
+                            excellent: 1, very_good: 1, good: 1, fair: 1,
                             ...(localSettings.condition_multipliers || {}),
                             [cond]: Math.round(v) / 100,
                           })}
