@@ -173,6 +173,8 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
           ctaAccept: ctaAccept ?? null,
           ctaOfferText: landingCtaText,
           ctaAcceptText: landingCtaText,
+          heroBg: heroBg || null,
+          heroText: heroText || null,
         };
         localStorage.setItem(LS_THEME_KEY, JSON.stringify(next));
       } catch (e) {
