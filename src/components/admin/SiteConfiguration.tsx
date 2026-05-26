@@ -983,6 +983,50 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               ))}
             </div>
           </div>
+          {/* Hero Colors */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Hero Background</Label>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded-md border border-border shrink-0"
+                  style={{
+                    background: config.hero_bg_color?.trim()
+                      ? config.hero_bg_color
+                      : `linear-gradient(135deg, hsl(${config.primary_color}), hsl(210,100%,32%))`,
+                  }}
+                />
+                <Input
+                  value={config.hero_bg_color}
+                  onChange={e => update("hero_bg_color", e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="#0F172A or linear-gradient(...)"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Solid (#hex), gradient, or leave blank for brand default.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Hero Text Color</Label>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded-md border border-border shrink-0"
+                  style={{ backgroundColor: config.hero_text_color?.trim() || "#ffffff" }}
+                />
+                <Input
+                  value={config.hero_text_color}
+                  onChange={e => update("hero_text_color", e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="#FFFFFF"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Text and icon color on the hero section. Leave blank for brand default.
+              </p>
+            </div>
+          </div>
+
           {/* Main Landing Page (/) */}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Main Page Headline <span className="text-muted-foreground font-normal">(/)</span></Label>
