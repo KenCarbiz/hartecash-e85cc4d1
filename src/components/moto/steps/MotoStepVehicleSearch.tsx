@@ -34,6 +34,10 @@ const MotoStepVehicleSearch = ({
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
   const tuner = useHeroTuner();
+  const { config } = useSiteConfig();
+  const customHeadline = config.hero_headline?.trim();
+  const customSubtext = config.hero_subtext?.trim();
+
 
 
   const [tab, setTab] = useState<Exclude<LookupMode, "ymm">>(
