@@ -39,6 +39,8 @@ interface SiteConfig {
   hero_headline: string;
   hero_subtext: string;
   hero_layout: string;
+  hero_bg_color: string;
+  hero_text_color: string;
   price_guarantee_days: number;
   stats_cars_purchased: string;
   stats_years_in_business: string;
@@ -115,6 +117,8 @@ const DEFAULT_CONFIG: SiteConfig = {
   hero_headline: "Sell Your Car The Easy Way",
   hero_subtext: "Get a top-dollar cash offer in 2 minutes. No haggling, no stress.",
   hero_layout: "centered",
+  hero_bg_color: "",
+  hero_text_color: "",
   price_guarantee_days: 8,
   stats_cars_purchased: "14,721+",
   stats_years_in_business: "78 yrs",

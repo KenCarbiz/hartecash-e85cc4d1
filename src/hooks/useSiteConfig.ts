@@ -93,6 +93,8 @@ export interface SiteConfig {
   hero_headline: string;
   hero_subtext: string;
   hero_layout: string;
+  hero_bg_color: string | null;
+  hero_text_color: string | null;
   landing_template: LandingTemplate;
   /**
    * Public sell-flow variant. 'detailed' renders the full multi-step
