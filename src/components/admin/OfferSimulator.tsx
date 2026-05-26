@@ -719,7 +719,8 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
           </div>
 
           {/* ══ TWO-COLUMN LAYOUT ══ */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-4 items-start">
+
 
             {/* ── LEFT: Active Tier Config + Waterfall ── */}
             <div className="space-y-4">
