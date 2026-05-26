@@ -708,21 +708,30 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
             return (
               <div key={field} className="space-y-2">
                 <Label className="text-xs font-semibold">{labels[field]}</Label>
-                <div className="border border-border rounded-lg p-3 bg-muted/30 flex flex-col items-center gap-2 min-h-[100px]">
+                <label
+                  className="group relative block cursor-pointer border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 rounded-lg p-3 bg-muted/30 transition-colors min-h-[120px] flex flex-col items-center justify-center gap-2"
+                  title="Click to upload"
+                >
                   {config[field] ? (
-                    <img src={config[field]} alt={labels[field]} className="max-h-16 object-contain" />
+                    <img src={config[field]} alt={labels[field]} className="max-h-16 object-contain pointer-events-none" />
                   ) : (
                     <div className="text-xs text-muted-foreground">No image set</div>
                   )}
-                  <label className="cursor-pointer text-xs text-primary hover:underline">
-                    Upload
-                    <input type="file" accept="image/*" className="hidden" onChange={e => {
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-primary">
+                    <Upload className="w-3.5 h-3.5" />
+                    {config[field] ? "Replace" : "Upload"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => {
                       const file = e.target.files?.[0];
                       if (file) handleLogoUpload(field, file);
                       e.target.value = "";
-                    }} />
-                  </label>
-                </div>
+                    }}
+                  />
+                </label>
                 <Input
                   value={config[field]}
                   onChange={e => update(field, e.target.value)}
