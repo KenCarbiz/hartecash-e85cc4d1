@@ -8,6 +8,7 @@ import { TenantOverrideProvider } from "@/contexts/TenantContext";
 import { PAGE_SIZE, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission, canViewExecutiveHUD } from "@/lib/adminConstants";
 import type { Submission, DealerLocation, Appointment } from "@/lib/adminConstants";
 import type { PendingRequest, ActivityLogEntry } from "@/hooks/useAdminDashboard";
+import { useIsPlatformAdmin } from "@/hooks/useIsPlatformAdmin";
 
 // Hot-path sections stay eager so the first paint of the admin home
 // (today summary + submissions) isn't blocked on chunk downloads.
