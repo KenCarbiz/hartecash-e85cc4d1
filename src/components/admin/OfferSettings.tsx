@@ -52,7 +52,7 @@ const Section = ({
   const [open, setOpen] = useState(defaultOpen);
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <div className={`bg-card rounded-xl shadow-lg border border-border overflow-hidden ${className}`}>
+      <div className={`bg-card rounded-2xl shadow-sm border border-border/60 overflow-hidden hover:shadow-md transition-shadow ${className}`}>
         <CollapsibleTrigger asChild>
           <button className="flex items-center justify-between w-full px-5 py-4 text-left hover:bg-muted/30 transition-colors">
             <div className="flex items-center gap-2">
