@@ -1542,6 +1542,36 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     )}
                   </div>
 
+                  {/* ── LIVE MARKET INTELLIGENCE — elevated, green-accent ── */}
+                  <div className="rounded-2xl border-2 border-success/40 bg-gradient-to-br from-success/5 via-card to-card shadow-lg overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-success/10 border-b border-success/30">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                        </span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-success">Live Market Intelligence</span>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] border-success/40 text-success bg-success/5">REAL-TIME</Badge>
+                    </div>
+                    <div className="p-3">
+                      <RetailMarketPanel
+                        vin={liveVin}
+                        uvc={liveBbVehicle.uvc}
+                        zipcode={liveZip}
+                        dealerZip={liveZip}
+                        radiusMiles={Number(activeSettings.retail_search_radius) || 50}
+                        offerHigh={liveResult.high}
+                        vehicleMileage={liveMileage}
+                        currentAcv={liveResult.high}
+                        onStatsLoaded={setRetailStats}
+                        onListingsLoaded={setRetailListings}
+                      />
+                    </div>
+                  </div>
+
+
+
                   {/* What-If Toggle */}
                   {savedSettings && (
                     <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-border bg-muted/30">
