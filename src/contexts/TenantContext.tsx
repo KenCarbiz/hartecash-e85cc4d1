@@ -155,21 +155,33 @@ async function resolveTenant(): Promise<TenantInfo> {
     return DEFAULT_TENANT;
   }
 
-  // 1. Try custom domain lookup
-  const { data: domainMatch } = await supabase.rpc("get_tenant_by_domain", {
-    _domain: hostname,
-  });
-
-  if (domainMatch && domainMatch.length > 0) {
-    const t: TenantInfo = {
-      dealership_id: domainMatch[0].dealership_id,
-      slug: domainMatch[0].slug,
-      display_name: domainMatch[0].display_name,
-      location_id: domainMatch[0].location_id ?? null,
-    };
-    cachedTenant = { hostname, tenant: t };
-    return t;
+  // 1. Try custom domain lookup. Also try the www <-> apex counterpart
+  //    so a tenant with custom_domain "www.autocurb.io" also serves
+  //    "autocurb.io" (and vice versa) without needing two DB rows.
+  const candidates = [hostname];
+  if (hostname.startsWith("www.")) {
+    candidates.push(hostname.slice(4));
+  } else if (hostname.split(".").length === 2) {
+    // apex like autocurb.io — also try www.autocurb.io
+    candidates.push(`www.${hostname}`);
   }
+
+  for (const candidate of candidates) {
+    const { data: domainMatch } = await supabase.rpc("get_tenant_by_domain", {
+      _domain: candidate,
+    });
+    if (domainMatch && domainMatch.length > 0) {
+      const t: TenantInfo = {
+        dealership_id: domainMatch[0].dealership_id,
+        slug: domainMatch[0].slug,
+        display_name: domainMatch[0].display_name,
+        location_id: domainMatch[0].location_id ?? null,
+      };
+      cachedTenant = { hostname, tenant: t };
+      return t;
+    }
+  }
+
 
   // 1b. Try dealer_groups custom domain. When a hostname is registered
   // to a group, we resolve into the group's primary (most-recent-active)
