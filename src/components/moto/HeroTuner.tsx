@@ -430,6 +430,54 @@ export default function HeroTuner() {
 
           <div className="space-y-3">
             <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Page hero background
+            </div>
+            <ColorField
+              label="Background color"
+              value={heroBg && HEX_RE.test(heroBg) ? heroBg : "#ffffff"}
+              onChange={(next) => {
+                setHeroBg(next);
+                persistHeroColors({ hero_bg_color: next });
+              }}
+            />
+            <label className="block">
+              <span className="text-zinc-600">Background (advanced — hex or CSS gradient)</span>
+              <input
+                type="text"
+                value={heroBg}
+                placeholder="e.g. #0f172a or linear-gradient(...)"
+                onChange={(e) => {
+                  setHeroBg(e.target.value);
+                  persistHeroColors({ hero_bg_color: e.target.value || null });
+                }}
+                spellCheck={false}
+                className="mt-1 w-full rounded border border-zinc-300 px-2 py-1 font-mono text-[11px]"
+              />
+              <div className="text-[10px] text-zinc-400">Leave blank to use the brand default.</div>
+            </label>
+            <ColorField
+              label="Text color"
+              value={heroText && HEX_RE.test(heroText) ? heroText : "#ffffff"}
+              onChange={(next) => {
+                setHeroText(next);
+                persistHeroColors({ hero_text_color: next });
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setHeroBg("");
+                setHeroText("");
+                persistHeroColors({ hero_bg_color: null, hero_text_color: null });
+              }}
+              className="w-full rounded border border-zinc-200 py-1 text-[11px] text-zinc-500 hover:bg-zinc-50"
+            >
+              Reset hero colors to brand default
+            </button>
+
+            <hr className="border-zinc-200" />
+
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
               Headline
             </div>
 
