@@ -1595,19 +1595,8 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     <MarketContextPanel bbVehicle={liveBbVehicle} offerHigh={liveResult.high} />
                   </div>
 
-                  {/* Live Retail Market Data */}
-                  <div className="rounded-lg border border-border bg-muted/20 p-4">
-                    <RetailMarketPanel
-                      vin={liveVin}
-                      uvc={liveBbVehicle.uvc}
-                      zipcode={liveZip}
-                      radiusMiles={activeSettings.retail_search_radius || 100}
-                      offerHigh={liveResult.high}
-                      vehicleMileage={liveMileage}
-                      onStatsLoaded={setRetailStats}
-                      onListingsLoaded={setRetailListings}
-                    />
-                  </div>
+                  {/* (Live Retail Market moved up — see elevated panel below Final Offer) */}
+
                 </>
               )}
 
