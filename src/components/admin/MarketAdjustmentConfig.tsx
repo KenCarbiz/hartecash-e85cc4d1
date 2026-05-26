@@ -21,7 +21,12 @@ const BRACKET_LABELS = [
 ];
 
 export default function MarketAdjustmentConfigPanel({ config, onChange }: Props) {
-  const cfg = config || DEFAULT_MARKET_ADJUSTMENT;
+  const cfg = { ...(config || DEFAULT_MARKET_ADJUSTMENT), enabled: true };
+
+  // Ensure parent state reflects always-on if it was previously off
+  if (config && !config.enabled) {
+    onChange({ ...config, enabled: true });
+  }
 
   const updateBracket = (index: number, field: keyof MarketDaysSupplyBracket, value: number) => {
     const brackets = [...cfg.days_supply_brackets];
@@ -31,14 +36,14 @@ export default function MarketAdjustmentConfigPanel({ config, onChange }: Props)
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between rounded-lg border border-success/30 bg-success/5 px-3 py-2">
         <div>
-          <Label className="text-sm font-bold">Enable Live Market Multiplier</Label>
+          <Label className="text-sm font-bold">Live Market Multiplier</Label>
           <p className="text-micro text-muted-foreground">
-            Automatically adjust offers based on Black Book Market Days Supply data.
+            Always pulling Black Book Market Days Supply data to adjust offers in real time.
           </p>
         </div>
-        <Switch checked={cfg.enabled} onCheckedChange={v => onChange({ ...cfg, enabled: v })} />
+        <Badge variant="outline" className="text-[10px] font-bold text-success border-success/40">ALWAYS ON</Badge>
       </div>
 
       {cfg.enabled && (

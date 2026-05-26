@@ -150,7 +150,7 @@ export interface MarketAdjustmentConfig {
 }
 
 export const DEFAULT_MARKET_ADJUSTMENT: MarketAdjustmentConfig = {
-  enabled: false,
+  enabled: true,
   days_supply_brackets: [
     { max_days: 20,   adjustment_pct: 10  }, // Critical scarcity — step up aggressively
     { max_days: 35,   adjustment_pct: 5   }, // Low supply — step up
