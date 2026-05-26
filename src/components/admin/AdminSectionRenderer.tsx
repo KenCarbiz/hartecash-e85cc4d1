@@ -8,6 +8,7 @@ import { TenantOverrideProvider } from "@/contexts/TenantContext";
 import { PAGE_SIZE, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission, canViewExecutiveHUD } from "@/lib/adminConstants";
 import type { Submission, DealerLocation, Appointment } from "@/lib/adminConstants";
 import type { PendingRequest, ActivityLogEntry } from "@/hooks/useAdminDashboard";
+import { useIsPlatformAdmin } from "@/hooks/useIsPlatformAdmin";
 
 // Hot-path sections stay eager so the first paint of the admin home
 // (today summary + submissions) isn't blocked on chunk downloads.
@@ -209,6 +210,12 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     dealerLocations,
   } = props;
   const navigate = useNavigate();
+  // Super-admin (Ken) may be scoped to ANY tenant via the rooftop
+  // switcher, so the Platform Admin gates can't key off
+  // `tenant.dealership_id === "default"` — that hides every panel
+  // the moment he switches to e.g. autocurb.io's `auto_curb_` tenant.
+  // Use the server-driven platform-admin flag instead.
+  const { isPlatformAdmin } = useIsPlatformAdmin();
 
   // Parse compound section keys like "site-config:logos"
   const colonIdx = rawActiveSection.indexOf(":");
@@ -740,7 +747,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
         </div>
       )}
       {activeSection === "changelog" && canManageAccess && <ChangelogManagement />}
-      {activeSection === "pricing-model" && canManageAccess && tenant.dealership_id === "default" && (
+      {activeSection === "pricing-model" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <PlatformPricingManager />
         </React.Suspense>
@@ -750,7 +757,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           their own rooftop shouldn't see other dealers' tenant records.
           Rooftop management (locations within THIS dealership) lives
           in the Locations section, which stays admin-accessible. */}
-      {activeSection === "tenants" && canManageAccess && tenant.dealership_id === "default" && (
+      {activeSection === "tenants" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <TenantManagement
             onSetupDealer={(dealerId) => {
@@ -787,22 +794,22 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "my-lead-link" && <MyLeadLink />}
       {activeSection === "my-availability" && <MyAvailability />}
       {activeSection === "embed-toolkit" && canManageAccess && <EmbedToolkit />}
-      {activeSection === "prospect-demo" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "prospect-demo" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <ProspectDemo />
         </React.Suspense>
       )}
-      {activeSection === "groups" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "groups" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <GroupManagement />
         </React.Suspense>
       )}
-      {activeSection === "stripe-webhooks" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "stripe-webhooks" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <StripeWebhookReprocessor />
         </React.Suspense>
       )}
-      {activeSection === "audit-log" && canManageAccess && props.tenant.dealership_id === "default" && (
+      {activeSection === "audit-log" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <UnifiedAuditLog />
         </React.Suspense>
