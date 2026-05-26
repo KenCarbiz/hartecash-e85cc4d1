@@ -361,6 +361,8 @@ const DEFAULTS: SiteConfig = {
   // truncates the default. Dealer admins can still override.
   hero_subtext: "Real cash offer in 60 seconds. No store visit. No 7-day wait.",
   hero_layout: "offset_right",
+  hero_bg_color: null,
+  hero_text_color: null,
   landing_template: "classic",
   landing_form_variant: "detailed",
   landing_form_density: "simple",
