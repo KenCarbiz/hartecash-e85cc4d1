@@ -794,15 +794,16 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                           <span className="text-xs font-bold text-primary">{mult.toFixed(2)}×</span>
                         </div>
                         <Slider
-                          value={[mult * 100]}
-                          min={70} max={110} step={1}
+                          key={`mult-${cond}`}
+                          value={[Math.round(Math.max(50, Math.min(150, mult * 100)))]}
+                          min={50} max={150} step={1}
                           onValueChange={([v]) => updateLocalSetting("condition_multipliers", {
-                            ...localSettings.condition_multipliers,
+                            ...(localSettings.condition_multipliers || {}),
                             [cond]: Math.round(v) / 100,
                           })}
                         />
                         <div className="flex justify-between text-[8px] text-muted-foreground mt-0.5">
-                          <span>0.70×</span><span>1.00×</span><span>1.10×</span>
+                          <span>0.50×</span><span>1.00×</span><span>1.50×</span>
                         </div>
                       </div>
                     </div>
