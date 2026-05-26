@@ -522,7 +522,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
   const canManageRequests = userRole === "admin" || userRole === "gsm_gm";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 bg-slate-50/40 dark:bg-background/40 -mx-4 px-4 -my-2 py-4 rounded-2xl">
       {/* Admin/GM: show pending GSM access requests */}
       {canManageRequests && userId && (
         <PricingAccessRequests userId={userId} />
@@ -531,24 +531,28 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       {/* Gate pricing tools behind access control */}
       <PricingAccessGate userId={userId || ""} userRole={userRole || "admin"}>
       {/* ── Price Builder Workbench — Simulator First ── */}
-      <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl border border-primary/20 p-5 mb-2">
-        <div className="flex items-center gap-2 mb-1">
-          <SlidersHorizontal className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold text-card-foreground">Price Builder Workbench</h2>
+      <div className="bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden mb-3">
+        <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent px-5 py-4 border-b border-border/50">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/15 flex items-center justify-center">
+              <SlidersHorizontal className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <h2 className="text-lg font-bold text-card-foreground tracking-tight">Price Builder Workbench</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Look up any VIN to see real-time valuations. Adjust every pricing lever inline and watch the offer, profit gauge, and market context update instantly. Save your formula as a named offer logic.
+          </p>
         </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          Look up any VIN to see real-time valuations. Adjust every pricing lever inline and watch the offer, profit gauge, and market context update instantly. Save your formula as a named offer logic.
-        </p>
 
-        {/* Pricing Model Manager — model save/load/schedule */}
-        <PricingModelManager
-          onModelChange={setModelOverrideSettings}
-          onRegisterSync={(fn) => { syncToModelRef.current = fn; }}
-          userRole={userRole}
-        />
+        <div className="p-5 space-y-4">
+          {/* Pricing Model Manager — model save/load/schedule */}
+          <PricingModelManager
+            onModelChange={setModelOverrideSettings}
+            onRegisterSync={(fn) => { syncToModelRef.current = fn; }}
+            userRole={userRole}
+          />
 
-        {/* Unified Simulator — all controls inline alongside results */}
-        <div className="mt-4">
+          {/* Unified Simulator — all controls inline alongside results */}
           <OfferSimulator
             settings={modelOverrideSettings || settings}
             savedSettings={savedSettings}
@@ -563,34 +567,37 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
            PRICING ENGINE CONFIGURATION — tabbed control center
            ══════════════════════════════════════════════════════════ */}
       <Tabs defaultValue="strategy" className="w-full">
-        <div className="sticky top-[64px] z-20 -mx-1 px-1 py-2 bg-slate-50/95 dark:bg-background/95 backdrop-blur-sm border-b border-border/50 mb-3">
-          <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-1 h-auto w-full bg-muted/60 p-1 rounded-xl">
-            <TabsTrigger value="strategy" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
-              <Shield className="w-3.5 h-3.5" /> Strategy
-            </TabsTrigger>
-            <TabsTrigger value="ai" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" /> AI Bumps
-            </TabsTrigger>
-            <TabsTrigger value="market" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5" /> Market
-            </TabsTrigger>
-            <TabsTrigger value="costs" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
-              <DollarSign className="w-3.5 h-3.5" /> Costs
-            </TabsTrigger>
-            <TabsTrigger value="guardrails" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-destructive" /> Guardrails
-            </TabsTrigger>
-            <TabsTrigger value="archetypes" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
-              <Truck className="w-3.5 h-3.5" /> Vehicles
-            </TabsTrigger>
-            <TabsTrigger value="learning" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
-              <Brain className="w-3.5 h-3.5" /> Learning
-            </TabsTrigger>
-            <TabsTrigger value="rules" className="text-xs font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5">
-              <Target className="w-3.5 h-3.5" /> Rules
-            </TabsTrigger>
-          </TabsList>
+        <div className="sticky top-[64px] z-20 -mx-4 px-4 py-2.5 bg-slate-50/95 dark:bg-background/95 backdrop-blur-md border-b border-border/40 mb-4">
+          <div className="overflow-x-auto scrollbar-none">
+            <TabsList className="inline-flex lg:grid lg:grid-cols-8 gap-1 h-auto w-full min-w-max lg:min-w-0 bg-white dark:bg-card border border-border/60 shadow-sm p-1 rounded-full lg:rounded-xl">
+              <TabsTrigger value="strategy" className="text-xs font-semibold rounded-full lg:rounded-lg px-3 py-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm gap-1.5 whitespace-nowrap">
+                <Shield className="w-3.5 h-3.5" /> Strategy
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="text-xs font-semibold rounded-full lg:rounded-lg px-3 py-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm gap-1.5 whitespace-nowrap">
+                <Sparkles className="w-3.5 h-3.5" /> AI Bumps
+              </TabsTrigger>
+              <TabsTrigger value="market" className="text-xs font-semibold rounded-full lg:rounded-lg px-3 py-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm gap-1.5 whitespace-nowrap">
+                <TrendingUp className="w-3.5 h-3.5" /> Market
+              </TabsTrigger>
+              <TabsTrigger value="costs" className="text-xs font-semibold rounded-full lg:rounded-lg px-3 py-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm gap-1.5 whitespace-nowrap">
+                <DollarSign className="w-3.5 h-3.5" /> Costs
+              </TabsTrigger>
+              <TabsTrigger value="guardrails" className="text-xs font-semibold rounded-full lg:rounded-lg px-3 py-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm gap-1.5 whitespace-nowrap">
+                <Shield className="w-3.5 h-3.5" /> Guardrails
+              </TabsTrigger>
+              <TabsTrigger value="archetypes" className="text-xs font-semibold rounded-full lg:rounded-lg px-3 py-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm gap-1.5 whitespace-nowrap">
+                <Truck className="w-3.5 h-3.5" /> Vehicles
+              </TabsTrigger>
+              <TabsTrigger value="learning" className="text-xs font-semibold rounded-full lg:rounded-lg px-3 py-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm gap-1.5 whitespace-nowrap">
+                <Brain className="w-3.5 h-3.5" /> Learning
+              </TabsTrigger>
+              <TabsTrigger value="rules" className="text-xs font-semibold rounded-full lg:rounded-lg px-3 py-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm gap-1.5 whitespace-nowrap">
+                <Target className="w-3.5 h-3.5" /> Rules
+              </TabsTrigger>
+            </TabsList>
+          </div>
         </div>
+
 
         <TabsContent value="strategy" className="space-y-3 mt-0">
       {/* ── Strategy Mode Selector ── */}
