@@ -937,27 +937,29 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                         </div>
                       </div>
 
-                  {/* Offer page mock */}
-                  <div className="rounded-xl p-5 bg-card border border-border">
-                    <div className="text-micro font-bold uppercase tracking-widest text-muted-foreground mb-2">
-                      Offer page · /offer
+                      {/* Offer page mock */}
+                      <div className="rounded-xl p-5 bg-card border border-border">
+                        <div className="text-micro font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                          Offer page · /offer
+                        </div>
+                        <div className="text-card-foreground font-bold text-base mb-1">Your Cash Offer</div>
+                        <div className="font-display text-2xl font-bold mb-3" style={{ color: primaryBg }}>
+                          $18,500
+                        </div>
+                        <button
+                          type="button"
+                          className="w-full h-10 rounded-lg text-sm font-bold text-white shadow-md cursor-default flex items-center justify-center gap-2"
+                          style={{ backgroundColor: acceptBg, boxShadow: `0 6px 16px ${acceptBg}40` }}
+                        >
+                          → Accept Offer
+                        </button>
+                        <p className="text-micro text-muted-foreground text-center mt-2">
+                          Slide-to-accept on the live page
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-card-foreground font-bold text-base mb-1">Your Cash Offer</div>
-                    <div className="font-display text-2xl font-bold mb-3" style={{ color: primaryBg }}>
-                      $18,500
-                    </div>
-                    <button
-                      type="button"
-                      className="w-full h-10 rounded-lg text-sm font-bold text-white shadow-md cursor-default flex items-center justify-center gap-2"
-                      style={{ backgroundColor: acceptBg, boxShadow: `0 6px 16px ${acceptBg}40` }}
-                    >
-                      → Accept Offer
-                    </button>
-                    <p className="text-micro text-muted-foreground text-center mt-2">
-                      Slide-to-accept on the live page
-                    </p>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
             );
           })()}
