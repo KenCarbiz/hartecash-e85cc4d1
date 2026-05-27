@@ -150,8 +150,11 @@ serve(async (req) => {
       });
     }
 
-    const customerName = sub.name ? sub.name.split(" ")[0] : "there";
-    const reasonLabel = REASON_LABEL[reason];
+    const esc = (s: unknown) => String(s ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    const customerName = esc(sub.name ? sub.name.split(" ")[0] : "there");
+    const reasonLabel = esc(REASON_LABEL[reason]);
     return htmlResponse(
       "Thanks for letting us know",
       `<div class="check">✓</div>
