@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Building2, Users, TrendingUp, TrendingDown, DollarSign, ArrowLeft,
   BarChart3, CheckCircle2, Clock, XCircle, Car, Target, AlertTriangle,
-  UserCheck, Moon, Sun, Plus, Eye,
+  UserCheck, Moon, Sun, Plus, Eye, Rocket,
 } from "lucide-react";
 import TenantViewPickerDialog from "@/components/admin/TenantViewPickerDialog";
 import {
@@ -43,6 +43,18 @@ interface Sub {
   lead_source: string;
 }
 
+interface EarlyAccessSignup {
+  id: string;
+  contact_name: string | null;
+  dealership_name: string;
+  email: string;
+  phone: string | null;
+  rooftops: string | null;
+  current_solution: string | null;
+  status: string;
+  created_at: string;
+}
+
 const STORE_COLORS = [
   "hsl(210,70%,50%)", "hsl(160,60%,45%)", "hsl(280,60%,55%)",
   "hsl(35,85%,55%)", "hsl(340,65%,50%)", "hsl(190,70%,45%)",
@@ -78,6 +90,7 @@ const SuperAdminDashboard = () => {
   const [viewTarget, setViewTarget] = useState<{ dealership_id: string; display_name: string } | null>(null);
   const [accounts, setAccounts] = useState<DealerAccount[]>([]);
   const [subs, setSubs] = useState<Sub[]>([]);
+  const [signups, setSignups] = useState<EarlyAccessSignup[]>([]);
   const [timeRange, setTimeRange] = useState<"30" | "60" | "90" | "all">("all");
   const [dark, setDark] = useState(() => localStorage.getItem("super-admin-dark") === "true");
   const [showAddTenant, setShowAddTenant] = useState(false);
@@ -118,15 +131,23 @@ const SuperAdminDashboard = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [{ data: tenantData }, { data: accountData }, { data: subData }] = await Promise.all([
+      const [{ data: tenantData }, { data: accountData }, { data: subData }, { data: signupData }] = await Promise.all([
         supabase.from("tenants").select("dealership_id, slug, display_name, is_active, custom_domain, created_at").order("created_at", { ascending: true }),
         supabase.from("dealer_accounts").select("dealership_id, plan_tier, plan_cost, onboarding_status, start_date, billing_date"),
         supabase.from("submissions").select("dealership_id, progress_status, offered_price, created_at, lead_source"),
+        // Tolerant of a missing table: if the early_access_signups migration
+        // hasn't been applied yet, this returns an error (not a throw) and we
+        // fall back to an empty list rather than blanking the dashboard.
+        (supabase as any)
+          .from("early_access_signups")
+          .select("id, contact_name, dealership_name, email, phone, rooftops, current_solution, status, created_at")
+          .order("created_at", { ascending: false }),
       ]);
 
       setTenants((tenantData || []) as TenantRow[]);
       setAccounts((accountData || []) as DealerAccount[]);
       setSubs((subData || []) as Sub[]);
+      setSignups((signupData || []) as EarlyAccessSignup[]);
     } catch {
       toast.error("Failed to load platform data");
     }
@@ -553,6 +574,58 @@ const SuperAdminDashboard = () => {
                   );
                 })}
               </div>
+            </div>
+
+            {/* Row 6 — Early Access Signups (autocurb.io/early-access) */}
+            <div className="bg-card rounded-xl border border-border p-5 shadow-sm overflow-x-auto">
+              <div className="flex items-center gap-2 mb-4">
+                <Rocket className="w-4 h-4 text-muted-foreground" />
+                <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                  Early Access Signups
+                </h3>
+                <span className="px-2 py-0.5 rounded-full bg-[#4CAF50]/10 text-[#4CAF50] text-[10px] font-bold">
+                  {signups.length}
+                </span>
+              </div>
+              {signups.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4">
+                  No early-access signups yet. Dealers who submit at{" "}
+                  <span className="font-mono text-xs">/early-access</span> show up here.
+                </p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 text-[10px] font-bold text-muted-foreground uppercase">Dealership</th>
+                      <th className="text-left py-2 text-[10px] font-bold text-muted-foreground uppercase hidden sm:table-cell">Contact</th>
+                      <th className="text-left py-2 text-[10px] font-bold text-muted-foreground uppercase">Email</th>
+                      <th className="text-left py-2 text-[10px] font-bold text-muted-foreground uppercase hidden md:table-cell">Phone</th>
+                      <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase hidden sm:table-cell">Rooftops</th>
+                      <th className="text-left py-2 text-[10px] font-bold text-muted-foreground uppercase hidden lg:table-cell">Using Today</th>
+                      <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {signups.map((s) => (
+                      <tr key={s.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="py-2.5 font-semibold text-card-foreground">{s.dealership_name}</td>
+                        <td className="py-2.5 text-muted-foreground hidden sm:table-cell">{s.contact_name || "—"}</td>
+                        <td className="py-2.5">
+                          <a href={`mailto:${s.email}`} className="text-[#4CAF50] hover:underline">{s.email}</a>
+                        </td>
+                        <td className="py-2.5 text-muted-foreground hidden md:table-cell">{s.phone || "—"}</td>
+                        <td className="py-2.5 text-right text-muted-foreground hidden sm:table-cell">{s.rooftops || "—"}</td>
+                        <td className="py-2.5 text-muted-foreground hidden lg:table-cell max-w-[16rem] truncate" title={s.current_solution || ""}>
+                          {s.current_solution || "—"}
+                        </td>
+                        <td className="py-2.5 text-right text-muted-foreground whitespace-nowrap">
+                          {new Date(s.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </>
         )}
