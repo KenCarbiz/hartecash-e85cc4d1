@@ -1743,6 +1743,45 @@ export type Database = {
         }
         Relationships: []
       }
+      early_access_signups: {
+        Row: {
+          contact_name: string | null
+          created_at: string
+          current_solution: string | null
+          dealership_name: string
+          email: string
+          id: string
+          phone: string | null
+          rooftops: string | null
+          source: string
+          status: string
+        }
+        Insert: {
+          contact_name?: string | null
+          created_at?: string
+          current_solution?: string | null
+          dealership_name: string
+          email: string
+          id?: string
+          phone?: string | null
+          rooftops?: string | null
+          source?: string
+          status?: string
+        }
+        Update: {
+          contact_name?: string | null
+          created_at?: string
+          current_solution?: string | null
+          dealership_name?: string
+          email?: string
+          id?: string
+          phone?: string | null
+          rooftops?: string | null
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
