@@ -46,6 +46,7 @@ const MfaChallenge = lazy(() => import("./pages/MfaChallenge"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PitchDeck = lazy(() => import("./pages/PitchDeck"));
 const PlatformPitch = lazy(() => import("./pages/PlatformPitch"));
+const EarlyAccess = lazy(() => import("./pages/EarlyAccess"));
 const ServiceLanding = lazy(() => import("./pages/ServiceLanding"));
 const KenPage = lazy(() => import("./pages/KenPage"));
 const ServiceLinkGen = lazy(() => import("./pages/ServiceLinkGen"));
@@ -264,6 +265,8 @@ const AnimatedRoutes = () => {
         <Route path="/service" element={<ServiceLanding />} />
         <Route path="/pitch" element={<PitchDeck />} />
         <Route path="/platform" element={<PlatformPitch />} />
+        {/* Dealer early-access signup for the AutoCurb.io platform. */}
+        <Route path="/early-access" element={<EarlyAccess />} />
         <Route path="/ken" element={<KenPage />} />
         <Route path="/servicelinkgen" element={<ServiceLinkGen />} />
         {/* /privacy and /terms moved into CustomerLayout above so
