@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useEffect } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Sparkles,
   Zap,
@@ -39,6 +40,21 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
     goTo("accepted");
   };
 
+  // Respect prefers-reduced-motion: skip the infinite sparkle/glow loops.
+  const reduceMotion = useReducedMotion();
+  const pulse = (keyframes: number[], duration: number, delay = 0) =>
+    reduceMotion ? undefined : { animate: { opacity: keyframes }, transition: { duration, repeat: Infinity, delay } };
+
+  // Keyboard: Escape closes the modal (keeps the current offer).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onKeep();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const benefits = [
     {
       icon: Zap,
@@ -74,6 +90,9 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
         className="relative w-full max-w-[580px]"
       >
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="boost-intro-title"
           className="relative max-h-[86vh] overflow-y-auto rounded-[28px] bg-white px-5 pb-6 pt-7 ring-1 ring-slate-200/75 sm:px-8 sm:pb-7 sm:pt-8"
           style={{
             boxShadow:
@@ -93,8 +112,8 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           {/* Close X */}
           <button
             onClick={onKeep}
-            aria-label="Close"
-            className="absolute right-5 top-5 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100/75 text-slate-500 ring-1 ring-slate-200/70 transition-colors hover:bg-slate-200 hover:text-slate-800"
+            aria-label="Close and keep your current offer"
+            className="absolute right-4 top-4 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-slate-100/75 text-slate-500 ring-1 ring-slate-200/70 transition-colors hover:bg-slate-200 hover:text-slate-800"
           >
             <X className="h-4 w-4" />
           </button>
@@ -117,20 +136,17 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
               />
               <motion.span
                 aria-hidden
-                animate={{ opacity: [0.4, 1, 0.4] }}
-                transition={{ duration: 2.4, repeat: Infinity }}
+                {...pulse([0.4, 1, 0.4], 2.4)}
                 className="absolute -left-9 top-2 h-1.5 w-1.5 rounded-full bg-[hsl(262_83%_62%/0.7)]"
               />
               <motion.span
                 aria-hidden
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ duration: 2.8, repeat: Infinity, delay: 0.4 }}
+                {...pulse([1, 0.3, 1], 2.8, 0.4)}
                 className="absolute -right-9 top-3 h-1.5 w-1.5 rounded-full bg-[hsl(262_83%_62%/0.7)]"
               />
               <motion.span
                 aria-hidden
-                animate={{ opacity: [0.3, 0.9, 0.3] }}
-                transition={{ duration: 2.2, repeat: Infinity, delay: 0.8 }}
+                {...pulse([0.3, 0.9, 0.3], 2.2, 0.8)}
                 className="absolute -right-10 bottom-2 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.6)]"
               />
               <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-[0_13px_32px_-11px_hsl(262_83%_58%/0.55)] ring-1 ring-[hsl(262_83%_62%/0.25)]">
@@ -145,7 +161,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
           </p>
 
           {/* Headline — forced two lines */}
-          <h2 className="mt-2 text-center text-[28px] font-bold leading-[1.12] text-slate-950 sm:text-[40px]">
+          <h2 id="boost-intro-title" className="mt-2 text-center text-[28px] font-bold leading-[1.12] text-slate-950 sm:text-[40px]">
             Get your strongest offer
             <br />
             with a <span className="text-[hsl(262_83%_52%)]">photo review.</span>
@@ -229,7 +245,7 @@ const StepBoostIntro = ({ state, goTo, update }: StepContext) => {
             <div className="text-center">
               <button
                 onClick={onKeep}
-                className="text-[14px] font-semibold text-[hsl(262_83%_50%)] underline-offset-4 transition-colors hover:underline"
+                className="inline-flex min-h-[44px] items-center justify-center px-4 py-2.5 text-[14px] font-semibold text-[hsl(262_83%_50%)] underline-offset-4 transition-colors hover:underline"
               >
                 Save Your Offer
               </button>
