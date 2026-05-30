@@ -15,6 +15,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { LogIn, Search, Car, ChevronRight, ArrowUp } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
+// Progressive (xxx) xxx-xxxx mask. We store digits; the lookup RPC
+// strips non-digits on both sides, so formatting is display-only and
+// never affects matching.
+const formatPhone = (raw: string) => {
+  const d = (raw || "").replace(/\D/g, "").slice(0, 10);
+  if (!d) return "";
+  if (d.length < 4) return `(${d}`;
+  if (d.length < 7) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+};
+
 interface FoundSubmission {
   token: string;
   vehicle_year: string | null;
@@ -124,8 +135,8 @@ const FindOfferLean = () => {
               autoComplete="tel"
               inputMode="tel"
               placeholder="(555) 123-4567"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              value={formatPhone(phone)}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
               required
               className="w-full h-12 px-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 transition-colors"
             />

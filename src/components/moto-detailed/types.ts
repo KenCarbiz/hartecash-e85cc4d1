@@ -19,6 +19,8 @@ export interface JourneyVehicle {
   vin?: string;
   plate?: string;
   plateState?: string;
+  /** Black Book UVC — lets the image pipeline pull the exact-vehicle BB photo. */
+  uvc?: string;
   imageUrl?: string;
 }
 

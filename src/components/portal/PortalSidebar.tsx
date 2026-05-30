@@ -6,7 +6,7 @@ import {
   Menu, X, Bell, MessageSquare, Upload, HelpCircle, Bot, ShieldCheck, Lock,
   type LucideIcon,
 } from "lucide-react";
-import harteLogo from "@/assets/harte-logo.png";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { AccountMenu } from "./AccountMenu";
 
 /* ─────────────────────────────────────────────────────────────────
@@ -42,6 +42,62 @@ const NAV: NavItem[] = [
 ];
 
 type Customer = { name: string; initials: string; dealer: string; email: string };
+
+/* ── tenant brand ──────────────────────────────────────────────────
+   White-labels the portal: shows the tenant's own logo
+   (config.logo_url) and gracefully falls back to the tenant name
+   (config.dealership_name, then the customer's dealer) when no logo
+   is configured. Replaces the hardcoded platform MOTO(acquire) mark.
+   ──────────────────────────────────────────────────────────────── */
+const PortalBrand = ({
+  collapsed = false,
+  fallbackName,
+  chipClass = "w-11 h-11 rounded-xl",
+  logoClass = "h-9 max-w-[180px]",
+  nameClass = "text-[15px]",
+}: {
+  collapsed?: boolean;
+  fallbackName: string;
+  chipClass?: string;
+  logoClass?: string;
+  nameClass?: string;
+}) => {
+  const { config } = useSiteConfig();
+  const raw = config.logo_url;
+  const logoSrc = raw
+    ? raw.includes("supabase.co/storage/")
+      ? `${raw}?width=280&resize=contain&quality=80&format=origin`
+      : raw
+    : "";
+  const name =
+    config.dealership_name && config.dealership_name !== "Our Dealership"
+      ? config.dealership_name
+      : fallbackName || "Your Dealership";
+
+  // Collapsed rail → square chip with the logo, or the first initial.
+  if (collapsed) {
+    return (
+      <div className={`${chipClass} bg-white border border-[#E6EAF0] shadow-[0_2px_6px_-2px_rgba(15,23,42,0.08)] grid place-items-center overflow-hidden p-1.5 shrink-0`}>
+        {logoSrc ? (
+          <img src={logoSrc} alt={name} className="w-full h-full object-contain" />
+        ) : (
+          <span className="text-[16px] font-extrabold text-[#06194A]">
+            {name.charAt(0).toUpperCase()}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  // Expanded → just the tenant logo, else the tenant name.
+  return logoSrc ? (
+    <img src={logoSrc} alt={name} className={`${logoClass} w-auto object-contain`} />
+  ) : (
+    <div className={`${nameClass} font-extrabold tracking-tight text-[#06194A] truncate min-w-0`}>
+      {name}
+    </div>
+  );
+};
 
 /* ── shared nav button ─────────────────────────────────────────── */
 const NavButton = ({
@@ -189,29 +245,9 @@ export const PortalSidebar = ({ active, onChange, customer }: SidebarProps) => {
       transition={{ type: "spring", stiffness: 260, damping: 30 }}
       className="hidden lg:flex sticky top-0 self-start h-screen flex-col shrink-0 bg-white border-r border-[#E6EAF0] py-5 overflow-hidden"
     >
-      {/* logo + collapse */}
-      <div className={`flex items-center gap-3 px-4 mb-6 ${collapsed ? "justify-center px-2" : ""}`}>
-        <div className="w-11 h-11 rounded-xl bg-white border border-[#E6EAF0] shadow-[0_2px_6px_-2px_rgba(15,23,42,0.08)] grid place-items-center overflow-hidden p-1.5 shrink-0">
-          <img src={harteLogo} alt="MOTO(acquire)" className="w-full h-full object-contain" />
-        </div>
-        <AnimatePresence initial={false}>
-          {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -8 }}
-              transition={{ duration: 0.15 }}
-              className="leading-tight flex-1 min-w-0"
-            >
-              <div className="text-[14px] font-extrabold tracking-tight text-[#06194A]">
-                MOTO<span className="text-[#4F46E5]">(acquire)</span>
-              </div>
-              <div className="text-[9px] uppercase tracking-[0.24em] text-[#8893A8] font-semibold mt-0.5 truncate">
-                {customer.dealer}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* tenant logo (falls back to the tenant name) + collapse */}
+      <div className={`flex items-center px-4 mb-6 ${collapsed ? "justify-center px-2" : ""}`}>
+        <PortalBrand collapsed={collapsed} fallbackName={customer.dealer} />
       </div>
 
       {/* collapse toggle */}
@@ -271,13 +307,8 @@ export const PortalMobileTopBar = ({
         >
           <Menu className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-white border border-[#E6EAF0] grid place-items-center overflow-hidden p-1">
-            <img src={harteLogo} alt="" className="w-full h-full object-contain" />
-          </div>
-          <div className="text-[13px] font-extrabold tracking-tight text-[#06194A]">
-            MOTO<span className="text-[#4F46E5]">(acquire)</span>
-          </div>
+        <div className="flex items-center gap-2 min-w-0">
+          <PortalBrand fallbackName={customer.dealer} logoClass="h-7 max-w-[150px]" nameClass="text-[13px]" />
         </div>
         <div className="flex items-center gap-1">
           <button aria-label="Notifications" className="relative w-9 h-9 rounded-lg hover:bg-[#F4F6FA] grid place-items-center text-[#53627A] transition-colors">
@@ -311,18 +342,8 @@ export const PortalMobileTopBar = ({
               className="lg:hidden fixed inset-y-0 left-0 z-50 w-[85%] max-w-[340px] bg-white shadow-2xl flex flex-col"
             >
               <div className="flex items-center justify-between px-5 h-16 border-b border-[#E6EAF0]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-white border border-[#E6EAF0] grid place-items-center overflow-hidden p-1.5">
-                    <img src={harteLogo} alt="" className="w-full h-full object-contain" />
-                  </div>
-                  <div className="leading-tight">
-                    <div className="text-[13px] font-extrabold tracking-tight text-[#06194A]">
-                      MOTO<span className="text-[#4F46E5]">(acquire)</span>
-                    </div>
-                    <div className="text-[9px] uppercase tracking-[0.22em] text-[#8893A8] font-semibold mt-0.5">
-                      {customer.dealer}
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <PortalBrand fallbackName={customer.dealer} logoClass="h-8 max-w-[170px]" nameClass="text-[14px]" />
                 </div>
                 <button
                   aria-label="Close menu"

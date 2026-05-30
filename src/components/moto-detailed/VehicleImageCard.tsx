@@ -32,8 +32,12 @@ interface Props {
   alt?: string;
 }
 
+// v2 — bumped so the "no image" sentinels cached during the period
+// when Black Book was disconnected get invalidated. Without this, a
+// browser that saw the silhouette fallback once would keep showing it
+// forever even now that BB photos resolve.
 const cacheKey = (year?: string | null, make?: string | null, model?: string | null) =>
-  `journey-vehicle-img-v1-${year ?? ""}-${make ?? ""}-${model ?? ""}`
+  `journey-vehicle-img-v2-${year ?? ""}-${make ?? ""}-${model ?? ""}`
     .toLowerCase()
     .replace(/\s+/g, "_");
 

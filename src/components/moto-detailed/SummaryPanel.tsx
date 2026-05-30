@@ -74,6 +74,7 @@ const SummaryPanel = ({ state, currentStepId }: { state: JourneyState; currentSt
             year={vehicle.year}
             make={vehicle.make}
             model={vehicle.model}
+            uvc={vehicle.uvc}
           />
 
           {/* Vehicle name */}
@@ -155,6 +156,7 @@ const SummaryPanel = ({ state, currentStepId }: { state: JourneyState; currentSt
             year={vehicle.year}
             make={vehicle.make}
             model={vehicle.model}
+            uvc={vehicle.uvc}
           />
 
           <div className="border-t border-slate-100 px-5 pb-5 pt-4">
