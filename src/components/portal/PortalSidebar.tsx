@@ -260,9 +260,15 @@ export const PortalSidebar = ({ active, onChange, customer }: SidebarProps) => {
       transition={{ type: "spring", stiffness: 260, damping: 30 }}
       className="hidden lg:flex sticky top-0 self-start h-screen flex-col shrink-0 bg-white border-r border-[#E6EAF0] py-5 overflow-hidden"
     >
-      {/* tenant logo (falls back to the tenant name) + collapse */}
-      <div className={`flex items-center px-4 mb-6 ${collapsed ? "justify-center px-2" : ""}`}>
-        <PortalBrand collapsed={collapsed} fallbackName={customer.dealer} />
+      {/* tenant logo (falls back to the tenant name) — centered in the rail */}
+      <div className={`flex items-center justify-center mb-6 ${collapsed ? "px-2" : "px-4"}`}>
+        <PortalBrand
+          collapsed={collapsed}
+          fallbackName={customer.dealer}
+          chipClass="w-14 h-14 rounded-2xl"
+          logoClass="h-14 max-w-[210px]"
+          nameClass="text-[26px] text-center"
+        />
       </div>
 
       {/* collapse toggle */}
