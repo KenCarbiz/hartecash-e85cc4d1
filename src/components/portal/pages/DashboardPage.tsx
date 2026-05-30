@@ -5,7 +5,6 @@ import {
   ArrowRight, Upload, MessageSquare, LineChart as LineIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { fmt } from "../portalMock";
 import { usePortalData } from "../PortalDataContext";
 import { SlideOver } from "../SlideOver";

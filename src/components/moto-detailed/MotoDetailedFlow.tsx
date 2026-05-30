@@ -82,6 +82,9 @@ const seedFromMotoPatch = (patch: Partial<MotoFlowState>): Partial<JourneyState>
     vin: bb.vin || patch.vin || undefined,
     plate: patch.plate || undefined,
     plateState: patch.plateState || undefined,
+    // Carry the BB UVC so the summary image card can request the
+    // exact-vehicle Black Book photo (not a generic Wikipedia/AI shot).
+    uvc: bb.uvc || undefined,
   };
   const range = pickRange(bb);
   const valuation: JourneyValuation = {

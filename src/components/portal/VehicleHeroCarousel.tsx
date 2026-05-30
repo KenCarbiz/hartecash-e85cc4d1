@@ -6,8 +6,8 @@ import {
   Activity, Flame, Zap, MapPin, Clock, FileText, Truck, Wallet, Trophy,
   CircleDot, Plus, Brain, ArrowRight,
 } from "lucide-react";
-import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { fmt } from "./portalMock";
+import { NEUTRAL_VEHICLE } from "./neutralVehicle";
 import { usePortalData } from "./PortalDataContext";
 import { useVehicleImage } from "@/hooks/useVehicleImage";
 
@@ -79,7 +79,7 @@ const SLIDE_HEIGHT = "h-[280px] md:h-[300px]";
 /* ---------- 1. Vehicle Overview --------------------------------- */
 const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () => void }) => {
   const MOCK = usePortalData();
-  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model);
+  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model, MOCK.vehicle.vin);
   return (
   <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-4 items-center h-full">
     <div className="relative h-[140px] md:h-[200px] flex items-center justify-center overflow-hidden group">
@@ -87,7 +87,7 @@ const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () 
         <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
       </div>
       <img
-        src={heroUrl || vehicleHero}
+        src={heroUrl || NEUTRAL_VEHICLE}
         alt={`${MOCK.vehicle.year} ${MOCK.vehicle.make} ${MOCK.vehicle.model}`}
         loading="lazy"
         className="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_18px_14px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.24]"
@@ -163,8 +163,8 @@ const PHOTO_STATUS: Record<string, { label: string; cls: string }> = {
 
 const PhotoGallerySlide = () => {
   const MOCK = usePortalData();
-  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model);
-  const heroSrc = heroUrl || vehicleHero;
+  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model, MOCK.vehicle.vin);
+  const heroSrc = heroUrl || NEUTRAL_VEHICLE;
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const cat = PHOTO_CATEGORIES[active];

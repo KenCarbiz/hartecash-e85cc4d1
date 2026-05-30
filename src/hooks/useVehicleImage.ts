@@ -5,28 +5,32 @@ import { supabase } from "@/integrations/supabase/client";
  * Resolves a customer-portal hero image for a given year/make/model.
  *
  * Invokes the `generate-vehicle-image` edge function with
- * `studio_only: true, angle: "3q"` so we always get a transparent /
- * white-background, 3/4-front studio render (per product direction:
- * "no background 3/4 angle with a shadow under the car"). The
+ * `angle: "3q"` and the optional Black Book `uvc`. We do NOT force
+ * `studio_only`, so the function resolves the real photo of the
+ * customer's actual vehicle in priority order — Black Book photo (by
+ * uvc, an exact-VIN match) → Wikipedia (correct year/make/model) → AI
+ * studio render — instead of an AI-only image that may not match. The
  * function checks `vehicle_image_cache` first; only the very first
- * caller for a new year-make-model triggers an AI generation, which
- * is then cached for every subsequent portal load.
+ * caller for a new year-make-model triggers a generation, which is
+ * then cached for every subsequent portal load.
  *
- * Returns `null` while loading or on failure -- callers are
- * expected to fall back to a static placeholder until the URL
- * resolves.
+ * Returns `null` while loading or on failure -- callers should show a
+ * neutral, brand-agnostic placeholder (never a specific model) until
+ * the URL resolves.
  */
 export function useVehicleImage(
   year?: number | string | null,
   make?: string | null,
   model?: string | null,
+  vin?: string | null,
   submissionToken?: string | null,
+  uvc?: string | null,
 ): string | null {
   const [url, setUrl] = useState<string | null>(null);
 
   // Stable key so we don't re-fetch on every render. Strings normalize
   // away nullish + whitespace so equivalent inputs hit the same key.
-  const key = [year, make, model].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
+  const key = [year, make, model, vin, uvc].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
 
   useEffect(() => {
     if (!year || !make || !model) {
@@ -42,7 +46,10 @@ export function useVehicleImage(
             make,
             model,
             angle: "3q",
-            studio_only: true,
+            // VIN lets the edge function resolve the exact-vehicle Black
+            // Book UVC (and thus the real BB photo) when no uvc is passed.
+            vin: vin || undefined,
+            uvc: uvc || undefined,
             submission_token: submissionToken || undefined,
           },
         });

@@ -50,6 +50,7 @@ interface SubmissionInfo {
   vehicle_year: string | null;
   vehicle_make: string | null;
   vehicle_model: string | null;
+  vin?: string | null;
   name: string | null;
   photos_uploaded: boolean;
   bb_class_name?: string | null;
@@ -138,6 +139,7 @@ const UploadPhotosClarity = () => {
     submission?.vehicle_year,
     submission?.vehicle_make,
     submission?.vehicle_model,
+    submission?.vin,
     token,
   );
 

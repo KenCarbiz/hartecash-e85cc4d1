@@ -8,7 +8,7 @@ import {
   Clock, Search, Sparkles, Settings2, ZoomIn, MoreHorizontal, Archive, Download,
   Pencil, Lightbulb, Fingerprint, History, FileCheck2,
 } from "lucide-react";
-import vehicleHero from "@/assets/portal-vehicle-rav4.png";
+import { NEUTRAL_VEHICLE } from "../neutralVehicle";
 import { fmt } from "../portalMock";
 import { usePortalData } from "../PortalDataContext";
 import { useVehicleImage } from "@/hooks/useVehicleImage";
@@ -416,8 +416,8 @@ const AddVehicleWizard = ({ open, onClose }: { open: boolean; onClose: () => voi
    ────────────────────────────────────────────────────────────── */
 export const VehiclesPage = ({ onNavigate }: Props) => {
   const MOCK = usePortalData();
-  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model);
-  const heroSrc = heroUrl || vehicleHero;
+  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model, MOCK.vehicle.vin);
+  const heroSrc = heroUrl || NEUTRAL_VEHICLE;
   const [edit, setEdit] = useState(false);
   const [upload, setUpload] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);

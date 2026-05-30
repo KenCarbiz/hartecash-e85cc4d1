@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const BB_PHOTO_BASE = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle/Photo/uvc";
+const BB_VIN_BASE = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle";
 
 // Wikipedia REST API — free, no key, ~300-500ms response time.
 // Most popular vehicles (Camry, Civic, F-150, Armada, etc.) have a
@@ -76,7 +77,7 @@ serve(async (req) => {
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
   try {
-    const { year, make, model, style, color, uvc, angle, studio_only } = await req.json();
+    const { year, make, model, style, color, uvc, vin, angle, studio_only } = await req.json();
 
     if (!year || !make || !model) {
       return new Response(JSON.stringify({ error: "year, make, and model are required" }), {
@@ -152,22 +153,46 @@ serve(async (req) => {
       }
     }
 
-    // 2. Try Black Book photo API first (if UVC provided and year >= 2001)
+    // 2. Try Black Book photo API first (the exact-vehicle photo).
     let imageBytes: Uint8Array | null = null;
     let imageSource = "ai";
     const bbUsername = Deno.env.get("BLACKBOOK_USERNAME");
     const bbPassword = Deno.env.get("BLACKBOOK_PASSWORD");
     const yearNum = parseInt(year, 10);
+    const bbCreds = bbUsername && bbPassword ? btoa(`${bbUsername}:${bbPassword}`) : "";
 
-    if (!studio_only && uvc && bbUsername && bbPassword && yearNum >= 2001) {
+    // Resolve the BB UVC for the exact vehicle. Prefer the uvc passed
+    // in; otherwise decode the VIN via Black Book. The customer portal
+    // only has the VIN (the uvc isn't persisted), so this VIN→uvc step
+    // is what lets the portal show the exact-VIN BB photo instead of a
+    // generic model shot.
+    let resolvedUvc: string = (uvc as string) || "";
+    if (!studio_only && !resolvedUvc && vin && bbCreds && yearNum >= 2001) {
       try {
-        const credentials = btoa(`${bbUsername}:${bbPassword}`);
-        const bbPhotoUrl = `${BB_PHOTO_BASE}/${encodeURIComponent(uvc)}`;
-        console.log(`Trying BB photo for UVC ${uvc}...`);
+        const vinRes = await fetch(`${BB_VIN_BASE}/VIN/${encodeURIComponent(vin)}?template=11`, {
+          headers: { "Authorization": `Basic ${bbCreds}`, "Accept": "application/json" },
+        });
+        if (vinRes.ok) {
+          const vinJson = await vinRes.json();
+          resolvedUvc = vinJson?.used_vehicles?.used_vehicle_list?.[0]?.uvc || "";
+          if (resolvedUvc) console.log(`Resolved UVC ${resolvedUvc} from VIN for BB photo`);
+          else console.log("BB VIN decode returned no uvc for photo");
+        } else {
+          console.log(`BB VIN decode for photo returned ${vinRes.status}`);
+        }
+      } catch (e) {
+        console.log(`BB VIN decode error: ${(e as Error).message}`);
+      }
+    }
+
+    if (!studio_only && resolvedUvc && bbCreds && yearNum >= 2001) {
+      try {
+        const bbPhotoUrl = `${BB_PHOTO_BASE}/${encodeURIComponent(resolvedUvc)}`;
+        console.log(`Trying BB photo for UVC ${resolvedUvc}...`);
 
         const bbRes = await fetch(bbPhotoUrl, {
           headers: {
-            "Authorization": `Basic ${credentials}`,
+            "Authorization": `Basic ${bbCreds}`,
             "Accept": "image/jpeg",
           },
         });
@@ -179,11 +204,11 @@ serve(async (req) => {
             if (arrayBuf.byteLength > 1000) { // Sanity check — real photo should be > 1KB
               imageBytes = new Uint8Array(arrayBuf);
               imageSource = "blackbook";
-              console.log(`BB photo SUCCESS for ${uvc} (${imageBytes.length} bytes)`);
+              console.log(`BB photo SUCCESS for ${resolvedUvc} (${imageBytes.length} bytes)`);
             }
           }
         } else {
-          console.log(`BB photo returned ${bbRes.status} for UVC ${uvc}, falling back to AI`);
+          console.log(`BB photo returned ${bbRes.status} for UVC ${resolvedUvc}, falling back to AI`);
         }
       } catch (e) {
         console.log(`BB photo error: ${(e as Error).message}, falling back to AI`);
