@@ -88,17 +88,24 @@ const PortalBrand = ({
 }) => {
   const { config } = useSiteConfig();
   const raw = config.logo_url;
-  // Prefer the tenant's own uploaded logo (white-label); otherwise fall
-  // back to the AUTO (curb) wordmark asset instead of the text wordmark.
-  const logoSrc = raw
-    ? raw.includes("supabase.co/storage/")
-      ? `${raw}?width=280&resize=contain&quality=80&format=origin`
-      : raw
-    : PORTAL_LOGO_FALLBACK;
   const name =
     config.dealership_name && config.dealership_name !== "Our Dealership"
       ? config.dealership_name
       : fallbackName || "Your Dealership";
+  // The AUTO (curb) wordmark asset is AutoCurb's brand — only use it as
+  // the fallback for that tenant. Every other tenant without an uploaded
+  // logo keeps their own name wordmark (white-label correctness).
+  const norm = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const isAutoCurb = norm.includes("autocurb");
+  // Prefer the tenant's own uploaded logo; else the AUTO (curb) asset for
+  // AutoCurb; else fall through to the rendered tenant-name wordmark.
+  const logoSrc = raw
+    ? raw.includes("supabase.co/storage/")
+      ? `${raw}?width=280&resize=contain&quality=80&format=origin`
+      : raw
+    : isAutoCurb
+      ? PORTAL_LOGO_FALLBACK
+      : "";
 
   // Collapsed rail → square chip with the logo, or the first initial.
   if (collapsed) {
