@@ -9,6 +9,13 @@ import {
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { AccountMenu } from "./AccountMenu";
 
+// AUTO (curb) wordmark — served from /public. encodeURI handles the
+// spaces in the filename. Used as the portal brand when a tenant has
+// not uploaded their own logo.
+const PORTAL_LOGO_FALLBACK = encodeURI(
+  "/brand/autocurb/ChatGPT Image May 30, 2026, 06_40_52 PM.png",
+);
+
 /* ─────────────────────────────────────────────────────────────────
    PortalSidebar — premium customer-portal navigation.
    • Desktop: fixed, 260px expanded ↔ 88px icon-only, animated.
@@ -81,11 +88,13 @@ const PortalBrand = ({
 }) => {
   const { config } = useSiteConfig();
   const raw = config.logo_url;
+  // Prefer the tenant's own uploaded logo (white-label); otherwise fall
+  // back to the AUTO (curb) wordmark asset instead of the text wordmark.
   const logoSrc = raw
     ? raw.includes("supabase.co/storage/")
       ? `${raw}?width=280&resize=contain&quality=80&format=origin`
       : raw
-    : "";
+    : PORTAL_LOGO_FALLBACK;
   const name =
     config.dealership_name && config.dealership_name !== "Our Dealership"
       ? config.dealership_name

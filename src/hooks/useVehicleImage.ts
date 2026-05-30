@@ -46,8 +46,11 @@ export function useVehicleImage(
             make,
             model,
             angle: "3q",
-            // VIN lets the edge function resolve the exact-vehicle Black
-            // Book UVC (and thus the real BB photo) when no uvc is passed.
+            // Clean white-background studio render of the customer's exact
+            // year/make/model. This is the reliable path (cached per
+            // y/m/m); the BB-photo-by-VIN route produced empty results for
+            // some vehicles and fell through to the silhouette placeholder.
+            studio_only: true,
             vin: vin || undefined,
             uvc: uvc || undefined,
             submission_token: submissionToken || undefined,
