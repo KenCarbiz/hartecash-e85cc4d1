@@ -6,10 +6,24 @@ import {
   Activity, Flame, Zap, MapPin, Clock, FileText, Truck, Wallet, Trophy,
   CircleDot, Plus, Brain, ArrowRight,
 } from "lucide-react";
-import vehicleHero from "@/assets/portal-vehicle-rav4.png";
 import { fmt } from "./portalMock";
 import { usePortalData } from "./PortalDataContext";
 import { useVehicleImage } from "@/hooks/useVehicleImage";
+
+// Neutral, brand-agnostic vehicle silhouette shown only until the real
+// photo of the customer's actual vehicle resolves. Replaces the old
+// hardcoded RAV4 placeholder so a customer never sees the wrong model.
+const NEUTRAL_VEHICLE =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 70'>" +
+      "<path d='M10 50 L10 40 Q10 36 14 36 L26 36 L36 20 Q38 16 44 16 L84 16 Q90 16 92 20 L102 36 L106 36 Q110 36 110 40 L110 50 Z' fill='rgba(79,70,229,0.10)' stroke='rgba(79,70,229,0.45)' stroke-width='2' stroke-linejoin='round'/>" +
+      "<path d='M40 20 L62 20 L62 34 L34 34 Z' fill='white' stroke='rgba(79,70,229,0.4)' stroke-width='1'/>" +
+      "<path d='M64 20 L84 20 L94 34 L64 34 Z' fill='white' stroke='rgba(79,70,229,0.4)' stroke-width='1'/>" +
+      "<circle cx='34' cy='52' r='7' fill='white' stroke='rgba(79,70,229,0.5)' stroke-width='2'/>" +
+      "<circle cx='90' cy='52' r='7' fill='white' stroke='rgba(79,70,229,0.5)' stroke-width='2'/>" +
+    "</svg>",
+  );
 
 /* ============================================================== */
 /*  Slide data — single source of truth                            */
@@ -87,7 +101,7 @@ const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () 
         <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
       </div>
       <img
-        src={heroUrl || vehicleHero}
+        src={heroUrl || NEUTRAL_VEHICLE}
         alt={`${MOCK.vehicle.year} ${MOCK.vehicle.make} ${MOCK.vehicle.model}`}
         loading="lazy"
         className="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_18px_14px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.24]"
@@ -164,7 +178,7 @@ const PHOTO_STATUS: Record<string, { label: string; cls: string }> = {
 const PhotoGallerySlide = () => {
   const MOCK = usePortalData();
   const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model);
-  const heroSrc = heroUrl || vehicleHero;
+  const heroSrc = heroUrl || NEUTRAL_VEHICLE;
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const cat = PHOTO_CATEGORIES[active];

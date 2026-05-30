@@ -49,6 +49,23 @@ type Customer = { name: string; initials: string; dealer: string; email: string 
    (config.dealership_name, then the customer's dealer) when no logo
    is configured. Replaces the hardcoded platform MOTO(acquire) mark.
    ──────────────────────────────────────────────────────────────── */
+
+/** Tenant name styled as a MOTO(acquire)-style wordmark: the first
+ *  token uppercase / bold / near-black, the remainder lowercase in the
+ *  brand purple. e.g. "AUTO (CURB)" → AUTO (black) + (curb) (purple). */
+const BrandWordmark = ({ name, className = "" }: { name: string; className?: string }) => {
+  const trimmed = name.trim();
+  const spaceIdx = trimmed.indexOf(" ");
+  const first = (spaceIdx === -1 ? trimmed : trimmed.slice(0, spaceIdx)).toUpperCase();
+  const rest = spaceIdx === -1 ? "" : trimmed.slice(spaceIdx).toLowerCase();
+  return (
+    <div className={`font-extrabold tracking-tight truncate min-w-0 ${className}`}>
+      <span className="text-[#06194A]">{first}</span>
+      {rest && <span className="text-[#4F46E5]">{rest}</span>}
+    </div>
+  );
+};
+
 const PortalBrand = ({
   collapsed = false,
   fallbackName,
@@ -89,13 +106,11 @@ const PortalBrand = ({
     );
   }
 
-  // Expanded → just the tenant logo, else the tenant name.
+  // Expanded → just the tenant logo, else the tenant name wordmark.
   return logoSrc ? (
     <img src={logoSrc} alt={name} className={`${logoClass} w-auto object-contain`} />
   ) : (
-    <div className={`${nameClass} font-extrabold tracking-tight text-[#06194A] truncate min-w-0`}>
-      {name}
-    </div>
+    <BrandWordmark name={name} className={nameClass} />
   );
 };
 
