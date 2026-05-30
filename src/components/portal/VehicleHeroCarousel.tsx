@@ -7,23 +7,9 @@ import {
   CircleDot, Plus, Brain, ArrowRight,
 } from "lucide-react";
 import { fmt } from "./portalMock";
+import { NEUTRAL_VEHICLE } from "./neutralVehicle";
 import { usePortalData } from "./PortalDataContext";
 import { useVehicleImage } from "@/hooks/useVehicleImage";
-
-// Neutral, brand-agnostic vehicle silhouette shown only until the real
-// photo of the customer's actual vehicle resolves. Replaces the old
-// hardcoded RAV4 placeholder so a customer never sees the wrong model.
-const NEUTRAL_VEHICLE =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 70'>" +
-      "<path d='M10 50 L10 40 Q10 36 14 36 L26 36 L36 20 Q38 16 44 16 L84 16 Q90 16 92 20 L102 36 L106 36 Q110 36 110 40 L110 50 Z' fill='rgba(79,70,229,0.10)' stroke='rgba(79,70,229,0.45)' stroke-width='2' stroke-linejoin='round'/>" +
-      "<path d='M40 20 L62 20 L62 34 L34 34 Z' fill='white' stroke='rgba(79,70,229,0.4)' stroke-width='1'/>" +
-      "<path d='M64 20 L84 20 L94 34 L64 34 Z' fill='white' stroke='rgba(79,70,229,0.4)' stroke-width='1'/>" +
-      "<circle cx='34' cy='52' r='7' fill='white' stroke='rgba(79,70,229,0.5)' stroke-width='2'/>" +
-      "<circle cx='90' cy='52' r='7' fill='white' stroke='rgba(79,70,229,0.5)' stroke-width='2'/>" +
-    "</svg>",
-  );
 
 /* ============================================================== */
 /*  Slide data — single source of truth                            */
@@ -93,7 +79,7 @@ const SLIDE_HEIGHT = "h-[280px] md:h-[300px]";
 /* ---------- 1. Vehicle Overview --------------------------------- */
 const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () => void }) => {
   const MOCK = usePortalData();
-  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model);
+  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model, MOCK.vehicle.vin);
   return (
   <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-4 items-center h-full">
     <div className="relative h-[140px] md:h-[200px] flex items-center justify-center overflow-hidden group">
@@ -177,7 +163,7 @@ const PHOTO_STATUS: Record<string, { label: string; cls: string }> = {
 
 const PhotoGallerySlide = () => {
   const MOCK = usePortalData();
-  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model);
+  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model, MOCK.vehicle.vin);
   const heroSrc = heroUrl || NEUTRAL_VEHICLE;
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);

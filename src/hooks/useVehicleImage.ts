@@ -22,6 +22,7 @@ export function useVehicleImage(
   year?: number | string | null,
   make?: string | null,
   model?: string | null,
+  vin?: string | null,
   submissionToken?: string | null,
   uvc?: string | null,
 ): string | null {
@@ -29,7 +30,7 @@ export function useVehicleImage(
 
   // Stable key so we don't re-fetch on every render. Strings normalize
   // away nullish + whitespace so equivalent inputs hit the same key.
-  const key = [year, make, model, uvc].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
+  const key = [year, make, model, vin, uvc].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
 
   useEffect(() => {
     if (!year || !make || !model) {
@@ -45,6 +46,9 @@ export function useVehicleImage(
             make,
             model,
             angle: "3q",
+            // VIN lets the edge function resolve the exact-vehicle Black
+            // Book UVC (and thus the real BB photo) when no uvc is passed.
+            vin: vin || undefined,
             uvc: uvc || undefined,
             submission_token: submissionToken || undefined,
           },
