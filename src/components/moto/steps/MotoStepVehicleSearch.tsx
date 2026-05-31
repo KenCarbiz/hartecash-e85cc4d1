@@ -318,7 +318,6 @@ const MotoStepVehicleSearch = ({
             <div className="mt-8">
               <MotoPrimaryButton
                 className={`w-full py-2 rounded-full text-sm transition-colors ${canSubmit ? "" : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"}`}
-                style={canSubmit ? { background: tuner.ctaColor, color: tuner.ctaTextColor } : undefined}
                 onClick={submit}
                 disabled={!canSubmit}
                 loading={loading}
@@ -331,7 +330,7 @@ const MotoStepVehicleSearch = ({
 
               <div
                 className="mt-4 rounded-md py-3 text-center text-sm font-semibold"
-                style={{ background: tuner.ctaColor, color: tuner.ctaTextColor }}
+                style={{ background: "hsl(var(--cta-offer))", color: "var(--cta-offer-text)" }}
               >
                 Get a valuation in less than 30 seconds!
               </div>

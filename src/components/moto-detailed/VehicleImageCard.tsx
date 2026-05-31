@@ -37,7 +37,7 @@ interface Props {
 // browser that saw the silhouette fallback once would keep showing it
 // forever even now that BB photos resolve.
 const cacheKey = (year?: string | null, make?: string | null, model?: string | null) =>
-  `journey-vehicle-img-v2-${year ?? ""}-${make ?? ""}-${model ?? ""}`
+  `journey-vehicle-img-v3-${year ?? ""}-${make ?? ""}-${model ?? ""}`
     .toLowerCase()
     .replace(/\s+/g, "_");
 
@@ -90,6 +90,9 @@ const VehicleImageCard = ({
             color: "white",
             uvc: uvc ?? undefined,
             angle: "three_quarter",
+            // Clean no-background studio render of the customer's exact
+            // year/make/model (reliable, cached per y/m/m).
+            studio_only: true,
           },
         });
         if (cancelled) return;
@@ -121,7 +124,7 @@ const VehicleImageCard = ({
         <img
           src={displayUrl!}
           alt={alt ?? (`${make ?? ""} ${model ?? ""}`.trim() || "Vehicle")}
-          className="h-full w-full object-contain"
+          className="h-full w-full object-contain drop-shadow-[0_16px_14px_rgba(15,23,42,0.22)]"
           loading="lazy"
           onError={() => setErrored(true)}
         />
