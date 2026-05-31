@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { UserRound, CalendarCheck, FileText, ArrowLeftRight, Phone, Info, HelpCircle, TrendingUp, MessageSquare, Workflow, LogIn } from "lucide-react";
 import logoFallback from "@/assets/logo-placeholder.png";
-import { tenantLogoSrc } from "@/lib/tenantLogo";
+import { tenantLogoSrc, AUTOCURB_LOGO } from "@/lib/tenantLogo";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useLocationLogos } from "@/hooks/useLocationLogos";
 
@@ -93,7 +93,7 @@ const SiteHeader = () => {
             <img
               src={logoSrc}
               alt={dealerName}
-              className="h-[62px] md:h-[72px] w-auto transition-transform duration-300 group-hover:scale-[1.02]"
+              className={`${logoSrc === AUTOCURB_LOGO ? "h-[40px] md:h-[46px] max-w-[210px]" : "h-[62px] md:h-[72px]"} w-auto transition-transform duration-300 group-hover:scale-[1.02]`}
               width={189}
               height={67}
               fetchPriority="high"
