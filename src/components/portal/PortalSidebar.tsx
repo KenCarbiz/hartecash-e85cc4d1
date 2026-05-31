@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { AccountMenu } from "./AccountMenu";
-import { AUTOCURB_LOGO as PORTAL_LOGO_FALLBACK } from "@/lib/tenantLogo";
+import { AUTOCURB_LOGO as PORTAL_LOGO_FALLBACK, tenantLogoSrc } from "@/lib/tenantLogo";
 
 /* ─────────────────────────────────────────────────────────────────
    PortalSidebar — premium customer-portal navigation.
@@ -81,25 +81,16 @@ const PortalBrand = ({
   nameClass?: string;
 }) => {
   const { config } = useSiteConfig();
-  const raw = config.logo_url;
   const name =
     config.dealership_name && config.dealership_name !== "Our Dealership"
       ? config.dealership_name
       : fallbackName || "Your Dealership";
-  // The AUTO (curb) wordmark asset is AutoCurb's brand — only use it as
-  // the fallback for that tenant. Every other tenant without an uploaded
-  // logo keeps their own name wordmark (white-label correctness).
-  const norm = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const isAutoCurb = norm.includes("autocurb");
-  // Prefer the tenant's own uploaded logo; else the AUTO (curb) asset for
-  // AutoCurb; else fall through to the rendered tenant-name wordmark.
-  const logoSrc = raw
-    ? raw.includes("supabase.co/storage/")
-      ? `${raw}?width=280&resize=contain&quality=80&format=origin`
-      : raw
-    : isAutoCurb
-      ? PORTAL_LOGO_FALLBACK
-      : "";
+  // Shared resolver: AutoCurb → forced autoCURB wordmark; else the
+  // tenant's uploaded logo; else "" (→ rendered name wordmark below).
+  const base = tenantLogoSrc(config, fallbackName);
+  const logoSrc = base.includes("supabase.co/storage/")
+    ? `${base}?width=280&resize=contain&quality=80&format=origin`
+    : base;
   // The fallback asset is a wide wordmark — it letterboxes badly in the
   // narrow collapsed rail, so we show a monogram there instead. A tenant's
   // own uploaded logo (often square) still renders in the chip.

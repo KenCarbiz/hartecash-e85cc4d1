@@ -31,8 +31,8 @@ const SiteHeader = () => {
   const show = () => { clearTimeout(timeout.current); setOpen(true); };
   const hide = () => { timeout.current = setTimeout(() => setOpen(false), 200); };
 
-  // config logo wins; else the AutoCurb wordmark for that tenant; else placeholder.
-  const rawLogoSrc = config.logo_url || tenantLogoSrc(config) || logoFallback;
+  // AutoCurb → forced autoCURB wordmark; else the tenant's uploaded logo; else placeholder.
+  const rawLogoSrc = tenantLogoSrc(config) || logoFallback;
   // Serve a smaller, compressed version via Supabase image transforms to reduce LCP payload
   const logoSrc = rawLogoSrc.includes("supabase.co/storage/")
     ? `${rawLogoSrc}?width=200&resize=contain&quality=75&format=origin`
