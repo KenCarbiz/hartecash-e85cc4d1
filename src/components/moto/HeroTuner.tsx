@@ -117,8 +117,8 @@ export const DEFAULTS: HeroTunerValues = {
   accentWeight: 600,
   instantColor: "#18181b",
   instantWeight: 300,
-  ctaColor: BRAND_YELLOW,
-  ctaTextColor: BRAND_YELLOW_INK,
+  ctaColor: "#15803D",
+  ctaTextColor: "#FFFFFF",
   tabPadY: 9,
 };
 
@@ -436,9 +436,9 @@ export default function HeroTuner() {
               {[
                 {
                   name: "Indigo → Violet",
-                  bg: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)",
+                  bg: "linear-gradient(135deg, #6D28D9 0%, #6D28D9 100%)",
                   text: "#ffffff",
-                  cta: "#4F46E5",
+                  cta: "#6D28D9",
                   ctaText: "#ffffff",
                 },
                 {

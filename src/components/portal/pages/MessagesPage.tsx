@@ -46,8 +46,8 @@ const QUICK_REPLIES = {
 };
 
 const ATTACH_SHORTCUTS = [
-  { icon: FileText,      label: "Upload Title",        accent: "#4F46E5" },
-  { icon: Camera,        label: "Damage Photo",        accent: "#7C3AED" },
+  { icon: FileText,      label: "Upload Title",        accent: "#6D28D9" },
+  { icon: Camera,        label: "Damage Photo",        accent: "#6D28D9" },
   { icon: ClipboardList, label: "Registration",        accent: "#0EA5E9" },
   { icon: Receipt,       label: "Bill of Sale",        accent: "#16A34A" },
 ];
@@ -92,7 +92,7 @@ const TransactionHeader = ({ onOffer }: { onOffer: () => void }) => {
         </div>
         <button
           onClick={onOffer}
-          className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-white border border-[#E0E7FF] rounded-lg px-2.5 py-1.5 hover:bg-[#EEF0FF] transition shrink-0"
+          className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#6D28D9] bg-white border border-[#E0E7FF] rounded-lg px-2.5 py-1.5 hover:bg-[#EEF0FF] transition shrink-0"
         >
           <DollarSign className="w-3.5 h-3.5" /> {fmt(MOCK.firmOffer)}
         </button>
@@ -103,7 +103,7 @@ const TransactionHeader = ({ onOffer }: { onOffer: () => void }) => {
 
 const SystemEvent = ({ msg }: { msg: Msg }) => {
   const tones: Record<string, string> = {
-    indigo: "bg-[#EEF0FF] text-[#4F46E5] border-[#C7D2FE]",
+    indigo: "bg-[#EEF0FF] text-[#6D28D9] border-[#C7D2FE]",
     green:  "bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]",
     amber:  "bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]",
     blue:   "bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]",
@@ -128,7 +128,7 @@ const FileBubble = ({ msg }: { msg: Msg }) => {
   const isImg = f.type === "image";
   const statusTone =
     f.status === "approved" ? "text-[#16A34A]" :
-    f.status === "review"   ? "text-[#B45309]" : "text-[#4F46E5]";
+    f.status === "review"   ? "text-[#B45309]" : "text-[#6D28D9]";
   return (
     <div className={`flex ${msg.who === "you" ? "justify-end" : "justify-start"}`}>
       <motion.div
@@ -136,7 +136,7 @@ const FileBubble = ({ msg }: { msg: Msg }) => {
         className="max-w-[78%] rounded-2xl border border-[#E6EAF0] bg-white p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
       >
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl grid place-items-center ${isImg ? "bg-[#EEF0FF] text-[#4F46E5]" : "bg-[#FEF3C7] text-[#B45309]"}`}>
+          <div className={`w-10 h-10 rounded-xl grid place-items-center ${isImg ? "bg-[#EEF0FF] text-[#6D28D9]" : "bg-[#FEF3C7] text-[#B45309]"}`}>
             {isImg ? <ImageIcon className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
           </div>
           <div className="min-w-0">
@@ -146,7 +146,7 @@ const FileBubble = ({ msg }: { msg: Msg }) => {
         </div>
         {f.status === "uploading" ? (
           <div className="mt-2 h-1 rounded-full bg-[#F4F6FA] overflow-hidden">
-            <motion.div className="h-full bg-[#4F46E5]" initial={{ width: "10%" }} animate={{ width: "100%" }} transition={{ duration: 1.4 }} />
+            <motion.div className="h-full bg-[#6D28D9]" initial={{ width: "10%" }} animate={{ width: "100%" }} transition={{ duration: 1.4 }} />
           </div>
         ) : (
           <div className={`mt-2 text-[11px] font-semibold inline-flex items-center gap-1 ${statusTone}`}>
@@ -171,7 +171,7 @@ const MessageBubble = ({ msg }: { msg: Msg }) => {
     >
       <div className={`max-w-[78%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-snug shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${
         isYou
-          ? "bg-gradient-to-br from-[#4F46E5] to-[#6366F1] text-white"
+          ? "bg-gradient-to-br from-[#6D28D9] to-[#6366F1] text-white"
           : "bg-white border border-[#E6EAF0] text-[#06194A]"
       }`}>
         {msg.text}
@@ -321,7 +321,7 @@ export const MessagesPage = () => {
           {/* ── Conversations list ────────────────────────────────────── */}
           <aside className={`border-r border-[#E6EAF0] flex flex-col bg-white ${mobileChat ? "hidden lg:flex" : "flex"}`}>
             <div className="p-4 border-b border-[#E6EAF0]">
-              <div className="flex items-center gap-2 rounded-xl bg-[#F7F8FB] px-3 py-2 ring-1 ring-transparent focus-within:ring-[#4F46E5]/30 focus-within:bg-white transition">
+              <div className="flex items-center gap-2 rounded-xl bg-[#F7F8FB] px-3 py-2 ring-1 ring-transparent focus-within:ring-[#6D28D9]/30 focus-within:bg-white transition">
                 <Search className="w-4 h-4 text-[#8893A8]" />
                 <input placeholder="Search conversations" className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#8893A8]" />
               </div>
@@ -337,11 +337,11 @@ export const MessagesPage = () => {
                       whileHover={{ x: 2 }}
                       onClick={() => { setActive(c.id); setMobileChat(true); }}
                       className={`w-full flex items-start gap-3 px-4 py-3 text-left transition border-l-2 relative ${
-                        sel ? "border-[#4F46E5] bg-gradient-to-r from-[#EEF0FF]/70 to-transparent" : "border-transparent hover:bg-[#F7F8FB]"
+                        sel ? "border-[#6D28D9] bg-gradient-to-r from-[#EEF0FF]/70 to-transparent" : "border-transparent hover:bg-[#F7F8FB]"
                       }`}
                     >
                       <div className="relative shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#4F46E5] grid place-items-center text-xs font-bold ring-2 ring-white shadow-[0_2px_6px_rgba(79,70,229,0.15)]">{c.initials}</div>
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center text-xs font-bold ring-2 ring-white shadow-[0_2px_6px_rgba(79,70,229,0.15)]">{c.initials}</div>
                         {online && (
                           <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#16A34A] ring-2 ring-white">
                             <span className="absolute inset-0 rounded-full bg-[#16A34A] animate-ping opacity-60" />
@@ -355,7 +355,7 @@ export const MessagesPage = () => {
                         </div>
                         <div className="text-[11px] truncate mt-0.5">
                           {typing ? (
-                            <span className="inline-flex items-center gap-1.5 text-[#4F46E5] font-semibold">
+                            <span className="inline-flex items-center gap-1.5 text-[#6D28D9] font-semibold">
                               <TypingDots /> typing…
                             </span>
                           ) : (
@@ -366,7 +366,7 @@ export const MessagesPage = () => {
                       {c.unread > 0 && (
                         <motion.span
                           animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 2, repeat: Infinity }}
-                          className="min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white text-[10px] font-bold grid place-items-center shrink-0 shadow-[0_2px_6px_rgba(79,70,229,0.35)]"
+                          className="min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] text-white text-[10px] font-bold grid place-items-center shrink-0 shadow-[0_2px_6px_rgba(79,70,229,0.35)]"
                         >{c.unread}</motion.span>
                       )}
                     </motion.button>
@@ -375,7 +375,7 @@ export const MessagesPage = () => {
               })}
             </ul>
             <div className="p-3 border-t border-[#E6EAF0]">
-              <div className="rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#F5F3FF] p-3 text-[11px] text-[#4F46E5] flex items-center gap-2">
+              <div className="rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#F5F3FF] p-3 text-[11px] text-[#6D28D9] flex items-center gap-2">
                 <Lock className="w-3.5 h-3.5 shrink-0" />
                 <span className="font-semibold">All messages end-to-end encrypted</span>
               </div>
@@ -389,18 +389,18 @@ export const MessagesPage = () => {
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <div className="relative">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#4F46E5] grid place-items-center text-xs font-bold">{conv.initials}</div>
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center text-xs font-bold">{conv.initials}</div>
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#16A34A] ring-2 ring-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold text-[#06194A] truncate flex items-center gap-1.5">
-                  {conv.name} <BadgeCheck className="w-3.5 h-3.5 text-[#4F46E5]" />
+                  {conv.name} <BadgeCheck className="w-3.5 h-3.5 text-[#6D28D9]" />
                 </div>
                 <div className="text-[11px] text-[#16A34A] font-medium inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" /> Online · Replies in ~5 min
                 </div>
               </div>
-              <button onClick={() => setProfile(true)} className="lg:hidden text-xs font-semibold text-[#4F46E5]">Profile</button>
+              <button onClick={() => setProfile(true)} className="lg:hidden text-xs font-semibold text-[#6D28D9]">Profile</button>
             </header>
 
             <TransactionHeader onOffer={() => setOfferDrawer(true)} />
@@ -427,12 +427,12 @@ export const MessagesPage = () => {
 
             {/* Quick replies */}
             <div className="px-4 py-2 border-t border-[#E6EAF0] flex items-center gap-2 overflow-x-auto bg-white/60">
-              <Sparkles className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-[#6D28D9] shrink-0" />
               {quickReplies.map((q) => (
                 <button
                   key={q}
                   onClick={() => sendText(q)}
-                  className="whitespace-nowrap text-xs font-semibold px-3 py-1.5 rounded-full bg-[#F4F6FA] hover:bg-[#EEF0FF] hover:text-[#4F46E5] text-[#53627A] transition border border-transparent hover:border-[#C7D2FE]"
+                  className="whitespace-nowrap text-xs font-semibold px-3 py-1.5 rounded-full bg-[#F4F6FA] hover:bg-[#EEF0FF] hover:text-[#6D28D9] text-[#53627A] transition border border-transparent hover:border-[#C7D2FE]"
                 >
                   {q}
                 </button>
@@ -441,7 +441,7 @@ export const MessagesPage = () => {
 
             {/* Composer */}
             <div className="p-3 border-t border-[#E6EAF0] bg-white/80 backdrop-blur">
-              <div className="flex items-end gap-2 rounded-2xl border border-[#E6EAF0] bg-white p-2 focus-within:border-[#4F46E5] focus-within:ring-4 focus-within:ring-[#4F46E5]/15 transition">
+              <div className="flex items-end gap-2 rounded-2xl border border-[#E6EAF0] bg-white p-2 focus-within:border-[#6D28D9] focus-within:ring-4 focus-within:ring-[#6D28D9]/15 transition">
                 <button onClick={() => setAttach(true)} aria-label="Attach" className="p-2 rounded-lg hover:bg-[#F4F6FA] text-[#53627A] transition">
                   <Paperclip className="w-4 h-4" />
                 </button>
@@ -461,7 +461,7 @@ export const MessagesPage = () => {
                   aria-label="Send"
                   className={`rounded-xl p-2.5 transition text-white ${
                     draft.trim()
-                      ? "bg-gradient-to-br from-[#4F46E5] to-[#6366F1] shadow-[0_4px_14px_rgba(79,70,229,0.35)] hover:from-[#4338CA] hover:to-[#4F46E5]"
+                      ? "bg-gradient-to-br from-[#6D28D9] to-[#6366F1] shadow-[0_4px_14px_rgba(79,70,229,0.35)] hover:from-[#4338CA] hover:to-[#6D28D9]"
                       : "bg-[#C7D2FE]"
                   }`}
                 >
@@ -479,13 +479,13 @@ export const MessagesPage = () => {
             {/* Specialist identity */}
             <div className="p-4 text-center border-b border-[#E6EAF0]">
               <div className="relative w-14 h-14 mx-auto">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#4F46E5] grid place-items-center text-base font-bold ring-2 ring-white shadow-[0_4px_14px_rgba(79,70,229,0.15)]">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center text-base font-bold ring-2 ring-white shadow-[0_4px_14px_rgba(79,70,229,0.15)]">
                   {conv.initials}
                 </div>
                 <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#16A34A] ring-2 ring-white" />
               </div>
               <div className="text-[13.5px] font-semibold text-[#06194A] mt-2 inline-flex items-center gap-1 justify-center">
-                Marcus Chen <BadgeCheck className="w-3.5 h-3.5 text-[#4F46E5]" />
+                Marcus Chen <BadgeCheck className="w-3.5 h-3.5 text-[#6D28D9]" />
               </div>
               <div className="text-[11px] text-[#53627A]">Acquisition Specialist</div>
               <div className="text-[11px] text-[#8893A8]">{conv.name}</div>
@@ -494,7 +494,7 @@ export const MessagesPage = () => {
               </div>
               <button
                 onClick={() => setProfile(true)}
-                className="block mx-auto mt-2 text-[11px] font-semibold text-[#4F46E5] hover:underline"
+                className="block mx-auto mt-2 text-[11px] font-semibold text-[#6D28D9] hover:underline"
               >
                 View specialist details
               </button>
@@ -532,23 +532,23 @@ export const MessagesPage = () => {
                 <DollarSign className="w-4 h-4 text-[#16A34A]" /> View Offer
               </button>
               <button onClick={() => setAttach(true)} className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] font-semibold text-[#06194A] hover:bg-[#F4F6FA] transition">
-                <Upload className="w-4 h-4 text-[#4F46E5]" /> Upload Document
+                <Upload className="w-4 h-4 text-[#6D28D9]" /> Upload Document
               </button>
               <button className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] font-semibold text-[#06194A] hover:bg-[#F4F6FA] transition">
-                <Truck className="w-4 h-4 text-[#4F46E5]" /> Schedule Pickup
+                <Truck className="w-4 h-4 text-[#6D28D9]" /> Schedule Pickup
               </button>
               <button onClick={() => setSupportDrawer("callback")} className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] font-semibold text-[#06194A] hover:bg-[#F4F6FA] transition">
-                <PhoneCall className="w-4 h-4 text-[#4F46E5]" /> Request Callback
+                <PhoneCall className="w-4 h-4 text-[#6D28D9]" /> Request Callback
               </button>
             </div>
 
             {/* Footer: secondary Call/Email + trust line */}
             <div className="mt-auto border-t border-[#E6EAF0]">
               <div className="grid grid-cols-2 gap-2 p-3">
-                <button className="inline-flex items-center justify-center gap-1.5 text-[11.5px] font-semibold text-[#53627A] hover:text-[#4F46E5] py-1.5 rounded-lg hover:bg-[#F4F6FA] transition">
+                <button className="inline-flex items-center justify-center gap-1.5 text-[11.5px] font-semibold text-[#53627A] hover:text-[#6D28D9] py-1.5 rounded-lg hover:bg-[#F4F6FA] transition">
                   <Phone className="w-3.5 h-3.5" /> Call
                 </button>
-                <button className="inline-flex items-center justify-center gap-1.5 text-[11.5px] font-semibold text-[#53627A] hover:text-[#4F46E5] py-1.5 rounded-lg hover:bg-[#F4F6FA] transition">
+                <button className="inline-flex items-center justify-center gap-1.5 text-[11.5px] font-semibold text-[#53627A] hover:text-[#6D28D9] py-1.5 rounded-lg hover:bg-[#F4F6FA] transition">
                   <Mail className="w-3.5 h-3.5" /> Email
                 </button>
               </div>
@@ -602,7 +602,7 @@ export const MessagesPage = () => {
             })}
           </div>
           <button onClick={() => sendAttachment("Document")} className="w-full border-2 border-dashed border-[#C7D2FE] bg-[#FAFBFE] rounded-2xl p-6 text-center hover:bg-[#EEF0FF] transition">
-            <Upload className="w-6 h-6 mx-auto text-[#4F46E5] mb-2" />
+            <Upload className="w-6 h-6 mx-auto text-[#6D28D9] mb-2" />
             <div className="text-sm font-semibold text-[#06194A]">Drop a file or tap to upload</div>
             <div className="text-[11px] text-[#53627A] mt-1">PDF, JPG, PNG up to 25MB · Encrypted upload</div>
           </button>
@@ -613,7 +613,7 @@ export const MessagesPage = () => {
       <SlideOver open={offerDrawer} onClose={() => setOfferDrawer(false)} title="Offer Details" subtitle={`${MOCK.vehicle.year} ${MOCK.vehicle.make} ${MOCK.vehicle.model}`} width="md">
         <div className="space-y-3 text-sm">
           <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#F5F3FF] p-4 text-center">
-            <div className="text-[11px] uppercase tracking-wide text-[#4F46E5] font-semibold">Current firm offer</div>
+            <div className="text-[11px] uppercase tracking-wide text-[#6D28D9] font-semibold">Current firm offer</div>
             <div className="text-3xl font-bold text-[#06194A] mt-1">{fmt(MOCK.firmOffer)}</div>
             <div className="text-[11px] text-[#53627A] mt-1">Valid until {MOCK.offerExpires}</div>
           </div>
@@ -634,7 +634,7 @@ export const MessagesPage = () => {
             <div className="text-[11px] uppercase text-[#8893A8] font-semibold">We'll call</div>
             <div className="text-[#06194A] font-semibold mt-0.5">{MOCK.customer.phone}</div>
           </div>
-          <textarea rows={4} placeholder="Optional: what would you like to discuss?" className="w-full rounded-xl border border-[#E6EAF0] bg-white p-3 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+          <textarea rows={4} placeholder="Optional: what would you like to discuss?" className="w-full rounded-xl border border-[#E6EAF0] bg-white p-3 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
         </div>
       </SlideOver>
 
@@ -644,7 +644,7 @@ export const MessagesPage = () => {
           <div className="rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] p-4 text-[12px] text-[#92400E]">
             Escalating notifies the dealership manager. Your specialist remains your point of contact unless reassigned.
           </div>
-          <textarea rows={5} placeholder="What's the issue?" className="w-full rounded-xl border border-[#E6EAF0] bg-white p-3 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+          <textarea rows={5} placeholder="What's the issue?" className="w-full rounded-xl border border-[#E6EAF0] bg-white p-3 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
         </div>
       </SlideOver>
     </PortalPageShell>

@@ -88,7 +88,7 @@ const ProgressHeader = ({ stepIdx, completed }: { stepIdx: number; completed: Se
           initial={false}
           animate={{ width: `calc(${pct}% - 0px)` }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute left-5 top-[18px] h-px bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"
+          className="absolute left-5 top-[18px] h-px bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]"
         />
         <div className="relative grid grid-cols-8 gap-1">
           {STEPS.map((s, i) => {
@@ -101,8 +101,8 @@ const ProgressHeader = ({ stepIdx, completed }: { stepIdx: number; completed: Se
                   animate={active ? { boxShadow: ["0 0 0 0 rgba(79,70,229,0.45)", "0 0 0 10px rgba(79,70,229,0)"] } : {}}
                   transition={{ duration: 1.8, repeat: Infinity }}
                   className={`w-9 h-9 rounded-full grid place-items-center transition ${
-                    done ? "bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white"
-                    : active ? "bg-white border-2 border-[#4F46E5] text-[#4F46E5]"
+                    done ? "bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] text-white"
+                    : active ? "bg-white border-2 border-[#6D28D9] text-[#6D28D9]"
                     : "bg-[#F4F6FA] text-[#8893A8]"
                   }`}
                 >
@@ -111,7 +111,7 @@ const ProgressHeader = ({ stepIdx, completed }: { stepIdx: number; completed: Se
                 <div className={`text-[10px] font-semibold mt-1.5 leading-tight truncate w-full ${done || active ? "text-[#06194A]" : "text-[#8893A8]"}`}>
                   Step {i + 1}
                 </div>
-                <div className={`text-[9px] leading-tight truncate w-full ${active ? "text-[#4F46E5]" : "text-[#8893A8]"}`}>{s.short}</div>
+                <div className={`text-[9px] leading-tight truncate w-full ${active ? "text-[#6D28D9]" : "text-[#8893A8]"}`}>{s.short}</div>
               </div>
             );
           })}
@@ -124,7 +124,7 @@ const ProgressHeader = ({ stepIdx, completed }: { stepIdx: number; completed: Se
           <span>{STEPS[stepIdx].title}</span>
         </div>
         <div className="h-1.5 rounded-full bg-[#F4F6FA] overflow-hidden">
-          <motion.div className="h-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"
+          <motion.div className="h-full bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]"
             animate={{ width: `${pct}%` }} transition={{ duration: 0.5 }} />
         </div>
       </div>
@@ -219,7 +219,7 @@ const CameraStage = ({
               transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
               className="absolute left-6 right-6 h-px bg-gradient-to-r from-transparent via-[#A78BFA] to-transparent"
             />
-            <div className="w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_10px_40px_-5px_rgba(124,58,237,0.6)]">
+            <div className="w-12 h-12 rounded-2xl grid place-items-center bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] shadow-[0_10px_40px_-5px_rgba(124,58,237,0.6)]">
               {status === "uploading" ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
             </div>
             <div className="text-sm font-bold">
@@ -277,7 +277,7 @@ const VinMatchPanel = ({ vehicle }: { vehicle?: InspectionVehicle }) => (
     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
     className="mt-3 rounded-2xl border border-[#C7D2FE] bg-gradient-to-br from-[#EEF0FF] via-white to-white p-4"
   >
-    <div className="flex items-center gap-2 text-[#4F46E5] text-[11px] font-bold uppercase tracking-wide">
+    <div className="flex items-center gap-2 text-[#6D28D9] text-[11px] font-bold uppercase tracking-wide">
       <ShieldCheck className="w-3.5 h-3.5" /> VIN Intelligence
     </div>
     <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -313,7 +313,7 @@ const SummaryScreen = ({
   const isUnderReview = score < 92;
   return (
     <div className="space-y-5">
-      <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-[#4F46E5] via-[#6D28D9] to-[#7C3AED] text-white relative overflow-hidden">
+      <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-[#6D28D9] via-[#6D28D9] to-[#6D28D9] text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-20" style={{
           backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
           backgroundSize: "20px 20px",
@@ -362,8 +362,8 @@ const SummaryScreen = ({
         <div className="text-[11px] font-bold uppercase tracking-wide text-[#8893A8]">Live activity</div>
         <ul className="mt-2 space-y-1.5 text-[12.5px]">
           <li className="flex items-center gap-2 text-emerald-700"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> AI verification completed</li>
-          <li className="flex items-center gap-2 text-[#4F46E5]"><span className="w-1.5 h-1.5 rounded-full bg-[#4F46E5]" /> Fast-track approval eligible</li>
-          <li className="flex items-center gap-2 text-[#7C3AED]"><span className="w-1.5 h-1.5 rounded-full bg-[#7C3AED]" /> Pickup availability unlocked</li>
+          <li className="flex items-center gap-2 text-[#6D28D9]"><span className="w-1.5 h-1.5 rounded-full bg-[#6D28D9]" /> Fast-track approval eligible</li>
+          <li className="flex items-center gap-2 text-[#6D28D9]"><span className="w-1.5 h-1.5 rounded-full bg-[#6D28D9]" /> Pickup availability unlocked</li>
         </ul>
       </div>
 
@@ -372,7 +372,7 @@ const SummaryScreen = ({
           Close
         </button>
         <button onClick={onApprove}
-          className="rounded-xl px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:shadow-[0_14px_30px_-10px_rgba(124,58,237,0.6)] inline-flex items-center justify-center gap-1.5">
+          className="rounded-xl px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#6D28D9] to-[#6D28D9] hover:shadow-[0_14px_30px_-10px_rgba(124,58,237,0.6)] inline-flex items-center justify-center gap-1.5">
           {isUnderReview ? "Continue & track review" : "Continue to scheduling"} <ArrowRight className="w-4 h-4" />
         </button>
       </div>
@@ -490,11 +490,11 @@ export const AIInspectionFlow = ({ open, onClose, onApproved, vehicle }: Props) 
         >
           {/* Top bar */}
           <div className="flex items-center gap-3 px-4 sm:px-6 py-3 border-b border-[#EEF0F5] bg-white">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center text-white shadow-[0_8px_20px_-8px_rgba(124,58,237,0.6)]">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] grid place-items-center text-white shadow-[0_8px_20px_-8px_rgba(124,58,237,0.6)]">
               <Sparkles className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-[#4F46E5]">AI Vehicle Verification</div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-[#6D28D9]">AI Vehicle Verification</div>
               <div className="text-sm font-extrabold text-[#06194A] truncate">
                 {vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}${vehicle.trim ? " · " + vehicle.trim : ""}` : "Guided inspection"}
               </div>
@@ -525,7 +525,7 @@ export const AIInspectionFlow = ({ open, onClose, onApproved, vehicle }: Props) 
                         <p className="text-sm text-[#53627A] mt-1">{step.hint}</p>
                       </div>
                       <button onClick={() => setTipsOpen((v) => !v)}
-                        className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-[#EEF0FF] text-[#4F46E5] text-[11px] font-bold px-2.5 py-1.5 border border-[#C7D2FE]">
+                        className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-[#EEF0FF] text-[#6D28D9] text-[11px] font-bold px-2.5 py-1.5 border border-[#C7D2FE]">
                         <Lightbulb className="w-3.5 h-3.5" /> {tipsOpen ? "Hide tips" : "Tips"}
                       </button>
                     </div>
@@ -544,7 +544,7 @@ export const AIInspectionFlow = ({ open, onClose, onApproved, vehicle }: Props) 
                             <RotateCcw className="w-4 h-4" /> Retake
                           </button>
                           <button onClick={advance}
-                            className="ml-auto inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:shadow-[0_14px_30px_-10px_rgba(124,58,237,0.6)]">
+                            className="ml-auto inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-[#6D28D9] to-[#6D28D9] hover:shadow-[0_14px_30px_-10px_rgba(124,58,237,0.6)]">
                             {stepIdx === STEPS.length - 2 ? "Finish & review" : "Looks good — continue"} <ArrowRight className="w-4 h-4" />
                           </button>
                         </>
@@ -556,7 +556,7 @@ export const AIInspectionFlow = ({ open, onClose, onApproved, vehicle }: Props) 
                             <ChevronLeft className="w-4 h-4" /> Back
                           </button>
                           <button onClick={capture} disabled={status !== "idle"}
-                            className="ml-auto inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:shadow-[0_14px_30px_-10px_rgba(124,58,237,0.6)] disabled:opacity-70 disabled:cursor-not-allowed">
+                            className="ml-auto inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#6D28D9] to-[#6D28D9] hover:shadow-[0_14px_30px_-10px_rgba(124,58,237,0.6)] disabled:opacity-70 disabled:cursor-not-allowed">
                             <Camera className="w-4 h-4" />
                             {status === "uploading" ? "Uploading…"
                               : status === "analyzing" ? "Analyzing…"
@@ -588,7 +588,7 @@ export const AIInspectionFlow = ({ open, onClose, onApproved, vehicle }: Props) 
                               transition={{ duration: 0.6 }} />
                             <defs>
                               <linearGradient id="gradConfidence" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%" stopColor="#4F46E5" /><stop offset="100%" stopColor="#7C3AED" />
+                                <stop offset="0%" stopColor="#6D28D9" /><stop offset="100%" stopColor="#6D28D9" />
                               </linearGradient>
                             </defs>
                           </svg>
@@ -614,10 +614,10 @@ export const AIInspectionFlow = ({ open, onClose, onApproved, vehicle }: Props) 
                       {tipsOpen && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                           className="rounded-2xl border border-[#C7D2FE] bg-gradient-to-br from-[#EEF0FF] to-white p-4 overflow-hidden">
-                          <div className="text-[11px] font-bold uppercase tracking-wide text-[#4F46E5]">Tips for this shot</div>
+                          <div className="text-[11px] font-bold uppercase tracking-wide text-[#6D28D9]">Tips for this shot</div>
                           <ul className="mt-2 space-y-1.5 text-[12.5px] text-[#06194A]">
                             {step.tips.map((t) => (
-                              <li key={t} className="flex items-start gap-2"><Check className="w-3.5 h-3.5 mt-0.5 text-[#4F46E5] shrink-0" /> {t}</li>
+                              <li key={t} className="flex items-start gap-2"><Check className="w-3.5 h-3.5 mt-0.5 text-[#6D28D9] shrink-0" /> {t}</li>
                             ))}
                           </ul>
                         </motion.div>
@@ -628,8 +628,8 @@ export const AIInspectionFlow = ({ open, onClose, onApproved, vehicle }: Props) 
                       <div className="text-[11px] font-bold uppercase tracking-wide text-[#8893A8]">Live activity</div>
                       <ul className="mt-2 space-y-1.5 text-[12px]">
                         <li className="flex items-center gap-2 text-emerald-700"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> AI ready · vision model online</li>
-                        <li className="flex items-center gap-2 text-[#4F46E5]"><span className="w-1.5 h-1.5 rounded-full bg-[#4F46E5]" /> Specialist on standby for review</li>
-                        <li className="flex items-center gap-2 text-[#7C3AED]"><span className="w-1.5 h-1.5 rounded-full bg-[#7C3AED]" /> Pickup slots refresh every 60s</li>
+                        <li className="flex items-center gap-2 text-[#6D28D9]"><span className="w-1.5 h-1.5 rounded-full bg-[#6D28D9]" /> Specialist on standby for review</li>
+                        <li className="flex items-center gap-2 text-[#6D28D9]"><span className="w-1.5 h-1.5 rounded-full bg-[#6D28D9]" /> Pickup slots refresh every 60s</li>
                       </ul>
                     </div>
                   </aside>
@@ -640,7 +640,7 @@ export const AIInspectionFlow = ({ open, onClose, onApproved, vehicle }: Props) 
 
           {/* Bottom reassurance bar */}
           <div className="px-4 sm:px-6 py-2.5 border-t border-[#EEF0F5] bg-white flex items-center justify-between text-[11px] text-[#53627A]">
-            <div className="inline-flex items-center gap-1.5"><FileCheck2 className="w-3.5 h-3.5 text-[#4F46E5]" /> Photos are private and used only to verify your vehicle.</div>
+            <div className="inline-flex items-center gap-1.5"><FileCheck2 className="w-3.5 h-3.5 text-[#6D28D9]" /> Photos are private and used only to verify your vehicle.</div>
             <div className="hidden sm:inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Encrypted transmission</div>
           </div>
         </motion.div>

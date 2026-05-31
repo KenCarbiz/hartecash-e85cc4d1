@@ -10,7 +10,7 @@ const REQUIRED_PHOTO_IDS = ["front", "rear", "driver", "passenger", "interior", 
 
 const strengthLabel = {
   soft: { text: "Soft Market", className: "bg-slate-100 text-slate-700" },
-  balanced: { text: "Balanced Market", className: "bg-[hsl(262_83%_58%/0.1)] text-[hsl(262_60%_45%)]" },
+  balanced: { text: "Balanced Market", className: "bg-[hsl(263_70%_50%/0.1)] text-[hsl(263_60%_45%)]" },
   hot: { text: "Hot Market", className: "bg-emerald-50 text-emerald-700" },
 } as const;
 
@@ -63,7 +63,7 @@ const SummaryPanel = ({ state, currentStepId }: { state: JourneyState; currentSt
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
               Offer Profile
             </p>
-            <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(262_83%_58%/0.08)] px-2 py-0.5 text-[10px] font-semibold text-[hsl(262_60%_45%)]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(263_70%_50%/0.08)] px-2 py-0.5 text-[10px] font-semibold text-[hsl(263_60%_45%)]">
               Building your offer · {progressPct}%
             </span>
           </div>
@@ -126,7 +126,7 @@ const SummaryPanel = ({ state, currentStepId }: { state: JourneyState; currentSt
                 <span>Secure &amp; private</span>
               </div>
               <div className="flex items-center gap-2 text-slate-600">
-                <TrendingUp className="h-3.5 w-3.5 text-[hsl(262_60%_45%)]" />
+                <TrendingUp className="h-3.5 w-3.5 text-[hsl(263_60%_45%)]" />
                 <span>Live market data</span>
               </div>
               <div className="flex items-center gap-2 text-slate-600">
@@ -224,7 +224,7 @@ const SummaryPanel = ({ state, currentStepId }: { state: JourneyState; currentSt
           </div>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
             <div
-              className="h-full bg-[hsl(262_83%_58%)] transition-[width] duration-300"
+              className="h-full bg-[hsl(263_70%_50%)] transition-[width] duration-300"
               style={{ width: `${(todosDone / state.todos.length) * 100}%` }}
             />
           </div>
@@ -253,8 +253,8 @@ const Sparkline = ({ data }: { data: number[] }) => {
     <svg viewBox={`0 0 ${w} ${h}`} className="mt-3 h-14 w-full" preserveAspectRatio="none">
       <defs>
         <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="hsl(262 83% 58%)" stopOpacity="0.28" />
-          <stop offset="100%" stopColor="hsl(262 83% 58%)" stopOpacity="0" />
+          <stop offset="0%" stopColor="hsl(263 70% 50%)" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="hsl(263 70% 50%)" stopOpacity="0" />
         </linearGradient>
       </defs>
       {/* Faint baseline grid */}
@@ -262,7 +262,7 @@ const Sparkline = ({ data }: { data: number[] }) => {
       <polygon points={areaPts} fill={`url(#${gradId})`} />
       <polyline
         fill="none"
-        stroke="hsl(262 83% 58%)"
+        stroke="hsl(263 70% 50%)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -322,7 +322,7 @@ const ProfileChecklist = ({
                 <CheckCircle2 className="h-3 w-3" strokeWidth={2.75} />
               </span>
             ) : isActive ? (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[hsl(262_83%_58%)] text-white ring-[3px] ring-[hsl(262_83%_58%/0.15)]">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[hsl(263_70%_50%)] text-white ring-[3px] ring-[hsl(263_70%_50%/0.15)]">
                 <Circle className="h-1.5 w-1.5 fill-current" />
               </span>
             ) : (
@@ -335,7 +335,7 @@ const ProfileChecklist = ({
                 showDone
                   ? "text-slate-600"
                   : isActive
-                    ? "font-semibold text-[hsl(262_60%_45%)]"
+                    ? "font-semibold text-[hsl(263_60%_45%)]"
                     : "text-slate-400"
               }
             >

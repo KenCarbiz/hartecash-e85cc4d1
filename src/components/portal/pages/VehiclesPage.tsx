@@ -40,7 +40,7 @@ type GalleryImage = { src: string; caption: string };
 
 const STATUS_META: Record<PhotoStatus, { label: string; cls: string; Icon: any }> = {
   approved: { label: "Approved",     cls: "text-[#0F7A3E] bg-[#E8F8EE]", Icon: CheckCircle2 },
-  uploaded: { label: "Uploaded",     cls: "text-[#4F46E5] bg-[#EEF0FF]", Icon: Check },
+  uploaded: { label: "Uploaded",     cls: "text-[#6D28D9] bg-[#EEF0FF]", Icon: Check },
   review:   { label: "Under Review", cls: "text-[#B45309] bg-[#FEF3E2]", Icon: Clock },
   missing:  { label: "Missing",      cls: "text-[#53627A] bg-[#F4F6FA]", Icon: AlertCircle },
 };
@@ -65,7 +65,7 @@ const SummaryChip = ({
   label, value, prefix, Icon, tone = "indigo",
 }: { label: string; value: number; prefix?: string; Icon: any; tone?: "indigo" | "orange" | "green" }) => {
   const tones = {
-    indigo: "text-[#4F46E5] bg-[#EEF0FF]",
+    indigo: "text-[#6D28D9] bg-[#EEF0FF]",
     orange: "text-[#B45309] bg-[#FEF3E2]",
     green:  "text-[#0F7A3E] bg-[#E8F8EE]",
   };
@@ -92,10 +92,10 @@ const ActionPill = ({
     green:  "text-[#0F7A3E] bg-[#E8F8EE] hover:shadow-[0_8px_18px_-10px_rgba(15,122,62,0.55)]",
     orange: "text-[#B45309] bg-[#FEF3E2] hover:shadow-[0_8px_18px_-10px_rgba(180,83,9,0.5)]",
     gray:   "text-[#53627A] bg-[#F4F6FA] hover:shadow-[0_8px_18px_-10px_rgba(83,98,122,0.4)]",
-    indigo: "text-[#4F46E5] bg-[#EEF0FF] hover:shadow-[0_8px_18px_-10px_rgba(79,70,229,0.55)]",
+    indigo: "text-[#6D28D9] bg-[#EEF0FF] hover:shadow-[0_8px_18px_-10px_rgba(79,70,229,0.55)]",
   };
   const dotTone: Record<string, string> = {
-    green: "bg-[#16A34A]", orange: "bg-[#F59E0B]", gray: "bg-[#94A3B8]", indigo: "bg-[#4F46E5]",
+    green: "bg-[#16A34A]", orange: "bg-[#F59E0B]", gray: "bg-[#94A3B8]", indigo: "bg-[#6D28D9]",
   };
   return (
     <button
@@ -120,7 +120,7 @@ const SmartGuidanceBanner = ({
   tone, Icon, title, description, ctaLabel, onCta,
 }: { tone: "indigo" | "orange" | "green"; Icon: any; title: string; description: string; ctaLabel: string; onCta: () => void }) => {
   const tones = {
-    indigo: { bg: "from-[#EEF0FF] to-white", border: "border-[#C7D2FE]", icon: "bg-white text-[#4F46E5]", btn: "bg-[#4F46E5] hover:bg-[#4338CA] text-white" },
+    indigo: { bg: "from-[#EEF0FF] to-white", border: "border-[#C7D2FE]", icon: "bg-white text-[#6D28D9]", btn: "bg-[#6D28D9] hover:bg-[#4338CA] text-white" },
     orange: { bg: "from-[#FEF3E2] to-white", border: "border-[#FCD9A8]", icon: "bg-white text-[#B45309]", btn: "bg-[#B45309] hover:bg-[#92400E] text-white" },
     green:  { bg: "from-[#E8F8EE] to-white", border: "border-[#BBE5C6]", icon: "bg-white text-[#0F7A3E]", btn: "bg-[#0F7A3E] hover:bg-[#0B5C2F] text-white" },
   }[tone];
@@ -289,7 +289,7 @@ const AddVehicleWizard = ({ open, onClose }: { open: boolean; onClose: () => voi
         >
           <header className="flex items-center justify-between px-5 sm:px-8 py-4 border-b border-[#E6EAF0] bg-white">
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center">
+              <div className="w-9 h-9 rounded-xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center">
                 <Sparkles className="w-[18px] h-[18px]" />
               </div>
               <div className="leading-tight">
@@ -307,8 +307,8 @@ const AddVehicleWizard = ({ open, onClose }: { open: boolean; onClose: () => voi
             <div className="flex items-center gap-2">
               {WIZARD_STEPS.map((s, i) => (
                 <div key={s} className="flex-1">
-                  <div className={`h-1.5 rounded-full transition-colors ${i <= step ? "bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]" : "bg-[#E6EAF0]"}`} />
-                  <div className={`mt-1 text-[10px] uppercase tracking-wide font-semibold ${i <= step ? "text-[#4F46E5]" : "text-[#8893A8]"}`}>{s}</div>
+                  <div className={`h-1.5 rounded-full transition-colors ${i <= step ? "bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]" : "bg-[#E6EAF0]"}`} />
+                  <div className={`mt-1 text-[10px] uppercase tracking-wide font-semibold ${i <= step ? "text-[#6D28D9]" : "text-[#8893A8]"}`}>{s}</div>
                 </div>
               ))}
             </div>
@@ -329,12 +329,12 @@ const AddVehicleWizard = ({ open, onClose }: { open: boolean; onClose: () => voi
                       <div className="mt-5 space-y-3">
                         <div className="relative">
                           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8893A8]" />
-                          <input placeholder="Enter 17-digit VIN" className="w-full rounded-xl border border-[#E6EAF0] bg-white pl-10 pr-3 py-3 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+                          <input placeholder="Enter 17-digit VIN" className="w-full rounded-xl border border-[#E6EAF0] bg-white pl-10 pr-3 py-3 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
                         </div>
                         <div className="text-center text-[11px] text-[#8893A8] uppercase tracking-wider">or</div>
                         <div className="grid grid-cols-[2fr_1fr] gap-2">
-                          <input placeholder="License plate" className="rounded-xl border border-[#E6EAF0] bg-white px-3 py-3 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
-                          <select className="rounded-xl border border-[#E6EAF0] bg-white px-3 py-3 text-sm focus:border-[#4F46E5] outline-none">
+                          <input placeholder="License plate" className="rounded-xl border border-[#E6EAF0] bg-white px-3 py-3 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
+                          <select className="rounded-xl border border-[#E6EAF0] bg-white px-3 py-3 text-sm focus:border-[#6D28D9] outline-none">
                             <option>State</option><option>CA</option><option>NY</option><option>TX</option>
                           </select>
                         </div>
@@ -349,7 +349,7 @@ const AddVehicleWizard = ({ open, onClose }: { open: boolean; onClose: () => voi
                         {[["Year","2021"],["Make","Toyota"],["Model","RAV4"],["Trim","XLE"],["Mileage","26,540"],["Drivetrain","AWD"]].map(([k,v]) => (
                           <label key={k} className="block">
                             <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">{k}</span>
-                            <input defaultValue={v} className="mt-1 w-full rounded-xl border border-[#E6EAF0] bg-white px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+                            <input defaultValue={v} className="mt-1 w-full rounded-xl border border-[#E6EAF0] bg-white px-3 py-2.5 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
                           </label>
                         ))}
                       </div>
@@ -359,8 +359,8 @@ const AddVehicleWizard = ({ open, onClose }: { open: boolean; onClose: () => voi
                     <div>
                       <h2 className="text-[20px] font-bold text-[#06194A]">Add photos</h2>
                       <p className="text-sm text-[#53627A] mt-1">More angles = stronger offer. You can add more later.</p>
-                      <button className="mt-5 w-full border-2 border-dashed border-[#C7D2FE] bg-white rounded-2xl p-10 text-center hover:border-[#4F46E5] hover:bg-[#EEF0FF] transition">
-                        <Upload className="w-7 h-7 mx-auto text-[#4F46E5] mb-2" />
+                      <button className="mt-5 w-full border-2 border-dashed border-[#C7D2FE] bg-white rounded-2xl p-10 text-center hover:border-[#6D28D9] hover:bg-[#EEF0FF] transition">
+                        <Upload className="w-7 h-7 mx-auto text-[#6D28D9] mb-2" />
                         <div className="text-sm font-semibold text-[#06194A]">Drop files or tap to upload</div>
                         <div className="text-[11px] text-[#53627A] mt-1">Exterior, interior, odometer & damage shots</div>
                       </button>
@@ -372,8 +372,8 @@ const AddVehicleWizard = ({ open, onClose }: { open: boolean; onClose: () => voi
                       <p className="text-sm text-[#53627A] mt-1">Honest answers = no surprises at pickup.</p>
                       <div className="space-y-2 mt-5">
                         {["Excellent — like-new", "Good — minor wear", "Fair — visible damage", "Has accident history"].map((o) => (
-                          <label key={o} className="flex items-center gap-3 p-3.5 rounded-xl border border-[#E6EAF0] bg-white hover:border-[#4F46E5]/40 cursor-pointer transition">
-                            <input type="radio" name="cond" className="accent-[#4F46E5]" />
+                          <label key={o} className="flex items-center gap-3 p-3.5 rounded-xl border border-[#E6EAF0] bg-white hover:border-[#6D28D9]/40 cursor-pointer transition">
+                            <input type="radio" name="cond" className="accent-[#6D28D9]" />
                             <span className="text-sm font-medium text-[#06194A]">{o}</span>
                           </label>
                         ))}
@@ -385,7 +385,7 @@ const AddVehicleWizard = ({ open, onClose }: { open: boolean; onClose: () => voi
                       <div className="w-14 h-14 mx-auto rounded-full bg-[#E8F8EE] text-[#0F7A3E] grid place-items-center"><CheckCircle2 className="w-7 h-7" /></div>
                       <h2 className="text-[20px] font-bold text-[#06194A] mt-4">You're all set</h2>
                       <p className="text-sm text-[#53627A] mt-1">We'll have a firm offer ready shortly.</p>
-                      <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#EEF0FF] text-[#4F46E5] text-sm font-semibold">
+                      <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#EEF0FF] text-[#6D28D9] text-sm font-semibold">
                         <DollarSign className="w-4 h-4" /> Estimated range $19,250 – $21,450
                       </div>
                     </div>
@@ -573,7 +573,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
             <SectionLabel>Vehicle Details</SectionLabel>
             <button
               onClick={() => setVerify(true)}
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EEF0FF] text-[#4F46E5] hover:bg-[#E0E4FF] transition"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EEF0FF] text-[#6D28D9] hover:bg-[#E0E4FF] transition"
             >
               <ShieldCheck className="w-3 h-3" /> Verified Vehicle Data
             </button>
@@ -595,7 +595,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
                 disabled={!editable}
                 className={`group rounded-lg px-2 py-2 transition-colors flex items-start gap-2.5 text-left ${editable ? "hover:bg-[#F4F6FA] cursor-pointer" : "cursor-default"}`}
               >
-                <span className="w-7 h-7 rounded-md bg-[#F4F6FA] text-[#4F46E5] grid place-items-center shrink-0">
+                <span className="w-7 h-7 rounded-md bg-[#F4F6FA] text-[#6D28D9] grid place-items-center shrink-0">
                   <Icon className="w-[13px] h-[13px]" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -613,7 +613,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <SectionLabel>Photo Upload</SectionLabel>
-            <button onClick={() => setUpload(true)} className="text-xs font-semibold text-[#4F46E5] hover:underline">
+            <button onClick={() => setUpload(true)} className="text-xs font-semibold text-[#6D28D9] hover:underline">
               Manage
             </button>
           </div>
@@ -642,7 +642,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
                       <motion.div
                         initial={{ width: 0 }} animate={{ width: `${b.target ? pct : 0}%` }}
                         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                        className={`h-full ${b.status === "approved" ? "bg-[#16A34A]" : b.status === "review" ? "bg-[#F59E0B]" : "bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"}`}
+                        className={`h-full ${b.status === "approved" ? "bg-[#16A34A]" : b.status === "review" ? "bg-[#F59E0B]" : "bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]"}`}
                       />
                     </div>
                   </button>
@@ -671,9 +671,9 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
             >
               <button
                 onClick={() => setHistory(p)}
-                className="w-full text-left rounded-2xl border border-[#E6EAF0] p-4 flex items-center gap-3 hover:border-[#4F46E5]/40 hover:shadow-[0_14px_28px_-18px_rgba(79,70,229,0.4)] transition-all"
+                className="w-full text-left rounded-2xl border border-[#E6EAF0] p-4 flex items-center gap-3 hover:border-[#6D28D9]/40 hover:shadow-[0_14px_28px_-18px_rgba(79,70,229,0.4)] transition-all"
               >
-                <div className={`w-12 h-12 rounded-2xl grid place-items-center shrink-0 ${p.outcome === "sold" ? "bg-[#EEF0FF] text-[#4F46E5]" : "bg-[#F4F6FA] text-[#8893A8]"}`}>
+                <div className={`w-12 h-12 rounded-2xl grid place-items-center shrink-0 ${p.outcome === "sold" ? "bg-[#EEF0FF] text-[#6D28D9]" : "bg-[#F4F6FA] text-[#8893A8]"}`}>
                   <Car className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -717,7 +717,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
           ].map((f) => (
             <label key={f.label} className="block">
               <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">{f.label}</span>
-              <input defaultValue={f.value} className="mt-1 w-full rounded-xl border border-[#E6EAF0] bg-white px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+              <input defaultValue={f.value} className="mt-1 w-full rounded-xl border border-[#E6EAF0] bg-white px-3 py-2.5 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
             </label>
           ))}
         </div>
@@ -733,8 +733,8 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
           >Continue</PrimaryButton>
         }
       >
-        <button className="w-full border-2 border-dashed border-[#C7D2FE] bg-[#FAFBFE] rounded-2xl p-8 text-center hover:border-[#4F46E5] hover:bg-[#EEF0FF] transition">
-          <Upload className="w-8 h-8 mx-auto text-[#4F46E5] mb-2" />
+        <button className="w-full border-2 border-dashed border-[#C7D2FE] bg-[#FAFBFE] rounded-2xl p-8 text-center hover:border-[#6D28D9] hover:bg-[#EEF0FF] transition">
+          <Upload className="w-8 h-8 mx-auto text-[#6D28D9] mb-2" />
           <div className="text-sm font-semibold text-[#06194A]">Drop files or tap to upload</div>
           <div className="text-[11px] text-[#53627A] mt-1">JPG, PNG or HEIC up to 25MB</div>
         </button>
@@ -787,7 +787,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
                     : [{ t: "Offer declined", d: "Jan 18" }]),
                 ].map((e, i) => (
                   <li key={i} className="relative">
-                    <span className="absolute -left-[18px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#4F46E5] ring-4 ring-[#EEF0FF]" />
+                    <span className="absolute -left-[18px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#6D28D9] ring-4 ring-[#EEF0FF]" />
                     <div className="text-[13px] font-semibold text-[#06194A]">{e.t}</div>
                     <div className="text-[11.5px] text-[#53627A]">{e.d}</div>
                   </li>
@@ -832,7 +832,7 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
       >
         <div className="space-y-4">
           <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#C7D2FE] p-4 flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-white text-[#4F46E5] grid place-items-center shadow-sm">
+            <span className="w-10 h-10 rounded-xl bg-white text-[#6D28D9] grid place-items-center shadow-sm">
               <Fingerprint className="w-[18px] h-[18px]" />
             </span>
             <div className="min-w-0">
@@ -855,8 +855,8 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
             ] as [string, string, PhotoStatus, any][]).map(([title, sub, status, Icon]) => {
               const meta = STATUS_META[status];
               return (
-                <li key={title} className="flex items-center gap-3 p-3 rounded-xl border border-[#E6EAF0] bg-white hover:border-[#4F46E5]/30 transition">
-                  <span className="w-9 h-9 rounded-lg bg-[#F4F6FA] text-[#4F46E5] grid place-items-center shrink-0">
+                <li key={title} className="flex items-center gap-3 p-3 rounded-xl border border-[#E6EAF0] bg-white hover:border-[#6D28D9]/30 transition">
+                  <span className="w-9 h-9 rounded-lg bg-[#F4F6FA] text-[#6D28D9] grid place-items-center shrink-0">
                     <Icon className="w-4 h-4" />
                   </span>
                   <div className="flex-1 min-w-0">

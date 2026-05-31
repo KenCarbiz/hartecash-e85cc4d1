@@ -139,7 +139,7 @@ const MethodCard = ({
     onClick={onClick}
     className={`relative text-left rounded-2xl border-2 p-6 transition group overflow-hidden ${
       active
-        ? "border-[#4F46E5] bg-gradient-to-br from-[#EEF0FF] to-white shadow-[0_20px_50px_-20px_rgba(79,70,229,0.45)]"
+        ? "border-[#6D28D9] bg-gradient-to-br from-[#EEF0FF] to-white shadow-[0_20px_50px_-20px_rgba(79,70,229,0.45)]"
         : "border-[#E6EAF0] bg-white hover:border-[#C7D2FE] hover:shadow-[0_12px_30px_-12px_rgba(79,70,229,0.25)]"
     }`}
   >
@@ -154,7 +154,7 @@ const MethodCard = ({
         <Icon className="w-5 h-5" />
       </motion.div>
       {active && (
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-7 h-7 rounded-full bg-[#4F46E5] grid place-items-center">
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-7 h-7 rounded-full bg-[#6D28D9] grid place-items-center">
           <Check className="w-4 h-4 text-white" />
         </motion.div>
       )}
@@ -168,7 +168,7 @@ const MethodCard = ({
         </li>
       ))}
     </ul>
-    <div className={`mt-5 inline-flex items-center gap-1.5 text-sm font-semibold ${active ? "text-[#4F46E5]" : "text-[#06194A]"}`}>
+    <div className={`mt-5 inline-flex items-center gap-1.5 text-sm font-semibold ${active ? "text-[#6D28D9]" : "text-[#06194A]"}`}>
       {cta} <ArrowRight className="w-4 h-4 transition group-hover:translate-x-0.5" />
     </div>
   </motion.button>
@@ -181,7 +181,7 @@ const WorkflowTracker = ({ activeStep }: { activeStep: number }) => (
       initial={{ scaleX: 0 }} animate={{ scaleX: (activeStep - 1) / (WORKFLOW.length - 1) }}
       transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
       style={{ transformOrigin: "left" }}
-      className="absolute left-0 right-0 top-5 h-px bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"
+      className="absolute left-0 right-0 top-5 h-px bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]"
     />
     <div className="relative grid grid-cols-7 gap-1 overflow-x-auto">
       {WORKFLOW.map((s) => {
@@ -194,8 +194,8 @@ const WorkflowTracker = ({ activeStep }: { activeStep: number }) => (
               animate={active ? { boxShadow: ["0 0 0 0 rgba(79,70,229,0.5)", "0 0 0 8px rgba(79,70,229,0)"] } : {}}
               transition={{ duration: 1.8, repeat: Infinity }}
               className={`w-10 h-10 rounded-full grid place-items-center transition ${
-                done   ? "bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white shadow-[0_6px_14px_-4px_rgba(79,70,229,0.55)]"
-              : active ? "bg-white border-2 border-[#4F46E5] text-[#4F46E5]"
+                done   ? "bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] text-white shadow-[0_6px_14px_-4px_rgba(79,70,229,0.55)]"
+              : active ? "bg-white border-2 border-[#6D28D9] text-[#6D28D9]"
                        : "bg-[#F4F6FA] text-[#8893A8]"
               }`}
             >
@@ -224,7 +224,7 @@ const ProgressRing = ({ percent }: { percent: number }) => {
       />
       <defs>
         <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#4F46E5" /><stop offset="100%" stopColor="#7C3AED" />
+          <stop offset="0%" stopColor="#6D28D9" /><stop offset="100%" stopColor="#6D28D9" />
         </linearGradient>
       </defs>
     </svg>
@@ -234,8 +234,8 @@ const ProgressRing = ({ percent }: { percent: number }) => {
 const LiveStatusStrip = () => {
   const items = [
     { icon: CheckCircle2, tone: "text-[#16A34A]", text: "Pickup availability updated · just now" },
-    { icon: Truck,        tone: "text-[#4F46E5]", text: "Coordinator reviewing route · 2 min ago" },
-    { icon: Camera,       tone: "text-[#7C3AED]", text: "Inspection slot opened · 5 min ago" },
+    { icon: Truck,        tone: "text-[#6D28D9]", text: "Coordinator reviewing route · 2 min ago" },
+    { icon: Camera,       tone: "text-[#6D28D9]", text: "Inspection slot opened · 5 min ago" },
   ];
   const [i, setI] = useState(0);
   useEffect(() => { const id = setInterval(() => setI((x) => (x + 1) % items.length), 5000); return () => clearInterval(id); }, []);
@@ -328,7 +328,7 @@ export const PickupPage = () => {
           <SectionLabel>Step 1 · Handoff Method</SectionLabel>
           {method && (
             <button onClick={() => { setMethod(null); setInspectionApproved(false); setDealershipPick(null); }}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[#4F46E5] hover:underline">
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#6D28D9] hover:underline">
               <RotateCcw className="w-3 h-3" /> Change method
             </button>
           )}
@@ -343,7 +343,7 @@ export const PickupPage = () => {
             desc="Bring your vehicle to a nearby dealership for a quick in-person inspection and immediate handoff."
             benefits={["Same-day completion", "In-person support", "Faster payment release", "Final verification onsite"]}
             cta="Schedule Dealership Visit"
-            accent="#4F46E5"
+            accent="#6D28D9"
           />
           <MethodCard
             active={method === "ai"}
@@ -353,7 +353,7 @@ export const PickupPage = () => {
             desc="Complete a guided AI-assisted inspection from your phone and we'll schedule pickup directly from your location."
             benefits={["No dealership visit required", "Pickup from home or work", "AI-guided photo capture", "Contactless experience"]}
             cta={inspectionApproved ? "Inspection Complete ✓" : "Start AI Inspection"}
-            accent="#7C3AED"
+            accent="#6D28D9"
           />
         </div>
 
@@ -382,10 +382,10 @@ export const PickupPage = () => {
               return (
                 <motion.button key={d.id} whileHover={{ y: -2 }} onClick={() => setDealershipPick(d.id)}
                   className={`text-left rounded-2xl border-2 overflow-hidden transition ${
-                    sel ? "border-[#4F46E5] shadow-[0_12px_30px_-12px_rgba(79,70,229,0.4)]" : "border-[#E6EAF0] hover:border-[#C7D2FE]"
+                    sel ? "border-[#6D28D9] shadow-[0_12px_30px_-12px_rgba(79,70,229,0.4)]" : "border-[#E6EAF0] hover:border-[#C7D2FE]"
                   }`}>
                   <div className="h-24 bg-gradient-to-br from-[#EEF0FF] via-[#F5F3FF] to-[#FAFBFE] relative">
-                    <div className="absolute inset-0 grid place-items-center text-[#4F46E5]/40"><Building2 className="w-10 h-10" /></div>
+                    <div className="absolute inset-0 grid place-items-center text-[#6D28D9]/40"><Building2 className="w-10 h-10" /></div>
                     <div className="absolute top-2 right-2 inline-flex items-center gap-1 bg-white/90 backdrop-blur rounded-full px-2 py-0.5 text-[10px] font-bold text-[#06194A]">
                       <Star className="w-3 h-3 fill-[#F59E0B] text-[#F59E0B]" /> {d.rating}
                     </div>
@@ -393,7 +393,7 @@ export const PickupPage = () => {
                   <div className="p-3">
                     <div className="flex items-center justify-between">
                       <div className="text-sm font-bold text-[#06194A] truncate">{d.name}</div>
-                      <div className="text-[11px] font-semibold text-[#4F46E5]">{d.distance}</div>
+                      <div className="text-[11px] font-semibold text-[#6D28D9]">{d.distance}</div>
                     </div>
                     <div className="text-[11px] text-[#53627A] mt-0.5 truncate">{d.address}</div>
                     <div className="text-[10px] text-[#8893A8] mt-1.5">{d.hours}</div>
@@ -427,9 +427,9 @@ export const PickupPage = () => {
                 {/* Smart recommendations */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
                   <div className="rounded-xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#C7D2FE] p-3 flex items-start gap-2">
-                    <Zap className="w-4 h-4 text-[#4F46E5] mt-0.5" />
+                    <Zap className="w-4 h-4 text-[#6D28D9] mt-0.5" />
                     <div>
-                      <div className="text-[10px] uppercase tracking-wide text-[#4F46E5] font-bold">Earliest pickup</div>
+                      <div className="text-[10px] uppercase tracking-wide text-[#6D28D9] font-bold">Earliest pickup</div>
                       <div className="text-xs font-semibold text-[#06194A]">Tomorrow · 10 AM–12 PM</div>
                     </div>
                   </div>
@@ -454,8 +454,8 @@ export const PickupPage = () => {
                         onClick={() => setSelectedDay(d.date)}
                         className={`relative aspect-square rounded-xl border text-sm font-semibold transition ${
                           !d.available ? "opacity-30 cursor-not-allowed border-[#E6EAF0] text-[#8893A8]"
-                          : sel ? "bg-gradient-to-br from-[#4F46E5] to-[#6366F1] text-white border-[#4F46E5] shadow-[0_10px_24px_-8px_rgba(79,70,229,0.6)]"
-                          : "border-[#E6EAF0] text-[#06194A] hover:border-[#4F46E5]/40 hover:bg-[#EEF0FF]/40"
+                          : sel ? "bg-gradient-to-br from-[#6D28D9] to-[#6366F1] text-white border-[#6D28D9] shadow-[0_10px_24px_-8px_rgba(79,70,229,0.6)]"
+                          : "border-[#E6EAF0] text-[#06194A] hover:border-[#6D28D9]/40 hover:bg-[#EEF0FF]/40"
                         }`}
                       >
                         <div className="text-[10px] uppercase opacity-75 leading-none mt-1.5">{d.date.toLocaleDateString(undefined, { weekday: "short" })}</div>
@@ -479,7 +479,7 @@ export const PickupPage = () => {
                       return (
                         <motion.button key={w.label} whileHover={{ y: -1 }} onClick={() => setSelectedWindow(w.label)} disabled={!selectedDay}
                           className={`rounded-xl py-2.5 text-left px-3 transition ${
-                            sel ? "bg-gradient-to-br from-[#4F46E5] to-[#6366F1] text-white shadow-[0_8px_20px_-8px_rgba(79,70,229,0.5)]"
+                            sel ? "bg-gradient-to-br from-[#6D28D9] to-[#6366F1] text-white shadow-[0_8px_20px_-8px_rgba(79,70,229,0.5)]"
                                 : "bg-[#F7F8FB] text-[#06194A] hover:bg-[#EEF0FF] disabled:opacity-50 disabled:cursor-not-allowed"
                           }`}>
                           <div className="text-sm font-bold">{w.label}</div>
@@ -500,7 +500,7 @@ export const PickupPage = () => {
                 <Card className="p-5">
                   <div className="flex items-center justify-between">
                     <SectionLabel>Pickup Location</SectionLabel>
-                    <button onClick={() => setEditLoc(true)} className="text-xs font-semibold text-[#4F46E5] hover:underline">Edit</button>
+                    <button onClick={() => setEditLoc(true)} className="text-xs font-semibold text-[#6D28D9] hover:underline">Edit</button>
                   </div>
                   <div className="mt-3 grid grid-cols-3 gap-1.5">
                     {([
@@ -512,7 +512,7 @@ export const PickupPage = () => {
                       return (
                         <button key={o.id} onClick={() => setPickupSpot(o.id)}
                           className={`rounded-xl border px-2 py-2 text-[11px] font-semibold transition flex flex-col items-center gap-1 ${
-                            sel ? "border-[#4F46E5] bg-[#EEF0FF] text-[#4F46E5]" : "border-[#E6EAF0] text-[#53627A] hover:bg-[#F7F8FB]"
+                            sel ? "border-[#6D28D9] bg-[#EEF0FF] text-[#6D28D9]" : "border-[#E6EAF0] text-[#53627A] hover:bg-[#F7F8FB]"
                           }`}>
                           <Icon className="w-4 h-4" /> {o.label}
                         </button>
@@ -525,11 +525,11 @@ export const PickupPage = () => {
                     }} />
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                       <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 2, repeat: Infinity }}
-                        className="w-3 h-3 rounded-full bg-[#4F46E5] ring-4 ring-[#4F46E5]/20" />
+                        className="w-3 h-3 rounded-full bg-[#6D28D9] ring-4 ring-[#6D28D9]/20" />
                     </div>
                   </div>
                   <div className="mt-3 flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center shrink-0">
                       <MapPin className="w-4 h-4" />
                     </div>
                     <div className="text-sm">
@@ -543,7 +543,7 @@ export const PickupPage = () => {
                   <SectionLabel>Driver / Transport</SectionLabel>
                   <div className="mt-3 flex items-center gap-3">
                     <div className="relative">
-                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#4F46E5] grid place-items-center text-xs font-bold">MR</div>
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center text-xs font-bold">MR</div>
                       <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#16A34A] ring-2 ring-white" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -551,7 +551,7 @@ export const PickupPage = () => {
                       <div className="text-[11px] text-[#53627A]">Transport Coordinator · 6 yrs</div>
                     </div>
                     <button onClick={() => setContact(true)} aria-label="Contact driver"
-                      className="w-9 h-9 rounded-lg border border-[#E6EAF0] text-[#4F46E5] grid place-items-center hover:bg-[#EEF0FF] transition">
+                      className="w-9 h-9 rounded-lg border border-[#E6EAF0] text-[#6D28D9] grid place-items-center hover:bg-[#EEF0FF] transition">
                       <Phone className="w-4 h-4" />
                     </button>
                   </div>
@@ -571,7 +571,7 @@ export const PickupPage = () => {
       <Card className="p-5 mb-6">
         <div className="flex items-center justify-between">
           <SectionLabel>What Happens During Pickup?</SectionLabel>
-          <button onClick={() => setWhatHappens(true)} className="text-xs font-semibold text-[#4F46E5] hover:underline">View all details →</button>
+          <button onClick={() => setWhatHappens(true)} className="text-xs font-semibold text-[#6D28D9] hover:underline">View all details →</button>
         </div>
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-5 gap-3">
           {PICKUP_STEPS.map((s, i) => {
@@ -579,7 +579,7 @@ export const PickupPage = () => {
             return (
               <motion.div key={s.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
                 className="relative rounded-2xl border border-[#E6EAF0] p-4 hover:border-[#C7D2FE] hover:shadow-[0_8px_20px_-8px_rgba(79,70,229,0.2)] transition">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#4F46E5] grid place-items-center mb-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center mb-2.5">
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="text-[11px] text-[#8893A8] font-semibold">Step {i + 1} · {s.time}</div>
@@ -592,7 +592,7 @@ export const PickupPage = () => {
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div className="rounded-xl bg-[#F7F8FB] p-3 flex items-center gap-2 text-[12px] text-[#06194A]"><DollarSign className="w-4 h-4 text-[#16A34A]" /> ACH initiated after VIN confirm</div>
           <div className="rounded-xl bg-[#F7F8FB] p-3 flex items-center gap-2 text-[12px] text-[#06194A]"><Zap className="w-4 h-4 text-[#F59E0B]" /> Most payments release within 2 hrs</div>
-          <div className="rounded-xl bg-[#F7F8FB] p-3 flex items-center gap-2 text-[12px] text-[#06194A]"><Lock className="w-4 h-4 text-[#4F46E5]" /> Secure encrypted transaction</div>
+          <div className="rounded-xl bg-[#F7F8FB] p-3 flex items-center gap-2 text-[12px] text-[#06194A]"><Lock className="w-4 h-4 text-[#6D28D9]" /> Secure encrypted transaction</div>
         </div>
       </Card>
 
@@ -610,7 +610,7 @@ export const PickupPage = () => {
             </div>
             <div className="relative">
               <ProgressRing percent={checklistPct} />
-              <div className="absolute inset-0 grid place-items-center text-[10px] font-bold text-[#4F46E5]">
+              <div className="absolute inset-0 grid place-items-center text-[10px] font-bold text-[#6D28D9]">
                 {checked.size}/{CHECKLIST.length}
               </div>
             </div>
@@ -670,7 +670,7 @@ export const PickupPage = () => {
           <ol className="space-y-2 text-sm">
             {["Date & window confirmed", "Pickup address saved", "Vehicle ready & keys in hand", "Title signed and ready"].map((s, i) => (
               <li key={s} className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-[#EEF0FF] text-[#4F46E5] font-bold text-xs grid place-items-center shrink-0">{i + 1}</span>
+                <span className="w-6 h-6 rounded-full bg-[#EEF0FF] text-[#6D28D9] font-bold text-xs grid place-items-center shrink-0">{i + 1}</span>
                 <span className="text-[#06194A] pt-0.5">{s}</span>
               </li>
             ))}
@@ -682,27 +682,27 @@ export const PickupPage = () => {
         footer={<div className="flex gap-2"><SecondaryButton onClick={() => setEditLoc(false)} className="flex-1">Cancel</SecondaryButton><PrimaryButton onClick={() => setEditLoc(false)} className="flex-1">Save</PrimaryButton></div>}>
         <label className="block">
           <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">Address</span>
-          <input defaultValue="128 Oakridge Lane" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+          <input defaultValue="128 Oakridge Lane" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
         </label>
         <div className="grid grid-cols-2 gap-2 mt-3">
           <label className="block">
             <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">City</span>
-            <input defaultValue="Hartford" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+            <input defaultValue="Hartford" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
           </label>
           <label className="block">
             <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">ZIP</span>
-            <input defaultValue="06105" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+            <input defaultValue="06105" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
           </label>
         </div>
         <label className="block mt-3">
           <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">Delivery instructions</span>
-          <textarea rows={3} placeholder="Gate code, apartment number, preferred parking area…" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+          <textarea rows={3} placeholder="Gate code, apartment number, preferred parking area…" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
         </label>
       </SlideOver>
 
       <SlideOver open={contact} onClose={() => setContact(false)} title="Contact Coordinator" subtitle="Marcus R."
         footer={<PrimaryButton className="w-full">Send Message</PrimaryButton>}>
-        <textarea rows={4} placeholder="e.g. Please call when you're 10 minutes out." className="w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+        <textarea rows={4} placeholder="e.g. Please call when you're 10 minutes out." className="w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
         <div className="mt-3 grid grid-cols-2 gap-2">
           <SecondaryButton><Phone className="w-4 h-4" /> Call</SecondaryButton>
           <SecondaryButton>Text Driver</SecondaryButton>
@@ -715,7 +715,7 @@ export const PickupPage = () => {
             const Icon = s.icon;
             return (
               <li key={s.title} className="flex items-start gap-3 rounded-2xl border border-[#E6EAF0] p-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#4F46E5] grid place-items-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center shrink-0">
                   <Icon className="w-5 h-5" />
                 </div>
                 <div className="flex-1">

@@ -16,7 +16,7 @@ import {
 
 const Toggle = ({ on, onChange }: { on: boolean; onChange: () => void }) => (
   <button onClick={onChange} role="switch" aria-checked={on}
-    className={`relative w-10 h-6 rounded-full transition ${on ? "bg-[#4F46E5]" : "bg-[#E6EAF0]"}`}>
+    className={`relative w-10 h-6 rounded-full transition ${on ? "bg-[#6D28D9]" : "bg-[#E6EAF0]"}`}>
     <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${on ? "translate-x-4" : ""}`} />
   </button>
 );
@@ -95,10 +95,10 @@ export const SettingsPage = () => {
       whileHover={{ y: -2 }}
       transition={{ type: "spring", stiffness: 360, damping: 26 }}
       onClick={() => setPanel(s.key)}
-      className="text-left bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5 hover:border-[#4F46E5]/40 hover:shadow-[0_12px_28px_-16px_rgba(79,70,229,0.35)] transition group"
+      className="text-left bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5 hover:border-[#6D28D9]/40 hover:shadow-[0_12px_28px_-16px_rgba(79,70,229,0.35)] transition group"
     >
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-2xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center">
+        <div className="w-11 h-11 rounded-2xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center">
           <s.Icon className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
@@ -108,7 +108,7 @@ export const SettingsPage = () => {
           </div>
           <div className="text-[11px] text-[#53627A] mt-0.5">{s.desc}</div>
         </div>
-        <ChevronRight className="w-4 h-4 text-[#8893A8] group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition" />
+        <ChevronRight className="w-4 h-4 text-[#8893A8] group-hover:text-[#6D28D9] group-hover:translate-x-0.5 transition" />
       </div>
     </motion.button>
   );
@@ -142,7 +142,7 @@ export const SettingsPage = () => {
           className="rounded-2xl border border-[#C7D2FE]/60 bg-gradient-to-br from-[#EEF0FF] via-white to-[#F7F8FB] p-5 mb-6"
         >
           <div className="flex items-start gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-white border border-[#C7D2FE]/60 text-[#4F46E5] grid place-items-center shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-white border border-[#C7D2FE]/60 text-[#6D28D9] grid place-items-center shrink-0">
               {(() => { const Icon = ADDRESS_ICONS[defaultLocation.type]; return <Icon className="w-5 h-5" />; })()}
             </div>
             <div className="flex-1 min-w-0">
@@ -158,7 +158,7 @@ export const SettingsPage = () => {
             </div>
             <button
               onClick={() => setPanel("savedLocations")}
-              className="shrink-0 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] hover:underline"
+              className="shrink-0 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#6D28D9] hover:underline"
             >
               Manage
             </button>
@@ -256,8 +256,8 @@ export const SettingsPage = () => {
             { Icon: User, title: "Trusted devices", desc: "2 active devices" },
           ].map((r) => (
             <li key={r.title}>
-              <button className="w-full flex items-center gap-3 p-3 rounded-xl border border-[#E6EAF0] hover:border-[#4F46E5]/40 transition text-left">
-                <div className="w-10 h-10 rounded-xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center"><r.Icon className="w-4 h-4" /></div>
+              <button className="w-full flex items-center gap-3 p-3 rounded-xl border border-[#E6EAF0] hover:border-[#6D28D9]/40 transition text-left">
+                <div className="w-10 h-10 rounded-xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center"><r.Icon className="w-4 h-4" /></div>
                 <div className="flex-1">
                   <div className="text-sm font-semibold text-[#06194A]">{r.title}</div>
                   <div className="text-[11px] text-[#53627A]">{r.desc}</div>
@@ -289,7 +289,7 @@ export const SettingsPage = () => {
             </div>
           ))}
           <div className="mt-4 rounded-xl bg-[#F7F8FB] border border-[#E6EAF0] p-3 flex items-start gap-2.5">
-            <Eye className="w-4 h-4 text-[#4F46E5] mt-0.5 shrink-0" />
+            <Eye className="w-4 h-4 text-[#6D28D9] mt-0.5 shrink-0" />
             <p className="text-[11.5px] text-[#53627A] leading-relaxed">
               You can request a full export of your data or revoke consents anytime from this panel.
             </p>
@@ -357,7 +357,7 @@ export const SettingsPage = () => {
               <div className="px-6 space-y-2.5 pb-2">
                 {SMS_IMPACTS.map((item) => (
                   <div key={item.label} className="flex items-start gap-3 rounded-xl bg-[#F7F8FB] p-3">
-                    <div className="w-8 h-8 rounded-lg bg-white border border-[#E6EAF0] text-[#4F46E5] grid place-items-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-[#E6EAF0] text-[#6D28D9] grid place-items-center shrink-0">
                       <item.Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-1">
@@ -368,8 +368,8 @@ export const SettingsPage = () => {
                 ))}
               </div>
               <div className="mx-6 mt-4 mb-2 rounded-xl bg-[#EEF0FF] border border-[#C7D2FE]/40 p-3 flex items-start gap-2.5">
-                <Mail className="w-4 h-4 text-[#4F46E5] mt-0.5 shrink-0" />
-                <p className="text-[11.5px] text-[#4F46E5] leading-relaxed">
+                <Mail className="w-4 h-4 text-[#6D28D9] mt-0.5 shrink-0" />
+                <p className="text-[11.5px] text-[#6D28D9] leading-relaxed">
                   Important transaction notices may still be sent by email.
                 </p>
               </div>

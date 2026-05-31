@@ -198,14 +198,14 @@ const MotoDetailedJourneyConfig = () => {
               }
               className={`rounded-xl border p-4 text-left transition-all ${
                 active
-                  ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%/0.04)] shadow-[0_0_0_3px_hsl(262_83%_58%/0.08)]"
+                  ? "border-[hsl(263_70%_50%)] bg-[hsl(263_70%_50%/0.04)] shadow-[0_0_0_3px_hsl(263_70%_50%/0.08)]"
                   : "border-zinc-200 bg-white hover:border-zinc-300"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-zinc-900">{t.label}</p>
                 {active && (
-                  <span className="rounded-full bg-[hsl(262_83%_58%)] p-0.5 text-white">
+                  <span className="rounded-full bg-[hsl(263_70%_50%)] p-0.5 text-white">
                     <Check className="h-3 w-3" />
                   </span>
                 )}
@@ -236,7 +236,7 @@ const MotoDetailedJourneyConfig = () => {
                     }
                     className={`rounded-xl border p-3 text-left transition-all ${
                       active
-                        ? "border-[hsl(262_83%_58%)] bg-white shadow-[0_0_0_3px_hsl(262_83%_58%/0.08)]"
+                        ? "border-[hsl(263_70%_50%)] bg-white shadow-[0_0_0_3px_hsl(263_70%_50%/0.08)]"
                         : "border-zinc-200 bg-white hover:border-zinc-300"
                     }`}
                   >

@@ -25,7 +25,7 @@ const StepUsage = ({ state, update, next }: StepContext) => {
       </div>
 
       <div className="flex items-start gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-[13px] leading-relaxed text-slate-600">
-        <span className="mt-0.5 text-[hsl(262_60%_45%)]">💡</span>
+        <span className="mt-0.5 text-[hsl(263_60%_45%)]">💡</span>
         <span>Your choice helps us match the right dealer process for your offer. You can change this before accepting.</span>
       </div>
 
@@ -45,8 +45,8 @@ const Card = ({
     onClick={onClick}
     className={`group relative flex h-full min-h-[156px] cursor-pointer flex-col rounded-2xl border p-5 text-left transition-all duration-200 ${
       active
-        ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%/0.05)] shadow-[0_8px_24px_-12px_hsl(262_83%_58%/0.45),0_0_0_4px_hsl(262_83%_58%/0.08)]"
-        : "border-slate-200 bg-white hover:border-[hsl(262_83%_58%/0.55)] hover:bg-[hsl(262_83%_58%/0.035)] hover:shadow-[0_8px_24px_-12px_hsl(262_83%_58%/0.18)] hover:-translate-y-[1px]"
+        ? "border-[hsl(263_70%_50%)] bg-[hsl(263_70%_50%/0.05)] shadow-[0_8px_24px_-12px_hsl(263_70%_50%/0.45),0_0_0_4px_hsl(263_70%_50%/0.08)]"
+        : "border-slate-200 bg-white hover:border-[hsl(263_70%_50%/0.55)] hover:bg-[hsl(263_70%_50%/0.035)] hover:shadow-[0_8px_24px_-12px_hsl(263_70%_50%/0.18)] hover:-translate-y-[1px]"
     }`}
   >
     {/* Top row — icon + selection indicator */}
@@ -54,8 +54,8 @@ const Card = ({
       <div
         className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
           active
-            ? "bg-[hsl(262_83%_58%)] text-white"
-            : "bg-[hsl(262_83%_58%/0.08)] text-[hsl(262_60%_45%)] group-hover:bg-[hsl(262_83%_58%/0.12)]"
+            ? "bg-[hsl(263_70%_50%)] text-white"
+            : "bg-[hsl(263_70%_50%/0.08)] text-[hsl(263_60%_45%)] group-hover:bg-[hsl(263_70%_50%/0.12)]"
         }`}
       >
         {icon}
@@ -63,7 +63,7 @@ const Card = ({
       <div
         className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
           active
-            ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%)] text-white"
+            ? "border-[hsl(263_70%_50%)] bg-[hsl(263_70%_50%)] text-white"
             : "border-slate-300 bg-white text-transparent"
         }`}
       >

@@ -617,7 +617,7 @@ const NextStepCard = () => (
       className="mt-auto w-full h-11 rounded-xl text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-opacity hover:opacity-95 active:opacity-90"
       style={{
         background:
-          "linear-gradient(135deg, #4F46E5 0%, #3B35FF 50%, #6D28D9 100%)",
+          "linear-gradient(135deg, #6D28D9 0%, #3B35FF 50%, #6D28D9 100%)",
       }}
     >
       View Firm Offer

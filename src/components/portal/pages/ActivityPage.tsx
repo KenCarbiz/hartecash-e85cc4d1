@@ -34,7 +34,7 @@ const TYPE_MAP: Record<string, {
   nav?: NavTarget;
 }> = {
   submission: {
-    Icon: Car, tint: "bg-[#EEF0FF] text-[#4F46E5]", ring: "ring-[#C7D2FE]", cat: "All",
+    Icon: Car, tint: "bg-[#EEF0FF] text-[#6D28D9]", ring: "ring-[#C7D2FE]", cat: "All",
     rich: "Your vehicle details were sent to your acquisition specialist for review.",
     nav: "vehicles",
   },
@@ -49,7 +49,7 @@ const TYPE_MAP: Record<string, {
     nav: "messages",
   },
   documents: {
-    Icon: FileText, tint: "bg-[#EEF0FF] text-[#4F46E5]", ring: "ring-[#C7D2FE]", cat: "Documents",
+    Icon: FileText, tint: "bg-[#EEF0FF] text-[#6D28D9]", ring: "ring-[#C7D2FE]", cat: "Documents",
     rich: "Your title and registration are currently under review by the dealership.",
     nav: "documents",
   },
@@ -89,10 +89,10 @@ const ProgressHeader = ({ percent }: { percent: number }) => (
       <div>
         <SectionLabel>Vehicle Acquisition Progress</SectionLabel>
         <h2 className="text-[18px] sm:text-[20px] font-bold text-[#06194A] mt-1">
-          You're <span className="text-[#4F46E5]">{percent}% complete</span>
+          You're <span className="text-[#6D28D9]">{percent}% complete</span>
         </h2>
       </div>
-      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#EEF0FF] text-[#4F46E5]">
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#EEF0FF] text-[#6D28D9]">
         <ActivityIcon className="w-3.5 h-3.5" /> Live tracking
       </span>
     </div>
@@ -102,7 +102,7 @@ const ProgressHeader = ({ percent }: { percent: number }) => (
       <motion.div
         initial={{ width: 0 }} animate={{ width: `${percent}%` }}
         transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-        className="h-full bg-gradient-to-r from-[#4F46E5] via-[#6366F1] to-[#7C3AED] rounded-full shadow-[0_0_12px_rgba(79,70,229,0.5)]"
+        className="h-full bg-gradient-to-r from-[#6D28D9] via-[#6366F1] to-[#6D28D9] rounded-full shadow-[0_0_12px_rgba(79,70,229,0.5)]"
       />
     </div>
 
@@ -147,7 +147,7 @@ const SmartGuidanceBanner = ({
   tone, Icon, title, description, ctaLabel, onCta,
 }: { tone: "indigo" | "orange" | "green"; Icon: LucideIcon; title: string; description: string; ctaLabel: string; onCta: () => void }) => {
   const tones = {
-    indigo: { bg: "from-[#EEF0FF] to-white", border: "border-[#C7D2FE]", icon: "bg-white text-[#4F46E5]", btn: "bg-[#4F46E5] hover:bg-[#4338CA] text-white" },
+    indigo: { bg: "from-[#EEF0FF] to-white", border: "border-[#C7D2FE]", icon: "bg-white text-[#6D28D9]", btn: "bg-[#6D28D9] hover:bg-[#4338CA] text-white" },
     orange: { bg: "from-[#FEF3E2] to-white", border: "border-[#FCD9A8]", icon: "bg-white text-[#B45309]", btn: "bg-[#B45309] hover:bg-[#92400E] text-white" },
     green:  { bg: "from-[#E8F8EE] to-white", border: "border-[#BBE5C6]", icon: "bg-white text-[#0F7A3E]", btn: "bg-[#0F7A3E] hover:bg-[#0B5C2F] text-white" },
   }[tone];
@@ -180,7 +180,7 @@ const SmartGuidanceBanner = ({
 
 const InsightChip = ({ Icon, text }: { Icon: LucideIcon; text: string }) => (
   <div className="inline-flex items-center gap-1.5 text-[11.5px] font-medium text-[#53627A] bg-white border border-[#E6EAF0] px-2.5 py-1.5 rounded-full">
-    <Icon className="w-3.5 h-3.5 text-[#4F46E5]" /> {text}
+    <Icon className="w-3.5 h-3.5 text-[#6D28D9]" /> {text}
   </div>
 );
 
@@ -251,13 +251,13 @@ export const ActivityPage = ({ onNavigate }: Props) => {
               onClick={() => setFilter(f)}
               className={`group relative text-xs font-semibold pl-3 pr-2.5 py-1.5 rounded-full transition-all inline-flex items-center gap-1.5 active:scale-[0.97] ${
                 active
-                  ? "bg-[#4F46E5] text-white shadow-[0_8px_18px_-8px_rgba(79,70,229,0.6)]"
-                  : "bg-white border border-[#E6EAF0] text-[#53627A] hover:text-[#4F46E5] hover:border-[#4F46E5]/40 hover:shadow-[0_6px_14px_-10px_rgba(79,70,229,0.4)]"
+                  ? "bg-[#6D28D9] text-white shadow-[0_8px_18px_-8px_rgba(79,70,229,0.6)]"
+                  : "bg-white border border-[#E6EAF0] text-[#53627A] hover:text-[#6D28D9] hover:border-[#6D28D9]/40 hover:shadow-[0_6px_14px_-10px_rgba(79,70,229,0.4)]"
               }`}
             >
               {f}
               <span className={`text-[10.5px] font-bold rounded-full min-w-[18px] h-[18px] px-1 grid place-items-center ${
-                active ? "bg-white/20 text-white" : "bg-[#F4F6FA] text-[#53627A] group-hover:bg-[#EEF0FF] group-hover:text-[#4F46E5]"
+                active ? "bg-white/20 text-white" : "bg-[#F4F6FA] text-[#53627A] group-hover:bg-[#EEF0FF] group-hover:text-[#6D28D9]"
               }`}>{count}</span>
             </button>
           );
@@ -284,7 +284,7 @@ export const ActivityPage = ({ onNavigate }: Props) => {
             initial={{ scaleY: 0 }} animate={{ scaleY: percent / 100 }}
             transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
             style={{ transformOrigin: "top" }}
-            className="absolute left-[19px] top-1 bottom-1 w-px bg-gradient-to-b from-[#4F46E5] to-[#7C3AED]"
+            className="absolute left-[19px] top-1 bottom-1 w-px bg-gradient-to-b from-[#6D28D9] to-[#6D28D9]"
             aria-hidden
           />
 
@@ -336,7 +336,7 @@ export const ActivityPage = ({ onNavigate }: Props) => {
                         {/* Message preview with avatar */}
                         {a.type === "messages" && (
                           <div className="mt-2.5 flex items-center gap-2 p-2 rounded-lg bg-white border border-[#EEF0F4] max-w-md">
-                            <span className="w-7 h-7 rounded-full bg-[#EEF0FF] text-[#4F46E5] text-[10.5px] font-bold grid place-items-center shrink-0">
+                            <span className="w-7 h-7 rounded-full bg-[#EEF0FF] text-[#6D28D9] text-[10.5px] font-bold grid place-items-center shrink-0">
                               {dealer.initials}
                             </span>
                             <div className="min-w-0 flex-1">
@@ -351,7 +351,7 @@ export const ActivityPage = ({ onNavigate }: Props) => {
                           <div className="mt-2.5">
                             <button
                               onClick={(e) => { e.stopPropagation(); if (cfg.nav) go(cfg.nav); }}
-                              className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] hover:text-[#4338CA] px-2.5 py-1.5 rounded-lg bg-[#EEF0FF] hover:bg-[#E0E4FF] transition"
+                              className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#6D28D9] hover:text-[#4338CA] px-2.5 py-1.5 rounded-lg bg-[#EEF0FF] hover:bg-[#E0E4FF] transition"
                             >
                               {a.type === "pickup" ? "Schedule pickup" : a.type === "payments" ? "Track payment" : "Take action"}
                               <ArrowRight className="w-3.5 h-3.5" />
@@ -521,7 +521,7 @@ export const ActivityPage = ({ onNavigate }: Props) => {
               {open.type === "messages" && (
                 <div className="rounded-2xl border border-[#E6EAF0] p-4">
                   <div className="flex items-center gap-2.5">
-                    <span className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#4F46E5] text-[11px] font-bold grid place-items-center">{dealer.initials}</span>
+                    <span className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#6D28D9] text-[11px] font-bold grid place-items-center">{dealer.initials}</span>
                     <div className="min-w-0">
                       <div className="text-[13px] font-semibold text-[#06194A]">{dealer.name}</div>
                       <div className="text-[11px] text-[#8893A8]">{dealer.role}</div>

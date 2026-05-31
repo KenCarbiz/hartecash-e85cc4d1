@@ -159,7 +159,7 @@ const CustomerLookup = () => {
                 <Mail className="w-4 h-4" /> Contact
               </Link>
             )}
-            <span className="hidden md:inline-flex items-center gap-1.5 ml-2 px-3 py-1.5 rounded-full bg-[#EEF0FF] text-[#4F46E5] text-xs font-semibold">
+            <span className="hidden md:inline-flex items-center gap-1.5 ml-2 px-3 py-1.5 rounded-full bg-[#EEF0FF] text-[#6D28D9] text-xs font-semibold">
               <ShieldCheck className="w-3.5 h-3.5" /> Secure Login
             </span>
           </nav>
@@ -176,7 +176,7 @@ const CustomerLookup = () => {
                 className="absolute inset-0 -m-3 rounded-full blur-2xl opacity-70"
                 style={{ background: "radial-gradient(closest-side, rgba(124,58,237,0.35), rgba(79,70,229,0.15), transparent 70%)" }}
               />
-              <span className="relative inline-flex items-center justify-center w-[58px] h-[58px] rounded-2xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_14px_32px_-12px_rgba(124,58,237,0.6)] ring-4 ring-white">
+              <span className="relative inline-flex items-center justify-center w-[58px] h-[58px] rounded-2xl bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] shadow-[0_14px_32px_-12px_rgba(124,58,237,0.6)] ring-4 ring-white">
                 <LockKeyhole className="w-7 h-7 text-white" strokeWidth={2} />
               </span>
             </div>
@@ -193,13 +193,13 @@ const CustomerLookup = () => {
             <button
               type="button"
               onClick={() => navigate(`/my-submission/${lastSession.token}`)}
-              className="w-full mb-5 rounded-2xl border border-[#C7D2FE] bg-gradient-to-br from-[#EEF0FF] via-white to-white p-5 text-left flex items-center gap-4 hover:shadow-[0_12px_28px_-14px_rgba(79,70,229,0.35)] hover:border-[#4F46E5]/30 transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/40"
+              className="w-full mb-5 rounded-2xl border border-[#C7D2FE] bg-gradient-to-br from-[#EEF0FF] via-white to-white p-5 text-left flex items-center gap-4 hover:shadow-[0_12px_28px_-14px_rgba(79,70,229,0.35)] hover:border-[#6D28D9]/30 transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]/40"
             >
-              <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_6px_16px_-6px_rgba(79,70,229,0.45)] grid place-items-center">
+              <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] shadow-[0_6px_16px_-6px_rgba(79,70,229,0.45)] grid place-items-center">
                 <Car className="w-5 h-5 text-white" strokeWidth={2} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#4F46E5] mb-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#6D28D9] mb-1">
                   Welcome back
                 </p>
                 <p className="text-sm font-semibold text-foreground truncate capitalize">
@@ -207,7 +207,7 @@ const CustomerLookup = () => {
                 </p>
                 <p className="text-xs text-foreground/55">Continue where you left off</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-[#4F46E5] shrink-0 group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight className="w-5 h-5 text-[#6D28D9] shrink-0 group-hover:translate-x-0.5 transition-transform" />
             </button>
           )}
 
@@ -231,7 +231,7 @@ const CustomerLookup = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
+                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#6D28D9]/60 focus:ring-2 focus:ring-[#6D28D9]/15 transition-colors"
                 />
               </div>
             </div>
@@ -251,7 +251,7 @@ const CustomerLookup = () => {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   required
-                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#4F46E5]/60 focus:ring-2 focus:ring-[#4F46E5]/15 transition-colors"
+                  className="w-full h-12 pl-11 pr-4 rounded-xl border border-border/70 bg-white text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[#6D28D9]/60 focus:ring-2 focus:ring-[#6D28D9]/15 transition-colors"
                 />
               </div>
             </div>
@@ -259,13 +259,13 @@ const CustomerLookup = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl py-3.5 text-base font-semibold tracking-wide text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:from-[#4338CA] hover:to-[#6D28D9] shadow-[0_10px_24px_-10px_rgba(79,70,229,0.55)] hover:shadow-[0_14px_32px_-12px_rgba(79,70,229,0.65)] disabled:opacity-60 disabled:cursor-not-allowed transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#4F46E5] flex items-center justify-center gap-2"
+              className="w-full rounded-xl py-3.5 text-base font-semibold tracking-wide text-white bg-gradient-to-r from-[#6D28D9] to-[#6D28D9] hover:from-[#4338CA] hover:to-[#6D28D9] shadow-[0_10px_24px_-10px_rgba(79,70,229,0.55)] hover:shadow-[0_14px_32px_-12px_rgba(79,70,229,0.65)] disabled:opacity-60 disabled:cursor-not-allowed transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#6D28D9] flex items-center justify-center gap-2"
             >
               {loading ? "Searching…" : (<><Search className="w-4 h-4" /> Access My Transaction</>)}
             </button>
 
             <p className="flex items-center justify-center gap-1.5 text-xs text-foreground/55">
-              <LockKeyhole className="w-3.5 h-3.5 text-[#4F46E5]" strokeWidth={2} />
+              <LockKeyhole className="w-3.5 h-3.5 text-[#6D28D9]" strokeWidth={2} />
               Secure access · Your info is never shared
             </p>
           </form>
@@ -274,11 +274,11 @@ const CustomerLookup = () => {
           <div className="mt-5 lg:mt-6">
             <div className="flex items-center justify-center gap-3 mb-4" aria-hidden>
               <span className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-border/50" />
-              <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
+              <Sparkles className="w-3 h-3 text-[#6D28D9]/60" strokeWidth={2} />
               <p className="text-[11px] uppercase tracking-[0.14em] font-semibold text-foreground/50">
                 Inside your portal
               </p>
-              <Sparkles className="w-3 h-3 text-[#7C3AED]/60" strokeWidth={2} />
+              <Sparkles className="w-3 h-3 text-[#6D28D9]/60" strokeWidth={2} />
               <span className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-border/50" />
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
@@ -288,7 +288,7 @@ const CustomerLookup = () => {
                   className="rounded-2xl border border-border/25 bg-white px-6 py-7 text-center shadow-[0_2px_12px_-6px_rgba(15,23,42,0.06)] flex flex-col items-center justify-center gap-3.5"
                 >
                   <div className="w-[62px] h-[62px] rounded-full bg-[#F5F3FF] grid place-items-center">
-                    <Icon className="w-[22px] h-[22px] text-[#4F46E5]" strokeWidth={2} />
+                    <Icon className="w-[22px] h-[22px] text-[#6D28D9]" strokeWidth={2} />
                   </div>
                   <p className="text-[15px] font-extrabold text-foreground leading-tight">
                     {title}
@@ -311,7 +311,7 @@ const CustomerLookup = () => {
               <Link
                 to="/"
                 onClick={() => window.scrollTo(0, 0)}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-[#4F46E5] underline-offset-4 hover:underline"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-[#6D28D9] underline-offset-4 hover:underline"
               >
                 Start a new offer
                 <ArrowRight className="w-4 h-4" />
@@ -334,9 +334,9 @@ const CustomerLookup = () => {
                     key={r.token}
                     type="button"
                     onClick={() => navigate(`/my-submission/${r.token}`)}
-                    className="w-full rounded-2xl border border-border/60 bg-white p-5 hover:border-[#4F46E5]/40 hover:shadow-[0_12px_28px_-14px_rgba(79,70,229,0.25)] transition-all text-left flex items-center gap-4 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5]/30"
+                    className="w-full rounded-2xl border border-border/60 bg-white p-5 hover:border-[#6D28D9]/40 hover:shadow-[0_12px_28px_-14px_rgba(79,70,229,0.25)] transition-all text-left flex items-center gap-4 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]/30"
                   >
-                    <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] shadow-[0_6px_16px_-6px_rgba(79,70,229,0.45)] grid place-items-center">
+                    <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] shadow-[0_6px_16px_-6px_rgba(79,70,229,0.45)] grid place-items-center">
                       <Car className="w-5 h-5 text-white" strokeWidth={2} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -347,7 +347,7 @@ const CustomerLookup = () => {
                         <p className="text-sm text-foreground/60 truncate">{r.name}</p>
                       )}
                     </div>
-                    <ChevronRight className="w-4 h-4 text-foreground/40 group-hover:text-[#4F46E5] transition-colors shrink-0" strokeWidth={2} />
+                    <ChevronRight className="w-4 h-4 text-foreground/40 group-hover:text-[#6D28D9] transition-colors shrink-0" strokeWidth={2} />
                   </button>
                 );
               })}

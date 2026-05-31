@@ -115,7 +115,7 @@ const VehicleImageCard = ({
 
   return (
     <div
-      className={`relative w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-[hsl(262_83%_58%/0.08)] ${aspectClassName} ${className}`}
+      className={`relative w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-[hsl(263_70%_50%/0.08)] ${aspectClassName} ${className}`}
     >
       {!showFallback ? (
         <img
@@ -144,7 +144,7 @@ const Fallback = ({ bodyStyle }: { bodyStyle: VehicleBodyStyle }) => (
       }}
     />
     {/* Soft glow under silhouette */}
-    <div className="absolute left-1/2 top-1/2 h-32 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[hsl(262_83%_58%/0.18)] blur-2xl" />
+    <div className="absolute left-1/2 top-1/2 h-32 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[hsl(263_70%_50%/0.18)] blur-2xl" />
     <div className="relative flex h-full flex-col items-center justify-center">
       <Silhouette body={bodyStyle} />
     </div>
@@ -153,8 +153,8 @@ const Fallback = ({ bodyStyle }: { bodyStyle: VehicleBodyStyle }) => (
 );
 
 /* ── Hand-rolled silhouettes ────────────────────────────────────── */
-const STROKE = "hsl(262 60% 45%)";
-const FILL = "hsl(262 83% 58% / 0.12)";
+const STROKE = "hsl(263 60% 45%)";
+const FILL = "hsl(263 70% 50% / 0.12)";
 
 const Silhouette = ({ body }: { body: VehicleBodyStyle }) => {
   const common = {

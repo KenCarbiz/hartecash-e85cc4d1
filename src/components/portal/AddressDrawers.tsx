@@ -41,7 +41,7 @@ export type MailingAddress = {
 /* ───────────────────────── Atoms ───────────────────────── */
 
 const FIELD =
-  "mt-1 w-full rounded-xl border border-[#E6EAF0] bg-white px-3 py-2.5 text-sm text-[#06194A] placeholder:text-[#8893A8] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15 outline-none transition";
+  "mt-1 w-full rounded-xl border border-[#E6EAF0] bg-white px-3 py-2.5 text-sm text-[#06194A] placeholder:text-[#8893A8] focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/15 outline-none transition";
 
 const Label = ({ children }: { children: React.ReactNode }) => (
   <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">{children}</span>
@@ -96,15 +96,15 @@ const MapPreview = ({ seed, verified }: { seed: string; verified: boolean }) => 
         style={{ left: `${offset.x}%`, top: `${offset.y}%`, transform: "translate(-50%, -100%)" }}
       >
         <div className="relative">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center shadow-[0_10px_24px_-8px_rgba(79,70,229,0.65)] ring-4 ring-white/70">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] grid place-items-center shadow-[0_10px_24px_-8px_rgba(79,70,229,0.65)] ring-4 ring-white/70">
             <MapPin className="w-4 h-4 text-white" />
           </div>
-          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#4F46E5]/30 blur-[2px]" />
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#6D28D9]/30 blur-[2px]" />
         </div>
       </motion.div>
       <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10.5px] font-semibold text-[#06194A] border border-white">
-          <Navigation className="w-3 h-3 text-[#4F46E5]" />
+          <Navigation className="w-3 h-3 text-[#6D28D9]" />
           Live preview
         </div>
         {verified ? (
@@ -192,12 +192,12 @@ export const ProfileDrawer = ({ open, onClose }: { open: boolean; onClose: () =>
       }
     >
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#4F46E5] grid place-items-center text-lg font-bold ring-1 ring-[#C7D2FE]/60">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center text-lg font-bold ring-1 ring-[#C7D2FE]/60">
           {MOCK.customer.initials}
         </div>
         <div>
           <div className="text-sm font-semibold text-[#06194A]">{first} {last}</div>
-          <button className="text-xs font-semibold text-[#4F46E5] hover:underline mt-0.5">Change avatar</button>
+          <button className="text-xs font-semibold text-[#6D28D9] hover:underline mt-0.5">Change avatar</button>
         </div>
       </div>
 
@@ -350,8 +350,8 @@ export const PickupAddressDrawer = ({
                   onClick={() => setLoc({ ...loc, type: t })}
                   className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-[12px] font-semibold transition ${
                     active
-                      ? "border-[#4F46E5] bg-[#EEF0FF] text-[#4338CA] shadow-[0_8px_20px_-12px_rgba(79,70,229,0.45)]"
-                      : "border-[#E6EAF0] text-[#53627A] hover:border-[#4F46E5]/40 hover:text-[#4F46E5]"
+                      ? "border-[#6D28D9] bg-[#EEF0FF] text-[#4338CA] shadow-[0_8px_20px_-12px_rgba(79,70,229,0.45)]"
+                      : "border-[#E6EAF0] text-[#53627A] hover:border-[#6D28D9]/40 hover:text-[#6D28D9]"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -376,7 +376,7 @@ export const PickupAddressDrawer = ({
             <button
               onClick={useCurrentLocation}
               disabled={isLocked}
-              className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-[#4F46E5] hover:underline disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-[#6D28D9] hover:underline disabled:opacity-40"
             >
               <Locate className="w-3.5 h-3.5" />
               Use current location
@@ -399,8 +399,8 @@ export const PickupAddressDrawer = ({
         <AnimatePresence mode="wait">
           {verifying && (
             <motion.div key="ver" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="flex items-center gap-2 text-[12px] text-[#4F46E5] font-medium">
-              <span className="w-3 h-3 rounded-full border-2 border-[#C7D2FE] border-t-[#4F46E5] animate-spin" />
+              className="flex items-center gap-2 text-[12px] text-[#6D28D9] font-medium">
+              <span className="w-3 h-3 rounded-full border-2 border-[#C7D2FE] border-t-[#6D28D9] animate-spin" />
               Verifying address…
             </motion.div>
           )}
@@ -451,7 +451,7 @@ export const PickupAddressDrawer = ({
               type="checkbox"
               checked={!!loc.isDefault}
               onChange={(e) => setLoc({ ...loc, isDefault: e.target.checked })}
-              className="w-4 h-4 rounded border-[#C7D2FE] text-[#4F46E5] focus:ring-[#4F46E5]"
+              className="w-4 h-4 rounded border-[#C7D2FE] text-[#6D28D9] focus:ring-[#6D28D9]"
             />
             Make this my default pickup location
           </label>
@@ -515,7 +515,7 @@ export const SavedLocationsDrawer = ({
       >
         {!pickupEnabled ? (
           <div className="rounded-2xl border border-[#E6EAF0] bg-[#F7F8FB] p-5 text-center">
-            <div className="mx-auto w-11 h-11 rounded-2xl bg-white border border-[#E6EAF0] text-[#4F46E5] grid place-items-center mb-3">
+            <div className="mx-auto w-11 h-11 rounded-2xl bg-white border border-[#E6EAF0] text-[#6D28D9] grid place-items-center mb-3">
               <Building2 className="w-5 h-5" />
             </div>
             <div className="text-sm font-semibold text-[#06194A]">Dealership drop-off only</div>
@@ -538,10 +538,10 @@ export const SavedLocationsDrawer = ({
                     exit={{ opacity: 0, y: -6 }}
                     whileHover={{ y: -2 }}
                     transition={{ type: "spring", stiffness: 320, damping: 28 }}
-                    className="group rounded-2xl border border-[#E6EAF0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:shadow-[0_12px_28px_-16px_rgba(79,70,229,0.35)] hover:border-[#4F46E5]/40 transition"
+                    className="group rounded-2xl border border-[#E6EAF0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:shadow-[0_12px_28px_-16px_rgba(79,70,229,0.35)] hover:border-[#6D28D9]/40 transition"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center shrink-0">
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -556,7 +556,7 @@ export const SavedLocationsDrawer = ({
                         </div>
                         {loc.instructions && (
                           <div className="mt-2 inline-flex items-start gap-1.5 rounded-lg bg-[#F7F8FB] px-2.5 py-1.5 text-[11.5px] text-[#53627A]">
-                            <Shield className="w-3 h-3 text-[#4F46E5] mt-0.5 shrink-0" />
+                            <Shield className="w-3 h-3 text-[#6D28D9] mt-0.5 shrink-0" />
                             <span className="line-clamp-2">{loc.instructions}</span>
                           </div>
                         )}
@@ -566,14 +566,14 @@ export const SavedLocationsDrawer = ({
                       {!loc.isDefault && (
                         <button
                           onClick={() => setDefault(loc.id)}
-                          className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[#4F46E5] hover:underline px-2 py-1"
+                          className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[#6D28D9] hover:underline px-2 py-1"
                         >
                           <Star className="w-3 h-3" /> Set default
                         </button>
                       )}
                       <button
                         onClick={() => setEditing(loc)}
-                        className="ml-auto inline-flex items-center gap-1 text-[11.5px] font-semibold text-[#53627A] hover:text-[#4F46E5] px-2 py-1"
+                        className="ml-auto inline-flex items-center gap-1 text-[11.5px] font-semibold text-[#53627A] hover:text-[#6D28D9] px-2 py-1"
                       >
                         <Pencil className="w-3 h-3" /> Edit
                       </button>
@@ -584,7 +584,7 @@ export const SavedLocationsDrawer = ({
             </AnimatePresence>
             {locations.length === 0 && (
               <div className="rounded-2xl border border-dashed border-[#C7D2FE] bg-[#F7F8FB]/60 p-6 text-center">
-                <div className="mx-auto w-10 h-10 rounded-xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center mb-2">
+                <div className="mx-auto w-10 h-10 rounded-xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center mb-2">
                   <MapPin className="w-4 h-4" />
                 </div>
                 <div className="text-sm font-semibold text-[#06194A]">No saved locations yet</div>
@@ -647,7 +647,7 @@ export const PickupPreferencesDrawer = ({
       {!pickupEnabled ? (
         <div className="rounded-2xl border border-[#E6EAF0] bg-[#F7F8FB] p-5">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white border border-[#E6EAF0] text-[#4F46E5] grid place-items-center">
+            <div className="w-10 h-10 rounded-xl bg-white border border-[#E6EAF0] text-[#6D28D9] grid place-items-center">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -663,7 +663,7 @@ export const PickupPreferencesDrawer = ({
           {defaultLocation && (
             <div className="rounded-2xl border border-[#C7D2FE]/60 bg-[#EEF0FF]/50 p-4">
               <div className="flex items-center gap-2">
-                <Star className="w-3.5 h-3.5 text-[#4F46E5]" />
+                <Star className="w-3.5 h-3.5 text-[#6D28D9]" />
                 <span className="text-[11px] uppercase tracking-wide font-semibold text-[#4338CA]">Default pickup location</span>
               </div>
               <div className="mt-1.5 text-sm font-semibold text-[#06194A]">{defaultLocation.nickname}</div>
@@ -680,8 +680,8 @@ export const PickupPreferencesDrawer = ({
                   onClick={() => setWindowPref(w)}
                   className={`rounded-xl border px-3 py-2.5 text-[12.5px] font-semibold capitalize transition ${
                     windowPref === w
-                      ? "border-[#4F46E5] bg-[#EEF0FF] text-[#4338CA]"
-                      : "border-[#E6EAF0] text-[#53627A] hover:border-[#4F46E5]/40"
+                      ? "border-[#6D28D9] bg-[#EEF0FF] text-[#4338CA]"
+                      : "border-[#E6EAF0] text-[#53627A] hover:border-[#6D28D9]/40"
                   }`}
                 >
                   {w}
@@ -699,7 +699,7 @@ export const PickupPreferencesDrawer = ({
               role="switch"
               aria-checked={contactless}
               onClick={() => setContactless((v) => !v)}
-              className={`relative w-10 h-6 rounded-full transition ${contactless ? "bg-[#4F46E5]" : "bg-[#E6EAF0]"}`}
+              className={`relative w-10 h-6 rounded-full transition ${contactless ? "bg-[#6D28D9]" : "bg-[#E6EAF0]"}`}
             >
               <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${contactless ? "translate-x-4" : ""}`} />
             </button>

@@ -92,7 +92,7 @@ const TODO_META: Record<string, TodoMeta> = {
   },
 };
 
-const PURPLE = "hsl(262_83%_58%)";
+const PURPLE = "hsl(263_70%_50%)";
 
 /**
  * Post-acceptance command center — premium confirmation, mode picker,
@@ -262,7 +262,7 @@ const StepAccepted = ({ state, update }: StepContext) => {
 
           <button
             onClick={goToPortal}
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[hsl(262_83%_58%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_-10px_rgba(124,58,237,0.6)] transition-transform hover:scale-[1.02]"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[hsl(263_70%_50%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_-10px_rgba(124,58,237,0.6)] transition-transform hover:scale-[1.02]"
           >
             Go to My Offer Portal
             <ArrowRight className="h-4 w-4" />
@@ -293,18 +293,18 @@ const StepAccepted = ({ state, update }: StepContext) => {
                 }}
                 className={`group relative flex flex-col rounded-2xl border-2 p-5 text-left transition-all ${
                   active
-                    ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%)]/5 shadow-[0_10px_30px_-12px_rgba(124,58,237,0.35)]"
+                    ? "border-[hsl(263_70%_50%)] bg-[hsl(263_70%_50%)]/5 shadow-[0_10px_30px_-12px_rgba(124,58,237,0.35)]"
                     : "border-zinc-200 bg-white hover:border-zinc-300"
                 }`}
               >
                 {active && (
-                  <span className="absolute right-3 top-3 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(262_83%_58%)] text-white">
+                  <span className="absolute right-3 top-3 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[hsl(263_70%_50%)] text-white">
                     <Check className="h-3.5 w-3.5" strokeWidth={3} />
                   </span>
                 )}
                 <span
                   className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${
-                    active ? "bg-[hsl(262_83%_58%)] text-white" : "bg-zinc-100 text-zinc-700"
+                    active ? "bg-[hsl(263_70%_50%)] text-white" : "bg-zinc-100 text-zinc-700"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -328,8 +328,8 @@ const StepAccepted = ({ state, update }: StepContext) => {
                 onClick={() => setSlot(s.date, s.label)}
                 className={`rounded-xl border-2 px-3 py-3 text-sm font-medium transition-all ${
                   active
-                    ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%)] text-white shadow-[0_8px_20px_-8px_rgba(124,58,237,0.5)]"
-                    : "border-zinc-200 text-zinc-700 hover:border-[hsl(262_83%_58%)]/40"
+                    ? "border-[hsl(263_70%_50%)] bg-[hsl(263_70%_50%)] text-white shadow-[0_8px_20px_-8px_rgba(124,58,237,0.5)]"
+                    : "border-zinc-200 text-zinc-700 hover:border-[hsl(263_70%_50%)]/40"
                 }`}
               >
                 {s.label}
@@ -354,7 +354,7 @@ const StepAccepted = ({ state, update }: StepContext) => {
         </div>
         <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-zinc-100">
           <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-[hsl(262_83%_58%)] to-[hsl(262_83%_70%)]"
+            className="h-full rounded-full bg-gradient-to-r from-[hsl(263_70%_50%)] to-[hsl(263_70%_70%)]"
             initial={false}
             animate={{ width: `${pct}%` }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
@@ -402,7 +402,7 @@ const StepAccepted = ({ state, update }: StepContext) => {
                   className={`shrink-0 rounded-lg px-3.5 py-2 text-xs font-semibold transition-all ${
                     t.done
                       ? "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"
-                      : "bg-[hsl(262_83%_58%)] text-white shadow-sm hover:bg-[hsl(262_83%_52%)]"
+                      : "bg-[hsl(263_70%_50%)] text-white shadow-sm hover:bg-[hsl(263_70%_52%)]"
                   }`}
                 >
                   {t.done ? (meta.action === "upload" || meta.action === "payoff" ? "Replace" : "View") : meta.actionLabel}
@@ -436,7 +436,7 @@ const StepAccepted = ({ state, update }: StepContext) => {
           </button>
           <button
             onClick={goToPortal}
-            className="inline-flex items-center gap-2 rounded-xl bg-[hsl(262_83%_58%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_-10px_rgba(124,58,237,0.6)] hover:bg-[hsl(262_83%_52%)]"
+            className="inline-flex items-center gap-2 rounded-xl bg-[hsl(263_70%_50%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_-10px_rgba(124,58,237,0.6)] hover:bg-[hsl(263_70%_52%)]"
           >
             Go to My Offer Portal
             <ArrowRight className="h-4 w-4" />
@@ -457,9 +457,9 @@ const StepAccepted = ({ state, update }: StepContext) => {
                   payoffInputRef.current?.click();
                   setModal(null);
                 }}
-                className="flex items-center gap-3 rounded-xl border border-zinc-200 p-4 text-left hover:border-[hsl(262_83%_58%)]"
+                className="flex items-center gap-3 rounded-xl border border-zinc-200 p-4 text-left hover:border-[hsl(263_70%_50%)]"
               >
-                <Upload className="h-5 w-5 text-[hsl(262_83%_58%)]" />
+                <Upload className="h-5 w-5 text-[hsl(263_70%_50%)]" />
                 <div>
                   <p className="text-sm font-semibold text-zinc-900">Upload payoff statement</p>
                   <p className="text-xs text-zinc-500">PDF or image from your lender</p>
@@ -470,9 +470,9 @@ const StepAccepted = ({ state, update }: StepContext) => {
                   markDone("payoff", true);
                   setModal(null);
                 }}
-                className="flex items-center gap-3 rounded-xl border border-zinc-200 p-4 text-left hover:border-[hsl(262_83%_58%)]"
+                className="flex items-center gap-3 rounded-xl border border-zinc-200 p-4 text-left hover:border-[hsl(263_70%_50%)]"
               >
-                <FileText className="h-5 w-5 text-[hsl(262_83%_58%)]" />
+                <FileText className="h-5 w-5 text-[hsl(263_70%_50%)]" />
                 <div>
                   <p className="text-sm font-semibold text-zinc-900">Enter payoff details manually</p>
                   <p className="text-xs text-zinc-500">Lender name, account, and payoff amount</p>
@@ -492,7 +492,7 @@ const StepAccepted = ({ state, update }: StepContext) => {
                 markDone("id", true);
                 setModal(null);
               }}
-              className="mt-5 w-full rounded-xl bg-[hsl(262_83%_58%)] px-4 py-3 text-sm font-semibold text-white hover:bg-[hsl(262_83%_52%)]"
+              className="mt-5 w-full rounded-xl bg-[hsl(263_70%_50%)] px-4 py-3 text-sm font-semibold text-white hover:bg-[hsl(263_70%_52%)]"
             >
               Start ID Verification
             </button>
@@ -511,7 +511,7 @@ const StepAccepted = ({ state, update }: StepContext) => {
                     markDone("payment", true);
                     setModal(null);
                   }}
-                  className="flex items-center justify-between rounded-xl border border-zinc-200 p-4 text-left text-sm font-semibold text-zinc-900 hover:border-[hsl(262_83%_58%)]"
+                  className="flex items-center justify-between rounded-xl border border-zinc-200 p-4 text-left text-sm font-semibold text-zinc-900 hover:border-[hsl(263_70%_50%)]"
                 >
                   {opt}
                   <ArrowRight className="h-4 w-4 text-zinc-400" />
@@ -531,7 +531,7 @@ const StepAccepted = ({ state, update }: StepContext) => {
                 markDone("title", true);
                 setModal(null);
               }}
-              className="mt-5 w-full rounded-xl bg-[hsl(262_83%_58%)] px-4 py-3 text-sm font-semibold text-white hover:bg-[hsl(262_83%_52%)]"
+              className="mt-5 w-full rounded-xl bg-[hsl(263_70%_50%)] px-4 py-3 text-sm font-semibold text-white hover:bg-[hsl(263_70%_52%)]"
             >
               Got it
             </button>

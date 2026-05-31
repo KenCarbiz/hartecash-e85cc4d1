@@ -118,7 +118,7 @@ const ChartTooltip = ({ active, payload }: any) => {
       <div className="text-[15px] font-extrabold text-[#06194A] tabular-nums mt-0.5">{fmt(p.value)}</div>
       {p.event && (
         <div className="mt-2 pt-2 border-t border-[#EEF0F4]">
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-[#4F46E5]">
+          <div className="flex items-center gap-1 text-[11px] font-semibold text-[#6D28D9]">
             {p.event.tone === "up" ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
             {p.event.title}
           </div>
@@ -137,21 +137,21 @@ const ValueChart = () => {
         <AreaChart data={SERIES} margin={{ top: 14, right: 12, bottom: 4, left: 0 }}>
           <defs>
             <linearGradient id="anFill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%"  stopColor="#4F46E5" stopOpacity={0.28} />
-              <stop offset="100%" stopColor="#4F46E5" stopOpacity={0} />
+              <stop offset="0%"  stopColor="#6D28D9" stopOpacity={0.28} />
+              <stop offset="100%" stopColor="#6D28D9" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid stroke="#EEF0F4" strokeDasharray="3 5" vertical={false} />
           <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#8893A8", fontSize: 10 }} />
           <YAxis domain={["dataMin - 250", "dataMax + 250"]} tickLine={false} axisLine={false}
                  tick={{ fill: "#8893A8", fontSize: 10 }} tickFormatter={(v) => `$${(v / 1000).toFixed(1)}k`} width={48} />
-          <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#4F46E5", strokeOpacity: 0.25, strokeWidth: 1 }} />
+          <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#6D28D9", strokeOpacity: 0.25, strokeWidth: 1 }} />
           <Area
-            type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={2.75}
-            fill="url(#anFill)" activeDot={{ r: 5, stroke: "#fff", strokeWidth: 2, fill: "#4F46E5" }}
+            type="monotone" dataKey="value" stroke="#6D28D9" strokeWidth={2.75}
+            fill="url(#anFill)" activeDot={{ r: 5, stroke: "#fff", strokeWidth: 2, fill: "#6D28D9" }}
             animationDuration={900} animationEasing="ease-out"
           />
-          <ReferenceDot x={current.label} y={current.value} r={5} fill="#4F46E5" stroke="#fff" strokeWidth={2} />
+          <ReferenceDot x={current.label} y={current.value} r={5} fill="#6D28D9" stroke="#fff" strokeWidth={2} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -198,7 +198,7 @@ export const AnalyticsPage = () => {
 
       {/* ----- Hero: three clear blocks ----- */}
       <Card className="p-5 mb-6 relative overflow-hidden">
-        <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#4F46E5]/[0.06] blur-3xl pointer-events-none" />
+        <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#6D28D9]/[0.06] blur-3xl pointer-events-none" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
           {/* Block 1: Current Market Offer */}
           <div>
@@ -230,7 +230,7 @@ export const AnalyticsPage = () => {
               <motion.div
                 initial={{ width: 0 }} animate={{ width: "88%" }}
                 transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
-                className="h-full rounded-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"
+                className="h-full rounded-full bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]"
               />
             </div>
             <div className="text-[12px] text-[#53627A] mt-2">Strong buyer activity</div>
@@ -280,7 +280,7 @@ export const AnalyticsPage = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card className="p-4">
-          <div className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-[#EEF0FF] text-[#4F46E5]">
+          <div className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-[#EEF0FF] text-[#6D28D9]">
             <Gauge className="w-4 h-4" />
           </div>
           <div className="text-[12px] text-[#53627A] mt-2 font-semibold uppercase tracking-wide">Demand Score</div>
@@ -298,7 +298,7 @@ export const AnalyticsPage = () => {
           </div>
           <button
             onClick={() => setDrawer("forecast")}
-            className="mt-2 text-[11px] font-semibold text-[#4F46E5] hover:text-[#3730A3] inline-flex items-center gap-1"
+            className="mt-2 text-[11px] font-semibold text-[#6D28D9] hover:text-[#3730A3] inline-flex items-center gap-1"
           >
             View demand breakdown <ArrowUpRight className="w-3 h-3" />
           </button>
@@ -340,7 +340,7 @@ export const AnalyticsPage = () => {
             <SectionLabel>What is influencing your offer</SectionLabel>
             <button
               onClick={() => setDrawer("factors")}
-              className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#3730A3] inline-flex items-center gap-1"
+              className="text-[11px] font-semibold text-[#6D28D9] hover:text-[#3730A3] inline-flex items-center gap-1"
             >
               Full breakdown <ArrowUpRight className="w-3 h-3" />
             </button>
@@ -383,7 +383,7 @@ export const AnalyticsPage = () => {
             const Icon = s.icon;
             const palette: Record<string, string> = {
               green:  "bg-[#E8F8EE] text-[#0F7A3E] border-[#BBF7D0]",
-              indigo: "bg-[#EEF0FF] text-[#4F46E5] border-[#E0E7FF]",
+              indigo: "bg-[#EEF0FF] text-[#6D28D9] border-[#E0E7FF]",
               orange: "bg-[#FEF3E2] text-[#B45309] border-[#FED7AA]",
             };
             return (
@@ -445,7 +445,7 @@ export const AnalyticsPage = () => {
                 onClick={() => { setComp(c); setDrawer("comp"); }}
                 className="w-full flex items-center gap-3 py-3 text-left hover:bg-[#F7F8FB] rounded-xl px-2 transition group"
               >
-                <div className="w-11 h-11 rounded-2xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center shrink-0 group-hover:scale-105 transition">
+                <div className="w-11 h-11 rounded-2xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center shrink-0 group-hover:scale-105 transition">
                   <Car className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -566,7 +566,7 @@ export const AnalyticsPage = () => {
       >
         <div className="space-y-3 text-[13px] text-[#06194A]">
           <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#E0E7FF] p-4">
-            <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
+            <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9]">
               <Sparkles className="w-3 h-3" /> Market read
             </div>
             <div className="text-[15px] font-bold mt-1.5">Sell within the next 7–14 days</div>
@@ -610,8 +610,8 @@ const FilterChip = ({
     onClick={onClick}
     className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold border transition ${
       active
-        ? "bg-[#EEF0FF] text-[#4F46E5] border-[#C7D2FE]"
-        : "bg-white text-[#53627A] border-[#E6EAF0] hover:border-[#C7D2FE] hover:text-[#4F46E5]"
+        ? "bg-[#EEF0FF] text-[#6D28D9] border-[#C7D2FE]"
+        : "bg-white text-[#53627A] border-[#E6EAF0] hover:border-[#C7D2FE] hover:text-[#6D28D9]"
     }`}
   >
     <Icon className="w-3 h-3" /> {label}

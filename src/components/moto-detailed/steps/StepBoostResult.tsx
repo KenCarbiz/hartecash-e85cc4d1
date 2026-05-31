@@ -205,7 +205,7 @@ const StepBoostResult = ({ state, update }: StepContext) => {
       {/* Detail cards */}
       <div className="grid gap-3 sm:grid-cols-3">
         <DetailCard
-          icon={<Camera className="h-4 w-4 text-[hsl(262_83%_58%)]" />}
+          icon={<Camera className="h-4 w-4 text-[hsl(263_70%_50%)]" />}
           title="Photos reviewed"
           body={`${photoCount} photo${photoCount === 1 ? "" : "s"} added`}
         />

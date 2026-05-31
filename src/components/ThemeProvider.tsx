@@ -136,11 +136,11 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const ctaOffer =
       landingCtaBg ||
       normalizeToHslTriplet((config as any).cta_offer_color) ||
-      accent;
+      "142 72% 29%";
     const ctaAccept =
       landingCtaBg ||
       normalizeToHslTriplet((config as any).cta_accept_color) ||
-      accent;
+      "142 72% 29%";
     if (ctaOffer) root.style.setProperty("--cta-offer", ctaOffer);
     if (ctaAccept) root.style.setProperty("--cta-accept", ctaAccept);
 

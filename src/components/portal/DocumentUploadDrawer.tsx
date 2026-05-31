@@ -123,7 +123,7 @@ const HandoffCard = ({ docName }: { docName: string }) => {
 
   return (
     <div className="relative rounded-2xl overflow-hidden border border-[#E0E7FF] bg-gradient-to-br from-[#F5F3FF] via-white to-[#EEF0FF] p-4">
-      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[#7C3AED]/10 blur-2xl pointer-events-none" />
+      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[#6D28D9]/10 blur-2xl pointer-events-none" />
 
       <div className="flex items-start gap-4">
         <div className="relative shrink-0 rounded-2xl bg-white p-2 shadow-[0_8px_24px_-12px_rgba(79,70,229,0.4)] ring-1 ring-[#E0E7FF]">
@@ -137,13 +137,13 @@ const HandoffCard = ({ docName }: { docName: string }) => {
           />
           <div className="absolute inset-0 grid place-items-center pointer-events-none">
             <div className="w-7 h-7 rounded-lg bg-white grid place-items-center shadow ring-1 ring-[#E0E7FF]">
-              <Smartphone className="w-3.5 h-3.5 text-[#4F46E5]" />
+              <Smartphone className="w-3.5 h-3.5 text-[#6D28D9]" />
             </div>
           </div>
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
+          <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9]">
             <Sparkles className="w-3 h-3" /> Continue on your phone
           </div>
           <div className="text-[13px] font-bold text-[#06194A] mt-1 leading-snug">
@@ -161,7 +161,7 @@ const HandoffCard = ({ docName }: { docName: string }) => {
               </span>
               Session active
             </span>
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#4F46E5] bg-[#EEF0FF] px-1.5 py-0.5 rounded-md tabular-nums">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#6D28D9] bg-[#EEF0FF] px-1.5 py-0.5 rounded-md tabular-nums">
               <Clock className="w-3 h-3" /> Expires in {mm}:{ss}
             </span>
           </div>
@@ -170,7 +170,7 @@ const HandoffCard = ({ docName }: { docName: string }) => {
 
       <button
         onClick={copy}
-        className="mt-3 w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#4F46E5] bg-white border border-[#E0E7FF] hover:border-[#C7D2FE] rounded-lg py-2 transition"
+        className="mt-3 w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#6D28D9] bg-white border border-[#E0E7FF] hover:border-[#C7D2FE] rounded-lg py-2 transition"
       >
         {copied
           ? <><Check className="w-3 h-3" /> Link copied</>
@@ -337,7 +337,7 @@ export const DocumentUploadDrawer = ({ open, onClose, docName, onSubmit }: Props
               className="w-full border-2 border-dashed border-[#C7D2FE] bg-[#FAFBFE] hover:bg-[#EEF0FF] rounded-2xl p-6 text-center transition group"
             >
               <div className="w-12 h-12 rounded-2xl bg-white shadow-sm mx-auto grid place-items-center mb-2 group-hover:scale-105 transition">
-                <Upload className="w-5 h-5 text-[#4F46E5]" />
+                <Upload className="w-5 h-5 text-[#6D28D9]" />
               </div>
               <div className="text-[13px] font-semibold text-[#06194A]">Drop a file or click to browse</div>
               <div className="text-[11px] text-[#53627A] mt-1">PDF, JPG, PNG, HEIC · up to 25MB</div>
@@ -348,7 +348,7 @@ export const DocumentUploadDrawer = ({ open, onClose, docName, onSubmit }: Props
               className="w-full inline-flex items-center justify-between gap-3 rounded-2xl border border-[#E6EAF0] bg-white hover:border-[#C7D2FE] hover:bg-[#F7F8FB] px-4 py-3 transition"
             >
               <span className="inline-flex items-center gap-3">
-                <span className="w-9 h-9 rounded-xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center">
+                <span className="w-9 h-9 rounded-xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center">
                   <Camera className="w-4 h-4" />
                 </span>
                 <span className="text-left">
@@ -383,7 +383,7 @@ export const DocumentUploadDrawer = ({ open, onClose, docName, onSubmit }: Props
                 <Lock className="w-3 h-3 text-[#16A34A]" /> Encrypted
               </span>
               <span className="inline-flex items-center gap-1 justify-center bg-[#F7F8FB] rounded-lg py-1.5 font-semibold">
-                <Wifi className="w-3 h-3 text-[#4F46E5]" /> Auto-sync
+                <Wifi className="w-3 h-3 text-[#6D28D9]" /> Auto-sync
               </span>
             </div>
           </motion.div>
@@ -398,7 +398,7 @@ export const DocumentUploadDrawer = ({ open, onClose, docName, onSubmit }: Props
           >
             <div className="rounded-2xl border border-[#EEF0F4] bg-white p-4">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center shrink-0">
+                <div className="w-11 h-11 rounded-2xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center shrink-0">
                   {step === "uploading"
                     ? <Loader2 className="w-5 h-5 animate-spin" />
                     : <Sparkles className="w-5 h-5" />}
@@ -415,7 +415,7 @@ export const DocumentUploadDrawer = ({ open, onClose, docName, onSubmit }: Props
               </div>
               <div className="mt-3 h-1.5 rounded-full bg-[#F4F6FA] overflow-hidden">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"
+                  className="h-full bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]"
                   animate={{ width: `${step === "analyzing" ? 100 : progress}%` }}
                   transition={{ duration: 0.25 }}
                 />
@@ -455,7 +455,7 @@ export const DocumentUploadDrawer = ({ open, onClose, docName, onSubmit }: Props
 
             <div className="rounded-2xl border border-[#EEF0F4] bg-white p-4">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center">
+                <div className="w-11 h-11 rounded-2xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -471,7 +471,7 @@ export const DocumentUploadDrawer = ({ open, onClose, docName, onSubmit }: Props
               </ul>
             </div>
 
-            <div className="rounded-xl bg-[#EEF0FF] border border-[#E0E7FF] px-3 py-2.5 text-[11px] text-[#4F46E5] inline-flex items-start gap-2">
+            <div className="rounded-xl bg-[#EEF0FF] border border-[#E0E7FF] px-3 py-2.5 text-[11px] text-[#6D28D9] inline-flex items-start gap-2">
               <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
               We'll notify you the moment your dealer reviews this document.
             </div>

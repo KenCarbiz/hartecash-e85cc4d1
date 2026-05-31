@@ -210,7 +210,7 @@ const PayoutMethodsConfig = () => {
               <div
                 className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                   enabled
-                    ? "bg-[hsl(262_83%_58%/0.1)] text-[hsl(262_83%_58%)]"
+                    ? "bg-[hsl(263_70%_50%/0.1)] text-[hsl(263_70%_50%)]"
                     : "bg-zinc-100 text-zinc-400"
                 }`}
               >

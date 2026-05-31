@@ -65,7 +65,7 @@ const METHOD_META: Record<Method, {
     description: "Secure bank transfer directly to your account.",
     timing: "Typically arrives within 1–2 business days",
     icon: Landmark,
-    accent: "#4F46E5",
+    accent: "#6D28D9",
     needsBank: true,
   },
   eft: {
@@ -81,7 +81,7 @@ const METHOD_META: Record<Method, {
     description: "Sent to your eligible debit card in minutes.",
     timing: "Delivered to your card in minutes",
     icon: Zap,
-    accent: "#7C3AED",
+    accent: "#6D28D9",
     needsBank: true,
   },
   wire_transfer: {
@@ -103,7 +103,7 @@ const PayoutTracker = ({ activeIdx }: { activeIdx: number }) => (
       initial={{ width: 0 }}
       animate={{ width: `${(activeIdx / (STAGES.length - 1)) * 100}%` }}
       transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-      className="absolute left-4 top-[14px] h-px bg-[#4F46E5]"
+      className="absolute left-4 top-[14px] h-px bg-[#6D28D9]"
     />
     <div className="relative grid grid-cols-3 gap-y-5 sm:grid-cols-6">
       {STAGES.map((s, i) => {
@@ -116,9 +116,9 @@ const PayoutTracker = ({ activeIdx }: { activeIdx: number }) => (
               transition={{ duration: 2, repeat: Infinity }}
               className={`h-7 w-7 rounded-full grid place-items-center text-[11px] font-bold transition ${
                 done
-                  ? "bg-[#4F46E5] text-white"
+                  ? "bg-[#6D28D9] text-white"
                   : active
-                  ? "bg-white text-[#4F46E5] ring-2 ring-[#4F46E5]"
+                  ? "bg-white text-[#6D28D9] ring-2 ring-[#6D28D9]"
                   : "bg-[#F4F6FA] text-[#C2CAD8]"
               }`}
             >
@@ -162,7 +162,7 @@ const MethodRow = ({
       onClick={() => onSelect(method)}
       className={`relative w-full text-left rounded-2xl border transition group ${
         active
-          ? "border-[#4F46E5] bg-white shadow-[0_18px_44px_-22px_rgba(79,70,229,0.45)]"
+          ? "border-[#6D28D9] bg-white shadow-[0_18px_44px_-22px_rgba(79,70,229,0.45)]"
           : "border-[#E6EAF0] bg-white hover:border-[#C7D2FE]"
       }`}
     >
@@ -188,7 +188,7 @@ const MethodRow = ({
           </p>
         </div>
         <div className={`shrink-0 grid place-items-center h-7 w-7 rounded-full transition ${
-          active ? "bg-[#4F46E5] text-white" : "bg-[#F4F6FA] text-[#C2CAD8] group-hover:text-[#8893A8]"
+          active ? "bg-[#6D28D9] text-white" : "bg-[#F4F6FA] text-[#C2CAD8] group-hover:text-[#8893A8]"
         }`}>
           {active ? <Check className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
         </div>
@@ -220,16 +220,16 @@ const MethodDetail = ({
 
         {method === "paper_check" && (
           <ul className="mt-3 space-y-1.5 text-[12.5px] text-[#53627A]">
-            <li className="flex items-center gap-2"><FileText className="h-3.5 w-3.5 text-[#4F46E5]" /> Printed at the dealership before your appointment.</li>
-            <li className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5 text-[#4F46E5]" /> Handed to you the moment you drop off your vehicle.</li>
-            <li className="flex items-center gap-2"><Lock className="h-3.5 w-3.5 text-[#4F46E5]" /> Verifiable check number on your transaction record.</li>
+            <li className="flex items-center gap-2"><FileText className="h-3.5 w-3.5 text-[#6D28D9]" /> Printed at the dealership before your appointment.</li>
+            <li className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5 text-[#6D28D9]" /> Handed to you the moment you drop off your vehicle.</li>
+            <li className="flex items-center gap-2"><Lock className="h-3.5 w-3.5 text-[#6D28D9]" /> Verifiable check number on your transaction record.</li>
           </ul>
         )}
 
         {method === "wire_transfer" && (
           <ul className="mt-3 space-y-1.5 text-[12.5px] text-[#53627A]">
-            <li className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5 text-[#4F46E5]" /> Provide your bank's wire instructions at handoff.</li>
-            <li className="flex items-center gap-2"><Lock className="h-3.5 w-3.5 text-[#4F46E5]" /> Often free for amounts over your bank's threshold.</li>
+            <li className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5 text-[#6D28D9]" /> Provide your bank's wire instructions at handoff.</li>
+            <li className="flex items-center gap-2"><Lock className="h-3.5 w-3.5 text-[#6D28D9]" /> Often free for amounts over your bank's threshold.</li>
           </ul>
         )}
 
@@ -362,7 +362,7 @@ const BankConnectionDrawer = ({
           return (
             <button key={opt.id} onClick={() => setMode(opt.id)}
               className={`relative inline-flex items-center justify-center gap-1.5 rounded-xl py-2 text-[12.5px] font-bold transition ${
-                sel ? "bg-white text-[#4F46E5] shadow-[0_6px_14px_-6px_rgba(79,70,229,0.35)]" : "text-[#53627A] hover:text-[#06194A]"
+                sel ? "bg-white text-[#6D28D9] shadow-[0_6px_14px_-6px_rgba(79,70,229,0.35)]" : "text-[#53627A] hover:text-[#06194A]"
               }`}>
               <opt.Icon className="w-3.5 h-3.5" /> {opt.label}
             </button>
@@ -375,12 +375,12 @@ const BankConnectionDrawer = ({
           <motion.div key="instant" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
             {linking ? (
               <div className="rounded-3xl border border-[#C7D2FE] bg-gradient-to-br from-[#EEF0FF] via-white to-white p-6 text-center">
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white grid place-items-center">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] text-white grid place-items-center">
                   <Loader2 className="w-6 h-6 animate-spin" />
                 </div>
                 <div className="text-sm font-extrabold text-[#06194A] mt-3">Securely linking your bank…</div>
                 <div className="mt-4 h-2 rounded-full bg-white border border-[#E6EAF0] overflow-hidden">
-                  <motion.div className="h-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"
+                  <motion.div className="h-full bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]"
                     animate={{ width: `${linkProgress}%` }} transition={{ duration: 0.25 }} />
                 </div>
               </div>
@@ -389,7 +389,7 @@ const BankConnectionDrawer = ({
                 <div className="relative mb-3">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8893A8]" />
                   <input placeholder="Search 11,000+ banks"
-                    className="w-full rounded-xl border border-[#E6EAF0] bg-white pl-9 pr-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+                    className="w-full rounded-xl border border-[#E6EAF0] bg-white pl-9 pr-3 py-2.5 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
                 </div>
                 <div className="text-[11px] font-bold uppercase tracking-wide text-[#8893A8] mb-2">Most popular</div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -405,7 +405,7 @@ const BankConnectionDrawer = ({
                           <div className="text-sm font-bold text-[#06194A] truncate">{b.name}</div>
                           <div className="text-[10.5px] text-[#8893A8]">Instant verification</div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-[#8893A8] group-hover:text-[#4F46E5] transition" />
+                        <ChevronRight className="w-4 h-4 text-[#8893A8] group-hover:text-[#6D28D9] transition" />
                       </div>
                     </motion.button>
                   ))}
@@ -431,14 +431,14 @@ const BankConnectionDrawer = ({
                   return (
                     <button key={t} onClick={() => setAcctType(t)}
                       className={`rounded-xl border-2 px-3 py-2.5 text-sm font-bold capitalize transition ${
-                        sel ? "border-[#4F46E5] bg-[#EEF0FF] text-[#4F46E5]" : "border-[#E6EAF0] text-[#06194A] hover:border-[#C7D2FE]"
+                        sel ? "border-[#6D28D9] bg-[#EEF0FF] text-[#6D28D9]" : "border-[#E6EAF0] text-[#06194A] hover:border-[#C7D2FE]"
                       }`}>{t}</button>
                   );
                 })}
               </div>
             </div>
             <label className="flex items-start gap-2 mt-3 rounded-2xl border border-[#E6EAF0] bg-[#F7F8FB] p-3 cursor-pointer">
-              <input type="checkbox" className="mt-0.5 accent-[#4F46E5]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+              <input type="checkbox" className="mt-0.5 accent-[#6D28D9]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
               <span className="text-[12px] text-[#06194A] leading-snug">
                 I authorize the dealership to send my payout to this account and confirm I am the account holder.
               </span>
@@ -466,7 +466,7 @@ const Field = ({
         className={`w-full rounded-xl border bg-white px-3 py-2.5 pr-9 text-sm outline-none focus:ring-2 transition ${
           errorMsg ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100"
           : ok ? "border-emerald-300 focus:border-emerald-500 focus:ring-emerald-100"
-          : "border-[#E6EAF0] focus:border-[#4F46E5] focus:ring-[#4F46E5]/20"
+          : "border-[#E6EAF0] focus:border-[#6D28D9] focus:ring-[#6D28D9]/20"
         }`} />
       {ok && <CheckCircle2 className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500" />}
       {errorMsg && <AlertCircle className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-rose-500" />}
@@ -645,7 +645,7 @@ export const PaymentsPage = () => {
           <PrimaryButton className="flex-1"><Download className="w-4 h-4" /> Download PDF</PrimaryButton>
         </div>}>
         <div className="rounded-2xl bg-[#F7F8FB] border border-[#E6EAF0] p-8 text-center">
-          <FileText className="w-12 h-12 mx-auto text-[#4F46E5]" />
+          <FileText className="w-12 h-12 mx-auto text-[#6D28D9]" />
           <div className="text-sm font-semibold text-[#06194A] mt-2">{receipt}</div>
           <div className="text-[12px] text-[#53627A] mt-1">Generated and time-stamped automatically.</div>
         </div>

@@ -141,7 +141,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
               transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             >
               <header className="mb-8 text-center">
-                <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-[hsl(262_83%_58%)]">
+                <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-[hsl(263_70%_50%)]">
                   Instant Vehicle Valuation
                 </p>
                 <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
@@ -215,7 +215,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
                 {current.id !== "boost_upload" && (
                   <header className="mb-6">
                     <div className="mb-3 inline-flex items-center gap-2">
-                      <span className="inline-flex items-center rounded-full bg-[hsl(262_83%_58%/0.1)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)]">
+                      <span className="inline-flex items-center rounded-full bg-[hsl(263_70%_50%/0.1)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[hsl(263_60%_45%)]">
                         Step {current.stepBadge?.current ?? safeCursor + 1} of {current.stepBadge?.total ?? activeSteps.length}
                       </span>
                       <span className="text-[11px] font-medium text-slate-400">
@@ -241,7 +241,7 @@ const JourneyEngine = ({ config, preview = false, initialState }: Props) => {
                     <BadgeCheck className="h-3.5 w-3.5 text-emerald-600" /> No obligation
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[hsl(262_60%_45%)]" /> Dealer reviewed
+                    <ShieldCheck className="h-3.5 w-3.5 text-[hsl(263_60%_45%)]" /> Dealer reviewed
                   </span>
                 </div>
               </motion.div>

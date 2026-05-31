@@ -226,7 +226,7 @@ const MotoStepVehicleSearch = ({
                       paddingTop: `${tuner.tabPadY}px`,
                       paddingBottom: `${tuner.tabPadY}px`,
                       ...(active
-                        ? { background: tuner.ctaColor, color: tuner.ctaTextColor }
+                        ? { background: "#6D28D9", color: "#fff" }
                         : {}),
                     }}
                   >

@@ -24,7 +24,7 @@ const StepCondition = ({ state, update, next }: StepContext) => {
               onClick={() => update({ condition: opt.value })}
               className={`group relative flex min-h-[88px] items-center rounded-2xl border p-5 text-left transition-all ${
                 active
-                  ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%/0.05)] shadow-[0_8px_24px_-12px_hsl(262_83%_58%/0.45),0_0_0_4px_hsl(262_83%_58%/0.08)]"
+                  ? "border-[hsl(263_70%_50%)] bg-[hsl(263_70%_50%/0.05)] shadow-[0_8px_24px_-12px_hsl(263_70%_50%/0.45),0_0_0_4px_hsl(263_70%_50%/0.08)]"
                   : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-[0_2px_8px_-4px_rgba(15,23,42,0.08)]"
               }`}
             >
@@ -36,7 +36,7 @@ const StepCondition = ({ state, update, next }: StepContext) => {
                 <div
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
                     active
-                      ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%)]"
+                      ? "border-[hsl(263_70%_50%)] bg-[hsl(263_70%_50%)]"
                       : "border-slate-300 bg-white"
                   }`}
                 >
@@ -49,7 +49,7 @@ const StepCondition = ({ state, update, next }: StepContext) => {
       </div>
 
       <div className="flex items-start gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-[13px] leading-relaxed text-slate-600">
-        <span className="mt-0.5 text-[hsl(262_60%_45%)]">💡</span>
+        <span className="mt-0.5 text-[hsl(263_60%_45%)]">💡</span>
         <span>
           Most vehicles with similar age and mileage are rated{" "}
           <span className="font-semibold text-slate-800">Good</span>.

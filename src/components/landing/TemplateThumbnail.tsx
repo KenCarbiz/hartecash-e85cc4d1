@@ -62,13 +62,13 @@ const TemplateThumbnail = ({ template, className = "" }: Props) => {
             <rect x="6" y="6" width="18" height="3" rx="0.5" fill="#0A0A0A" />
             {/* mobile stepper bar */}
             <rect x="6" y="14" width="148" height="1.4" rx="0.7" fill="#F1F3F5" />
-            <rect x="6" y="14" width="60" height="1.4" rx="0.7" fill="#7C3AED" />
+            <rect x="6" y="14" width="60" height="1.4" rx="0.7" fill="#6D28D9" />
 
             {/* LEFT — journey rail */}
             <circle cx="12" cy="26" r="2.4" fill="#22C55E" />
             <rect x="17" y="25" width="22" height="2" rx="0.4" fill="#0A0A0A" />
             <rect x="17" y="28" width="16" height="1.4" rx="0.3" fill="#A1A1AA" />
-            <circle cx="12" cy="38" r="2.4" fill="#7C3AED" />
+            <circle cx="12" cy="38" r="2.4" fill="#6D28D9" />
             <rect x="17" y="37" width="22" height="2" rx="0.4" fill="#0A0A0A" />
             <rect x="17" y="40" width="14" height="1.4" rx="0.3" fill="#A1A1AA" />
             <circle cx="12" cy="50" r="2.4" fill="#E5E7EB" />
@@ -83,12 +83,12 @@ const TemplateThumbnail = ({ template, className = "" }: Props) => {
             <rect x="53" y="28" width="44" height="3" rx="0.5" fill="#0A0A0A" />
             <rect x="53" y="33" width="56" height="1.6" rx="0.3" fill="#A1A1AA" />
             {/* option cards */}
-            <rect x="53" y="40" width="27" height="14" rx="1.5" fill="#F5F3FF" stroke="#7C3AED" strokeWidth="0.5" />
+            <rect x="53" y="40" width="27" height="14" rx="1.5" fill="#F5F3FF" stroke="#6D28D9" strokeWidth="0.5" />
             <rect x="84" y="40" width="27" height="14" rx="1.5" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="0.4" />
             <rect x="53" y="57" width="27" height="14" rx="1.5" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="0.4" />
             <rect x="84" y="57" width="27" height="14" rx="1.5" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="0.4" />
             {/* purple CTA */}
-            <rect x="53" y="74" width="58" height="4" rx="1.5" fill="#7C3AED" />
+            <rect x="53" y="74" width="58" height="4" rx="1.5" fill="#6D28D9" />
 
             {/* RIGHT — vehicle + value summary */}
             <rect x="120" y="22" width="34" height="22" rx="2" fill="#E5E7EB" />

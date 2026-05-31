@@ -158,7 +158,7 @@ const PHOTO_STATUS: Record<string, { label: string; cls: string }> = {
   whl: { label: "Approved",     cls: "bg-[#E8F8EE] text-[#0F7A3E]" },
   odo: { label: "Under Review", cls: "bg-[#FEF3E2] text-[#B45309]" },
   dmg: { label: "Optional",     cls: "bg-[#F4F6FA] text-[#53627A]" },
-  doc: { label: "Uploaded",     cls: "bg-[#EEF0FF] text-[#4F46E5]" },
+  doc: { label: "Uploaded",     cls: "bg-[#EEF0FF] text-[#6D28D9]" },
 };
 
 const PhotoGallerySlide = () => {
@@ -171,7 +171,7 @@ const PhotoGallerySlide = () => {
   const TONE: Record<string, string> = {
     green:  "bg-[#E8F8EE] text-[#0F7A3E]",
     orange: "bg-[#FEF3E2] text-[#B45309]",
-    indigo: "bg-[#EEF0FF] text-[#4F46E5]",
+    indigo: "bg-[#EEF0FF] text-[#6D28D9]",
   };
   const totalPhotos = PHOTO_CATEGORIES.reduce((s, p) => s + p.count, 0);
   const approvedCount = PHOTO_CATEGORIES.filter((p) => PHOTO_STATUS[p.id].label === "Approved")
@@ -227,8 +227,8 @@ const PhotoGallerySlide = () => {
               <button key={p.id} onClick={() => setActive(i)}
                 className={`px-2.5 h-7 rounded-lg shrink-0 text-[10.5px] font-semibold transition ${
                   i === active
-                    ? "bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white shadow-[0_6px_14px_-8px_rgba(79,70,229,0.6)]"
-                    : "bg-white text-[#53627A] border border-[#E6EEFB] hover:bg-[#EEF0FF] hover:text-[#4F46E5]"
+                    ? "bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] text-white shadow-[0_6px_14px_-8px_rgba(79,70,229,0.6)]"
+                    : "bg-white text-[#53627A] border border-[#E6EEFB] hover:bg-[#EEF0FF] hover:text-[#6D28D9]"
                 }`}>
                 {p.label}
               </button>
@@ -239,7 +239,7 @@ const PhotoGallerySlide = () => {
         {/* Right: list + summary + upload */}
         <div className="flex flex-col min-h-0">
           <div className="flex items-center justify-between">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Photo Sets</div>
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9]">Photo Sets</div>
             <div className="text-[10px] text-[#8893A8]">
               {totalPhotos} added · <span className="text-[#0F7A3E] font-semibold">{approvedCount} approved</span>
               {reviewCount > 0 && <> · <span className="text-[#B45309] font-semibold">{reviewCount} in review</span></>}
@@ -269,7 +269,7 @@ const PhotoGallerySlide = () => {
               );
             })}
           </ul>
-          <button className="mt-2 w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#4F46E5] bg-[#FAFBFF] border border-dashed border-[#C7D2FE] hover:bg-[#EEF0FF] hover:border-[#A5B4FC] rounded-xl py-2 transition shrink-0">
+          <button className="mt-2 w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#6D28D9] bg-[#FAFBFF] border border-dashed border-[#C7D2FE] hover:bg-[#EEF0FF] hover:border-[#A5B4FC] rounded-xl py-2 transition shrink-0">
             <Plus className="w-3.5 h-3.5" /> Add More Photos
           </button>
         </div>
@@ -337,7 +337,7 @@ const ConditionSlide = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] gap-4 h-full">
       <div className="rounded-2xl bg-gradient-to-br from-[#F5F3FF] via-white to-[#EEF0FF] border border-[#E0E7FF] p-3 flex flex-col items-center text-center min-h-0">
-        <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Condition Score</div>
+        <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9]">Condition Score</div>
         <div className="relative w-[96px] h-[96px] mt-2">
           <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
             <circle cx="60" cy="60" r="50" stroke="#EEF0F4" strokeWidth="9" fill="none" />
@@ -348,7 +348,7 @@ const ConditionSlide = () => {
               transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }} />
             <defs>
               <linearGradient id="cond" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#4F46E5" />
+                <stop offset="0%" stopColor="#6D28D9" />
                 <stop offset="100%" stopColor="#16A34A" />
               </linearGradient>
             </defs>
@@ -360,7 +360,7 @@ const ConditionSlide = () => {
             </div>
           </div>
         </div>
-        <div className="mt-2 inline-flex items-center gap-1.5 text-[10.5px] font-semibold text-[#4F46E5] bg-[#EEF0FF] px-2 py-0.5 rounded-full">
+        <div className="mt-2 inline-flex items-center gap-1.5 text-[10.5px] font-semibold text-[#6D28D9] bg-[#EEF0FF] px-2 py-0.5 rounded-full">
           <Brain className="w-3 h-3" /> AI confidence 94%
         </div>
         <div className="mt-2 text-[10.5px] text-[#53627A] leading-snug">
@@ -445,7 +445,7 @@ const MarketSlide = () => {
   const Icon = item.icon;
   const TONE_BG: Record<string, string> = {
     green:  "bg-[#E8F8EE] text-[#0F7A3E]",
-    indigo: "bg-[#EEF0FF] text-[#4F46E5]",
+    indigo: "bg-[#EEF0FF] text-[#6D28D9]",
     gray:   "bg-[#F4F6FA] text-[#53627A]",
   };
   return (
@@ -453,7 +453,7 @@ const MarketSlide = () => {
       <div className="flex flex-col gap-2 min-h-0">
         <div className="rounded-2xl border border-[#E6EEFB] bg-gradient-to-br from-[#F4F8FF] to-white p-3">
           <div className="flex items-center justify-between">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">30-Day Trend</div>
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9]">30-Day Trend</div>
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#16A34A] bg-[#E8F8EE] px-2 py-0.5 rounded-full">
               <TrendingUp className="w-3 h-3" /> +$550
             </span>
@@ -484,7 +484,7 @@ const MarketSlide = () => {
             <span className="absolute inset-0 rounded-full bg-[#16A34A] opacity-60 animate-ping" />
             <span className="relative rounded-full w-2 h-2 bg-[#16A34A]" />
           </span>
-          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] shrink-0">Live</div>
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9] shrink-0">Live</div>
           <div className="h-5 flex-1 relative overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div key={t}
@@ -502,15 +502,15 @@ const MarketSlide = () => {
       </div>
 
       <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#E0E7FF] p-3.5 min-h-0">
-        <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
+        <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9]">
           <Sparkles className="w-3 h-3" /> Best selling window
         </div>
         <div className="text-[16px] font-bold text-[#06194A] mt-1 leading-snug">Next 7–14 days</div>
         <div className="text-[11px] text-[#53627A] mt-0.5">May maximize your payout potential.</div>
         <ul className="mt-2 space-y-1 text-[11px]">
-          <li className="flex items-start gap-1.5 text-[#06194A]"><MapPin className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Hartford metro — high demand</li>
-          <li className="flex items-start gap-1.5 text-[#06194A]"><Star className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Top 12% offer regionally</li>
-          <li className="flex items-start gap-1.5 text-[#06194A]"><Clock className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Avg. days on market: 11</li>
+          <li className="flex items-start gap-1.5 text-[#06194A]"><MapPin className="w-3 h-3 mt-0.5 text-[#6D28D9]" /> Hartford metro — high demand</li>
+          <li className="flex items-start gap-1.5 text-[#06194A]"><Star className="w-3 h-3 mt-0.5 text-[#6D28D9]" /> Top 12% offer regionally</li>
+          <li className="flex items-start gap-1.5 text-[#06194A]"><Clock className="w-3 h-3 mt-0.5 text-[#6D28D9]" /> Avg. days on market: 11</li>
         </ul>
       </div>
     </div>
@@ -530,7 +530,7 @@ const TimelineSlide = () => (
             <div className="relative">
               <div className={`w-7 h-7 rounded-full grid place-items-center shrink-0 ${
                 done ? "bg-[#16A34A] text-white" :
-                active ? "bg-[#EEF0FF] text-[#4F46E5] ring-2 ring-[#4F46E5]/30" :
+                active ? "bg-[#EEF0FF] text-[#6D28D9] ring-2 ring-[#6D28D9]/30" :
                 "bg-[#F4F6FA] text-[#94A3B8]"
               }`}>
                 {done ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3 h-3" />}
@@ -544,7 +544,7 @@ const TimelineSlide = () => (
                 <span className="text-[12px] font-semibold text-[#06194A] truncate">{step.label}</span>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${
                   done ? "bg-[#E8F8EE] text-[#0F7A3E]" :
-                  active ? "bg-[#EEF0FF] text-[#4F46E5]" :
+                  active ? "bg-[#EEF0FF] text-[#6D28D9]" :
                   "bg-[#F4F6FA] text-[#8893A8]"
                 }`}>
                   {done ? "Complete" : active ? "In progress" : step.when}
@@ -556,16 +556,16 @@ const TimelineSlide = () => (
       })}
     </ol>
     <div className="rounded-2xl border border-[#E0E7FF] bg-gradient-to-br from-[#F5F3FF] to-white p-3.5 min-h-0">
-      <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
+      <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9]">
         <Zap className="w-3 h-3" /> What happens next?
       </div>
       <p className="text-[12px] text-[#06194A] mt-1.5 leading-snug">
         Your dealer is reviewing the documents. Once approved, you'll select a pickup time and inspection slot.
       </p>
       <ul className="mt-2 space-y-1 text-[11px] text-[#06194A]">
-        <li className="flex items-start gap-1.5"><Wrench className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> AI-assisted inspection in minutes</li>
-        <li className="flex items-start gap-1.5"><Truck className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> Free pickup, scheduled around you</li>
-        <li className="flex items-start gap-1.5"><Wallet className="w-3 h-3 mt-0.5 text-[#4F46E5]" /> ACH released within 2 hrs of verification</li>
+        <li className="flex items-start gap-1.5"><Wrench className="w-3 h-3 mt-0.5 text-[#6D28D9]" /> AI-assisted inspection in minutes</li>
+        <li className="flex items-start gap-1.5"><Truck className="w-3 h-3 mt-0.5 text-[#6D28D9]" /> Free pickup, scheduled around you</li>
+        <li className="flex items-start gap-1.5"><Wallet className="w-3 h-3 mt-0.5 text-[#6D28D9]" /> ACH released within 2 hrs of verification</li>
       </ul>
     </div>
   </div>
@@ -626,7 +626,7 @@ export const VehicleHeroCarousel = ({ onViewOfferDetails }: { onViewOfferDetails
       {/* Header strip */}
       <div className="flex items-center justify-between mb-3 gap-3">
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9]">
             {SLIDE_TITLES[slide]}
           </div>
           <div className="text-[12px] text-[#53627A] mt-0.5 truncate">
@@ -635,11 +635,11 @@ export const VehicleHeroCarousel = ({ onViewOfferDetails }: { onViewOfferDetails
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button onClick={() => go(-1)} aria-label="Previous slide"
-            className="w-9 h-9 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#EEF0FF] hover:text-[#4F46E5] hover:border-[#C7D2FE] hover:scale-105 active:scale-95 transition">
+            className="w-9 h-9 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#EEF0FF] hover:text-[#6D28D9] hover:border-[#C7D2FE] hover:scale-105 active:scale-95 transition">
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button onClick={() => go(1)} aria-label="Next slide"
-            className="w-9 h-9 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#EEF0FF] hover:text-[#4F46E5] hover:border-[#C7D2FE] hover:scale-105 active:scale-95 transition">
+            className="w-9 h-9 rounded-full border border-[#E6EAF0] grid place-items-center text-[#53627A] hover:bg-[#EEF0FF] hover:text-[#6D28D9] hover:border-[#C7D2FE] hover:scale-105 active:scale-95 transition">
             <ChevronRight className="w-4 h-4" />
           </button>
           <span className="text-[11px] font-semibold text-[#53627A] tabular-nums ml-1">{slide + 1} / {SLIDE_TITLES.length}</span>
@@ -673,7 +673,7 @@ export const VehicleHeroCarousel = ({ onViewOfferDetails }: { onViewOfferDetails
           <button key={i} onClick={() => { setDirection(i > slide ? 1 : -1); setSlide(i); }}
             aria-label={`Go to slide ${i + 1}`}
             className={`h-1.5 rounded-full transition-all ${
-              i === slide ? "w-6 bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]" : "w-1.5 bg-[#E6EAF0] hover:bg-[#C7D2FE]"
+              i === slide ? "w-6 bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]" : "w-1.5 bg-[#E6EAF0] hover:bg-[#C7D2FE]"
             }`} />
         ))}
       </div>

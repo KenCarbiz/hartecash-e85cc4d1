@@ -72,7 +72,7 @@ const InfoTip = ({ text, children }: { text: string; children: React.ReactNode }
   <TooltipProvider delayDuration={150}>
     <Tooltip>
       <TooltipTrigger asChild>
-        <button type="button" className="inline-flex items-center cursor-help focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4F46E5] rounded-full">
+        <button type="button" className="inline-flex items-center cursor-help focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9] rounded-full">
           {children}
         </button>
       </TooltipTrigger>
@@ -136,7 +136,7 @@ const MARKET_MESSAGES: { tone: MarketTone; title: string; sub: string }[] = [
 const MARKET_TONE: Record<MarketTone, { bg: string; text: string; dot: string }> = {
   green:  { bg: "bg-[#E8F8EE]", text: "text-[#0F7A3E]", dot: "bg-[#16A34A]" },
   orange: { bg: "bg-[#FEF3E2]", text: "text-[#B45309]", dot: "bg-[#F59E0B]" },
-  indigo: { bg: "bg-[#EEF0FF]", text: "text-[#4F46E5]", dot: "bg-[#4F46E5]" },
+  indigo: { bg: "bg-[#EEF0FF]", text: "text-[#6D28D9]", dot: "bg-[#6D28D9]" },
 };
 
 const useRotatingMarketStatus = () => {
@@ -165,7 +165,7 @@ const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () 
         >
           <header className="flex items-center justify-between px-5 sm:px-8 py-4 bg-white border-b border-[#E6EAF0]">
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center">
+              <div className="w-9 h-9 rounded-xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center">
                 <ShieldCheck className="w-[18px] h-[18px]" />
               </div>
               <div className="leading-tight">
@@ -182,8 +182,8 @@ const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () 
             <div className="flex items-center gap-2">
               {ACCEPT_STEPS.map((s, i) => (
                 <div key={s} className="flex-1">
-                  <div className={`h-1.5 rounded-full transition-colors ${i <= step ? "bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]" : "bg-[#E6EAF0]"}`} />
-                  <div className={`mt-1 text-[10px] uppercase tracking-wide font-semibold ${i <= step ? "text-[#4F46E5]" : "text-[#8893A8]"}`}>{s}</div>
+                  <div className={`h-1.5 rounded-full transition-colors ${i <= step ? "bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]" : "bg-[#E6EAF0]"}`} />
+                  <div className={`mt-1 text-[10px] uppercase tracking-wide font-semibold ${i <= step ? "text-[#6D28D9]" : "text-[#8893A8]"}`}>{s}</div>
                 </div>
               ))}
             </div>
@@ -202,7 +202,7 @@ const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () 
                       <h2 className="text-[20px] font-bold text-[#06194A]">Review offer terms</h2>
                       <p className="text-sm text-[#53627A] mt-1">Your firm number is locked once accepted, subject to a quick inspection at pickup.</p>
                       <div className="mt-5 p-5 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#E0E7FF]">
-                        <div className="text-[11px] uppercase tracking-wide text-[#4F46E5] font-semibold">Final firm offer</div>
+                        <div className="text-[11px] uppercase tracking-wide text-[#6D28D9] font-semibold">Final firm offer</div>
                         <div className="text-[34px] font-extrabold text-[#06194A] tracking-tight mt-1">{fmt(MOCK.firmOffer)}</div>
                         <div className="text-[12.5px] text-[#53627A] mt-1">from {MOCK.customer.dealer}</div>
                       </div>
@@ -225,7 +225,7 @@ const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () 
                         {[["Full name", MOCK.customer.name], ["Email", MOCK.customer.email], ["Phone", MOCK.customer.phone], ["Title status", MOCK.vehicle.ownership]].map(([k, v]) => (
                           <label key={k} className="block">
                             <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">{k}</span>
-                            <input defaultValue={v as string} className="mt-1 w-full rounded-xl border border-[#E6EAF0] bg-white px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+                            <input defaultValue={v as string} className="mt-1 w-full rounded-xl border border-[#E6EAF0] bg-white px-3 py-2.5 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
                           </label>
                         ))}
                       </div>
@@ -237,11 +237,11 @@ const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () 
                       <p className="text-sm text-[#53627A] mt-1">We'll come to you and pay via secure ACH after inspection.</p>
                       <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="p-4 rounded-xl border border-[#E6EAF0]">
-                          <div className="flex items-center gap-2 text-[#06194A] font-semibold text-[13.5px]"><CalendarDays className="w-4 h-4 text-[#4F46E5]" /> Preferred pickup</div>
+                          <div className="flex items-center gap-2 text-[#06194A] font-semibold text-[13.5px]"><CalendarDays className="w-4 h-4 text-[#6D28D9]" /> Preferred pickup</div>
                           <div className="text-[12.5px] text-[#53627A] mt-1">You'll choose a date next.</div>
                         </div>
                         <div className="p-4 rounded-xl border border-[#E6EAF0]">
-                          <div className="flex items-center gap-2 text-[#06194A] font-semibold text-[13.5px]"><Wallet className="w-4 h-4 text-[#4F46E5]" /> ACH • Chase •••• 4127</div>
+                          <div className="flex items-center gap-2 text-[#06194A] font-semibold text-[13.5px]"><Wallet className="w-4 h-4 text-[#6D28D9]" /> ACH • Chase •••• 4127</div>
                           <div className="text-[12.5px] text-[#53627A] mt-1">Funds within 1 business day.</div>
                         </div>
                       </div>
@@ -251,7 +251,7 @@ const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () 
                     <div>
                       <h2 className="text-[20px] font-bold text-[#06194A]">Digital signature</h2>
                       <p className="text-sm text-[#53627A] mt-1">Type your full legal name to sign the bill of sale.</p>
-                      <input placeholder="Full legal name" className="mt-5 w-full rounded-xl border border-[#E6EAF0] bg-white px-4 py-4 text-[18px] font-serif italic text-[#06194A] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+                      <input placeholder="Full legal name" className="mt-5 w-full rounded-xl border border-[#E6EAF0] bg-white px-4 py-4 text-[18px] font-serif italic text-[#06194A] focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
                       <div className="mt-3 text-[11.5px] text-[#8893A8] inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> Encrypted and stored securely.</div>
                     </div>
                   )}
@@ -269,7 +269,7 @@ const AcceptFlow = ({ open, onClose, onNavigate }: { open: boolean; onClose: () 
                           { Icon: Wallet,       t: "Receive payment", d: "ACH within 1 business day" },
                         ].map((s) => (
                           <li key={s.t} className="flex items-start gap-3 p-3 rounded-xl bg-[#F7F8FB]">
-                            <span className="w-8 h-8 rounded-lg bg-white border border-[#E6EAF0] text-[#4F46E5] grid place-items-center"><s.Icon className="w-4 h-4" /></span>
+                            <span className="w-8 h-8 rounded-lg bg-white border border-[#E6EAF0] text-[#6D28D9] grid place-items-center"><s.Icon className="w-4 h-4" /></span>
                             <div>
                               <div className="text-[13px] font-semibold text-[#06194A]">{s.t}</div>
                               <div className="text-[11.5px] text-[#53627A]">{s.d}</div>
@@ -321,8 +321,8 @@ export const OffersPage = ({ onNavigate }: Props) => {
       {/* Hero offer */}
       <Card className="relative overflow-hidden p-6 mb-6 bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] border-[#E0E7FF]">
         {/* ambient orb */}
-        <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#7C3AED]/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#4F46E5]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#6D28D9]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#6D28D9]/10 blur-3xl" />
 
         <div className="relative grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 items-center">
           <div>
@@ -334,7 +334,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
                 </span>
               </InfoTip>
               <InfoTip text="AI-verified means our pricing engine cross-checked your offer against the latest Black Book and regional sale data.">
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EEF0FF] text-[#4F46E5] cursor-help">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EEF0FF] text-[#6D28D9] cursor-help">
                   <ShieldCheck className="w-3 h-3" /> AI-Verified
                 </span>
               </InfoTip>
@@ -401,7 +401,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
             <div className="mt-3 h-1.5 rounded-full bg-[#F4F6FA] overflow-hidden">
               <motion.div
                 initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }}
-                className={`h-full ${urgent ? "bg-gradient-to-r from-[#F59E0B] to-[#D97706]" : "bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"}`}
+                className={`h-full ${urgent ? "bg-gradient-to-r from-[#F59E0B] to-[#D97706]" : "bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]"}`}
               />
             </div>
             <div className="text-[11px] text-[#53627A] text-center mt-2">{expired ? "Expired" : `Held through ${MOCK.offerExpires}`}</div>
@@ -426,7 +426,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
         <div className="relative grid grid-cols-1 sm:grid-cols-[1.4fr_1fr_1fr] gap-2 mt-5">
           <button
             onClick={() => setAccept(true)}
-            className="group relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl py-4 px-5 text-[15px] font-bold text-white bg-gradient-to-r from-[#4F46E5] via-[#5B47EA] to-[#7C3AED] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_14px_30px_-12px_rgba(79,70,229,0.7)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_22px_40px_-12px_rgba(79,70,229,0.9)] active:scale-[0.98] transition-all"
+            className="group relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl py-4 px-5 text-[15px] font-bold text-white bg-gradient-to-r from-[#6D28D9] via-[#5B47EA] to-[#6D28D9] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_14px_30px_-12px_rgba(79,70,229,0.7)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_22px_40px_-12px_rgba(79,70,229,0.9)] active:scale-[0.98] transition-all"
           >
             {/* periodic shimmer every ~9s + faster hover sweep */}
             <span
@@ -454,7 +454,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
             <Eye className="w-3.5 h-3.5 text-[#0F7A3E]" /> Dealer reviewed your offer <strong className="text-[#06194A] font-semibold">12 min ago</strong>
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <TrendingUp className="w-3.5 h-3.5 text-[#4F46E5]" /> Regional SUV demand <strong className="text-[#06194A] font-semibold">+8%</strong> this week
+            <TrendingUp className="w-3.5 h-3.5 text-[#6D28D9]" /> Regional SUV demand <strong className="text-[#06194A] font-semibold">+8%</strong> this week
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Truck className="w-3.5 h-3.5 text-[#B45309]" /> Pickup available <strong className="text-[#06194A] font-semibold">within 24 hrs</strong>
@@ -467,7 +467,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
         <Card className="p-5">
           <div className="flex items-center justify-between mb-3">
             <SectionLabel>Offer Breakdown</SectionLabel>
-            <button onClick={() => setBreakdown(true)} className="text-xs font-semibold text-[#4F46E5] hover:underline">Full detail</button>
+            <button onClick={() => setBreakdown(true)} className="text-xs font-semibold text-[#6D28D9] hover:underline">Full detail</button>
           </div>
           <ul className="space-y-3">
             {BREAKDOWN.map((b, i) => {
@@ -479,7 +479,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
                     <span className="text-[#06194A] font-medium inline-flex items-center gap-1.5">
                       {b.label}
                       <InfoTip text={b.why}>
-                        <Info className="w-3 h-3 text-[#B6BECC] hover:text-[#4F46E5] transition-colors" />
+                        <Info className="w-3 h-3 text-[#B6BECC] hover:text-[#6D28D9] transition-colors" />
                       </InfoTip>
                     </span>
                     <span className={`font-bold tabular-nums ${positive ? "text-[#0F7A3E]" : "text-[#B45309]"}`}>
@@ -516,10 +516,10 @@ export const OffersPage = ({ onNavigate }: Props) => {
               <button
                 key={x.key}
                 onClick={() => setAdvantage(x.key)}
-                className="group text-left rounded-xl border border-[#E6EAF0] p-3 hover:border-[#4F46E5]/40 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-16px_rgba(79,70,229,0.5)] transition-all active:scale-[0.98]"
+                className="group text-left rounded-xl border border-[#E6EAF0] p-3 hover:border-[#6D28D9]/40 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-16px_rgba(79,70,229,0.5)] transition-all active:scale-[0.98]"
               >
                 <div className="flex items-center justify-between">
-                  <div className="w-8 h-8 rounded-lg bg-[#EEF0FF] text-[#4F46E5] grid place-items-center transition-transform group-hover:scale-110 group-hover:rotate-[-4deg]">
+                  <div className="w-8 h-8 rounded-lg bg-[#EEF0FF] text-[#6D28D9] grid place-items-center transition-transform group-hover:scale-110 group-hover:rotate-[-4deg]">
                     <x.Icon className="w-[14px] h-[14px]" />
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-[#B6BECC] opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -575,7 +575,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
             aria-hidden initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
             transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
             style={{ transformOrigin: "left" }}
-            className="hidden sm:block absolute top-[34px] left-[8%] right-[8%] h-[2px] bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#4F46E5]/30 rounded-full"
+            className="hidden sm:block absolute top-[34px] left-[8%] right-[8%] h-[2px] bg-gradient-to-r from-[#6D28D9] via-[#6D28D9] to-[#6D28D9]/30 rounded-full"
           />
           {([
             { key: "accept",   Icon: Check,         t: "Accept Offer",    d: "Lock in your firm number", time: "1 min",          onClick: () => setAccept(true) },
@@ -591,10 +591,10 @@ export const OffersPage = ({ onNavigate }: Props) => {
             >
               <button
                 onClick={s.onClick}
-                className="group w-full text-left rounded-xl border border-[#E6EAF0] bg-white p-4 hover:border-[#4F46E5]/40 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-16px_rgba(79,70,229,0.5)] transition-all active:scale-[0.98]"
+                className="group w-full text-left rounded-xl border border-[#E6EAF0] bg-white p-4 hover:border-[#6D28D9]/40 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-16px_rgba(79,70,229,0.5)] transition-all active:scale-[0.98]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#E9E2FF] text-[#4F46E5] grid place-items-center transition-transform group-hover:scale-110">
+                  <span className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[#EEF0FF] to-[#E9E2FF] text-[#6D28D9] grid place-items-center transition-transform group-hover:scale-110">
                     <s.Icon className="w-4 h-4" />
                   </span>
                   <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8893A8]">Step {i + 1}</span>
@@ -604,7 +604,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
                   <ChevronRight className="w-3.5 h-3.5 text-[#B6BECC] opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <div className="text-[11.5px] text-[#53627A] mt-0.5">{s.d}</div>
-                <div className="text-[10.5px] text-[#4F46E5] font-semibold mt-2">{s.time}</div>
+                <div className="text-[10.5px] text-[#6D28D9] font-semibold mt-2">{s.time}</div>
               </button>
             </motion.li>
           ))}
@@ -622,7 +622,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
             { Icon: HelpCircle,  t: "Support 7 days a week" },
           ].map((x) => (
             <span key={x.t} className="inline-flex items-center gap-2 font-semibold">
-              <x.Icon className="w-4 h-4 text-[#4F46E5]" /> {x.t}
+              <x.Icon className="w-4 h-4 text-[#6D28D9]" /> {x.t}
             </span>
           ))}
         </div>
@@ -632,7 +632,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),12px)] bg-white/90 backdrop-blur border-t border-[#E6EAF0]">
         <button
           onClick={() => setAccept(true)}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-3.5 text-[15px] font-bold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] shadow-[0_14px_30px_-12px_rgba(79,70,229,0.7)]"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-3.5 text-[15px] font-bold text-white bg-gradient-to-r from-[#6D28D9] to-[#6D28D9] shadow-[0_14px_30px_-12px_rgba(79,70,229,0.7)]"
         >
           Accept {fmt(MOCK.firmOffer)} <ArrowRight className="w-4 h-4" />
         </button>
@@ -655,7 +655,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
         }
       >
         <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#E0E7FF] p-4">
-          <div className="text-[11px] uppercase tracking-wide font-semibold text-[#4F46E5]">Your counter</div>
+          <div className="text-[11px] uppercase tracking-wide font-semibold text-[#6D28D9]">Your counter</div>
           <div className="text-[32px] font-extrabold text-[#06194A] tabular-nums mt-1">{fmt(counterAmt)}</div>
           <div className="text-[11.5px] text-[#53627A] mt-1">
             {fmt(counterAmt - MOCK.firmOffer)} above current offer
@@ -666,18 +666,18 @@ export const OffersPage = ({ onNavigate }: Props) => {
           <input
             type="range" min={minCounter - 500} max={maxCounter + 800} step={50}
             value={counterAmt} onChange={(e) => setCounterAmt(Number(e.target.value))}
-            className="w-full accent-[#4F46E5]"
+            className="w-full accent-[#6D28D9]"
           />
           <div className="flex items-center justify-between text-[11px] text-[#8893A8] mt-1 tabular-nums">
             <span>{fmt(minCounter - 500)}</span>
-            <span className="text-[#4F46E5] font-semibold">Recommended {fmt(minCounter)}–{fmt(maxCounter)}</span>
+            <span className="text-[#6D28D9] font-semibold">Recommended {fmt(minCounter)}–{fmt(maxCounter)}</span>
             <span>{fmt(maxCounter + 800)}</span>
           </div>
         </div>
 
         <label className="block mt-4">
           <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">Custom amount</span>
-          <div className="mt-1 flex items-center rounded-xl border border-[#E6EAF0] px-3 focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/20">
+          <div className="mt-1 flex items-center rounded-xl border border-[#E6EAF0] px-3 focus-within:border-[#6D28D9] focus-within:ring-2 focus-within:ring-[#6D28D9]/20">
             <span className="text-[#53627A]">$</span>
             <input
               type="number" value={counterAmt}
@@ -688,13 +688,13 @@ export const OffersPage = ({ onNavigate }: Props) => {
         </label>
 
         <div className="mt-4 rounded-xl bg-[#F7F8FB] border border-[#E6EAF0] p-3 text-[12px] text-[#53627A]">
-          <div className="font-semibold text-[#06194A] inline-flex items-center gap-1.5"><Info className="w-3.5 h-3.5 text-[#4F46E5]" /> Market guidance</div>
+          <div className="font-semibold text-[#06194A] inline-flex items-center gap-1.5"><Info className="w-3.5 h-3.5 text-[#6D28D9]" /> Market guidance</div>
           <p className="mt-1">Most successful counter offers fall within $500–$1,200 of your current offer. Dealers typically respond in under 2 hours.</p>
         </div>
 
         <label className="block mt-4">
           <span className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">Notes for dealer (optional)</span>
-          <textarea rows={3} placeholder="Share context (e.g. recent maintenance, comparable offers)…" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none" />
+          <textarea rows={3} placeholder="Share context (e.g. recent maintenance, comparable offers)…" className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none" />
         </label>
       </SlideOver>
 
@@ -711,7 +711,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
         }
       >
         <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F7F8FB] border border-[#E6EAF0]">
-          <div className="w-10 h-10 rounded-xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center font-bold">
             {MOCK.customer.dealer.split(" ").map(w => w[0]).slice(0,2).join("")}
           </div>
           <div className="min-w-0">
@@ -732,7 +732,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
               <button
                 key={q}
                 onClick={() => setAskMsg((m) => m + q + "\n")}
-                className="text-[11.5px] font-medium px-2.5 py-1.5 rounded-full bg-[#EEF0FF] text-[#4F46E5] hover:bg-[#DCE0FF] transition"
+                className="text-[11.5px] font-medium px-2.5 py-1.5 rounded-full bg-[#EEF0FF] text-[#6D28D9] hover:bg-[#DCE0FF] transition"
               >{q}</button>
             ))}
           </div>
@@ -742,11 +742,11 @@ export const OffersPage = ({ onNavigate }: Props) => {
           <span className="text-[11px] uppercase tracking-wide font-semibold text-[#8893A8]">Your message</span>
           <textarea
             rows={6} value={askMsg} onChange={(e) => setAskMsg(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 outline-none"
+            className="mt-1 w-full rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-sm focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none"
           />
         </label>
 
-        <button className="mt-2 inline-flex items-center gap-1.5 text-[12px] text-[#4F46E5] font-semibold hover:underline">
+        <button className="mt-2 inline-flex items-center gap-1.5 text-[12px] text-[#6D28D9] font-semibold hover:underline">
           <Paperclip className="w-3.5 h-3.5" /> Attach a file
         </button>
       </SlideOver>
@@ -754,7 +754,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
       {/* Full breakdown */}
       <SlideOver open={breakdown} onClose={() => setBreakdown(false)} title="Full Offer Breakdown" subtitle="How we arrived at your firm number" width="lg">
         <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#E0E7FF] p-4 mb-4">
-          <div className="text-[11px] uppercase tracking-wide text-[#4F46E5] font-semibold">Final Firm Offer</div>
+          <div className="text-[11px] uppercase tracking-wide text-[#6D28D9] font-semibold">Final Firm Offer</div>
           <div className="text-[28px] font-extrabold text-[#06194A] tabular-nums">{fmt(MOCK.firmOffer)}</div>
         </div>
         <ul className="space-y-4">
@@ -776,7 +776,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
           })}
         </ul>
         <div className="mt-5 flex items-center gap-2 text-[12px] text-[#53627A]">
-          <BarChart3 className="w-4 h-4 text-[#4F46E5]" />
+          <BarChart3 className="w-4 h-4 text-[#6D28D9]" />
           Adjustments derived from local sale data and your submitted condition.
         </div>
       </SlideOver>
@@ -797,7 +797,7 @@ export const OffersPage = ({ onNavigate }: Props) => {
           const a = ADVANTAGES[advantage];
           const tone = a.tone === "green"
             ? { bg: "from-[#E8F8EE] to-white", border: "border-[#BBE5C6]", icon: "bg-white text-[#0F7A3E]" }
-            : { bg: "from-[#EEF0FF] to-white", border: "border-[#C7D2FE]", icon: "bg-white text-[#4F46E5]" };
+            : { bg: "from-[#EEF0FF] to-white", border: "border-[#C7D2FE]", icon: "bg-white text-[#6D28D9]" };
           return (
             <div className="space-y-4">
               <div className={`rounded-2xl bg-gradient-to-br ${tone.bg} border ${tone.border} p-4 flex items-center gap-3`}>

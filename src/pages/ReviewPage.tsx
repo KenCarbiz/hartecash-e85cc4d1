@@ -107,7 +107,7 @@ const ReviewPage = () => {
   const Shell = ({ children }: { children: React.ReactNode }) => (
     <div className="relative min-h-screen overflow-hidden bg-[#F7F8FB] text-[#06194A]">
       {/* Very subtle top accent bar */}
-      <div aria-hidden className="absolute inset-x-0 top-1.5 h-[3px] bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#4F46E5] opacity-30" />
+      <div aria-hidden className="absolute inset-x-0 top-1.5 h-[3px] bg-gradient-to-r from-[#6D28D9] via-[#6D28D9] to-[#6D28D9] opacity-30" />
       {/* Soft radial tint behind card */}
       <div
         aria-hidden
@@ -126,7 +126,7 @@ const ReviewPage = () => {
   if (loading) {
     return (
       <Shell>
-        <Loader2 className="w-8 h-8 animate-spin text-[#4F46E5]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#6D28D9]" />
       </Shell>
     );
   }
@@ -140,7 +140,7 @@ const ReviewPage = () => {
             <Button
               variant="outline"
               onClick={() => setError("")}
-              className="border-[#E6EAF0] text-[#06194A] hover:bg-[#EEF0FF] hover:text-[#4F46E5] hover:border-[#4F46E5]/30"
+              className="border-[#E6EAF0] text-[#06194A] hover:bg-[#EEF0FF] hover:text-[#6D28D9] hover:border-[#6D28D9]/30"
             >
               Try again
             </Button>
@@ -172,7 +172,7 @@ const ReviewPage = () => {
       <div className="w-full max-w-xl">
         {/* Hero */}
         <div className="text-center mb-8 sm:mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EEF0FF] border border-[#DEE2FC] text-[#4F46E5] text-[11px] font-semibold uppercase tracking-[0.18em] mb-5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EEF0FF] border border-[#DEE2FC] text-[#6D28D9] text-[11px] font-semibold uppercase tracking-[0.18em] mb-5">
             <MessageSquareQuote className="w-3.5 h-3.5" />
             Customer Review
           </div>
@@ -212,7 +212,7 @@ const ReviewPage = () => {
                     <Star
                       className={`w-9 h-9 sm:w-11 sm:h-11 transition-all ${
                         active
-                          ? "fill-[#4F46E5] text-[#4F46E5] drop-shadow-[0_0_6px_rgba(79,70,229,0.35)]"
+                          ? "fill-[#6D28D9] text-[#6D28D9] drop-shadow-[0_0_6px_rgba(79,70,229,0.35)]"
                           : "text-[#E2E8F0]"
                       }`}
                     />
@@ -232,7 +232,7 @@ const ReviewPage = () => {
               onChange={(e) => setReviewText(e.target.value)}
               rows={4}
               placeholder="Tell us about your experience selling your car..."
-              className="resize-none bg-[#F8FAFC] border-[#E2E8F0] rounded-xl text-[#06194A] placeholder:text-[#94A3B8] focus-visible:ring-[#4F46E5]/30 focus-visible:border-[#4F46E5]/40 px-4 py-3"
+              className="resize-none bg-[#F8FAFC] border-[#E2E8F0] rounded-xl text-[#06194A] placeholder:text-[#94A3B8] focus-visible:ring-[#6D28D9]/30 focus-visible:border-[#6D28D9]/40 px-4 py-3"
             />
           </div>
 
@@ -246,7 +246,7 @@ const ReviewPage = () => {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Sarah M."
-                className="bg-[#F8FAFC] border-[#E2E8F0] rounded-xl text-[#06194A] placeholder:text-[#94A3B8] focus-visible:ring-[#4F46E5]/30 focus-visible:border-[#4F46E5]/40 px-4 h-11"
+                className="bg-[#F8FAFC] border-[#E2E8F0] rounded-xl text-[#06194A] placeholder:text-[#94A3B8] focus-visible:ring-[#6D28D9]/30 focus-visible:border-[#6D28D9]/40 px-4 h-11"
               />
             </div>
             <div className="space-y-2">
@@ -257,7 +257,7 @@ const ReviewPage = () => {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Hartford, CT"
-                className="bg-[#F8FAFC] border-[#E2E8F0] rounded-xl text-[#06194A] placeholder:text-[#94A3B8] focus-visible:ring-[#4F46E5]/30 focus-visible:border-[#4F46E5]/40 px-4 h-11"
+                className="bg-[#F8FAFC] border-[#E2E8F0] rounded-xl text-[#06194A] placeholder:text-[#94A3B8] focus-visible:ring-[#6D28D9]/30 focus-visible:border-[#6D28D9]/40 px-4 h-11"
               />
             </div>
           </div>
@@ -271,7 +271,7 @@ const ReviewPage = () => {
                 value={vehicle}
                 onChange={(e) => setVehicle(e.target.value)}
                 placeholder="2019 Toyota RAV4"
-                className="bg-[#F8FAFC] border-[#E2E8F0] rounded-xl text-[#06194A] placeholder:text-[#94A3B8] focus-visible:ring-[#4F46E5]/30 focus-visible:border-[#4F46E5]/40 px-4 h-11"
+                className="bg-[#F8FAFC] border-[#E2E8F0] rounded-xl text-[#06194A] placeholder:text-[#94A3B8] focus-visible:ring-[#6D28D9]/30 focus-visible:border-[#6D28D9]/40 px-4 h-11"
               />
             </div>
           )}
@@ -294,7 +294,7 @@ const ReviewPage = () => {
             type="button"
             onClick={handleSubmit}
             disabled={submitting || !reviewText.trim()}
-            className="w-full h-12 rounded-xl bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-95 text-white font-bold text-base tracking-tight transition shadow-[0_8px_20px_-10px_rgba(79,70,229,0.5)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+            className="w-full h-12 rounded-xl bg-gradient-to-r from-[#6D28D9] to-[#6D28D9] hover:opacity-95 text-white font-bold text-base tracking-tight transition shadow-[0_8px_20px_-10px_rgba(79,70,229,0.5)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
           >
             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
             Submit My Review

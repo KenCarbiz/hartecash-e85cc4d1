@@ -13,7 +13,7 @@ const makePlaceholder = (label: string, description: string) => {
   const Step = ({ next }: StepContext) => (
     <div className="space-y-6">
       <div className="rounded-2xl border border-zinc-200 bg-gradient-to-br from-zinc-50 to-white p-8">
-        <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(262_83%_58%/0.1)] text-[hsl(262_83%_58%)]">
+        <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(263_70%_50%/0.1)] text-[hsl(263_70%_50%)]">
           <Sparkles className="h-5 w-5" />
         </div>
         <h3 className="text-lg font-semibold text-zinc-900">{label}</h3>

@@ -1143,7 +1143,7 @@ const InspectionSheet = () => {
 
     const equipmentSection = (hasPowertrain || autoEquip.length > 0 || customerOptional.length > 0) ? `
       <div class="section">
-        <div class="section-header" style="border-bottom-color:#7c3aed;">
+        <div class="section-header" style="border-bottom-color:#6D28D9;">
           <h2>🔧 Equipment & Powertrain Verification</h2>
           <span class="badge">Verify all items match the physical vehicle</span>
         </div>

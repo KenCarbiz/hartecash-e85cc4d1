@@ -14,7 +14,7 @@ import { VehicleHeroCarousel } from "../VehicleHeroCarousel";
 
 /* ── small visuals (kept inline so the dashboard page is portable) ── */
 const TINTS = {
-  indigo:  "bg-[#EEF0FF] text-[#4F46E5]",
+  indigo:  "bg-[#EEF0FF] text-[#6D28D9]",
   green:   "bg-[#E8F8EE] text-[#16A34A]",
   emerald: "bg-[#E6F7F1] text-[#0E9F6E]",
   orange:  "bg-[#FEF3E2] text-[#F59E0B]",
@@ -170,8 +170,8 @@ export const DashboardPage = ({ onNavigate }: Props) => {
         {/* Next Step card */}
         <div ref={offerRef} className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5 flex flex-col">
           <div className="flex items-start justify-between">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Your Next Step</div>
-            <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#4F46E5] grid place-items-center">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9]">Your Next Step</div>
+            <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#6D28D9] grid place-items-center">
               <Tag className="w-4 h-4" />
             </div>
           </div>
@@ -179,7 +179,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
           <p className="text-[12.5px] text-[#53627A] mt-0.5">Review your offer from {MOCK.customer.dealer}.</p>
 
           <div className="mt-3 rounded-2xl p-3.5 bg-gradient-to-br from-[#EEF0FF] to-[#F5F3FF] border border-[#E0E7FF]">
-            <div className="text-[10px] uppercase tracking-wide text-[#4F46E5] font-semibold">Firm Offer</div>
+            <div className="text-[10px] uppercase tracking-wide text-[#6D28D9] font-semibold">Firm Offer</div>
             <div className="text-[22px] font-extrabold leading-tight">{fmt(MOCK.firmOffer)}</div>
             <div className="text-[11px] text-[#53627A] mt-0.5">Offer Expires {MOCK.offerExpires}</div>
             <div className="grid grid-cols-2 gap-y-1.5 gap-x-3 mt-2.5 text-[11.5px] text-[#06194A]">
@@ -209,7 +209,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.25fr_1fr] gap-4 items-stretch">
         {/* Dealer Communication */}
         <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-3.5 flex flex-col">
-          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-2">Dealer Communication</div>
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9] mb-2">Dealer Communication</div>
           <div className="flex items-center gap-2.5">
             <div className="relative w-9 h-9 rounded-full bg-[#FEF3E2] text-[#F59E0B] grid place-items-center shrink-0">
               <Handshake className="w-4 h-4" />
@@ -247,11 +247,11 @@ export const DashboardPage = ({ onNavigate }: Props) => {
               ? "bg-[#E8F8EE] text-[#0F7A3E]"
               : s === "Under Review"
               ? "bg-[#FEF3E2] text-[#B45309]"
-              : "bg-[#EEF0FF] text-[#4F46E5]";
+              : "bg-[#EEF0FF] text-[#6D28D9]";
           return (
             <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-3.5 flex flex-col">
               <div className="flex items-center justify-between mb-1.5">
-                <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Documents</div>
+                <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9]">Documents</div>
                 <span className="text-[11px] font-semibold text-[#06194A]">{approved} of {docs.length} approved</span>
               </div>
               <div className="h-1.5 rounded-full bg-[#EEF0F4] overflow-hidden mb-2.5">
@@ -278,7 +278,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
         {/* Market Pulse */}
         <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-3.5 flex flex-col">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5]">Market Pulse</div>
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9]">Market Pulse</div>
             <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-[#0F7A3E] bg-[#E8F8EE] px-1.5 py-0.5 rounded-full">
               <TrendingUp className="w-3 h-3" /> +$550 · 7d
             </span>
@@ -304,7 +304,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
 
         {/* Next Best Actions */}
         <div className="bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-3.5">
-          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#4F46E5] mb-1.5">Next Best Actions</div>
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6D28D9] mb-1.5">Next Best Actions</div>
           <ul className="divide-y divide-[#EEF0F4]">
             {[
               { title: "Upload Documents", desc: "Finish your paperwork.",   Icon: Upload,        tint: "green" as Tint,   onClick: () => onNavigate("documents") },
@@ -319,10 +319,10 @@ export const DashboardPage = ({ onNavigate }: Props) => {
                     <Icon className="w-[15px] h-[15px]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[12.5px] font-semibold text-[#06194A] leading-tight group-hover:text-[#4F46E5] transition-colors">{title}</div>
+                    <div className="text-[12.5px] font-semibold text-[#06194A] leading-tight group-hover:text-[#6D28D9] transition-colors">{title}</div>
                     <div className="text-[10.5px] text-[#53627A] truncate mt-0.5">{desc}</div>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8] group-hover:text-[#4F46E5] group-hover:translate-x-0.5 transition" />
+                  <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8] group-hover:text-[#6D28D9] group-hover:translate-x-0.5 transition" />
                 </button>
               </li>
             ))}
@@ -348,7 +348,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
           ].map((m, i) => (
             <div key={i} className={`flex ${m.who === "you" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-[13px] leading-snug ${
-                m.who === "you" ? "bg-[#4F46E5] text-white" : "bg-[#F4F6FA] text-[#06194A]"
+                m.who === "you" ? "bg-[#6D28D9] text-white" : "bg-[#F4F6FA] text-[#06194A]"
               }`}>
                 {m.text}
                 <div className={`text-[10px] mt-1 ${m.who === "you" ? "text-white/70" : "text-[#53627A]"}`}>{m.time}</div>
@@ -369,7 +369,7 @@ export const DashboardPage = ({ onNavigate }: Props) => {
           </div>
         }>
         <div className="rounded-2xl p-4 bg-gradient-to-br from-[#EEF0FF] to-[#F5F3FF] border border-[#E0E7FF]">
-          <div className="text-[10px] uppercase tracking-wide text-[#4F46E5] font-semibold">Firm Offer</div>
+          <div className="text-[10px] uppercase tracking-wide text-[#6D28D9] font-semibold">Firm Offer</div>
           <div className="text-[28px] font-extrabold leading-tight">{fmt(MOCK.firmOffer)}</div>
           <div className="text-xs text-[#53627A]">Offer Expires {MOCK.offerExpires}</div>
         </div>

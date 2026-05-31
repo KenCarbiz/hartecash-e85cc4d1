@@ -92,7 +92,7 @@ const INITIAL_GROUPS: UploadGroup[] = [
 
 const STATUS_TONE: Record<ItemStatus, { label: string; pill: string; dot: string; Icon: LucideIcon }> = {
   approved:     { label: "Approved",      pill: "text-[#0F7A3E] bg-[#E8F8EE]",  dot: "bg-[#16A34A]", Icon: CheckCircle2 },
-  uploaded:     { label: "Uploaded",      pill: "text-[#4F46E5] bg-[#EEF0FF]",  dot: "bg-[#4F46E5]", Icon: Check },
+  uploaded:     { label: "Uploaded",      pill: "text-[#6D28D9] bg-[#EEF0FF]",  dot: "bg-[#6D28D9]", Icon: Check },
   under_review: { label: "Under review",  pill: "text-[#B45309] bg-[#FEF3E2]",  dot: "bg-[#F59E0B]", Icon: Loader2 },
   rejected:     { label: "Needs retake",  pill: "text-[#B91C1C] bg-[#FEE2E2]",  dot: "bg-[#EF4444]", Icon: AlertCircle },
   not_started:  { label: "Not started",   pill: "text-[#53627A] bg-[#F4F6FA]",  dot: "bg-[#94A3B8]", Icon: Clock },
@@ -119,7 +119,7 @@ const PrimaryBtn = ({
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`inline-flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-[14px] font-semibold text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-95 active:scale-[0.98] transition shadow-[0_10px_28px_-12px_rgba(79,70,229,0.6)] disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+    className={`inline-flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-[14px] font-semibold text-white bg-gradient-to-r from-[#6D28D9] to-[#6D28D9] hover:opacity-95 active:scale-[0.98] transition shadow-[0_10px_28px_-12px_rgba(79,70,229,0.6)] disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
   >
     {children}
   </button>
@@ -130,7 +130,7 @@ const SecondaryBtn = ({
 }: { children: ReactNode; onClick?: () => void; className?: string }) => (
   <button
     onClick={onClick}
-    className={`inline-flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-[14px] font-semibold text-[#06194A] bg-white border border-[#E6EAF0] hover:border-[#4F46E5]/40 hover:text-[#4F46E5] active:scale-[0.98] transition ${className}`}
+    className={`inline-flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-[14px] font-semibold text-[#06194A] bg-white border border-[#E6EAF0] hover:border-[#6D28D9]/40 hover:text-[#6D28D9] active:scale-[0.98] transition ${className}`}
   >
     {children}
   </button>
@@ -138,7 +138,7 @@ const SecondaryBtn = ({
 
 const TrustChip = ({ Icon, children }: { Icon: LucideIcon; children: ReactNode }) => (
   <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#53627A] bg-white/70 backdrop-blur-sm border border-[#E6EAF0] rounded-full px-2.5 py-1">
-    <Icon className="w-3 h-3 text-[#4F46E5]" />
+    <Icon className="w-3 h-3 text-[#6D28D9]" />
     {children}
   </span>
 );
@@ -168,14 +168,14 @@ const UploadRow = ({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       className={`relative flex items-start gap-3 p-3.5 rounded-xl border transition ${
-        isBad ? "border-[#FECACA] bg-[#FFFBFB]" : "border-[#E6EAF0] bg-white hover:border-[#4F46E5]/25"
+        isBad ? "border-[#FECACA] bg-[#FFFBFB]" : "border-[#E6EAF0] bg-white hover:border-[#6D28D9]/25"
       }`}
     >
       <div className={`relative w-11 h-11 rounded-xl grid place-items-center shrink-0 ${
         isDone ? "bg-[#EEF0FF]" : isBad ? "bg-[#FEE2E2]" : "bg-[#F4F6FA]"
       }`}>
         <item.icon className={`w-5 h-5 ${
-          isDone ? "text-[#4F46E5]" : isBad ? "text-[#B91C1C]" : "text-[#53627A]"
+          isDone ? "text-[#6D28D9]" : isBad ? "text-[#B91C1C]" : "text-[#53627A]"
         }`} />
         {isDone && (
           <span className={`absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ring-2 ring-white ${t.dot}`} />
@@ -196,7 +196,7 @@ const UploadRow = ({
         {isDone ? (
           <button
             onClick={() => onPreview(item.id)}
-            className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#4F46E5] px-2.5 py-1.5 rounded-lg hover:bg-[#EEF0FF] transition"
+            className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#6D28D9] px-2.5 py-1.5 rounded-lg hover:bg-[#EEF0FF] transition"
             aria-label={`Preview ${item.title}`}
           >
             <Eye className="w-3.5 h-3.5" />
@@ -208,7 +208,7 @@ const UploadRow = ({
             className={`inline-flex items-center gap-1 text-[12px] font-semibold rounded-lg px-3 py-2 transition active:scale-95 ${
               isBad
                 ? "text-white bg-[#EF4444] hover:bg-[#DC2626]"
-                : "text-white bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-95"
+                : "text-white bg-gradient-to-r from-[#6D28D9] to-[#6D28D9] hover:opacity-95"
             }`}
           >
             <Camera className="w-3.5 h-3.5" />
@@ -229,12 +229,12 @@ const Hero = ({
   return (
     <div className="relative overflow-hidden">
       {/* ambient glow */}
-      <div className="absolute -top-24 -left-16 w-72 h-72 rounded-full bg-[#7C3AED]/20 blur-3xl pointer-events-none" />
-      <div className="absolute -top-12 right-0 w-80 h-80 rounded-full bg-[#4F46E5]/15 blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 -left-16 w-72 h-72 rounded-full bg-[#6D28D9]/20 blur-3xl pointer-events-none" />
+      <div className="absolute -top-12 right-0 w-80 h-80 rounded-full bg-[#6D28D9]/15 blur-3xl pointer-events-none" />
 
       <div className="relative px-5 pt-5 pb-6">
         <div className="flex items-center justify-between">
-          <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#4F46E5]">
+          <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#6D28D9]">
             Secure Upload Hub
           </div>
           <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-[#0F7A3E] bg-[#E8F8EE] rounded-full px-2 py-0.5">
@@ -255,7 +255,7 @@ const Hero = ({
         <div className="mt-4">
           <div className="flex items-center justify-between mb-1.5">
             <div className="text-[12px] font-semibold text-[#06194A]">
-              <span className="text-[#4F46E5]">{completed}</span>
+              <span className="text-[#6D28D9]">{completed}</span>
               <span className="text-[#53627A]"> of {total} completed</span>
             </div>
             <div className="text-[11px] font-semibold text-[#53627A]">{pct}%</div>
@@ -265,7 +265,7 @@ const Hero = ({
               initial={{ width: 0 }}
               animate={{ width: `${pct}%` }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="h-full rounded-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"
+              className="h-full rounded-full bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]"
             />
           </div>
         </div>
@@ -288,7 +288,7 @@ const SessionCard = ({
 }: { firstName: string; vehicle: string; dealer: string; expiresIn: string }) => (
   <Card className="p-3.5">
     <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] grid place-items-center text-white font-bold text-[14px]">
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6D28D9] to-[#6D28D9] grid place-items-center text-white font-bold text-[14px]">
         {(firstName || "?")[0]?.toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
@@ -316,13 +316,13 @@ const NextActionCard = ({
   return (
     <Card className="overflow-hidden">
       <div className="relative p-4 bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F0FF]">
-        <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-[#7C3AED]/10 blur-2xl pointer-events-none" />
+        <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-[#6D28D9]/10 blur-2xl pointer-events-none" />
         <div className="flex items-start gap-3 relative">
           <div className="w-11 h-11 rounded-xl bg-white grid place-items-center shadow-sm shrink-0">
-            <item.icon className="w-5 h-5 text-[#4F46E5]" />
+            <item.icon className="w-5 h-5 text-[#6D28D9]" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[10.5px] uppercase tracking-[0.14em] font-bold text-[#4F46E5]">
+            <div className="text-[10.5px] uppercase tracking-[0.14em] font-bold text-[#6D28D9]">
               Next required item
             </div>
             <div className="text-[16px] font-bold text-[#06194A] mt-0.5">{item.title}</div>
@@ -356,14 +356,14 @@ const TipsCard = () => (
   <Card className="p-4">
     <div className="flex items-center gap-2 mb-2.5">
       <div className="w-7 h-7 rounded-lg bg-[#F5F0FF] grid place-items-center">
-        <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" />
+        <Sparkles className="w-3.5 h-3.5 text-[#6D28D9]" />
       </div>
       <div className="text-[13px] font-bold text-[#06194A]">Tips for best results</div>
     </div>
     <ul className="space-y-1.5">
       {TIPS.map(({ Icon, text }) => (
         <li key={text} className="flex items-start gap-2 text-[12.5px] text-[#53627A] leading-snug">
-          <Icon className="w-3.5 h-3.5 text-[#4F46E5] mt-0.5 shrink-0" />
+          <Icon className="w-3.5 h-3.5 text-[#6D28D9] mt-0.5 shrink-0" />
           {text}
         </li>
       ))}
@@ -376,8 +376,8 @@ const TipsCard = () => (
 const LiveSyncBadge = () => (
   <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#EEF0FF] to-[#F5F0FF] border border-[#E0E7FF]">
     <span className="relative flex h-2 w-2 shrink-0">
-      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4F46E5] opacity-75" />
-      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4F46E5]" />
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#6D28D9] opacity-75" />
+      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#6D28D9]" />
     </span>
     <div className="text-[12px] text-[#06194A]">
       <span className="font-semibold">Live sync</span>
@@ -503,7 +503,7 @@ const UploadHubInner = () => {
         <div className="max-w-[640px] lg:max-w-[1100px] mx-auto px-4 h-12 flex items-center justify-between">
           <button
             onClick={returnHome}
-            className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-[#53627A] hover:text-[#4F46E5] transition"
+            className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-[#53627A] hover:text-[#6D28D9] transition"
           >
             <ChevronLeft className="w-4 h-4" /> Portal
           </button>
@@ -543,7 +543,7 @@ const UploadHubInner = () => {
               <Card key={g.id} className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#4F46E5]">{g.eyebrow}</div>
+                    <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#6D28D9]">{g.eyebrow}</div>
                     <div className="text-[15px] font-bold text-[#06194A]">{g.title}</div>
                   </div>
                   <div className="text-[11.5px] font-semibold text-[#53627A]">
@@ -575,7 +575,7 @@ const UploadHubInner = () => {
             />
             <TipsCard />
             <Card className="p-4">
-              <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#4F46E5]">Need help?</div>
+              <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#6D28D9]">Need help?</div>
               <div className="text-[13px] font-bold text-[#06194A] mt-0.5">We're a tap away</div>
               <p className="text-[12px] text-[#53627A] mt-1 leading-relaxed">
                 Stuck on a photo or document? Message your dealer and we'll guide you through it.

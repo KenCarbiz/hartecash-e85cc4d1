@@ -24,7 +24,7 @@ const MobileStepper = ({ total, activeIndex, title }: Props) => {
           initial={false}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="h-full rounded-full bg-[hsl(262_83%_58%)]"
+          className="h-full rounded-full bg-[hsl(263_70%_50%)]"
         />
       </div>
     </div>

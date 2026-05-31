@@ -122,15 +122,15 @@ const StepContact = ({ state, update, next }: StepContext) => {
                 onClick={() => { set({ ownership: value }); touch("ownership"); }}
                 className={`group relative flex w-full items-center gap-4 rounded-2xl border px-5 py-5 text-left transition-all ${
                   active
-                    ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%/0.06)] shadow-[0_10px_28px_-14px_hsl(262_83%_58%/0.45),0_0_0_4px_hsl(262_83%_58%/0.08)]"
-                    : "border-slate-200 bg-white hover:border-[hsl(262_83%_58%/0.6)] hover:bg-[hsl(262_83%_58%/0.04)] hover:shadow-[0_6px_18px_-12px_hsl(262_83%_58%/0.3)]"
+                    ? "border-[hsl(263_70%_50%)] bg-[hsl(263_70%_50%/0.06)] shadow-[0_10px_28px_-14px_hsl(263_70%_50%/0.45),0_0_0_4px_hsl(263_70%_50%/0.08)]"
+                    : "border-slate-200 bg-white hover:border-[hsl(263_70%_50%/0.6)] hover:bg-[hsl(263_70%_50%/0.04)] hover:shadow-[0_6px_18px_-12px_hsl(263_70%_50%/0.3)]"
                 }`}
               >
                 <div
                   className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-all ${
                     active
-                      ? "bg-[hsl(262_83%_58%)] text-white shadow-[0_6px_16px_-6px_hsl(262_83%_58%/0.55)]"
-                      : "bg-[hsl(262_83%_58%/0.1)] text-[hsl(262_60%_45%)] ring-1 ring-[hsl(262_83%_58%/0.15)]"
+                      ? "bg-[hsl(263_70%_50%)] text-white shadow-[0_6px_16px_-6px_hsl(263_70%_50%/0.55)]"
+                      : "bg-[hsl(263_70%_50%/0.1)] text-[hsl(263_60%_45%)] ring-1 ring-[hsl(263_70%_50%/0.15)]"
                   }`}
                 >
                   <Icon className="h-5 w-5" strokeWidth={2.25} />
@@ -142,8 +142,8 @@ const StepContact = ({ state, update, next }: StepContext) => {
                 <span
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
                     active
-                      ? "border-[hsl(262_83%_58%)] bg-[hsl(262_83%_58%)] text-white shadow-[0_4px_12px_-4px_hsl(262_83%_58%/0.5)]"
-                      : "border-slate-300 bg-white group-hover:border-[hsl(262_83%_58%/0.5)]"
+                      ? "border-[hsl(263_70%_50%)] bg-[hsl(263_70%_50%)] text-white shadow-[0_4px_12px_-4px_hsl(263_70%_50%/0.5)]"
+                      : "border-slate-300 bg-white group-hover:border-[hsl(263_70%_50%/0.5)]"
                   }`}
                 >
                   {active && <Check className="h-4 w-4" strokeWidth={3} />}
@@ -160,7 +160,7 @@ const StepContact = ({ state, update, next }: StepContext) => {
         {c.ownership === "own" && (
           <motion.p
             initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[hsl(262_83%_58%/0.06)] px-3.5 py-2.5 text-[12.5px] text-[hsl(262_60%_38%)]"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[hsl(263_70%_50%/0.06)] px-3.5 py-2.5 text-[12.5px] text-[hsl(263_60%_38%)]"
           >
             <Sparkles className="h-3.5 w-3.5" />
             Great — please have your title available when completing the transaction.
@@ -270,7 +270,7 @@ const Field = ({
     <span className="mb-1.5 block text-[13px] font-medium text-slate-700">{label}</span>
     <div className="relative">
       {Icon && (
-        <Icon className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400 transition-colors peer-focus:text-[hsl(262_83%_58%)]" strokeWidth={2} />
+        <Icon className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400 transition-colors peer-focus:text-[hsl(263_70%_50%)]" strokeWidth={2} />
       )}
       <input
         type={type}
@@ -283,7 +283,7 @@ const Field = ({
         className={`peer h-[56px] w-full rounded-[14px] border bg-[#FAFBFF] ${Icon ? "pl-11" : "pl-4"} pr-4 text-[15px] font-medium text-slate-900 outline-none transition-all placeholder:font-normal placeholder:text-slate-400 hover:bg-white focus:bg-white ${
           error
             ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
-            : "border-[#E4E8F0] focus:border-[hsl(262_83%_58%)] focus:ring-4 focus:ring-[hsl(262_83%_58%/0.15)]"
+            : "border-[#E4E8F0] focus:border-[hsl(263_70%_50%)] focus:ring-4 focus:ring-[hsl(263_70%_50%/0.15)]"
         }`}
       />
     </div>

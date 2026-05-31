@@ -62,7 +62,7 @@ const BrandWordmark = ({ name, className = "" }: { name: string; className?: str
   return (
     <div className={`font-extrabold tracking-tight truncate min-w-0 ${className}`}>
       <span className="text-[#06194A]">{first}</span>
-      {rest && <span className="text-[#4F46E5]">{rest}</span>}
+      {rest && <span className="text-[#6D28D9]">{rest}</span>}
     </div>
   );
 };
@@ -130,14 +130,14 @@ const NavButton = ({
       title={collapsed ? label : undefined}
       className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 text-left w-full ${
         active
-          ? "bg-[#EEF0FF] text-[#4F46E5] font-semibold shadow-[0_1px_2px_rgba(79,70,229,0.08)]"
+          ? "bg-[#EEF0FF] text-[#6D28D9] font-semibold shadow-[0_1px_2px_rgba(79,70,229,0.08)]"
           : "text-[#53627A] hover:bg-[#F4F6FA] hover:text-[#06194A]"
       } ${collapsed ? "justify-center" : ""}`}
     >
       {active && !collapsed && (
         <motion.span
           layoutId="nav-active-indicator"
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r bg-[#4F46E5]"
+          className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r bg-[#6D28D9]"
           transition={{ type: "spring", stiffness: 380, damping: 32 }}
         />
       )}
@@ -176,7 +176,7 @@ const SupportModule = ({ collapsed }: { collapsed: boolean }) => {
       <div className="flex flex-col items-center gap-3">
         <button
           title="Contact Support"
-          className="w-11 h-11 rounded-xl bg-[#4F46E5] hover:bg-[#3F37CC] text-white grid place-items-center transition-colors shadow-[0_4px_14px_-4px_rgba(79,70,229,0.5)]"
+          className="w-11 h-11 rounded-xl bg-[#6D28D9] hover:bg-[#5B21B6] text-white grid place-items-center transition-colors shadow-[0_4px_14px_-4px_rgba(79,70,229,0.5)]"
         >
           <HelpCircle className="w-[18px] h-[18px]" />
         </button>
@@ -192,7 +192,7 @@ const SupportModule = ({ collapsed }: { collapsed: boolean }) => {
       <div className="rounded-2xl border border-[#E6EAF0] bg-gradient-to-b from-white to-[#FAFBFE] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
         <div className="flex items-center gap-2">
           <div className="text-sm font-semibold text-[#06194A]">Need Help?</div>
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#EEF0FF] text-[#4F46E5] text-[10px] font-semibold">
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#EEF0FF] text-[#6D28D9] text-[10px] font-semibold">
             <Bot className="w-3 h-3" />
             AI
           </span>
@@ -200,7 +200,7 @@ const SupportModule = ({ collapsed }: { collapsed: boolean }) => {
         <p className="text-xs text-[#53627A] mt-1.5 mb-3 leading-snug">
           Our team is here every step of the way.
         </p>
-        <button className="w-full rounded-xl bg-[#4F46E5] hover:bg-[#3F37CC] active:scale-[0.98] text-white text-xs font-semibold py-2.5 inline-flex items-center justify-center gap-1.5 transition-all shadow-[0_4px_14px_-4px_rgba(79,70,229,0.5)]">
+        <button className="w-full rounded-xl bg-[#6D28D9] hover:bg-[#5B21B6] active:scale-[0.98] text-white text-xs font-semibold py-2.5 inline-flex items-center justify-center gap-1.5 transition-all shadow-[0_4px_14px_-4px_rgba(79,70,229,0.5)]">
           <MessageCircle className="w-3.5 h-3.5" />
           Live Chat
         </button>
@@ -213,7 +213,7 @@ const SupportModule = ({ collapsed }: { collapsed: boolean }) => {
           SOC 2
         </span>
         <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#8893A8]">
-          <Lock className="w-3 h-3 text-[#4F46E5]" />
+          <Lock className="w-3 h-3 text-[#6D28D9]" />
           Encrypted
         </span>
       </div>
@@ -226,12 +226,12 @@ const MobileSupportFooter = () => (
   <div className="px-4 pt-3 pb-5 border-t border-[#E6EAF0] bg-[#FAFBFE]">
     <div className="flex items-center gap-2 mb-3">
       <div className="text-xs font-semibold text-[#06194A]">Need Help?</div>
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#EEF0FF] text-[#4F46E5] text-[10px] font-semibold">
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#EEF0FF] text-[#6D28D9] text-[10px] font-semibold">
         <Bot className="w-3 h-3" />
         AI
       </span>
     </div>
-    <button className="w-full rounded-xl bg-[#4F46E5] hover:bg-[#3F37CC] active:scale-[0.98] text-white text-xs font-semibold py-2.5 inline-flex items-center justify-center gap-1.5 transition-all shadow-[0_4px_14px_-4px_rgba(79,70,229,0.5)]">
+    <button className="w-full rounded-xl bg-[#6D28D9] hover:bg-[#5B21B6] active:scale-[0.98] text-white text-xs font-semibold py-2.5 inline-flex items-center justify-center gap-1.5 transition-all shadow-[0_4px_14px_-4px_rgba(79,70,229,0.5)]">
       <MessageCircle className="w-3.5 h-3.5" />
       Live Chat
     </button>
@@ -241,7 +241,7 @@ const MobileSupportFooter = () => (
         SOC 2
       </span>
       <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#8893A8]">
-        <Lock className="w-3 h-3 text-[#4F46E5]" />
+        <Lock className="w-3 h-3 text-[#6D28D9]" />
         Encrypted
       </span>
     </div>
@@ -280,7 +280,7 @@ export const PortalSidebar = ({ active, onChange, customer }: SidebarProps) => {
       <button
         onClick={() => setCollapsed((c) => !c)}
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className="absolute top-7 -right-3 w-6 h-6 rounded-full bg-white border border-[#E6EAF0] text-[#53627A] hover:text-[#4F46E5] hover:border-[#4F46E5]/40 shadow-[0_2px_6px_-2px_rgba(15,23,42,0.12)] grid place-items-center transition-colors z-10"
+        className="absolute top-7 -right-3 w-6 h-6 rounded-full bg-white border border-[#E6EAF0] text-[#53627A] hover:text-[#6D28D9] hover:border-[#6D28D9]/40 shadow-[0_2px_6px_-2px_rgba(15,23,42,0.12)] grid place-items-center transition-colors z-10"
       >
         {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
       </button>
@@ -405,7 +405,7 @@ export const PortalMobileTopBar = ({
                   ].map(({ Icon, label }) => (
                     <button
                       key={label}
-                      className="flex flex-col items-center gap-1.5 rounded-xl bg-white border border-[#E6EAF0] py-3 text-[11px] font-semibold text-[#06194A] hover:border-[#4F46E5]/40 hover:text-[#4F46E5] transition-colors active:scale-[0.97]"
+                      className="flex flex-col items-center gap-1.5 rounded-xl bg-white border border-[#E6EAF0] py-3 text-[11px] font-semibold text-[#06194A] hover:border-[#6D28D9]/40 hover:text-[#6D28D9] transition-colors active:scale-[0.97]"
                     >
                       <Icon className="w-[18px] h-[18px]" strokeWidth={1.8} />
                       {label}

@@ -99,12 +99,12 @@ export const DocumentsPage = () => {
               <div className="text-[22px] font-extrabold text-[#06194A]">
                 {completed} of {total} documents completed
               </div>
-              <div className="text-[14px] font-bold text-[#4F46E5]">{pct}%</div>
+              <div className="text-[14px] font-bold text-[#6D28D9]">{pct}%</div>
             </div>
 
             <div className="mt-3 h-2.5 rounded-full bg-[#F4F6FA] overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#4F46E5] via-[#6366F1] to-[#7C3AED] transition-all"
+                className="h-full rounded-full bg-gradient-to-r from-[#6D28D9] via-[#6366F1] to-[#6D28D9] transition-all"
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -114,7 +114,7 @@ export const DocumentsPage = () => {
               <span className="text-[#CBD2E0]">·</span>
               <span className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-[#16A34A]" /> Encrypted</span>
               <span className="text-[#CBD2E0]">·</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-[#4F46E5]" /> Dealer reviewed</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-[#6D28D9]" /> Dealer reviewed</span>
             </div>
 
             <div className="mt-4 flex items-center gap-2 flex-wrap">
@@ -168,7 +168,7 @@ export const DocumentsPage = () => {
               <span>·</span>
               <span>{remaining} document{remaining === 1 ? "" : "s"} remaining</span>
               <span>·</span>
-              <span className="text-[#4F46E5] font-semibold">Session stays in sync</span>
+              <span className="text-[#6D28D9] font-semibold">Session stays in sync</span>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -204,7 +204,7 @@ export const DocumentsPage = () => {
                       ? "bg-[#FEE2E2] text-[#DC2626]"
                       : approved
                       ? "bg-[#DCFCE7] text-[#16A34A]"
-                      : "bg-[#EEF0FF] text-[#4F46E5]"
+                      : "bg-[#EEF0FF] text-[#6D28D9]"
                   }`}
                 >
                   <FileText className="w-5 h-5" />
@@ -224,7 +224,7 @@ export const DocumentsPage = () => {
 
                   {helper && (
                     <div className="mt-2 text-[12px] text-[#53627A] inline-flex items-start gap-1.5">
-                      <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#4F46E5]" />
+                      <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#6D28D9]" />
                       {helper}
                     </div>
                   )}
@@ -269,7 +269,7 @@ export const DocumentsPage = () => {
       {/* What happens next */}
       <Card className="p-4 mt-4 border-[#E5E9F2] bg-[#F8FAFF]">
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white border border-[#E5E9F2] grid place-items-center shrink-0 text-[#4F46E5]">
+          <div className="w-9 h-9 rounded-xl bg-white border border-[#E5E9F2] grid place-items-center shrink-0 text-[#6D28D9]">
             <Info className="w-4 h-4" />
           </div>
           <div className="min-w-0">

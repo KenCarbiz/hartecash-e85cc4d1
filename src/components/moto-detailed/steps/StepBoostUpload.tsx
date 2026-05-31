@@ -257,10 +257,10 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
       >
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-gradient-to-br from-[hsl(262_83%_70%/0.18)] via-[hsl(262_83%_60%/0.10)] to-transparent blur-2xl"
+          className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-gradient-to-br from-[hsl(263_70%_70%/0.18)] via-[hsl(263_70%_60%/0.10)] to-transparent blur-2xl"
         />
         <div className="relative">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(262_83%_58%/0.1)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)] ring-1 ring-[hsl(262_83%_58%/0.18)]">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(263_70%_50%/0.1)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[hsl(263_60%_45%)] ring-1 ring-[hsl(263_70%_50%/0.18)]">
             <Sparkles className="h-3 w-3" /> AI Photo Appraisal
           </div>
           <h2 className="mt-4 max-w-2xl text-[26px] font-semibold leading-[1.1] tracking-tight text-slate-900 sm:text-[32px]">
@@ -306,7 +306,7 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
         </div>
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
           <motion.div
-            className={`h-full ${hasReds ? "bg-amber-400" : "bg-[hsl(262_83%_58%)]"}`}
+            className={`h-full ${hasReds ? "bg-amber-400" : "bg-[hsl(263_70%_50%)]"}`}
             initial={{ width: 0 }}
             animate={{ width: `${(requiredOk / REQUIRED.length) * 100}%` }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -318,10 +318,10 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
       <motion.button
         whileHover={{ y: -1 }}
         onClick={() => setShowPhone(true)}
-        className="group relative w-full overflow-hidden rounded-2xl border border-[hsl(262_83%_58%/0.25)] bg-gradient-to-br from-[hsl(262_83%_58%/0.06)] via-white to-white p-5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:border-[hsl(262_83%_58%/0.5)] hover:shadow-[0_12px_32px_-20px_hsl(262_83%_58%/0.6)] sm:p-6"
+        className="group relative w-full overflow-hidden rounded-2xl border border-[hsl(263_70%_50%/0.25)] bg-gradient-to-br from-[hsl(263_70%_50%/0.06)] via-white to-white p-5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:border-[hsl(263_70%_50%/0.5)] hover:shadow-[0_12px_32px_-20px_hsl(263_70%_50%/0.6)] sm:p-6"
       >
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[hsl(262_83%_58%/0.12)] text-[hsl(262_60%_45%)] ring-1 ring-[hsl(262_83%_58%/0.2)]">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[hsl(263_70%_50%/0.12)] text-[hsl(263_60%_45%)] ring-1 ring-[hsl(263_70%_50%/0.2)]">
             <Smartphone className="h-6 w-6" />
           </div>
           <div className="min-w-0 flex-1">
@@ -332,7 +332,7 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
               Scan once and finish the upload from your phone camera.
             </p>
           </div>
-          <span className="hidden items-center gap-1.5 rounded-xl bg-[hsl(262_83%_58%)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all group-hover:bg-[hsl(262_83%_52%)] sm:inline-flex">
+          <span className="hidden items-center gap-1.5 rounded-xl bg-[hsl(263_70%_50%)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all group-hover:bg-[hsl(263_70%_52%)] sm:inline-flex">
             <Send className="h-4 w-4" /> Send Link to My Phone
           </span>
         </div>
@@ -409,7 +409,7 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
               key={s.title}
               className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[hsl(262_83%_58%/0.1)] text-[hsl(262_60%_45%)] ring-1 ring-[hsl(262_83%_58%/0.15)]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[hsl(263_70%_50%/0.1)] text-[hsl(263_60%_45%)] ring-1 ring-[hsl(263_70%_50%/0.15)]">
                 <s.icon className="h-4 w-4" />
               </div>
               <div className="min-w-0">
@@ -437,7 +437,7 @@ const StepBoostUpload = ({ state, update, goTo }: StepContext) => {
           className={`group relative w-full overflow-hidden rounded-2xl px-6 py-5 text-base font-semibold transition-all ${
             !enoughRequired || hasReds
               ? "cursor-not-allowed bg-slate-100 text-slate-400"
-              : "bg-gradient-to-b from-[hsl(262_83%_62%)] to-[hsl(262_83%_50%)] text-white shadow-[0_12px_32px_-12px_hsl(262_83%_58%/0.7)] hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_46%)]"
+              : "bg-gradient-to-b from-[hsl(263_70%_62%)] to-[hsl(263_70%_50%)] text-white shadow-[0_12px_32px_-12px_hsl(263_70%_50%/0.7)] hover:from-[hsl(263_70%_50%)] hover:to-[hsl(263_70%_46%)]"
           }`}
         >
           {enoughRequired && !hasReds && (
@@ -524,9 +524,9 @@ const PhotoTile = ({
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={onClick}
-          className="group flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-white p-3 text-center transition-all hover:border-[hsl(262_83%_58%)] hover:bg-[hsl(262_83%_58%/0.04)] hover:shadow-sm"
+          className="group flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-white p-3 text-center transition-all hover:border-[hsl(263_70%_50%)] hover:bg-[hsl(263_70%_50%/0.04)] hover:shadow-sm"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors group-hover:bg-[hsl(262_83%_58%/0.12)] group-hover:text-[hsl(262_60%_45%)]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors group-hover:bg-[hsl(263_70%_50%/0.12)] group-hover:text-[hsl(263_60%_45%)]">
             <Camera className="h-5 w-5" />
           </div>
           <span className="text-xs font-semibold leading-tight text-slate-800">{category.label}</span>
@@ -630,7 +630,7 @@ const PhoneHandoffModal = ({
           <X className="h-4 w-4" />
         </button>
 
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(262_83%_58%/0.1)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[hsl(262_60%_45%)]">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(263_70%_50%/0.1)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[hsl(263_60%_45%)]">
           <Smartphone className="h-3 w-3" /> Use my phone
         </div>
         <h2 className="mt-3 text-xl font-semibold tracking-tight text-slate-900">
@@ -660,12 +660,12 @@ const PhoneHandoffModal = ({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="(555) 555-5555"
-              className="h-11 flex-1 rounded-xl border border-[#E6EAF0] bg-white px-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[hsl(262_83%_58%)] focus:ring-4 focus:ring-[hsl(262_83%_58%/0.12)]"
+              className="h-11 flex-1 rounded-xl border border-[#E6EAF0] bg-white px-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[hsl(263_70%_50%)] focus:ring-4 focus:ring-[hsl(263_70%_50%/0.12)]"
             />
             <button
               onClick={sendLink}
               disabled={sent}
-              className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-[hsl(262_83%_58%)] px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[hsl(262_83%_52%)] disabled:bg-emerald-600"
+              className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-[hsl(263_70%_50%)] px-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[hsl(263_70%_52%)] disabled:bg-emerald-600"
             >
               {sent ? <><Check className="h-4 w-4" /> Sent</> : <><Send className="h-4 w-4" /> Send Link</>}
             </button>
@@ -708,18 +708,18 @@ const AnalysisStage = ({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
-      className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-[hsl(262_83%_58%/0.05)] via-white to-slate-50 p-6 sm:p-8 min-h-[460px] flex flex-col"
+      className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-[hsl(263_70%_50%/0.05)] via-white to-slate-50 p-6 sm:p-8 min-h-[460px] flex flex-col"
     >
       <motion.div
-        className="pointer-events-none absolute inset-x-0 h-32 bg-gradient-to-b from-transparent via-[hsl(262_83%_58%/0.12)] to-transparent"
+        className="pointer-events-none absolute inset-x-0 h-32 bg-gradient-to-b from-transparent via-[hsl(263_70%_50%/0.12)] to-transparent"
         initial={{ top: -64 }}
         animate={{ top: ["-15%", "115%"] }}
         transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
       />
 
       <div className="relative text-center">
-        <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-[0_8px_30px_-8px_hsl(262_83%_58%/0.5)]">
-          <Loader2 className="h-5 w-5 animate-spin text-[hsl(262_83%_58%)]" />
+        <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-[0_8px_30px_-8px_hsl(263_70%_50%/0.5)]">
+          <Loader2 className="h-5 w-5 animate-spin text-[hsl(263_70%_50%)]" />
         </div>
         <h2 className="mt-4 text-xl font-semibold text-slate-900 sm:text-2xl">
           Reviewing your photos
@@ -783,7 +783,7 @@ const AnalysisStage = ({
                     <Check className="h-3 w-3 text-white" strokeWidth={3} />
                   </span>
                 ) : active ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-[hsl(262_83%_58%)]" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[hsl(263_70%_50%)]" />
                 ) : (
                   <span className="h-2 w-2 rounded-full bg-slate-300" />
                 )}
@@ -804,7 +804,7 @@ const AnalysisStage = ({
         </div>
         <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
           <div
-            className="h-full bg-gradient-to-r from-[hsl(262_83%_58%)] to-emerald-500 transition-all duration-200"
+            className="h-full bg-gradient-to-r from-[hsl(263_70%_50%)] to-emerald-500 transition-all duration-200"
             style={{ width: `${progress * 100}%` }}
           />
         </div>

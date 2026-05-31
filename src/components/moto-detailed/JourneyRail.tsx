@@ -29,7 +29,7 @@ const JourneyRail = ({ steps, activeIndex }: Props) => {
           initial={false}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="h-full rounded-full bg-gradient-to-r from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)]"
+          className="h-full rounded-full bg-gradient-to-r from-[hsl(263_70%_60%)] to-[hsl(263_70%_52%)]"
         />
       </div>
     </div>
@@ -41,7 +41,7 @@ const JourneyRail = ({ steps, activeIndex }: Props) => {
           <li key={step.id} className="relative">
             <div
               className={`flex items-start gap-3 rounded-2xl px-3 py-3 transition-colors ${
-                isActive ? "bg-[hsl(262_83%_58%/0.05)]" : ""
+                isActive ? "bg-[hsl(263_70%_50%/0.05)]" : ""
               }`}
             >
               <div className="relative">
@@ -51,11 +51,11 @@ const JourneyRail = ({ steps, activeIndex }: Props) => {
                     backgroundColor: isComplete
                       ? "hsl(142 71% 45%)"
                       : isActive
-                      ? "hsl(262 83% 58%)"
+                      ? "hsl(263 70% 50%)"
                       : "hsl(210 20% 96%)",
                     color: isComplete || isActive ? "#fff" : "hsl(215 16% 55%)",
                     boxShadow: isActive
-                      ? "0 0 0 4px hsl(262 83% 58% / 0.12)"
+                      ? "0 0 0 4px hsl(263 70% 50% / 0.12)"
                       : "0 0 0 0px transparent",
                   }}
                   className="flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-semibold"

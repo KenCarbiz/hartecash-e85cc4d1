@@ -114,7 +114,7 @@ const TrustStrip = () => (
   <div className="flex items-center gap-3 text-[11px] text-[#53627A]">
     <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#16A34A]" /> SOC 2</span>
     <span className="inline-flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-[#16A34A]" /> Encrypted in transit</span>
-    <span className="inline-flex items-center gap-1.5"><RadioTower className="w-3.5 h-3.5 text-[#4F46E5]" /> Synced</span>
+    <span className="inline-flex items-center gap-1.5"><RadioTower className="w-3.5 h-3.5 text-[#6D28D9]" /> Synced</span>
   </div>
 );
 
@@ -162,7 +162,7 @@ const HandoffPanel = ({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[#E6EAF0] bg-gradient-to-br from-[#06194A] via-[#1E1B4B] to-[#4F46E5] text-white p-5">
+    <div className="relative overflow-hidden rounded-2xl border border-[#E6EAF0] bg-gradient-to-br from-[#06194A] via-[#1E1B4B] to-[#6D28D9] text-white p-5">
       <div className="absolute -top-12 -right-12 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
       <div className="relative flex items-start gap-4">
         <div className="flex-1 min-w-0">
@@ -274,7 +274,7 @@ const MobileUploadCard = ({
     <div className="rounded-2xl border border-[#E6EAF0] bg-white p-4">
       <div className="flex items-start gap-3">
         <div className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 ${
-          done ? "bg-[#DCFCE7] text-[#16A34A]" : "bg-[#EEF0FF] text-[#4F46E5]"
+          done ? "bg-[#DCFCE7] text-[#16A34A]" : "bg-[#EEF0FF] text-[#6D28D9]"
         }`}>
           {done ? <Check className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
         </div>
@@ -294,7 +294,7 @@ const MobileUploadCard = ({
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="mt-3 rounded-xl bg-[#EEF0FF] border border-[#C7D2FE] px-3 py-2.5"
           >
-            <div className="flex items-center gap-2 text-[12px] font-semibold text-[#4F46E5]">
+            <div className="flex items-center gap-2 text-[12px] font-semibold text-[#6D28D9]">
               <Sparkles className="w-3.5 h-3.5 animate-pulse" /> AI checking quality…
             </div>
             <div className="mt-2 grid grid-cols-4 gap-2 text-[10px] text-[#53627A]">
@@ -351,13 +351,13 @@ const DesktopDocRow = ({
       animate={pulse ? { scale: [1, 1.012, 1] } : {}}
       transition={{ duration: 0.6 }}
       className={`relative rounded-2xl border bg-white p-3.5 transition-colors ${
-        highlight ? "border-[#4F46E5] ring-2 ring-[#4F46E5]/15" : "border-[#E6EAF0]"
+        highlight ? "border-[#6D28D9] ring-2 ring-[#6D28D9]/15" : "border-[#E6EAF0]"
       }`}
     >
       {pulse && (
         <span className="absolute -top-1 -right-1 inline-flex h-2.5 w-2.5">
-          <span className="absolute inline-flex h-full w-full rounded-full bg-[#4F46E5] opacity-75 animate-ping" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#4F46E5]" />
+          <span className="absolute inline-flex h-full w-full rounded-full bg-[#6D28D9] opacity-75 animate-ping" />
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#6D28D9]" />
         </span>
       )}
       <div className="flex items-start gap-3">
@@ -383,7 +383,7 @@ const DesktopDocRow = ({
                 <Clock className="w-3 h-3" />
                 {doc.status === "Under Review" ? "AI reviewing" : "Uploaded"} {doc.date}
                 {doc.source && (
-                  <span className="inline-flex items-center gap-1 text-[#4F46E5] font-semibold">
+                  <span className="inline-flex items-center gap-1 text-[#6D28D9] font-semibold">
                     · <Smartphone className="w-3 h-3" /> {doc.source}
                   </span>
                 )}
@@ -485,7 +485,7 @@ export const DocumentUploadHub = ({ open, onClose, docs: initialDocs, focusDoc }
             <div className="px-5 lg:px-6 pt-5 pb-4 bg-white border-b border-[#E6EAF0]">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-[#4F46E5] font-bold">
+                  <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-[#6D28D9] font-bold">
                     <Sparkles className="w-3 h-3" /> Upload Hub
                   </div>
                   <h3 className="text-[18px] font-extrabold text-[#06194A] leading-tight mt-1">
@@ -516,7 +516,7 @@ export const DocumentUploadHub = ({ open, onClose, docs: initialDocs, focusDoc }
                 </div>
                 <div className="mt-2 h-2 rounded-full bg-[#F4F6FA] overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]"
+                    className="h-full bg-gradient-to-r from-[#6D28D9] to-[#6D28D9]"
                     animate={{ width: `${pct}%` }}
                     transition={{ duration: 0.6, ease: "easeOut" }}
                   />
@@ -541,7 +541,7 @@ export const DocumentUploadHub = ({ open, onClose, docs: initialDocs, focusDoc }
               {isMobile ? (
                 <>
                   <div className="rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-white border border-[#C7D2FE] p-4">
-                    <div className="flex items-center gap-2 text-[11px] font-bold text-[#4F46E5] uppercase tracking-wider">
+                    <div className="flex items-center gap-2 text-[11px] font-bold text-[#6D28D9] uppercase tracking-wider">
                       <Camera className="w-3.5 h-3.5" /> Camera-first
                     </div>
                     <div className="text-[14px] font-extrabold text-[#06194A] mt-1">
@@ -607,7 +607,7 @@ export const DocumentUploadHub = ({ open, onClose, docs: initialDocs, focusDoc }
 
                   {/* Direct upload (desktop fallback) */}
                   <div className="rounded-2xl border-2 border-dashed border-[#C7D2FE] bg-white p-5 text-center">
-                    <Upload className="w-7 h-7 mx-auto text-[#4F46E5]" />
+                    <Upload className="w-7 h-7 mx-auto text-[#6D28D9]" />
                     <div className="text-[13px] font-bold text-[#06194A] mt-2">Or drop files here from this computer</div>
                     <div className="text-[11px] text-[#53627A] mt-1">
                       AI auto-detects document type and routes to the right slot.

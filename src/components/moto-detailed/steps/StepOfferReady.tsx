@@ -74,7 +74,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[hsl(262_60%_45%)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[hsl(263_60%_45%)]">
               Firm Offer
             </p>
             <motion.p
@@ -116,7 +116,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.995 }}
           onClick={acceptOriginal}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[hsl(262_83%_60%)] to-[hsl(262_83%_52%)] px-6 py-4 text-base font-semibold text-white shadow-[0_8px_24px_-10px_hsl(262_83%_58%/0.6)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_48%)]"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[hsl(263_70%_60%)] to-[hsl(263_70%_52%)] px-6 py-4 text-base font-semibold text-white shadow-[0_8px_24px_-10px_hsl(263_70%_50%/0.6)] transition-all hover:from-[hsl(263_70%_50%)] hover:to-[hsl(263_70%_48%)]"
         >
           Accept Offer · {fmt(firm)} <ArrowRight className="h-4 w-4" />
         </motion.button>
@@ -144,7 +144,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
             { icon: ShieldCheck, title: "Current offer protected", body: "Your offer stays safe while we review.", tint: "emerald" },
           ] as const;
           const tintClasses: Record<string, string> = {
-            violet: "bg-[hsl(262_83%_62%/0.10)] text-[hsl(262_70%_48%)] ring-[hsl(262_83%_58%/0.20)]",
+            violet: "bg-[hsl(263_70%_62%/0.10)] text-[hsl(263_70%_48%)] ring-[hsl(263_70%_50%/0.20)]",
             indigo: "bg-[hsl(232_83%_62%/0.10)] text-[hsl(232_70%_50%)] ring-[hsl(232_83%_58%/0.20)]",
             emerald: "bg-emerald-50 text-emerald-600 ring-emerald-200/70",
           };
@@ -172,11 +172,11 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
                 {/* Soft ambient purple glow */}
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute -inset-6 -z-10 rounded-[40px] bg-[radial-gradient(closest-side,hsl(262_83%_62%/0.28),hsl(262_83%_62%/0.08)_55%,transparent_75%)] blur-2xl"
+                  className="pointer-events-none absolute -inset-6 -z-10 rounded-[40px] bg-[radial-gradient(closest-side,hsl(263_70%_62%/0.28),hsl(263_70%_62%/0.08)_55%,transparent_75%)] blur-2xl"
                 />
 
                 <div
-                  className="relative rounded-[28px] bg-white px-6 pb-8 pt-10 ring-1 ring-[hsl(262_30%_92%)] sm:px-9 sm:pb-8 sm:pt-10"
+                  className="relative rounded-[28px] bg-white px-6 pb-8 pt-10 ring-1 ring-[hsl(263_30%_92%)] sm:px-9 sm:pb-8 sm:pt-10"
                   style={{
                     boxShadow:
                       "0 1px 2px rgba(15,23,42,0.04), 0 20px 50px -20px rgba(124,58,237,0.35), 0 40px 90px -30px rgba(15,23,42,0.25)",
@@ -199,18 +199,18 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
                       transition={{ delay: 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                       className="relative"
                     >
-                      <div aria-hidden className="absolute inset-0 -m-4 rounded-full bg-[hsl(262_83%_62%/0.30)] blur-2xl" />
-                      <span aria-hidden className="absolute -left-6 top-1 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.55)]" />
-                      <span aria-hidden className="absolute -right-5 top-3 h-1.5 w-1.5 rounded-full bg-[hsl(262_83%_62%/0.45)]" />
-                      <span aria-hidden className="absolute -right-7 bottom-2 h-1 w-1 rounded-full bg-[hsl(262_83%_62%/0.45)]" />
-                      <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-[0_10px_30px_-10px_hsl(262_83%_58%/0.55)] ring-1 ring-[hsl(262_83%_62%/0.20)]">
+                      <div aria-hidden className="absolute inset-0 -m-4 rounded-full bg-[hsl(263_70%_62%/0.30)] blur-2xl" />
+                      <span aria-hidden className="absolute -left-6 top-1 h-1 w-1 rounded-full bg-[hsl(263_70%_62%/0.55)]" />
+                      <span aria-hidden className="absolute -right-5 top-3 h-1.5 w-1.5 rounded-full bg-[hsl(263_70%_62%/0.45)]" />
+                      <span aria-hidden className="absolute -right-7 bottom-2 h-1 w-1 rounded-full bg-[hsl(263_70%_62%/0.45)]" />
+                      <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-white text-[hsl(263_70%_55%)] shadow-[0_10px_30px_-10px_hsl(263_70%_50%/0.55)] ring-1 ring-[hsl(263_70%_62%/0.20)]">
                         <Sparkles className="h-7 w-7" strokeWidth={2.2} />
                       </div>
                     </motion.div>
                   </div>
 
                   {/* Eyebrow */}
-                  <p className="mt-6 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(262_70%_48%)]">
+                  <p className="mt-6 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(263_70%_48%)]">
                     AI Photo Appraisal
                   </p>
 
@@ -220,7 +220,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
                     className="mt-3 text-center text-[26px] font-bold leading-[1.15] tracking-tight text-slate-900 sm:text-[32px]"
                   >
                     Get your strongest offer with a{" "}
-                    <span className="text-[hsl(262_83%_55%)]">photo review.</span>
+                    <span className="text-[hsl(263_70%_55%)]">photo review.</span>
                   </h2>
 
                   {/* Body */}
@@ -233,16 +233,16 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.18, duration: 0.4 }}
-                    className="mx-auto mt-6 flex max-w-[540px] items-center gap-4 rounded-2xl border border-[hsl(262_83%_58%/0.18)] bg-gradient-to-br from-[hsl(262_83%_62%/0.08)] via-[hsl(262_83%_62%/0.04)] to-white px-5 py-4 text-left sm:px-6 sm:py-5"
+                    className="mx-auto mt-6 flex max-w-[540px] items-center gap-4 rounded-2xl border border-[hsl(263_70%_50%/0.18)] bg-gradient-to-br from-[hsl(263_70%_62%/0.08)] via-[hsl(263_70%_62%/0.04)] to-white px-5 py-4 text-left sm:px-6 sm:py-5"
                   >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[hsl(262_83%_55%)] shadow-sm ring-1 ring-[hsl(262_83%_62%/0.25)]">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[hsl(263_70%_55%)] shadow-sm ring-1 ring-[hsl(263_70%_62%/0.25)]">
                       <ArrowUpRight className="h-5 w-5" strokeWidth={2.4} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[12.5px] font-medium text-slate-600">
                         Photo-reviewed offers may increase by
                       </p>
-                      <p className="mt-0.5 bg-gradient-to-r from-[hsl(262_83%_55%)] to-[hsl(262_83%_42%)] bg-clip-text text-[26px] font-bold tracking-tight text-transparent sm:text-[30px]">
+                      <p className="mt-0.5 bg-gradient-to-r from-[hsl(263_70%_55%)] to-[hsl(263_70%_42%)] bg-clip-text text-[26px] font-bold tracking-tight text-transparent sm:text-[30px]">
                         {hasOffer ? `${fmt(minIncrease)} – ${fmt(maxIncrease)}` : "Up to 12% more"}
                       </p>
                       <p className="mt-0.5 text-[11.5px] text-slate-500">
@@ -284,7 +284,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
                       whileHover={{ y: -1 }}
                       whileTap={{ scale: 0.995 }}
                       onClick={onAddPhotos}
-                      className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[hsl(262_83%_62%)] to-[hsl(262_83%_48%)] px-6 py-4 text-[15px] font-semibold text-white shadow-[0_14px_32px_-12px_hsl(262_83%_58%/0.65)] transition-all hover:from-[hsl(262_83%_58%)] hover:to-[hsl(262_83%_44%)]"
+                      className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[hsl(263_70%_62%)] to-[hsl(263_70%_48%)] px-6 py-4 text-[15px] font-semibold text-white shadow-[0_14px_32px_-12px_hsl(263_70%_50%/0.65)] transition-all hover:from-[hsl(263_70%_50%)] hover:to-[hsl(263_70%_44%)]"
                       style={{ minHeight: 56 }}
                     >
                       <span aria-hidden className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 transition-opacity group-hover:opacity-100" />
@@ -298,7 +298,7 @@ const StepOfferReady = ({ state, update, goTo }: StepContext) => {
                     <div className="text-center">
                       <button
                         onClick={onSaveOfferFromModal}
-                        className="text-[13px] font-medium text-[hsl(262_60%_45%)] underline-offset-4 transition-colors hover:text-[hsl(262_83%_40%)] hover:underline"
+                        className="text-[13px] font-medium text-[hsl(263_60%_45%)] underline-offset-4 transition-colors hover:text-[hsl(263_70%_40%)] hover:underline"
                       >
                         Save Your Offer
                       </button>

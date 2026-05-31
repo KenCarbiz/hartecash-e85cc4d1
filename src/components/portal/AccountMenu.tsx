@@ -57,7 +57,7 @@ const Row = ({
     onClick={onClick}
     className="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#EEF0FF] transition-colors text-left"
   >
-    <span className="w-8 h-8 rounded-lg bg-[#F4F6FA] group-hover:bg-white text-[#4F46E5] grid place-items-center transition-colors">
+    <span className="w-8 h-8 rounded-lg bg-[#F4F6FA] group-hover:bg-white text-[#6D28D9] grid place-items-center transition-colors">
       <Icon className="w-[16px] h-[16px]" />
     </span>
     <span className="flex-1 text-[13.5px] font-medium text-[#06194A]">{label}</span>
@@ -76,7 +76,7 @@ const Header = ({ customer }: { customer: Customer }) => (
   <div className="px-5 pt-5 pb-4">
     <div className="flex items-center gap-3.5">
       <div className="relative">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#EEF0FF] to-[#DCE0FF] text-[#4F46E5] grid place-items-center text-[15px] font-bold ring-1 ring-[#E6EAF0]">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#EEF0FF] to-[#DCE0FF] text-[#6D28D9] grid place-items-center text-[15px] font-bold ring-1 ring-[#E6EAF0]">
           {customer.initials}
         </div>
         <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#10B981] ring-2 ring-white" />
@@ -119,7 +119,7 @@ const DrawerBody = ({ which, customer }: { which: Exclude<DrawerKey, null>; cust
               <div className="text-[11px] uppercase tracking-wide text-[#8893A8] font-semibold">{k}</div>
               <div className="text-[13.5px] text-[#06194A] font-medium mt-0.5">{v}</div>
             </div>
-            <button className="text-[12.5px] font-semibold text-[#4F46E5] hover:underline">Edit</button>
+            <button className="text-[12.5px] font-semibold text-[#6D28D9] hover:underline">Edit</button>
           </div>
         ))}
       </div>
@@ -140,7 +140,7 @@ const DrawerBody = ({ which, customer }: { which: Exclude<DrawerKey, null>; cust
               <div className="text-[13.5px] font-semibold text-[#06194A]">{label}</div>
               <div className="text-[12px] text-[#53627A] mt-0.5">{channel}</div>
             </div>
-            <span className={`w-10 h-6 rounded-full relative transition-colors ${on ? "bg-[#4F46E5]" : "bg-[#E6EAF0]"}`}>
+            <span className={`w-10 h-6 rounded-full relative transition-colors ${on ? "bg-[#6D28D9]" : "bg-[#E6EAF0]"}`}>
               <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${on ? "left-[18px]" : "left-0.5"}`} />
             </span>
           </div>
@@ -151,12 +151,12 @@ const DrawerBody = ({ which, customer }: { which: Exclude<DrawerKey, null>; cust
   if (which === "payments") {
     return (
       <div className="space-y-3">
-        <div className="p-4 rounded-2xl border border-[#E6EAF0] bg-gradient-to-br from-[#4F46E5] to-[#7C6BFF] text-white">
+        <div className="p-4 rounded-2xl border border-[#E6EAF0] bg-gradient-to-br from-[#6D28D9] to-[#7C6BFF] text-white">
           <div className="text-[11px] uppercase tracking-wider opacity-80">Primary payout</div>
           <div className="text-[16px] font-bold mt-2">ACH • Chase •••• 4127</div>
           <div className="text-[12px] opacity-80 mt-1">Verified May 11, 2025</div>
         </div>
-        <button className="w-full p-3.5 rounded-xl border border-dashed border-[#C7CEDB] text-[#4F46E5] font-semibold text-[13.5px] hover:bg-[#EEF0FF] transition-colors">
+        <button className="w-full p-3.5 rounded-xl border border-dashed border-[#C7CEDB] text-[#6D28D9] font-semibold text-[13.5px] hover:bg-[#EEF0FF] transition-colors">
           + Add payment method
         </button>
       </div>
@@ -175,7 +175,7 @@ const DrawerBody = ({ which, customer }: { which: Exclude<DrawerKey, null>; cust
               <div className="text-[13.5px] font-semibold text-[#06194A]">{t}</div>
               <div className="text-[12px] text-[#53627A] mt-0.5">{s}</div>
             </div>
-            <button className="text-[12.5px] font-semibold text-[#4F46E5] hover:underline">{cta}</button>
+            <button className="text-[12.5px] font-semibold text-[#6D28D9] hover:underline">{cta}</button>
           </div>
         ))}
       </div>
@@ -190,7 +190,7 @@ const DrawerBody = ({ which, customer }: { which: Exclude<DrawerKey, null>; cust
         ].map(([n, sub]) => (
           <div key={n} className="flex items-center justify-between p-3.5 rounded-xl border border-[#E6EAF0]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#EEF0FF] text-[#4F46E5] grid place-items-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-[#EEF0FF] text-[#6D28D9] grid place-items-center font-bold">
                 {n.split(" ").map(w => w[0]).slice(0, 2).join("")}
               </div>
               <div>
@@ -198,7 +198,7 @@ const DrawerBody = ({ which, customer }: { which: Exclude<DrawerKey, null>; cust
                 <div className="text-[12px] text-[#53627A] mt-0.5">{sub}</div>
               </div>
             </div>
-            <button className="text-[12.5px] font-semibold text-[#4F46E5] hover:underline">Manage</button>
+            <button className="text-[12.5px] font-semibold text-[#6D28D9] hover:underline">Manage</button>
           </div>
         ))}
       </div>
@@ -210,7 +210,7 @@ const DrawerBody = ({ which, customer }: { which: Exclude<DrawerKey, null>; cust
         <div className="p-4 rounded-2xl bg-[#EEF0FF] border border-[#DCE0FF]">
           <div className="text-[13.5px] font-bold text-[#06194A]">Need a hand?</div>
           <div className="text-[12.5px] text-[#53627A] mt-1">Our team typically replies in under 5 minutes during business hours.</div>
-          <button className="mt-3 px-4 py-2 rounded-lg bg-[#4F46E5] text-white text-[13px] font-semibold hover:bg-[#4338CA] transition-colors">Start a chat</button>
+          <button className="mt-3 px-4 py-2 rounded-lg bg-[#6D28D9] text-white text-[13px] font-semibold hover:bg-[#4338CA] transition-colors">Start a chat</button>
         </div>
         {[["Help articles", "Browse common questions"], ["Email support", "help@motoacquire.com"], ["Call us", "(800) 555-0142 • Mon–Sat"]].map(([t, s]) => (
           <div key={t} className="p-3.5 rounded-xl border border-[#E6EAF0]">
@@ -241,8 +241,8 @@ const DrawerBody = ({ which, customer }: { which: Exclude<DrawerKey, null>; cust
   if (which === "upload") {
     return (
       <div className="space-y-3">
-        <button className="w-full p-6 rounded-2xl border-2 border-dashed border-[#C7CEDB] hover:border-[#4F46E5] hover:bg-[#EEF0FF] transition-colors text-center">
-          <Upload className="w-6 h-6 mx-auto text-[#4F46E5]" />
+        <button className="w-full p-6 rounded-2xl border-2 border-dashed border-[#C7CEDB] hover:border-[#6D28D9] hover:bg-[#EEF0FF] transition-colors text-center">
+          <Upload className="w-6 h-6 mx-auto text-[#6D28D9]" />
           <div className="mt-2 text-[13.5px] font-semibold text-[#06194A]">Drag files or browse</div>
           <div className="text-[12px] text-[#53627A] mt-0.5">PDF, JPG, PNG up to 10 MB</div>
         </button>
@@ -265,7 +265,7 @@ const DrawerBody = ({ which, customer }: { which: Exclude<DrawerKey, null>; cust
     return (
       <div className="flex flex-col gap-2.5">
         {msgs.map((m, i) => (
-          <div key={i} className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-[13px] leading-snug ${m.me ? "self-end bg-[#4F46E5] text-white rounded-br-md" : "self-start bg-[#F4F6FA] text-[#06194A] rounded-bl-md"}`}>
+          <div key={i} className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-[13px] leading-snug ${m.me ? "self-end bg-[#6D28D9] text-white rounded-br-md" : "self-start bg-[#F4F6FA] text-[#06194A] rounded-bl-md"}`}>
             {m.t}
             <div className={`text-[10px] mt-1 ${m.me ? "text-white/70" : "text-[#8893A8]"}`}>{m.time}</div>
           </div>
@@ -348,7 +348,7 @@ export const AccountMenu = ({ customer, variant = "desktop", onNavigate }: Props
             className="flex items-center gap-2.5 pl-3 pr-2 py-1.5 rounded-full border border-transparent hover:border-[#E6EAF0] hover:bg-white transition-all"
           >
             <div className="relative">
-              <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#4F46E5] grid place-items-center text-xs font-semibold ring-1 ring-transparent hover:ring-[#DCE0FF] transition-all">
+              <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#6D28D9] grid place-items-center text-xs font-semibold ring-1 ring-transparent hover:ring-[#DCE0FF] transition-all">
                 {customer.initials}
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#10B981] ring-2 ring-[#F7F8FB]" />
@@ -363,7 +363,7 @@ export const AccountMenu = ({ customer, variant = "desktop", onNavigate }: Props
           <button
             onClick={() => setOpen(true)}
             aria-label="Open account menu"
-            className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#4F46E5] grid place-items-center text-xs font-semibold"
+            className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#6D28D9] grid place-items-center text-xs font-semibold"
           >
             {customer.initials}
           </button>
@@ -460,7 +460,7 @@ export const AccountMenu = ({ customer, variant = "desktop", onNavigate }: Props
                 </button>
                 <button
                   onClick={() => setConfirmLogout(false)}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-[#4F46E5] text-white font-semibold text-[13.5px] hover:bg-[#4338CA] transition-colors inline-flex items-center justify-center gap-1.5"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-[#6D28D9] text-white font-semibold text-[13.5px] hover:bg-[#4338CA] transition-colors inline-flex items-center justify-center gap-1.5"
                 >
                   <Check className="w-4 h-4" /> Log out
                 </button>
