@@ -9,12 +9,9 @@ import {
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { AccountMenu } from "./AccountMenu";
 
-// AUTO (curb) wordmark — served from /public. encodeURI handles the
-// spaces in the filename. Used as the portal brand when a tenant has
-// not uploaded their own logo.
-const PORTAL_LOGO_FALLBACK = encodeURI(
-  "/brand/autocurb/ChatGPT Image May 30, 2026, 06_40_52 PM.png",
-);
+// autoCURB wordmark (vector) — served from /public. Used as the portal
+// brand for the AutoCurb tenant when no logo is uploaded in site_config.
+const PORTAL_LOGO_FALLBACK = "/brand/autocurb/autocurb-logo.svg";
 
 /* ─────────────────────────────────────────────────────────────────
    PortalSidebar — premium customer-portal navigation.
