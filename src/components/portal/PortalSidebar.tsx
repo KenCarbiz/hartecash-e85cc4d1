@@ -106,15 +106,19 @@ const PortalBrand = ({
     : isAutoCurb
       ? PORTAL_LOGO_FALLBACK
       : "";
+  // The fallback asset is a wide wordmark — it letterboxes badly in the
+  // narrow collapsed rail, so we show a monogram there instead. A tenant's
+  // own uploaded logo (often square) still renders in the chip.
+  const usingWideWordmark = logoSrc === PORTAL_LOGO_FALLBACK;
 
   // Collapsed rail → square chip with the logo, or the first initial.
   if (collapsed) {
     return (
       <div className={`${chipClass} bg-white border border-[#E6EAF0] shadow-[0_2px_6px_-2px_rgba(15,23,42,0.08)] grid place-items-center overflow-hidden p-1.5 shrink-0`}>
-        {logoSrc ? (
+        {logoSrc && !usingWideWordmark ? (
           <img src={logoSrc} alt={name} className="w-full h-full object-contain" />
         ) : (
-          <span className="text-[16px] font-extrabold text-[#06194A]">
+          <span className="text-[18px] font-extrabold leading-none text-[#06194A]">
             {name.charAt(0).toUpperCase()}
           </span>
         )}
