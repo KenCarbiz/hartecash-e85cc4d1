@@ -8,10 +8,7 @@ import {
 } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { AccountMenu } from "./AccountMenu";
-
-// autoCURB wordmark (vector) — served from /public. Used as the portal
-// brand for the AutoCurb tenant when no logo is uploaded in site_config.
-const PORTAL_LOGO_FALLBACK = "/brand/autocurb/autocurb-logo.svg";
+import { AUTOCURB_LOGO as PORTAL_LOGO_FALLBACK } from "@/lib/tenantLogo";
 
 /* ─────────────────────────────────────────────────────────────────
    PortalSidebar — premium customer-portal navigation.

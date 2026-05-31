@@ -1,5 +1,6 @@
 import { Menu } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { tenantLogoSrc } from "@/lib/tenantLogo";
 
 /**
  * Minimal top bar for the standalone /sell microsite:
@@ -9,15 +10,16 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
  */
 const MotoTopBar = () => {
   const { config } = useSiteConfig();
+  const logoSrc = tenantLogoSrc(config);
   return (
     <header className="border-b border-zinc-200 bg-white">
       <div className="mx-auto flex max-w-screen-sm items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
-          {config.logo_url ? (
+          {logoSrc ? (
             <img
-              src={config.logo_url}
+              src={logoSrc}
               alt={config.dealership_name || "Dealer"}
-              className="h-8 w-auto object-contain"
+              className="h-8 w-auto max-w-[180px] object-contain"
             />
           ) : (
             <span className="text-base font-bold tracking-tight text-zinc-900">
