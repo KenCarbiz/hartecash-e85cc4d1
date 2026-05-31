@@ -12,6 +12,7 @@ import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "../ymmData";
 import { cn } from "@/lib/utils";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
 import { useHeroTuner, useVehicleTuner } from "../HeroTuner";
+import { useVehicleImage } from "@/hooks/useVehicleImage";
 
 
 const US_STATES = [
@@ -54,6 +55,11 @@ const MotoStepVehicleSearch = ({
   const [plate, setPlate] = useState(state.plate);
   const [plateState, setPlateState] = useState(state.plateState || "");
   const [loading, setLoading] = useState(false);
+
+  // Dynamic hero: once the customer has picked Year + Make + Model, swap
+  // the static featured car for a no-background studio render of THEIR
+  // vehicle. Returns null until all three are set (→ static hero shows).
+  const liveVehicleImg = useVehicleImage(year, make, model);
 
   // Load model options whenever Year + Make change.
   useEffect(() => {
@@ -336,7 +342,11 @@ const MotoStepVehicleSearch = ({
               </div>
             </div>
 
-            <HeroVehicleImage src={tenantHeroVehicle} />
+            <HeroVehicleImage
+              src={liveVehicleImg || tenantHeroVehicle}
+              isDynamic={!!liveVehicleImg}
+              label={liveVehicleImg ? [year, make, model].filter(Boolean).join(" ") : "Featured vehicle"}
+            />
           </div>
         </div>
       </div>
@@ -345,11 +355,15 @@ const MotoStepVehicleSearch = ({
 };
 
 // Landing hero vehicle. Sizing + positioning are driven by the shared
-// Hero Tuner "Vehicle image" config (heroVehicle), so the dealer tunes
-// the same car here and on the post-search steps from one panel. The
-// camera-angle control only affects the generated images on later steps
-// — this hero is a fixed studio asset, so angle is a no-op here.
-const HeroVehicleImage = ({ src }: { src: string }) => {
+// Hero Tuner "Vehicle image" config (heroVehicle). When the customer has
+// chosen a vehicle, `isDynamic` is true and we render their studio render
+// (no background) with a soft shadow under the car; otherwise the static
+// featured asset shows.
+const HeroVehicleImage = ({
+  src,
+  isDynamic = false,
+  label = "Featured vehicle",
+}: { src: string; isDynamic?: boolean; label?: string }) => {
   const tuner = useVehicleTuner();
   const transform = [
     tuner.offsetX ? `translateX(${tuner.offsetX}px)` : "",
@@ -368,8 +382,10 @@ const HeroVehicleImage = ({ src }: { src: string }) => {
     >
       <img
         src={src}
-        alt="Featured vehicle"
-        className="h-auto w-full max-w-none object-contain"
+        alt={label}
+        className={`h-auto w-full max-w-none object-contain transition-opacity duration-500 ${
+          isDynamic ? "drop-shadow-[0_28px_22px_rgba(15,23,42,0.22)]" : ""
+        }`}
         loading="eager"
       />
     </div>
