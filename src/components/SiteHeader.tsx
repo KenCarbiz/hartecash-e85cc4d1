@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { UserRound, CalendarCheck, FileText, ArrowLeftRight, Phone, Info, HelpCircle, TrendingUp, MessageSquare, Workflow, LogIn } from "lucide-react";
 import logoFallback from "@/assets/logo-placeholder.png";
+import { tenantLogoSrc } from "@/lib/tenantLogo";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useLocationLogos } from "@/hooks/useLocationLogos";
 
@@ -30,7 +31,8 @@ const SiteHeader = () => {
   const show = () => { clearTimeout(timeout.current); setOpen(true); };
   const hide = () => { timeout.current = setTimeout(() => setOpen(false), 200); };
 
-  const rawLogoSrc = config.logo_url || logoFallback;
+  // config logo wins; else the AutoCurb wordmark for that tenant; else placeholder.
+  const rawLogoSrc = config.logo_url || tenantLogoSrc(config) || logoFallback;
   // Serve a smaller, compressed version via Supabase image transforms to reduce LCP payload
   const logoSrc = rawLogoSrc.includes("supabase.co/storage/")
     ? `${rawLogoSrc}?width=200&resize=contain&quality=75&format=origin`
