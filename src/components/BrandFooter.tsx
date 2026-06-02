@@ -46,6 +46,7 @@
 // site_config.brand_mission overrides the default mission line.
 import { Link } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { tenantLogoSrc } from "@/lib/tenantLogo";
 
 const scrollToForm = () => {
   const form = document.getElementById("sell-car-form");
@@ -60,6 +61,7 @@ const DEFAULT_MISSION = "The modern way to sell your car.";
 
 const BrandFooter = () => {
   const { config } = useSiteConfig();
+  const footerLogo = tenantLogoSrc(config);
   const dealerName = (config.dealership_name || "").trim();
   const showDealerName = dealerName && dealerName !== "Our Dealership";
   const year = new Date().getFullYear();
@@ -123,9 +125,9 @@ const BrandFooter = () => {
           (the slab is continuous). Reduced top padding pulls this
           tight under the CTA. */}
       <div className="max-w-4xl mx-auto px-5 pb-10 text-center">
-        {config.logo_url ? (
+        {footerLogo ? (
           <img
-            src={config.logo_url}
+            src={footerLogo}
             alt={showDealerName ? dealerName : "Logo"}
             className="h-11 lg:h-[3.125rem] w-auto mx-auto mb-3 opacity-90"
             width={125}

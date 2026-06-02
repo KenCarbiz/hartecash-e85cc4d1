@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { tenantLogoSrc } from "@/lib/tenantLogo";
 import { Facebook, Instagram, Youtube, MapPin, ExternalLink, Phone, Mail } from "lucide-react";
 
 interface DealerLocation {
@@ -15,6 +16,7 @@ interface DealerLocation {
 
 const SiteFooter = () => {
   const { config } = useSiteConfig();
+  const footerLogo = tenantLogoSrc(config);
   const dealerName = config.dealership_name || "Our Dealership";
   const [locations, setLocations] = useState<DealerLocation[]>([]);
 
@@ -60,11 +62,11 @@ const SiteFooter = () => {
         <div className="max-w-6xl mx-auto">
           {/* Logo + tagline row */}
           <div className="text-center mb-12 lg:mb-16">
-            {config.logo_url && (
+            {footerLogo && (
               <img
-                src={config.logo_url.includes("supabase.co/storage/")
-                  ? `${config.logo_url}?width=200&resize=contain&quality=75&format=origin`
-                  : config.logo_url}
+                src={footerLogo.includes("supabase.co/storage/")
+                  ? `${footerLogo}?width=200&resize=contain&quality=75&format=origin`
+                  : footerLogo}
                 alt={dealerName}
                 className="h-16 md:h-20 w-auto mx-auto mb-4 opacity-90"
                 width={120}
