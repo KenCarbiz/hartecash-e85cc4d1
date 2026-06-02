@@ -144,9 +144,7 @@ const NavButton = ({
       <span className="relative shrink-0">
         <Icon className="w-[18px] h-[18px]" strokeWidth={active ? 2.25 : 1.8} />
         {badge && collapsed && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-1 rounded-full bg-[#EF4444] text-white text-[9px] font-bold grid place-items-center ring-2 ring-white">
-            {badge}
-          </span>
+          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#EF4444] ring-2 ring-white" />
         )}
       </span>
       {!collapsed && (
@@ -269,7 +267,7 @@ export const PortalSidebar = ({ active, onChange, customer }: SidebarProps) => {
       initial={false}
       animate={{ width: collapsed ? 88 : 260 }}
       transition={{ type: "spring", stiffness: 260, damping: 30 }}
-      className="hidden lg:flex sticky top-0 self-start h-screen flex-col shrink-0 bg-white border-r border-[#E6EAF0] py-5 overflow-hidden"
+      className="hidden lg:flex sticky top-0 self-start h-screen flex-col shrink-0 bg-white border-r border-[#E6EAF0] py-5 overflow-visible"
     >
       {/* tenant logo (falls back to the tenant name) — centered in the rail.
           Click snaps the page back to the top. */}
@@ -294,7 +292,7 @@ export const PortalSidebar = ({ active, onChange, customer }: SidebarProps) => {
       <button
         onClick={() => setCollapsed((c) => !c)}
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className="absolute top-7 -right-3 w-6 h-6 rounded-full bg-white border border-[#E6EAF0] text-[#53627A] hover:text-[#6D28D9] hover:border-[#6D28D9]/40 shadow-[0_2px_6px_-2px_rgba(15,23,42,0.12)] grid place-items-center transition-colors z-10"
+        className="absolute top-7 -right-3 w-6 h-6 rounded-full bg-white border border-[#E6EAF0] text-[#53627A] hover:text-[#6D28D9] hover:border-[#6D28D9]/40 shadow-[0_2px_6px_-2px_rgba(15,23,42,0.12)] grid place-items-center transition-colors z-20"
       >
         {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
       </button>
