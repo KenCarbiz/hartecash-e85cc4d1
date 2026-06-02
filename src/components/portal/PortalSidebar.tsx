@@ -249,6 +249,12 @@ const MobileSupportFooter = () => (
 );
 
 /* ── desktop sidebar ───────────────────────────────────────────── */
+
+// Clicking the brand logo snaps the page back to the top (the portal
+// scrolls the window, not an inner container).
+const scrollMainToTop = () =>
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
 type SidebarProps = {
   active: NavKey;
   onChange: (key: NavKey) => void;
@@ -265,15 +271,23 @@ export const PortalSidebar = ({ active, onChange, customer }: SidebarProps) => {
       transition={{ type: "spring", stiffness: 260, damping: 30 }}
       className="hidden lg:flex sticky top-0 self-start h-screen flex-col shrink-0 bg-white border-r border-[#E6EAF0] py-5 overflow-hidden"
     >
-      {/* tenant logo (falls back to the tenant name) — centered in the rail */}
+      {/* tenant logo (falls back to the tenant name) — centered in the rail.
+          Click snaps the page back to the top. */}
       <div className={`flex items-center justify-center mb-6 ${collapsed ? "px-2" : "px-4"}`}>
-        <PortalBrand
-          collapsed={collapsed}
-          fallbackName={customer.dealer}
-          chipClass="w-14 h-14 rounded-2xl"
-          logoClass="h-14 max-w-[210px]"
-          nameClass="text-[26px] text-center"
-        />
+        <button
+          type="button"
+          onClick={scrollMainToTop}
+          aria-label="Back to top"
+          className="rounded-xl transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]/40"
+        >
+          <PortalBrand
+            collapsed={collapsed}
+            fallbackName={customer.dealer}
+            chipClass="w-14 h-14 rounded-2xl"
+            logoClass="h-14 max-w-[210px]"
+            nameClass="text-[26px] text-center"
+          />
+        </button>
       </div>
 
       {/* collapse toggle */}
@@ -334,7 +348,9 @@ export const PortalMobileTopBar = ({
           <Menu className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2 min-w-0">
-          <PortalBrand fallbackName={customer.dealer} logoClass="h-7 max-w-[150px]" nameClass="text-[13px]" />
+          <button type="button" onClick={scrollMainToTop} aria-label="Back to top" className="rounded-lg transition-opacity hover:opacity-80">
+            <PortalBrand fallbackName={customer.dealer} logoClass="h-7 max-w-[150px]" nameClass="text-[13px]" />
+          </button>
         </div>
         <div className="flex items-center gap-1">
           <button aria-label="Notifications" className="relative w-9 h-9 rounded-lg hover:bg-[#F4F6FA] grid place-items-center text-[#53627A] transition-colors">
@@ -369,7 +385,9 @@ export const PortalMobileTopBar = ({
             >
               <div className="flex items-center justify-between px-5 h-16 border-b border-[#E6EAF0]">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <PortalBrand fallbackName={customer.dealer} logoClass="h-8 max-w-[170px]" nameClass="text-[14px]" />
+                  <button type="button" onClick={() => { scrollMainToTop(); setOpen(false); }} aria-label="Back to top" className="rounded-lg transition-opacity hover:opacity-80">
+                    <PortalBrand fallbackName={customer.dealer} logoClass="h-8 max-w-[170px]" nameClass="text-[14px]" />
+                  </button>
                 </div>
                 <button
                   aria-label="Close menu"
