@@ -10,12 +10,15 @@ interface BrandConfig {
   dealership_name?: string;
 }
 
-/** True when the tenant is AutoCurb (by dealership name). */
+/** True when the tenant is AutoCurb — matched against BOTH the site
+ *  config name and a fallback name (e.g. the portal's customer.dealer),
+ *  since the portal resolves the tenant from the submission and leaves
+ *  config.dealership_name as the "Our Dealership" placeholder. */
 export function isAutoCurbTenant(config: BrandConfig, fallbackName = ""): boolean {
-  const norm = (config.dealership_name || fallbackName || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-  return norm.includes("autocurb");
+  return [config.dealership_name, fallbackName].some((candidate) => {
+    const norm = (candidate || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    return norm !== "" && norm !== "ourdealership" && norm.includes("autocurb");
+  });
 }
 
 /**
