@@ -8,7 +8,9 @@
    A customer can:
      • Upload a photo (center-cropped + downscaled to a small square so
        it stays well under the localStorage quota).
-     • Pick one of the preset illustrated avatars.
+     • Pick a monogram — their initials on a curated, brand-aligned
+       gradient.
+     • Pick a clean icon avatar (person / car / key) on a brand tint.
      • Remove it and fall back to their initials.
 
    Precedence when rendering: stored avatar → caller-supplied
@@ -16,30 +18,51 @@
 
 import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
-import { Upload, Trash2, Check } from "lucide-react";
+import {
+  Upload, Trash2, Check, User, Car, CarFront, KeyRound,
+  type LucideIcon,
+} from "lucide-react";
 
 /* ───────────────────────── Presets ───────────────────────── */
 
-export type AvatarPreset = { id: string; from: string; to: string; emoji: string };
+/** Curated gradients pulled from the portal's own palette (violet
+ *  primary, navy, plus professional accents) for monogram avatars. */
+export type ColorTheme = { id: string; from: string; to: string };
 
-export const AVATAR_PRESETS: AvatarPreset[] = [
-  { id: "violet", from: "#6D28D9", to: "#A855F7", emoji: "🦊" },
-  { id: "ocean",  from: "#0EA5E9", to: "#6366F1", emoji: "🐬" },
-  { id: "sunset", from: "#F97316", to: "#EC4899", emoji: "🦁" },
-  { id: "forest", from: "#10B981", to: "#14B8A6", emoji: "🐢" },
-  { id: "berry",  from: "#EC4899", to: "#8B5CF6", emoji: "🦄" },
-  { id: "slate",  from: "#475569", to: "#0F172A", emoji: "🐺" },
-  { id: "gold",   from: "#F59E0B", to: "#EF4444", emoji: "🐯" },
-  { id: "mint",   from: "#34D399", to: "#3B82F6", emoji: "🐸" },
+export const COLOR_THEMES: ColorTheme[] = [
+  { id: "violet",  from: "#6D28D9", to: "#4338CA" },
+  { id: "indigo",  from: "#4F46E5", to: "#6366F1" },
+  { id: "navy",    from: "#06194A", to: "#23408E" },
+  { id: "sky",     from: "#0EA5E9", to: "#2563EB" },
+  { id: "teal",    from: "#0D9488", to: "#14B8A6" },
+  { id: "emerald", from: "#16A34A", to: "#0F7A3E" },
+  { id: "amber",   from: "#F59E0B", to: "#EA580C" },
+  { id: "rose",    from: "#F43F5E", to: "#BE123C" },
+  { id: "slate",   from: "#475569", to: "#1E293B" },
 ];
 
-const presetById = (id: string) => AVATAR_PRESETS.find((p) => p.id === id);
+const themeById = (id: string) => COLOR_THEMES.find((t) => t.id === id);
+
+/** Clean line icons relevant to selling a vehicle, shown on the portal's
+ *  signature brand tint (#EEF0FF with #6D28D9). */
+export type AvatarIcon = { id: string; Icon: LucideIcon; label: string };
+
+export const AVATAR_ICONS: AvatarIcon[] = [
+  { id: "user",     Icon: User,     label: "Person" },
+  { id: "car",      Icon: Car,      label: "Car" },
+  { id: "carfront", Icon: CarFront, label: "Car (front)" },
+  { id: "key",      Icon: KeyRound, label: "Key" },
+];
+
+const iconById = (id: string) => AVATAR_ICONS.find((i) => i.id === id);
 
 /** A stored avatar value is one of:
- *    "preset:<id>"  — one of AVATAR_PRESETS
- *    "data:image…"  — an uploaded (downscaled) photo
- *    "http(s)://…"  — an external image URL */
-const isPreset = (v?: string | null): boolean => !!v && v.startsWith("preset:");
+ *    "mono:<themeId>"  — initials on a COLOR_THEMES gradient
+ *    "icon:<iconId>"   — an AVATAR_ICONS glyph on brand tint
+ *    "data:image…"     — an uploaded (downscaled) photo
+ *    "http(s)://…"     — an external image URL */
+const isMono = (v?: string | null): boolean => !!v && v.startsWith("mono:");
+const isIcon = (v?: string | null): boolean => !!v && v.startsWith("icon:");
 const isImage = (v?: string | null): boolean =>
   !!v && (v.startsWith("data:") || v.startsWith("http"));
 
@@ -123,7 +146,6 @@ export const CustomerAvatar = ({
   initials,
   fallbackImageUrl,
   className = "",
-  emojiClassName = "text-2xl",
   alt = "Avatar",
 }: {
   value?: string | null;
@@ -131,7 +153,6 @@ export const CustomerAvatar = ({
   /** Used when no avatar has been chosen — e.g. an employee profile photo. */
   fallbackImageUrl?: string | null;
   className?: string;
-  emojiClassName?: string;
   alt?: string;
 }) => {
   if (isImage(value)) {
@@ -141,15 +162,25 @@ export const CustomerAvatar = ({
       </div>
     );
   }
-  if (isPreset(value)) {
-    const p = presetById(value!.slice("preset:".length));
-    if (p) {
+  if (isMono(value)) {
+    const t = themeById(value!.slice("mono:".length));
+    if (t) {
       return (
         <div
-          className={`relative overflow-hidden grid place-items-center ${className}`}
-          style={{ backgroundImage: `linear-gradient(135deg, ${p.from}, ${p.to})` }}
+          className={`relative overflow-hidden ${className}`}
+          style={{ backgroundImage: `linear-gradient(135deg, ${t.from}, ${t.to})` }}
         >
-          <span className={`${emojiClassName} leading-none`}>{p.emoji}</span>
+          <span className="text-white">{initials}</span>
+        </div>
+      );
+    }
+  }
+  if (isIcon(value)) {
+    const i = iconById(value!.slice("icon:".length));
+    if (i) {
+      return (
+        <div className={className}>
+          <i.Icon className="w-1/2 h-1/2" strokeWidth={2.25} />
         </div>
       );
     }
@@ -242,25 +273,53 @@ export const AvatarPicker = ({
         )}
       </div>
 
-      <div className="mt-3 text-[11px] uppercase tracking-wide font-semibold text-[#8893A8]">
-        Or pick an avatar
+      <div className="mt-3.5 text-[11px] uppercase tracking-wide font-semibold text-[#8893A8]">
+        Monogram
       </div>
-      <div className="mt-2 grid grid-cols-8 gap-2">
-        {AVATAR_PRESETS.map((p) => {
-          const selected = value === `preset:${p.id}`;
+      <div className="mt-2 grid grid-cols-9 gap-2">
+        {COLOR_THEMES.map((t) => {
+          const selected = value === `mono:${t.id}`;
           return (
             <button
-              key={p.id}
+              key={t.id}
               type="button"
-              onClick={() => onChange(`preset:${p.id}`)}
-              aria-label={`Avatar ${p.id}`}
+              onClick={() => onChange(`mono:${t.id}`)}
+              aria-label={`Monogram ${t.id}`}
               aria-pressed={selected}
-              className={`relative aspect-square rounded-full grid place-items-center text-lg transition ${
+              className={`relative aspect-square rounded-full grid place-items-center text-[12px] font-bold text-white transition ${
                 selected ? "ring-2 ring-[#6D28D9] ring-offset-2 ring-offset-[#F7F8FB]" : "hover:scale-105"
               }`}
-              style={{ backgroundImage: `linear-gradient(135deg, ${p.from}, ${p.to})` }}
+              style={{ backgroundImage: `linear-gradient(135deg, ${t.from}, ${t.to})` }}
             >
-              <span className="leading-none">{p.emoji}</span>
+              {initials || "A"}
+              {selected && (
+                <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#6D28D9] grid place-items-center ring-2 ring-white">
+                  <Check className="w-2.5 h-2.5 text-white" />
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-3.5 text-[11px] uppercase tracking-wide font-semibold text-[#8893A8]">
+        Icon
+      </div>
+      <div className="mt-2 flex gap-2">
+        {AVATAR_ICONS.map(({ id, Icon, label }) => {
+          const selected = value === `icon:${id}`;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onChange(`icon:${id}`)}
+              aria-label={label}
+              aria-pressed={selected}
+              className={`relative w-9 h-9 rounded-full grid place-items-center bg-[#EEF0FF] text-[#6D28D9] transition ${
+                selected ? "ring-2 ring-[#6D28D9] ring-offset-2 ring-offset-[#F7F8FB]" : "hover:bg-[#E0E7FF]"
+              }`}
+            >
+              <Icon className="w-4 h-4" strokeWidth={2.25} />
               {selected && (
                 <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#6D28D9] grid place-items-center ring-2 ring-white">
                   <Check className="w-2.5 h-2.5 text-white" />

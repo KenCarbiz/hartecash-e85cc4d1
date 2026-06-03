@@ -211,7 +211,6 @@ export const ProfileDrawer = ({ open, onClose }: { open: boolean; onClose: () =>
         <CustomerAvatar
           value={avatar}
           initials={MOCK.customer.initials}
-          emojiClassName="text-3xl"
           className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center text-lg font-bold ring-1 ring-[#C7D2FE]/60"
         />
         <div>
