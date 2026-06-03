@@ -63,10 +63,14 @@ export const VehicleHeroImage = ({
       )}
 
       {showSkeleton && (
-        <div className="absolute inset-0 z-[6] grid place-items-center pointer-events-none">
+        <div
+          className="absolute inset-0 z-[6] grid place-items-center pointer-events-none"
+          aria-busy="true"
+          aria-hidden="true"
+        >
           <div className="relative w-[82%] h-[72%] max-w-[420px] rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF]/70 overflow-hidden">
-            {/* Sweeping highlight */}
-            <div className="absolute inset-y-0 -left-1/2 w-1/2 animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+            {/* Gentle sweeping highlight — subtle, never flashy */}
+            <div className="absolute inset-y-0 -left-1/2 w-1/2 animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
             {/* Faint vehicle hint, centered */}
             <div className="absolute inset-0 grid place-items-center">
               <Car className={`${iconClassName} text-white/70`} strokeWidth={1.5} />
@@ -76,7 +80,10 @@ export const VehicleHeroImage = ({
       )}
 
       {showFallback && (
-        <div className="absolute inset-0 z-[6] grid place-items-center pointer-events-none">
+        <div
+          className="absolute inset-0 z-[6] grid place-items-center pointer-events-none"
+          aria-hidden="true"
+        >
           <Car className={`${iconClassName} text-[#C7D2FE]`} strokeWidth={1.25} />
         </div>
       )}
