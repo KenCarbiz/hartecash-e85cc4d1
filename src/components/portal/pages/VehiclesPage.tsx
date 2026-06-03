@@ -9,6 +9,7 @@ import {
   Pencil, Lightbulb, Fingerprint, History, FileCheck2,
 } from "lucide-react";
 import { NEUTRAL_VEHICLE } from "../neutralVehicle";
+import { VehicleHeroImage } from "../VehicleHeroImage";
 import { fmt } from "../portalMock";
 import { usePortalData } from "../PortalDataContext";
 import { useVehicleImage } from "@/hooks/useVehicleImage";
@@ -498,9 +499,15 @@ export const VehiclesPage = ({ onNavigate }: Props) => {
             >
               <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[68%] h-7 bg-[#06194A]/22 blur-2xl rounded-full pointer-events-none" />
               <div className="absolute inset-0 flex items-center justify-center px-6 pt-2 pb-6">
-                <img
-                  src={heroSrc} alt={`${v.year} ${v.make} ${v.model}`}
-                  className="max-h-full max-w-full object-contain drop-shadow-[0_18px_14px_rgba(15,23,42,0.18)] transition-transform duration-500 ease-out group-hover:scale-[1.05] -translate-y-1"
+                <VehicleHeroImage
+                  year={v.year}
+                  make={v.make}
+                  model={v.model}
+                  vin={v.vin}
+                  alt={`${v.year} ${v.make} ${v.model}`}
+                  priority
+                  iconClassName="w-16 h-16"
+                  imgClassName="max-h-full max-w-full object-contain drop-shadow-[0_18px_14px_rgba(15,23,42,0.18)] ease-out group-hover:scale-[1.05] -translate-y-1"
                 />
               </div>
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_45%,rgba(79,70,229,0.18),transparent_60%)] pointer-events-none" />

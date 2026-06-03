@@ -123,6 +123,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         spin: "spin 0.8s linear infinite",
+        shimmer: "shimmer 1.8s ease-in-out infinite",
       },
     },
   },

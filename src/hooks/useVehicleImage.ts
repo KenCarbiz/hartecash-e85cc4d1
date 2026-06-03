@@ -18,15 +18,32 @@ import { supabase } from "@/integrations/supabase/client";
  * neutral, brand-agnostic placeholder (never a specific model) until
  * the URL resolves.
  */
-export function useVehicleImage(
+export interface VehicleImageState {
+  /** Resolved image URL, or null while loading / on failure. */
+  url: string | null;
+  /** True while the edge function is resolving (or generating) the image. */
+  loading: boolean;
+}
+
+/**
+ * Loading-aware variant of {@link useVehicleImage}. Distinguishes the
+ * "still resolving" state from "resolved but empty / failed" so callers
+ * can show a tasteful skeleton while loading and fade the real photo in
+ * once it arrives — never a placeholder graphic mid-flight.
+ */
+export function useVehicleImageState(
   year?: number | string | null,
   make?: string | null,
   model?: string | null,
   vin?: string | null,
   submissionToken?: string | null,
   uvc?: string | null,
-): string | null {
-  const [url, setUrl] = useState<string | null>(null);
+): VehicleImageState {
+  const hasInputs = !!(year && make && model);
+  const [state, setState] = useState<VehicleImageState>(() => ({
+    url: null,
+    loading: hasInputs,
+  }));
 
   // Stable key so we don't re-fetch on every render. Strings normalize
   // away nullish + whitespace so equivalent inputs hit the same key.
@@ -34,10 +51,11 @@ export function useVehicleImage(
 
   useEffect(() => {
     if (!year || !make || !model) {
-      setUrl(null);
+      setState({ url: null, loading: false });
       return;
     }
     let cancelled = false;
+    setState({ url: null, loading: true });
     (async () => {
       try {
         const { data, error } = await supabase.functions.invoke("generate-vehicle-image", {
@@ -58,18 +76,33 @@ export function useVehicleImage(
         });
         if (cancelled) return;
         if (error || !data?.image_url) {
-          setUrl(null);
+          setState({ url: null, loading: false });
           return;
         }
-        setUrl(data.image_url as string);
+        setState({ url: data.image_url as string, loading: false });
       } catch {
         if (cancelled) return;
-        setUrl(null);
+        setState({ url: null, loading: false });
       }
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return url;
+  return state;
+}
+
+/**
+ * Resolves a customer-portal hero image URL. Thin wrapper over
+ * {@link useVehicleImageState} for callers that only need the URL.
+ */
+export function useVehicleImage(
+  year?: number | string | null,
+  make?: string | null,
+  model?: string | null,
+  vin?: string | null,
+  submissionToken?: string | null,
+  uvc?: string | null,
+): string | null {
+  return useVehicleImageState(year, make, model, vin, submissionToken, uvc).url;
 }
