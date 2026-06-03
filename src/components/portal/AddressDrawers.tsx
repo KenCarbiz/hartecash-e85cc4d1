@@ -9,6 +9,9 @@ import {
 import { SlideOver } from "./SlideOver";
 import { PrimaryButton, SecondaryButton, SectionLabel, StatusPill } from "./PortalPageShell";
 import { usePortalData } from "./PortalDataContext";
+import {
+  CustomerAvatar, AvatarPicker, getCustomerAvatar, setCustomerAvatar,
+} from "./customerAvatar";
 
 /* ───────────────────────── Types ───────────────────────── */
 
@@ -171,8 +174,21 @@ export const ProfileDrawer = ({ open, onClose }: { open: boolean; onClose: () =>
   const [email, setEmail] = useState(MOCK.customer.email);
   const [phone, setPhone] = useState(MOCK.customer.phone);
   const [addr, setAddr] = useState<MailingAddress>(MOCK.customer.mailingAddress);
+  const avatarKey = MOCK.customer.email;
+  const [avatar, setAvatar] = useState<string | null>(() => getCustomerAvatar(avatarKey));
+  const [editingAvatar, setEditingAvatar] = useState(false);
+
+  // Re-sync the avatar draft from storage each time the drawer opens so
+  // a cancelled edit is discarded.
+  useEffect(() => {
+    if (open) {
+      setAvatar(getCustomerAvatar(avatarKey));
+      setEditingAvatar(false);
+    }
+  }, [open, avatarKey]);
 
   const save = () => {
+    setCustomerAvatar(avatarKey, avatar);
     toast.success("Profile updated successfully");
     onClose();
   };
@@ -191,15 +207,34 @@ export const ProfileDrawer = ({ open, onClose }: { open: boolean; onClose: () =>
         </div>
       }
     >
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center text-lg font-bold ring-1 ring-[#C7D2FE]/60">
-          {MOCK.customer.initials}
-        </div>
+      <div className="flex items-center gap-3 mb-3">
+        <CustomerAvatar
+          value={avatar}
+          initials={MOCK.customer.initials}
+          emojiClassName="text-3xl"
+          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center text-lg font-bold ring-1 ring-[#C7D2FE]/60"
+        />
         <div>
           <div className="text-sm font-semibold text-[#06194A]">{first} {last}</div>
-          <button className="text-xs font-semibold text-[#6D28D9] hover:underline mt-0.5">Change avatar</button>
+          <button
+            type="button"
+            onClick={() => setEditingAvatar((v) => !v)}
+            className="text-xs font-semibold text-[#6D28D9] hover:underline mt-0.5"
+          >
+            {editingAvatar ? "Close" : "Change avatar"}
+          </button>
         </div>
       </div>
+      {editingAvatar && (
+        <div className="mb-5">
+          <AvatarPicker
+            value={avatar}
+            initials={MOCK.customer.initials}
+            onChange={setAvatar}
+            onClose={() => setEditingAvatar(false)}
+          />
+        </div>
+      )}
 
       <SectionLabel>Personal</SectionLabel>
       <div className="mt-3 grid grid-cols-2 gap-3">
