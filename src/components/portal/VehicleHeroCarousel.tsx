@@ -317,6 +317,7 @@ const PhotoGallerySlide = () => {
                   vin={v.vin}
                   alt={cat.label}
                   priority
+                  realFit="contain"
                   iconClassName="w-20 h-20"
                   imgClassName="max-h-[88%] w-auto object-contain drop-shadow-[0_24px_24px_rgba(15,23,42,0.22)]"
                 />
