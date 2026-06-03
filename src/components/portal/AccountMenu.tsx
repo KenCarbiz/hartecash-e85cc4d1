@@ -5,6 +5,7 @@ import {
   LifeBuoy, Tag, Upload, Calendar, MessageSquare, Repeat, LogOut, X, Check,
 } from "lucide-react";
 import { SlideOver } from "./SlideOver";
+import { CustomerAvatar, useCustomerAvatar } from "./customerAvatar";
 
 
 /* AccountMenu — premium SaaS account center for the portal.
@@ -72,13 +73,18 @@ const SectionLabel = ({ children }: { children: ReactNode }) => (
   </div>
 );
 
-const Header = ({ customer }: { customer: Customer }) => (
+const Header = ({ customer }: { customer: Customer }) => {
+  const avatar = useCustomerAvatar(customer.email);
+  return (
   <div className="px-5 pt-5 pb-4">
     <div className="flex items-center gap-3.5">
       <div className="relative">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#EEF0FF] to-[#DCE0FF] text-[#6D28D9] grid place-items-center text-[15px] font-bold ring-1 ring-[#E6EAF0]">
-          {customer.initials}
-        </div>
+        <CustomerAvatar
+          value={avatar}
+          initials={customer.initials}
+          emojiClassName="text-2xl"
+          className="w-12 h-12 rounded-full bg-gradient-to-br from-[#EEF0FF] to-[#DCE0FF] text-[#6D28D9] grid place-items-center text-[15px] font-bold ring-1 ring-[#E6EAF0]"
+        />
         <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#10B981] ring-2 ring-white" />
       </div>
       <div className="min-w-0 flex-1">
@@ -92,7 +98,8 @@ const Header = ({ customer }: { customer: Customer }) => (
       Active Transaction
     </div>
   </div>
-);
+  );
+};
 
 /* Lightweight drawer body content — wired to mock data but presentation-only. */
 const DrawerBody = ({ which, customer }: { which: Exclude<DrawerKey, null>; customer: Customer }) => {
@@ -281,6 +288,7 @@ export const AccountMenu = ({ customer, variant = "desktop", onNavigate }: Props
   const [drawer, setDrawer] = useState<DrawerKey>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const avatar = useCustomerAvatar(customer.email);
 
   useEffect(() => {
     if (!open) return;
@@ -348,9 +356,12 @@ export const AccountMenu = ({ customer, variant = "desktop", onNavigate }: Props
             className="flex items-center gap-2.5 pl-3 pr-2 py-1.5 rounded-full border border-transparent hover:border-[#E6EAF0] hover:bg-white transition-all"
           >
             <div className="relative">
-              <div className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#6D28D9] grid place-items-center text-xs font-semibold ring-1 ring-transparent hover:ring-[#DCE0FF] transition-all">
-                {customer.initials}
-              </div>
+              <CustomerAvatar
+                value={avatar}
+                initials={customer.initials}
+                emojiClassName="text-lg"
+                className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#6D28D9] grid place-items-center text-xs font-semibold ring-1 ring-transparent hover:ring-[#DCE0FF] transition-all"
+              />
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#10B981] ring-2 ring-[#F7F8FB]" />
             </div>
             <div className="hidden sm:block leading-tight text-left">
@@ -363,9 +374,14 @@ export const AccountMenu = ({ customer, variant = "desktop", onNavigate }: Props
           <button
             onClick={() => setOpen(true)}
             aria-label="Open account menu"
-            className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#6D28D9] grid place-items-center text-xs font-semibold"
+            className="w-9 h-9 rounded-full"
           >
-            {customer.initials}
+            <CustomerAvatar
+              value={avatar}
+              initials={customer.initials}
+              emojiClassName="text-lg"
+              className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#6D28D9] grid place-items-center text-xs font-semibold"
+            />
           </button>
         )}
 
