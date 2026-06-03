@@ -82,7 +82,6 @@ const Header = ({ customer }: { customer: Customer }) => {
         <CustomerAvatar
           value={avatar}
           initials={customer.initials}
-          emojiClassName="text-2xl"
           className="w-12 h-12 rounded-full bg-gradient-to-br from-[#EEF0FF] to-[#DCE0FF] text-[#6D28D9] grid place-items-center text-[15px] font-bold ring-1 ring-[#E6EAF0]"
         />
         <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#10B981] ring-2 ring-white" />
@@ -359,7 +358,6 @@ export const AccountMenu = ({ customer, variant = "desktop", onNavigate }: Props
               <CustomerAvatar
                 value={avatar}
                 initials={customer.initials}
-                emojiClassName="text-lg"
                 className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#6D28D9] grid place-items-center text-xs font-semibold ring-1 ring-transparent hover:ring-[#DCE0FF] transition-all"
               />
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#10B981] ring-2 ring-[#F7F8FB]" />
@@ -379,7 +377,6 @@ export const AccountMenu = ({ customer, variant = "desktop", onNavigate }: Props
             <CustomerAvatar
               value={avatar}
               initials={customer.initials}
-              emojiClassName="text-lg"
               className="w-9 h-9 rounded-full bg-[#EEF0FF] text-[#6D28D9] grid place-items-center text-xs font-semibold"
             />
           </button>
