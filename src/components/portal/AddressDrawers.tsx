@@ -9,6 +9,9 @@ import {
 import { SlideOver } from "./SlideOver";
 import { PrimaryButton, SecondaryButton, SectionLabel, StatusPill } from "./PortalPageShell";
 import { usePortalData } from "./PortalDataContext";
+import { usePortalToken } from "@/contexts/PortalTokenContext";
+import { useCustomerAvatar } from "./useCustomerAvatar";
+import CustomerAvatarDialog from "./CustomerAvatarDialog";
 
 /* ───────────────────────── Types ───────────────────────── */
 
@@ -166,11 +169,14 @@ const fireWorkflowIntelligence = () => {
 
 export const ProfileDrawer = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const MOCK = usePortalData();
+  const { token } = usePortalToken();
+  const avatar = useCustomerAvatar(token);
   const [first, setFirst] = useState(MOCK.customer.firstName);
   const [last, setLast] = useState(MOCK.customer.lastName);
   const [email, setEmail] = useState(MOCK.customer.email);
   const [phone, setPhone] = useState(MOCK.customer.phone);
   const [addr, setAddr] = useState<MailingAddress>(MOCK.customer.mailingAddress);
+  const [avatarOpen, setAvatarOpen] = useState(false);
 
   const save = () => {
     toast.success("Profile updated successfully");
@@ -192,14 +198,39 @@ export const ProfileDrawer = ({ open, onClose }: { open: boolean; onClose: () =>
       }
     >
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center text-lg font-bold ring-1 ring-[#C7D2FE]/60">
-          {MOCK.customer.initials}
-        </div>
+        <button
+          type="button"
+          onClick={() => setAvatarOpen(true)}
+          className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-[#EEF0FF] to-[#E0E7FF] text-[#6D28D9] grid place-items-center text-lg font-bold ring-1 ring-[#C7D2FE]/60 hover:ring-2 hover:ring-[#6D28D9]/40 transition"
+          aria-label="Change avatar"
+        >
+          {avatar.url
+            ? <img src={avatar.url} alt="" className="w-full h-full object-cover" />
+            : MOCK.customer.initials}
+        </button>
         <div>
           <div className="text-sm font-semibold text-[#06194A]">{first} {last}</div>
-          <button className="text-xs font-semibold text-[#6D28D9] hover:underline mt-0.5">Change avatar</button>
+          <button
+            type="button"
+            onClick={() => setAvatarOpen(true)}
+            className="text-xs font-semibold text-[#6D28D9] hover:underline mt-0.5"
+          >
+            Change avatar
+          </button>
+          {avatar.source === "employee" && (
+            <div className="text-[10.5px] text-[#8893A8] mt-0.5">From your employee profile</div>
+          )}
         </div>
       </div>
+
+      <CustomerAvatarDialog
+        open={avatarOpen}
+        onClose={() => setAvatarOpen(false)}
+        token={token}
+        currentInitials={MOCK.customer.initials}
+        currentUrl={avatar.url}
+        onSaved={() => { /* hook re-reads via event listener */ }}
+      />
 
       <SectionLabel>Personal</SectionLabel>
       <div className="mt-3 grid grid-cols-2 gap-3">
