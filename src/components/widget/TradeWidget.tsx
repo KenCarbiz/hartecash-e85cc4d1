@@ -12,6 +12,8 @@
 
 import { X } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useFormConfig } from "@/hooks/useFormConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import { tenantLogoSrc } from "@/lib/tenantLogo";
 import TradeInBanner from "./TradeInBanner";
 import TradeWidgetFlow from "./TradeWidgetFlow";
@@ -30,10 +32,22 @@ export default function TradeWidget({
   zip: string;
 }) {
   const { config } = useSiteConfig();
+  const { formConfig } = useFormConfig();
+  const { tenant } = useTenant();
   const { offer } = useFirmOffer(resumeToken);
 
   const dealerName = (config.dealership_name || "").trim();
   const logo = tenantLogoSrc(config);
+
+  // Everything below honors the dealer's admin settings — same flags the
+  // main landing flow reads — so the widget stays "customizable like the
+  // others": the SMS-code gate, info-before/after-offer order, and the
+  // AI photo boost are all dealer toggles, not widget-specific behavior.
+  const requireVerify = formConfig.require_phone_verification !== false;
+  const aiPhotosEnabled = formConfig.step_ai_photos !== false;
+  // NOTE: formConfig.offer_before_details (collect contact before/after the
+  // offer) is a recognized dealer toggle — honoring it needs a
+  // compute-before-persist split; tracked as the next refinement.
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50">
@@ -59,7 +73,13 @@ export default function TradeWidget({
       {vdp && <TradeInBanner vdp={vdp} offer={offer} zip={zip} />}
 
       <div className="flex-1">
-        <TradeWidgetFlow initialIntent={intent} resolvedOffer={offer} />
+        <TradeWidgetFlow
+          initialIntent={intent}
+          dealershipId={tenant.dealership_id}
+          dealershipName={config.dealership_name}
+          requireVerify={requireVerify}
+          aiPhotosEnabled={aiPhotosEnabled}
+        />
       </div>
     </div>
   );

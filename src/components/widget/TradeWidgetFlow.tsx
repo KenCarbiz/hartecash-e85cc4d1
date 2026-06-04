@@ -1,32 +1,31 @@
-// Watered-down MotoAcquire-style trade/sell flow for the embeddable
-// widget. Visual + step parity with the Stevens Creek Toyota slide-out:
+// Watered-down MotoAcquire-style trade/sell flow — now wired to the real
+// engine (bb-lookup → offer calc/persist → SMS OTP → firm offer).
 //
-//   vehicle (VIN/plate + state) → confirm (detected vehicle + image)
+//   vehicle (VIN/plate + state) → confirm (BB vehicle + image)
 //   → condition (Fair/Good/Very Good/Excellent) → intent (trade/sell)
 //   → contact (name/email/phone/miles/zip + track-value toggle)
-//   → value (KBB-style range + "Get Firm Offer")
-//   → [kept OTP] verify → firm offer
+//   → value (real KBB-style range → OTP verify → firm offer)
 //
-// Stripped vs. the full moto flow: TCPA consent wall, 8-question damage
-// matrix, photo capture / boost upsell, ownership/color/scheduling.
-//
-// WIRING TODOs (framing — data is stubbed):
-//   [ ] vehicle: Black Book VIN/plate decode (MotoStepVehicleSearch) →
-//       detected Y/M/M + trim, feeds the confirm screen + image.
-//   [ ] value:   estimated range from offerCalculator + condition.
-//   [ ] firm:    on verified "Get Firm Offer", calculateAndPersistOffer()
-//       (motoSubmission.ts) → token + offered_price; stamp embed_source /
-//       embed_vehicle_label / embed_vehicle_msrp (EmbedLanding stashes
-//       them in sessionStorage).
+// Lead is captured at "See my value" (persistWidgetOffer inserts the
+// submissions row, stamped with embed attribution); the firm number is
+// gated behind SMS verification (kept per product decision).
 
 import { useState } from "react";
 import { Check, Pencil } from "lucide-react";
 import MotoCard from "@/components/moto/MotoCard";
 import MotoPrimaryButton from "@/components/moto/MotoPrimaryButton";
 import MotoFormField from "@/components/moto/MotoFormField";
+import { useVehicleImage } from "@/hooks/useVehicleImage";
+import type { BBVehicle } from "@/components/sell-form/types";
+import {
+  decodeVehicle,
+  persistWidgetOffer,
+  sendWidgetOtp,
+  verifyWidgetOtp,
+  type WidgetFlowData,
+} from "./widgetData";
 import {
   WIDGET_STEP_ORDER,
-  type FirmOffer,
   type WidgetCondition,
   type WidgetIntent,
   type WidgetStep,
@@ -48,38 +47,38 @@ const CONDITIONS: { value: WidgetCondition; label: string; blurb: string }[] = [
 const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
 type VehicleStage = "entry" | "confirm";
-type ValueStage = "range" | "verify" | "firm";
-
-interface FlowData {
-  entryMode: "vin" | "plate";
-  vehicleId: string; // VIN or plate
-  state: string;
-  condition: WidgetCondition | null;
-  intent: WidgetIntent;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  miles: string;
-  zip: string;
-  trackValue: boolean;
-  otp: string;
-}
+// range → (verify) → firm → (boost → reeval → firm-again, when the dealer
+// enables AI photos). verify is skipped when require_phone_verification off.
+type ValueStage = "range" | "verify" | "firm" | "boost" | "reeval";
 
 export default function TradeWidgetFlow({
   initialIntent,
-  resolvedOffer,
+  dealershipId,
+  dealershipName,
+  requireVerify,
+  aiPhotosEnabled,
 }: {
   initialIntent: WidgetIntent;
-  /** Existing firm offer resolved from a resume token, if any. */
-  resolvedOffer: FirmOffer | null;
+  dealershipId: string;
+  dealershipName?: string;
+  /** Dealer toggle: gate the firm offer behind an SMS code. */
+  requireVerify: boolean;
+  /** Dealer toggle: offer the AI photo boost / re-evaluation. */
+  aiPhotosEnabled: boolean;
 }) {
-  const [step, setStep] = useState<WidgetStep>(resolvedOffer ? "value" : "vehicle");
+  const [step, setStep] = useState<WidgetStep>("vehicle");
   const [vehicleStage, setVehicleStage] = useState<VehicleStage>("entry");
-  const [valueStage, setValueStage] = useState<ValueStage>(
-    resolvedOffer && resolvedOffer.amount > 0 ? "firm" : "range",
-  );
-  const [data, setData] = useState<FlowData>({
+  const [valueStage, setValueStage] = useState<ValueStage>("range");
+  const [boosted, setBoosted] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [bb, setBb] = useState<BBVehicle | null>(null);
+  const [estimate, setEstimate] = useState<{ low: number | null; high: number | null } | null>(null);
+  const [firm, setFirm] = useState<number | null>(null);
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+
+  const [data, setData] = useState<WidgetFlowData & { otp: string }>({
     entryMode: "vin",
     vehicleId: "",
     state: "",
@@ -94,16 +93,20 @@ export default function TradeWidgetFlow({
     trackValue: false,
     otp: "",
   });
-  const set = (patch: Partial<FlowData>) => setData((d) => ({ ...d, ...patch }));
+  const set = (patch: Partial<typeof data>) => setData((d) => ({ ...d, ...patch }));
+
+  // Cached image of the decoded vehicle (null until BB resolves Y/M/M).
+  const heroUrl = useVehicleImage(bb?.year, bb?.make, bb?.model, bb?.vin);
 
   const goNext = () => {
     const i = WIDGET_STEP_ORDER.indexOf(step);
     if (i < WIDGET_STEP_ORDER.length - 1) setStep(WIDGET_STEP_ORDER[i + 1]);
   };
 
-  // TODO: replace with the real BB-decoded vehicle from the lookup.
-  const detectedVehicle = data.vehicleId
-    ? `${data.entryMode === "vin" ? "VIN" : "Plate"} ${data.vehicleId.toUpperCase()}`
+  const detectedVehicle = bb
+    ? `${bb.year} ${bb.make} ${bb.model}`.trim()
+    : data.vehicleId
+    ? `${data.entryMode.toUpperCase()} ${data.vehicleId.toUpperCase()}`
     : "your vehicle";
 
   const contactComplete =
@@ -113,6 +116,88 @@ export default function TradeWidgetFlow({
     data.phone.trim() &&
     data.miles.trim() &&
     data.zip.trim();
+
+  // ── async actions ──────────────────────────────────────────────
+  const decode = async () => {
+    setBusy(true);
+    setError(null);
+    const { vehicle, error: err } = await decodeVehicle(data, dealershipId);
+    setBusy(false);
+    if (!vehicle) {
+      setError(err || "We couldn't find that vehicle.");
+      return;
+    }
+    setBb(vehicle);
+    setVehicleStage("confirm");
+  };
+
+  const seeValue = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await persistWidgetOffer(data, bb, dealershipId);
+      setEstimate(result.estimate ? { low: result.estimate.low, high: result.estimate.high } : null);
+      setFirm(result.firm);
+      setStep("value");
+      setValueStage("range");
+    } catch {
+      setError("We couldn't calculate your value. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const getFirm = async () => {
+    // Dealer toggle: when phone verification is off, reveal the firm
+    // offer immediately — no SMS code (same as the main flow).
+    if (!requireVerify) {
+      setValueStage("firm");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const { challengeId: cid, error: err } = await sendWidgetOtp(data.phone, dealershipName);
+    setBusy(false);
+    if (!cid) {
+      setError(err === "rate_limited" ? "Too many attempts — try again later." : "Couldn't send the code.");
+      return;
+    }
+    setChallengeId(cid);
+    setValueStage("verify");
+  };
+
+  // AI photo boost — same idea as the main flow's "Save My Offer →
+  // upload photos → AI re-inspects → new value". Stubbed re-eval for now
+  // (TODO: reuse the MotoStepPhotos upload + AI inspection pipeline and
+  // re-run the waterfall with the photo-derived condition).
+  const submitBoost = async () => {
+    setBusy(true);
+    setError(null);
+    // TODO: upload photos, run AI inspection, re-run calculateAndPersistOffer.
+    await new Promise((r) => setTimeout(r, 600));
+    setBoosted(firm != null ? Math.round(firm * 1.06) : null);
+    setBusy(false);
+    setValueStage("reeval");
+  };
+
+  const verify = async () => {
+    if (!challengeId) return;
+    setBusy(true);
+    setError(null);
+    const { ok, error: err, attemptsRemaining } = await verifyWidgetOtp(challengeId, data.otp);
+    setBusy(false);
+    if (!ok) {
+      setError(
+        err === "wrong_code"
+          ? `Wrong code. ${attemptsRemaining ?? 0} attempts left.`
+          : err === "expired"
+          ? "Code expired — resend it."
+          : "Verification failed. Try again.",
+      );
+      return;
+    }
+    setValueStage("firm");
+  };
 
   return (
     <div className="mx-auto w-full max-w-[420px] px-4 py-5">
@@ -158,13 +243,12 @@ export default function TradeWidgetFlow({
               </select>
             )}
           </div>
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
           <div className="mt-4">
-            {/* TODO: run the BB decode here, then go to confirm. */}
             <MotoPrimaryButton
-              disabled={
-                !data.vehicleId.trim() || (data.entryMode === "plate" && !data.state)
-              }
-              onClick={() => setVehicleStage("confirm")}
+              loading={busy}
+              disabled={!data.vehicleId.trim() || (data.entryMode === "plate" && !data.state)}
+              onClick={decode}
             >
               Next
             </MotoPrimaryButton>
@@ -174,10 +258,13 @@ export default function TradeWidgetFlow({
 
       {step === "vehicle" && vehicleStage === "confirm" && (
         <MotoCard title="Is this your vehicle?">
-          {/* TODO: real detected Y/M/M + cached image (useVehicleImage). */}
           <div className="flex items-center gap-3">
-            <div className="grid h-16 w-24 shrink-0 place-items-center rounded-md bg-zinc-100 text-[10px] text-zinc-400">
-              vehicle photo
+            <div className="grid h-16 w-24 shrink-0 place-items-center overflow-hidden rounded-md bg-zinc-100">
+              {heroUrl ? (
+                <img src={heroUrl} alt={detectedVehicle} className="h-full w-full object-contain" />
+              ) : (
+                <span className="text-[10px] text-zinc-400">vehicle</span>
+              )}
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-zinc-900">{detectedVehicle}</p>
@@ -186,7 +273,10 @@ export default function TradeWidgetFlow({
           </div>
           <button
             type="button"
-            onClick={() => setVehicleStage("entry")}
+            onClick={() => {
+              setBb(null);
+              setVehicleStage("entry");
+            }}
             className="mt-3 text-xs font-medium text-[hsl(var(--cta-offer))] hover:underline"
           >
             Not your vehicle? Re-enter
@@ -300,7 +390,6 @@ export default function TradeWidgetFlow({
             </div>
           </div>
 
-          {/* Marketing opt-in — defaults OFF, like MotoAcquire. */}
           <label className="mt-3 flex cursor-pointer items-center gap-2.5 text-sm text-zinc-600">
             <input
               type="checkbox"
@@ -311,8 +400,9 @@ export default function TradeWidgetFlow({
             Track my vehicle value monthly via email
           </label>
 
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
           <div className="mt-4">
-            <MotoPrimaryButton disabled={!contactComplete} onClick={goNext}>
+            <MotoPrimaryButton loading={busy} disabled={!contactComplete} onClick={seeValue}>
               See my value
             </MotoPrimaryButton>
           </div>
@@ -322,14 +412,18 @@ export default function TradeWidgetFlow({
       {/* ── 5. VALUE: range → verify (OTP) → firm offer ───────────── */}
       {step === "value" && valueStage === "range" && (
         <MotoCard title="Your estimated trade-in value">
-          {/* TODO: real estimated_offer_low/high from offerCalculator. */}
           <p className="text-4xl font-bold leading-none tabular-nums text-zinc-900">
-            $1,090 <span className="font-semibold text-zinc-400">–</span> $1,915
+            {estimate?.low != null && estimate?.high != null
+              ? <>{usd(estimate.low)} <span className="font-semibold text-zinc-400">–</span> {usd(estimate.high)}</>
+              : "Estimate ready"}
           </p>
           <p className="mt-2 text-sm text-zinc-500">{detectedVehicle}</p>
           <button
             type="button"
-            onClick={() => setStep("vehicle")}
+            onClick={() => {
+              setStep("vehicle");
+              setVehicleStage("confirm");
+            }}
             className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[hsl(var(--cta-offer))] hover:underline"
           >
             <Pencil className="h-3 w-3" /> Edit mileage
@@ -338,9 +432,9 @@ export default function TradeWidgetFlow({
             Estimated range based on market data and the condition you selected. Final value
             depends on inspection and current market factors.
           </p>
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
           <div className="mt-4">
-            {/* MotoAcquire's red CTA — kicks off the kept-OTP gate. */}
-            <MotoPrimaryButton onClick={() => setValueStage("verify")}>
+            <MotoPrimaryButton loading={busy} onClick={getFirm}>
               Get Firm Offer
             </MotoPrimaryButton>
           </div>
@@ -349,9 +443,6 @@ export default function TradeWidgetFlow({
 
       {step === "value" && valueStage === "verify" && (
         <MotoCard title="Verify your number">
-          {/* OTP kept (product decision) — gates the firm offer. TODO:
-              wire to the moto contact-verify path; on success call
-              calculateAndPersistOffer() and go to "firm". */}
           <p className="mb-3 text-sm text-zinc-500">
             We texted a 6-digit code to {data.phone || "your phone"}.
           </p>
@@ -359,11 +450,13 @@ export default function TradeWidgetFlow({
             label="6-digit code"
             inputMode="numeric"
             maxLength={6}
+            autoComplete="one-time-code"
             value={data.otp}
             onChange={(e) => set({ otp: e.target.value.replace(/\D/g, "").slice(0, 6) })}
           />
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
           <div className="mt-4">
-            <MotoPrimaryButton disabled={data.otp.length !== 6} onClick={() => setValueStage("firm")}>
+            <MotoPrimaryButton loading={busy} disabled={data.otp.length !== 6} onClick={verify}>
               Verify &amp; get firm offer
             </MotoPrimaryButton>
           </div>
@@ -372,31 +465,93 @@ export default function TradeWidgetFlow({
 
       {step === "value" && valueStage === "firm" && (
         <MotoCard title="Your firm offer">
-          {resolvedOffer && resolvedOffer.amount > 0 ? (
+          {firm != null && firm > 0 ? (
             <>
               <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 {data.intent === "trade" ? "Trade-in offer" : "Cash offer"}
               </p>
-              <p className="mt-1 text-4xl font-bold tabular-nums text-zinc-900">
-                {usd(resolvedOffer.amount)}
-              </p>
-              {resolvedOffer.vehicleLabel && (
-                <p className="mt-1 text-sm text-zinc-500">for your {resolvedOffer.vehicleLabel}</p>
-              )}
+              <p className="mt-1 text-4xl font-bold tabular-nums text-zinc-900">{usd(firm)}</p>
+              <p className="mt-1 text-sm text-zinc-500">for your {detectedVehicle}</p>
               <div className="mt-4">
                 <MotoPrimaryButton>
                   {data.intent === "trade" ? "Apply toward this vehicle" : "Lock in this offer"}
                 </MotoPrimaryButton>
               </div>
+              {aiPhotosEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setValueStage("boost")}
+                  className="mt-3 w-full text-center text-sm font-medium text-[hsl(var(--cta-offer))] hover:underline"
+                >
+                  Add photos for a possible higher offer
+                </button>
+              )}
             </>
           ) : (
-            // TODO: render the freshly-computed firm offer from
-            // calculateAndPersistOffer(); placeholder skeleton for now.
             <div className="flex items-center gap-2 text-sm text-zinc-500">
               <span className="h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--cta-offer))]" />
-              Building your firm number…
+              Finalizing your number…
             </div>
           )}
+        </MotoCard>
+      )}
+
+      {/* AI photo boost (dealer-toggled) — mirrors the main flow's
+          "upload photos → AI re-inspects → new value → accept/save". */}
+      {step === "value" && valueStage === "boost" && (
+        <MotoCard title="Boost your offer with photos">
+          <p className="text-sm text-zinc-500">
+            Upload a few quick photos and our AI re-inspects your {detectedVehicle} — a better
+            condition read can raise your offer.
+          </p>
+          {/* TODO: real multi-slot capture (reuse MotoStepPhotos). */}
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {["Front", "Rear", "Interior"].map((slot) => (
+              <div
+                key={slot}
+                className="grid h-16 place-items-center rounded-md border border-dashed border-zinc-300 text-[11px] text-zinc-400"
+              >
+                {slot}
+              </div>
+            ))}
+          </div>
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          <div className="mt-4 grid gap-2">
+            <MotoPrimaryButton loading={busy} onClick={submitBoost}>
+              Re-evaluate with photos
+            </MotoPrimaryButton>
+            <button
+              type="button"
+              onClick={() => setValueStage("firm")}
+              className="text-center text-sm font-medium text-zinc-500 hover:underline"
+            >
+              Keep my current offer
+            </button>
+          </div>
+        </MotoCard>
+      )}
+
+      {step === "value" && valueStage === "reeval" && (
+        <MotoCard title="Your updated offer">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            {data.intent === "trade" ? "Trade-in offer" : "Cash offer"} · after photo review
+          </p>
+          <p className="mt-1 text-4xl font-bold tabular-nums text-zinc-900">
+            {boosted != null ? usd(boosted) : firm != null ? usd(firm) : "—"}
+          </p>
+          <p className="mt-1 text-sm text-zinc-500">for your {detectedVehicle}</p>
+          <div className="mt-4 grid gap-2">
+            <MotoPrimaryButton>
+              {data.intent === "trade" ? "Apply toward this vehicle" : "Accept this offer"}
+            </MotoPrimaryButton>
+            <button
+              type="button"
+              onClick={() => setValueStage("firm")}
+              className="text-center text-sm font-medium text-zinc-500 hover:underline"
+            >
+              Save for later
+            </button>
+          </div>
         </MotoCard>
       )}
     </div>

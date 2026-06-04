@@ -779,6 +779,14 @@
       ".hc-embed-overlay iframe{width:100%;height:100%;border:0;display:block}",
       ".hc-embed-close{position:absolute;top:10px;right:12px;z-index:2;background:rgba(255,255,255,.92);border:none;border-radius:999px;width:36px;height:36px;cursor:pointer;font-size:18px;line-height:1;color:#0f172a;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.18)}",
       "@media (max-width:640px){.hc-embed-overlay{top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;border-radius:0;transform:none}.hc-embed-overlay.hc-open{transform:none}}",
+      // Right-side slide-out panel variant (.hc-panel) — the MotoAcquire
+      // pattern: ~1/3 width, full height, slides in from the right while
+      // the backdrop dims (but preserves) the dealer page. Higher
+      // specificity than the modal rules so it overrides the centered
+      // transform regardless of source order.
+      ".hc-embed-overlay.hc-panel{top:0;right:0;bottom:0;left:auto;width:clamp(360px,34vw,480px);height:100vh;height:100dvh;max-width:none;max-height:none;border-radius:0;transform:translateX(100%);box-shadow:-24px 0 60px rgba(0,0,0,.28)}",
+      ".hc-embed-overlay.hc-panel.hc-open{transform:translateX(0)}",
+      "@media (max-width:640px){.hc-embed-overlay.hc-panel{width:100vw}}",
       "@media (prefers-reduced-motion:reduce){.hc-embed-backdrop,.hc-embed-overlay{transition:none}.hc-embed-overlay{transform:translate(-50%,-50%)}.hc-pulse{animation:none}}",
     ].join("\n"));
   }
@@ -786,7 +794,7 @@
   // One overlay shell, two callers:
   //   openInventoryOverlay(cfg, vehicle) → /embed/:dealershipId
   //   openDirectOverlay(url)             → /boost-offer, /deal, etc.
-  function mountOverlay(src, ariaLabel) {
+  function mountOverlay(src, ariaLabel, variant) {
     if (overlayFrame) return;
     ensureOverlayStyles();
 
@@ -796,7 +804,7 @@
     document.body.appendChild(overlayBackdrop);
 
     overlayFrame = document.createElement("div");
-    overlayFrame.className = "hc-embed-overlay";
+    overlayFrame.className = "hc-embed-overlay" + (variant === "panel" ? " hc-panel" : "");
     overlayFrame.setAttribute("role", "dialog");
     overlayFrame.setAttribute("aria-modal", "true");
     if (ariaLabel) overlayFrame.setAttribute("aria-label", ariaLabel);
@@ -844,6 +852,17 @@
 
   function openInventoryOverlay(cfg, vehicle) {
     mountOverlay(buildEmbedUrl(Object.assign({}, cfg, { displayMode: "overlay" }), vehicle), "Trade-In");
+  }
+
+  // Open the watered-down trade/sell widget (template=widget) in the
+  // right-side slide-out panel. Carries the detected VDP vehicle + any
+  // persisted resume token so the panel can frame "apply toward this car".
+  function openTradeWidget(cfg, vehicle) {
+    mountOverlay(
+      buildEmbedUrl(Object.assign({}, cfg, { displayMode: "overlay", template: "widget" }), vehicle),
+      "Value My Trade",
+      "panel"
+    );
   }
 
   // Open an arbitrary HarteCash URL in the same overlay shell —
@@ -1193,6 +1212,46 @@
     /** Close the inventory overlay (alias for legacy call sites
      *  that already used HarteCash.close). */
     closeInventory: closeInventoryOverlay,
+
+    /**
+     * Open the watered-down trade/sell widget in the right-side
+     * slide-out panel. Use this to wire a dealer's existing
+     * "Value My Trade" / "Get Trade Value" CTA on a VDP without
+     * installing a second loader — the detected vehicle + any
+     * persisted offer token flow through automatically.
+     * cfg shape matches HarteCash.inventory().
+     */
+    valueMyTrade: function (cfg) {
+      cfg = cfg || {};
+      if (!cfg.dealerId) return;
+      trackHost = (cfg.host || "https://hartecash.com").replace(/\/$/, "");
+      trackDealerId = cfg.dealerId;
+      openTradeWidget(cfg, detectInventoryVehicle());
+    },
+
+    /**
+     * Bind the trade widget to the dealer's existing buttons so it
+     * "integrates onto all the other CTAs". Attaches a click handler
+     * to every element matching cfg.selector (default
+     * [data-hartecash-trade]); each opens the right-side panel with
+     * the current page's detected vehicle. Returns the handler.
+     */
+    bindTrade: function (cfg) {
+      cfg = cfg || {};
+      if (!cfg.dealerId) return;
+      trackHost = (cfg.host || "https://hartecash.com").replace(/\/$/, "");
+      trackDealerId = cfg.dealerId;
+      var selector = cfg.selector || "[data-hartecash-trade]";
+      var handler = function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        openTradeWidget(cfg, detectInventoryVehicle());
+      };
+      var nodes = document.querySelectorAll(selector);
+      for (var i = 0; i < nodes.length; i++) {
+        nodes[i].addEventListener("click", handler);
+      }
+      return handler;
+    },
   };
 
   // Backwards compatibility with v1

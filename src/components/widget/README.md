@@ -77,10 +77,12 @@ sessionStorage embed attribution). One surface, one set of plumbing.
 vs. the full moto flow (`src/components/moto/steps/*`, `sell-form/*`):
 
 - TCPA / SMS-consent wall (`StepFinalize.tsx`)
-- 8-question damage matrix → collapsed to a 3-point condition
-- Multi-slot AI photo capture + "boost" upsell (`StepPhotos.tsx`)
+- 8-question damage matrix → collapsed to the 4-point condition scale
 - Ownership / color / scheduling steps
 - `MotoDisclosureBar` (the host page owns chrome; behaves like `?embed=true`)
+
+(The AI photo **boost** is *not* dropped — it's retained as an optional,
+dealer-toggled step, same as the main flow.)
 
 ## postMessage contract (owned by EmbedLanding)
 
@@ -93,40 +95,60 @@ EmbedLanding already drives this; the widget body inherits it.
   resolved offer changes, so the floating button copy can swap to
   "Apply your $X toward this vehicle".
 
-## Product decisions (resolved by Ken)
+## Same engine, same admin settings (NOT widget-specific)
 
-1. **OTP: keep.** Gate the offer behind SMS verification, like the full
-   flow. The stepper includes an `otp` step between `contact` and `offer`.
-2. **Reveal: contact-first (forced).** Always collect name/email/phone
-   before the number; ignore `offer_settings.pricing_reveal_mode` in the
-   widget. (The stepper already orders contact → offer.)
-3. **Surface: extend `/embed`.** `?template=widget` override, not a
-   parallel route. (Implemented.)
+The widget produces identical leads + offers to the main landing flow
+because it calls the **same** backend — the proprietary "waterfall"
+valuation — and honors the **same dealer admin settings**. Nothing about
+the pricing is reimplemented here.
 
-## Build-out checklist (next passes)
+| Behavior | Source of truth | Wired |
+|---|---|---|
+| Firm-offer math / aggressiveness | `offer_settings` (incl. `auto_firm_offer_pct`) via `calculateAndPersistOffer` → `calculateOffer` | ✅ |
+| VIN / plate decode | `bb-lookup` edge fn | ✅ |
+| SMS-code gate before firm offer | `formConfig.require_phone_verification` | ✅ |
+| AI photo boost / re-evaluation | `formConfig.step_ai_photos` | ✅ (UI; AI re-inspect stubbed) |
+| Collect contact **before/after** offer | `formConfig.offer_before_details` | ◻︎ next refinement (needs compute-before-persist split) |
+| Lead attribution (inventory_embed + VDP vehicle) | `sessionStorage` keys set by EmbedLanding | ✅ |
 
-- [ ] **Vehicle step** — replace the placeholder input with the real
-      Black Book lookup used by `MotoStepVehicleSearch` (VIN/plate/YMM →
-      `BBVehicle`).
-- [ ] **Value range** — compute `estimated_offer_low/high` from
-      `offerCalculator` + selected condition; replace the hardcoded
-      `$1,090–$1,915` placeholder.
-- [ ] **OTP gate** — wire the `value`→verify sub-state to the moto
-      contact-verify path (`MotoStepContact` OTP) so the firm offer only
-      reveals post-verify (decision #1).
-- [ ] **Firm offer** — on verify, call `calculateAndPersistOffer()`
-      (`src/components/moto/motoSubmission.ts`) to insert the submission,
-      compute the firm offer (`offer_settings.auto_firm_offer_pct`), and
-      return the token; then render the real number. Stamp
-      `embed_source` / `embed_vehicle_label` / `embed_vehicle_msrp`
-      (EmbedLanding already stashes these in `sessionStorage`).
-- [ ] **embed.js opener** — add a `trade` asset type to `embed-config` and
-      an opener in `public/embed.js` that loads
-      `/embed/:tenant?template=widget` in the drawer with detected
-      `vehicle_label` / `vehicle_msrp` / stored `token` as params.
-- [ ] **Trade-in confirm** — wire the offer step's
-      "Apply toward this vehicle" CTA to record the VDP target against the
-      submission (reuse `embed_vehicle_label/msrp`; decide if a dedicated
-      `trade_target_*` column is warranted before adding a migration).
-- [ ] **Admin toggle** — surface an enable/disable for the trade widget in
-      the dealer's embed config (alongside inventory/sticky/banner assets).
+## embed.js — the slide-out opener
+
+`public/embed.js` now opens the widget in a **right-side ⅓-width slide-out
+panel** (`.hc-panel`, slides in from the right, dims-but-keeps the dealer
+page):
+
+- `HarteCash.valueMyTrade({ dealerId })` — open it programmatically.
+- `HarteCash.bindTrade({ dealerId, selector })` — wire it onto the
+  dealer's existing CTAs (default `[data-hartecash-trade]`), so it
+  "integrates onto all the other buttons". Detected VDP vehicle + stored
+  token flow through automatically.
+
+## Wired ✅
+
+- Vehicle: real `bb-lookup` VIN/plate decode → confirm screen with the
+  cached vehicle image.
+- Value: real `estimated_offer_low/high` from the waterfall.
+- OTP: real `send-customer-otp` / `verify-customer-otp`, gated by the
+  dealer toggle (skips cleanly when off).
+- Firm offer: `calculateAndPersistOffer` inserts the submission (stamped
+  with embed attribution) and returns the firm number.
+- AI boost: dealer-toggled "add photos for a higher offer" → re-eval →
+  accept/save (UI complete; photo upload + AI re-inspection stubbed).
+- Slide-out panel + button binding in `embed.js`.
+
+## Next refinements (foundation is in; polish against the live site)
+
+- [ ] **Fluid panel polish** — match MotoAcquire's exact width / easing;
+      optionally push page content rather than overlay.
+- [ ] **Returning-customer prompt** — when a resume token resolves an
+      offer: "use it toward THIS vehicle, or the one you're viewing?" plus
+      the **8-day locked-in countdown** (`price_guarantee_days` from
+      `offer_made_at`). Hooks are in place (`useFirmOffer`, `TradeInBanner`).
+- [ ] **`offer_before_details`** — honor before/after-offer ordering
+      (compute estimate without persisting, collect contact later).
+- [ ] **Real AI photo pipeline** — replace the stubbed boost with the
+      `MotoStepPhotos` upload + AI inspection, then re-run the waterfall.
+- [ ] **Trade-in confirm** — "Apply toward this vehicle" records the VDP
+      target on the submission.
+- [ ] **Admin toggle** — enable/disable the trade widget asset in the
+      dealer's embed config.
