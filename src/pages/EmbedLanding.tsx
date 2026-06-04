@@ -207,7 +207,7 @@ const EmbedLanding = () => {
       {/* Overlay-mode close button — sits top-right above the
           template chrome. The parent embed.js script listens for
           hartecash-close and dismisses the overlay iframe. */}
-      {isOverlay && (
+      {isOverlay && !isWidget && (
         <button
           type="button"
           onClick={() => window.parent.postMessage({ type: "hartecash-close" }, "*")}

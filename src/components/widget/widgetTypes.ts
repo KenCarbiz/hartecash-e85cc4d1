@@ -13,23 +13,29 @@
 export type WidgetIntent = "trade" | "sell";
 
 /**
- * Lean flow steps. Deliberately fewer than the full moto flow — the
- * heavy disclosure / process-explainer steps (TCPA consent, 8-question
- * damage matrix, multi-slot photo capture, scheduling) are dropped.
+ * Lean flow steps, mirroring the MotoAcquire slide-out:
+ *   vehicle → condition → intent → contact → value
  *
- * SMS verification (`otp`) is KEPT (product decision) and gates the
- * offer reveal — contact-first, then verify, then number.
+ * Sub-states handled inside a step (not separate dots):
+ *   • "vehicle" has entry → confirm (detected vehicle + image)
+ *   • "value"   has range → verify (kept OTP) → firm offer
+ *
+ * The heavy disclosure / process-explainer steps from the full moto
+ * flow (TCPA wall, 8-question damage matrix, photo capture, scheduling)
+ * are intentionally dropped.
  */
-export type WidgetStep = "vehicle" | "condition" | "intent" | "contact" | "otp" | "offer";
+export type WidgetStep = "vehicle" | "condition" | "intent" | "contact" | "value";
 
 export const WIDGET_STEP_ORDER: readonly WidgetStep[] = [
   "vehicle",
   "condition",
   "intent",
   "contact",
-  "otp",
-  "offer",
+  "value",
 ] as const;
+
+/** MotoAcquire-style 4-point condition scale. */
+export type WidgetCondition = "fair" | "good" | "very_good" | "excellent";
 
 /**
  * Vehicle-detail-page context, scraped by the parent embed.js from the

@@ -54,10 +54,23 @@ sessionStorage embed attribution). One surface, one set of plumbing.
 |---|---|
 | `widgetTypes.ts` | Shared types: `WidgetStep`, `WidgetIntent`, `VdpContext`, `FirmOffer`. |
 | `useTradeWidget.ts` | `useFirmOffer` — resolve the customer's existing offer by token. |
-| `TradeWidget.tsx` | Presentational body (banner + flow) rendered by `EmbedLanding`. |
+| `TradeWidget.tsx` | Branded panel (dealer-logo header + ×) rendered by `EmbedLanding`. |
 | `TradeInBanner.tsx` | VDP header: "apply your $X trade toward this {vehicle}" + effective price. |
-| `TradeWidgetFlow.tsx` | The watered-down stepper (vehicle → condition → intent → contact → **OTP** → offer). |
+| `TradeWidgetFlow.tsx` | MotoAcquire-style stepper: vehicle (VIN/plate+state → confirm) → condition (4-pt) → intent → contact (+track toggle) → value (range → **OTP** → firm offer). |
 | `../../pages/EmbedLanding.tsx` | Host — branches to `<TradeWidget>` on `?template=widget`. |
+
+## Flow parity with MotoAcquire (Stevens Creek Toyota reference)
+
+| MotoAcquire screen | Our step |
+|---|---|
+| VIN / plate + state | `vehicle` (entry) |
+| Confirm detected vehicle + car image | `vehicle` (confirm) |
+| Condition: Fair / Good / Very Good / Excellent | `condition` |
+| Trade or Sell | `intent` |
+| Contact + "Track value monthly" toggle (default off) | `contact` |
+| KBB-style range + disclaimer + Edit Mileage + red "Get Firm Offer" | `value` (range) |
+| — (our kept-OTP gate behind "Get Firm Offer") | `value` (verify) |
+| Firm appraisal / next step | `value` (firm) |
 
 ## What's deliberately dropped (the "watered down")
 
@@ -95,10 +108,13 @@ EmbedLanding already drives this; the widget body inherits it.
 - [ ] **Vehicle step** — replace the placeholder input with the real
       Black Book lookup used by `MotoStepVehicleSearch` (VIN/plate/YMM →
       `BBVehicle`).
-- [ ] **OTP step** — insert SMS verification (decision #1) between
-      `contact` and `offer`, reusing the moto contact-verify path
-      (`MotoStepContact` OTP) so the offer only reveals post-verify.
-- [ ] **Offer step** — on verify, call `calculateAndPersistOffer()`
+- [ ] **Value range** — compute `estimated_offer_low/high` from
+      `offerCalculator` + selected condition; replace the hardcoded
+      `$1,090–$1,915` placeholder.
+- [ ] **OTP gate** — wire the `value`→verify sub-state to the moto
+      contact-verify path (`MotoStepContact` OTP) so the firm offer only
+      reveals post-verify (decision #1).
+- [ ] **Firm offer** — on verify, call `calculateAndPersistOffer()`
       (`src/components/moto/motoSubmission.ts`) to insert the submission,
       compute the firm offer (`offer_settings.auto_firm_offer_pct`), and
       return the token; then render the real number. Stamp
