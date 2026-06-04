@@ -9,9 +9,6 @@
 //
 // See ./README.md for the full architecture + reuse map.
 
-/** Chrome behavior of the iframe, mirroring EmbedLanding's contract. */
-export type WidgetMode = "inline" | "overlay";
-
 /** Whether the customer wants to trade toward a purchase or cash out. */
 export type WidgetIntent = "trade" | "sell";
 
@@ -19,14 +16,18 @@ export type WidgetIntent = "trade" | "sell";
  * Lean flow steps. Deliberately fewer than the full moto flow — the
  * heavy disclosure / process-explainer steps (TCPA consent, 8-question
  * damage matrix, multi-slot photo capture, scheduling) are dropped.
+ *
+ * SMS verification (`otp`) is KEPT (product decision) and gates the
+ * offer reveal — contact-first, then verify, then number.
  */
-export type WidgetStep = "vehicle" | "condition" | "intent" | "contact" | "offer";
+export type WidgetStep = "vehicle" | "condition" | "intent" | "contact" | "otp" | "offer";
 
 export const WIDGET_STEP_ORDER: readonly WidgetStep[] = [
   "vehicle",
   "condition",
   "intent",
   "contact",
+  "otp",
   "offer",
 ] as const;
 
@@ -56,18 +57,4 @@ export interface FirmOffer {
   status: "in_progress" | "offer_made" | "deal_accepted";
   /** The customer's OWN vehicle (their trade), e.g. "2019 Toyota Camry". */
   vehicleLabel: string | null;
-}
-
-/** Parsed, static widget context derived from route + URL params. */
-export interface TradeWidgetContext {
-  dealershipId: string;
-  mode: WidgetMode;
-  /** Default "sell"; auto-promoted to "trade" when a VDP is detected. */
-  intent: WidgetIntent;
-  /** Non-null when the customer is on a vehicle detail page. */
-  vdp: VdpContext | null;
-  /** Existing submission token handed in by embed.js (`?t=`), if any. */
-  resumeToken: string;
-  /** Customer ZIP (drives state tax credit on the trade-in math). */
-  zip: string;
 }

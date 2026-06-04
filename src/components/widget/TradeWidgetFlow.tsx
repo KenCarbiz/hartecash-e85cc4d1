@@ -37,6 +37,7 @@ interface FlowData {
   firstName: string;
   email: string;
   phone: string;
+  otp: string;
 }
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
@@ -58,6 +59,7 @@ export default function TradeWidgetFlow({
     firstName: "",
     email: "",
     phone: "",
+    otp: "",
   });
   const set = (patch: Partial<FlowData>) => setData((d) => ({ ...d, ...patch }));
 
@@ -172,12 +174,37 @@ export default function TradeWidgetFlow({
             />
           </div>
           <div className="mt-4">
-            {/* TODO: on click → calculateAndPersistOffer(), then setStep("offer"). */}
+            {/* Contact-first (forced): next step is SMS verification, not
+                the offer. TODO: send the OTP here. */}
             <MotoPrimaryButton
               disabled={!data.firstName.trim() || !data.email.trim() || !data.phone.trim()}
               onClick={goNext}
             >
-              See my offer
+              Text me a code
+            </MotoPrimaryButton>
+          </div>
+        </MotoCard>
+      )}
+
+      {step === "otp" && (
+        <MotoCard title="Verify your number">
+          {/* OTP kept (product decision) — the offer only reveals after a
+              successful SMS verify. TODO: wire to the moto contact-verify
+              path (MotoStepContact OTP) → on success call
+              calculateAndPersistOffer() and advance to "offer". */}
+          <p className="mb-3 text-sm text-zinc-500">
+            We texted a 6-digit code to {data.phone || "your phone"}.
+          </p>
+          <MotoFormField
+            label="6-digit code"
+            inputMode="numeric"
+            maxLength={6}
+            value={data.otp}
+            onChange={(e) => set({ otp: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+          />
+          <div className="mt-4">
+            <MotoPrimaryButton disabled={data.otp.length !== 6} onClick={goNext}>
+              Verify &amp; see my offer
             </MotoPrimaryButton>
           </div>
         </MotoCard>

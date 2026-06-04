@@ -1,52 +1,13 @@
-// Hooks that wire the Trade/Sell widget to its host iframe + backend.
+// Offer resolution for the embeddable Trade/Sell widget.
 //
-// Three concerns, kept separate so the flow component stays presentational:
-//   1. useTradeWidgetContext()  — parse route + URL params into context
-//   2. useFirmOffer(token)      — resolve the customer's existing offer
-//   3. useParentFrameSync()     — postMessage contract with embed.js
-//
-// The postMessage contract is intentionally identical to EmbedLanding /
-// TradeIframe so any dealer site already running /public/embed.js gets
-// this widget's resize + state-change events with zero changes.
+// The widget body (TradeWidget) is rendered INSIDE EmbedLanding, which
+// already owns the iframe plumbing (resize / ready / close /
+// state-change postMessage) and the URL-param parsing. So all this hook
+// needs to do is resolve the customer's existing firm offer for display.
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { FirmOffer, TradeWidgetContext, WidgetIntent, WidgetMode } from "./widgetTypes";
-
-/** Parse the route param + query string into a stable widget context. */
-export function useTradeWidgetContext(): TradeWidgetContext {
-  const { dealershipId } = useParams<{ dealershipId: string }>();
-  const [params] = useSearchParams();
-
-  return useMemo(() => {
-    const mode = (params.get("mode") === "overlay" ? "overlay" : "inline") as WidgetMode;
-
-    const vehicleLabel = params.get("vehicle_label") || "";
-    const vehicleMsrp = Number(params.get("vehicle_msrp")) || 0;
-    const onVdp = vehicleLabel.length > 0;
-
-    // Intent precedence: explicit ?intent= wins; otherwise a detected
-    // VDP promotes us to "trade" (apply offer toward this car), and the
-    // bare floating button defaults to "sell".
-    const explicitIntent = params.get("intent");
-    const intent: WidgetIntent =
-      explicitIntent === "trade" || explicitIntent === "sell"
-        ? explicitIntent
-        : onVdp
-        ? "trade"
-        : "sell";
-
-    return {
-      dealershipId: dealershipId || "",
-      mode,
-      intent,
-      vdp: onVdp ? { vehicleLabel, vehicleMsrp } : null,
-      resumeToken: params.get("t") || "",
-      zip: params.get("zip") || "",
-    };
-  }, [dealershipId, params]);
-}
+import type { FirmOffer } from "./widgetTypes";
 
 /**
  * Resolve the customer's existing firm offer from a resume token.
@@ -105,58 +66,4 @@ export function useFirmOffer(token: string): { offer: FirmOffer | null; loading:
   }, [token]);
 
   return { offer, loading };
-}
-
-/**
- * Drive the cross-frame messaging contract with the parent embed.js:
- *   - hartecash-ready   once on mount
- *   - hartecash-resize  on every content height change
- *   - hartecash-close   helper returned for the close button
- *   - hartecash-state-change broadcast whenever the resolved offer changes
- *     (so the floating button copy swaps to "Apply your $X…").
- */
-export function useParentFrameSync(opts: {
-  dealershipId: string;
-  offer: FirmOffer | null;
-}): { close: () => void } {
-  const { dealershipId, offer } = opts;
-
-  // Resize + ready — identical to EmbedLanding so existing dealer
-  // resize listeners keep working untouched.
-  useEffect(() => {
-    let lastHeight = 0;
-    const sendHeight = () => {
-      const height = document.documentElement.scrollHeight;
-      if (Math.abs(height - lastHeight) < 4) return;
-      lastHeight = height;
-      window.parent.postMessage({ type: "hartecash-resize", height }, "*");
-    };
-    sendHeight();
-    window.parent.postMessage({ type: "hartecash-ready", dealershipId }, "*");
-    const observer = new ResizeObserver(sendHeight);
-    observer.observe(document.body);
-    const interval = setInterval(sendHeight, 500);
-    return () => {
-      observer.disconnect();
-      clearInterval(interval);
-    };
-  }, [dealershipId]);
-
-  // Broadcast resolved offer state up to the floating button.
-  useEffect(() => {
-    if (!offer) return;
-    window.parent.postMessage(
-      {
-        type: "hartecash-state-change",
-        token: offer.token,
-        status: offer.status,
-        offer: offer.amount,
-      },
-      "*",
-    );
-  }, [offer]);
-
-  return {
-    close: () => window.parent.postMessage({ type: "hartecash-close" }, "*"),
-  };
 }

@@ -34,15 +34,30 @@ already built for the existing inventory embed. This widget reuses them.
 The genuinely **new** piece is the **lean flow content** + a dedicated
 iframe host, instead of rendering the dealer's full landing template.
 
+## Surface: it extends `/embed` (no separate route)
+
+Per product decision, the lean flow is **not** a parallel route — it's a
+template override on the existing embed surface:
+
+```
+/embed/:dealershipId?template=widget&vehicle_label=…&vehicle_msrp=…&t=<token>&zip=…&intent=trade
+```
+
+`EmbedLanding` renders `<TradeWidget>` instead of `<LandingTemplateRouter>`
+when `?template=widget` is present, reusing all of EmbedLanding's existing
+iframe plumbing (resize / ready / close / state-change postMessage +
+sessionStorage embed attribution). One surface, one set of plumbing.
+
 ## Files in this framing
 
 | File | Role |
 |---|---|
-| `widgetTypes.ts` | Shared types: `WidgetStep`, `WidgetIntent`, `VdpContext`, `FirmOffer`, `TradeWidgetContext`. |
-| `useTradeWidget.ts` | `useTradeWidgetContext` (parse URL), `useFirmOffer` (resolve offer by token), `useParentFrameSync` (postMessage contract). |
+| `widgetTypes.ts` | Shared types: `WidgetStep`, `WidgetIntent`, `VdpContext`, `FirmOffer`. |
+| `useTradeWidget.ts` | `useFirmOffer` — resolve the customer's existing offer by token. |
+| `TradeWidget.tsx` | Presentational body (banner + flow) rendered by `EmbedLanding`. |
 | `TradeInBanner.tsx` | VDP header: "apply your $X trade toward this {vehicle}" + effective price. |
-| `TradeWidgetFlow.tsx` | The watered-down 5-step stepper (vehicle → condition → intent → contact → offer). |
-| `../../pages/WidgetTrade.tsx` | Iframe host at `/widget/:dealershipId` (lean sibling of `EmbedLanding`). |
+| `TradeWidgetFlow.tsx` | The watered-down stepper (vehicle → condition → intent → contact → **OTP** → offer). |
+| `../../pages/EmbedLanding.tsx` | Host — branches to `<TradeWidget>` on `?template=widget`. |
 
 ## What's deliberately dropped (the "watered down")
 
@@ -54,8 +69,9 @@ vs. the full moto flow (`src/components/moto/steps/*`, `sell-form/*`):
 - Ownership / color / scheduling steps
 - `MotoDisclosureBar` (the host page owns chrome; behaves like `?embed=true`)
 
-## postMessage contract (unchanged from EmbedLanding)
+## postMessage contract (owned by EmbedLanding)
 
+EmbedLanding already drives this; the widget body inherits it.
 `window.parent.postMessage(…, "*")`:
 - `{ type: "hartecash-ready", dealershipId }` — once on mount
 - `{ type: "hartecash-resize", height }` — on every height change
@@ -64,37 +80,37 @@ vs. the full moto flow (`src/components/moto/steps/*`, `sell-form/*`):
   resolved offer changes, so the floating button copy can swap to
   "Apply your $X toward this vehicle".
 
+## Product decisions (resolved by Ken)
+
+1. **OTP: keep.** Gate the offer behind SMS verification, like the full
+   flow. The stepper includes an `otp` step between `contact` and `offer`.
+2. **Reveal: contact-first (forced).** Always collect name/email/phone
+   before the number; ignore `offer_settings.pricing_reveal_mode` in the
+   widget. (The stepper already orders contact → offer.)
+3. **Surface: extend `/embed`.** `?template=widget` override, not a
+   parallel route. (Implemented.)
+
 ## Build-out checklist (next passes)
 
 - [ ] **Vehicle step** — replace the placeholder input with the real
       Black Book lookup used by `MotoStepVehicleSearch` (VIN/plate/YMM →
       `BBVehicle`).
-- [ ] **Offer step** — on contact submit, call `calculateAndPersistOffer()`
+- [ ] **OTP step** — insert SMS verification (decision #1) between
+      `contact` and `offer`, reusing the moto contact-verify path
+      (`MotoStepContact` OTP) so the offer only reveals post-verify.
+- [ ] **Offer step** — on verify, call `calculateAndPersistOffer()`
       (`src/components/moto/motoSubmission.ts`) to insert the submission,
       compute the firm offer (`offer_settings.auto_firm_offer_pct`), and
       return the token; then render the real number. Stamp
-      `embed_source` / `embed_vehicle_label` / `embed_vehicle_msrp` (the
-      `WidgetTrade` page already stashes these in `sessionStorage`).
-- [ ] **embed.js asset** — add a `trade` asset type to `embed-config` and a
-      `HarteCash.trade()` opener in `public/embed.js` that loads
-      `/widget/:tenant` in the drawer with detected `vehicle_label` /
-      `vehicle_msrp` / stored `token` as params. (Today it can be opened
-      via the existing overlay opener pointed at the new route.)
+      `embed_source` / `embed_vehicle_label` / `embed_vehicle_msrp`
+      (EmbedLanding already stashes these in `sessionStorage`).
+- [ ] **embed.js opener** — add a `trade` asset type to `embed-config` and
+      an opener in `public/embed.js` that loads
+      `/embed/:tenant?template=widget` in the drawer with detected
+      `vehicle_label` / `vehicle_msrp` / stored `token` as params.
 - [ ] **Trade-in confirm** — wire the offer step's
       "Apply toward this vehicle" CTA to record the VDP target against the
       submission (reuse `embed_vehicle_label/msrp`; decide if a dedicated
       `trade_target_*` column is warranted before adding a migration).
 - [ ] **Admin toggle** — surface an enable/disable for the trade widget in
       the dealer's embed config (alongside inventory/sticky/banner assets).
-
-## Open product decisions (flagged for Ken)
-
-1. **OTP on the lean flow?** The full flow gates the offer behind SMS
-   verification. Watering that out lowers friction but weakens lead
-   quality / TCPA posture. Keep, drop, or defer to post-offer?
-2. **Show the number before contact?** `offer_settings.pricing_reveal_mode`
-   supports `price_first`. Do we honor the dealer's setting or force
-   contact-first in the widget?
-3. **New embed asset vs. extend `/embed`?** This adds a parallel
-   `/widget` surface. Alternatively the lean flow could be a `?template=widget`
-   override on `/embed`. Parallel route chosen here for a clean separation.

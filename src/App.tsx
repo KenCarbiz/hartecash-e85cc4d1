@@ -60,7 +60,6 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const TradeLanding = lazy(() => import("./pages/TradeLanding"));
 const TradeIframe = lazy(() => import("./pages/TradeIframe"));
 const EmbedLanding = lazy(() => import("./pages/EmbedLanding"));
-const WidgetTrade = lazy(() => import("./pages/WidgetTrade"));
 const PushPullTow = lazy(() => import("./pages/PushPullTow"));
 const DealAccepted = lazy(() => import("./pages/DealAccepted"));
 const OfferDisclosure = lazy(() => import("./pages/OfferDisclosure"));
@@ -287,7 +286,6 @@ const AnimatedRoutes = () => {
         <Route path="/trade" element={<TradeLanding />} />
         <Route path="/trade-in" element={<TradeIframe />} />
         <Route path="/embed/:dealershipId" element={<EmbedLanding />} />
-        <Route path="/widget/:dealershipId" element={<WidgetTrade />} />
         <Route path="/push-pull-tow" element={<PushPullTow />} />
         <Route path="/deal/:token" element={<DealAccepted />} />
         {/* /disclosure moved into CustomerLayout above. */}
