@@ -6080,6 +6080,7 @@ export type Database = {
           created_at: string
           exterior_color: string
           id: string
+          image_source: string | null
           storage_path: string
           vehicle_make: string
           vehicle_model: string
@@ -6091,6 +6092,7 @@ export type Database = {
           created_at?: string
           exterior_color?: string
           id?: string
+          image_source?: string | null
           storage_path: string
           vehicle_make: string
           vehicle_model: string
@@ -6102,6 +6104,7 @@ export type Database = {
           created_at?: string
           exterior_color?: string
           id?: string
+          image_source?: string | null
           storage_path?: string
           vehicle_make?: string
           vehicle_model?: string
