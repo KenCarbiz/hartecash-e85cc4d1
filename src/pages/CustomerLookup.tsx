@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { tenantLogoSrc, AUTOCURB_LOGO } from "@/lib/tenantLogo";
 
 interface FoundSubmission {
   token: string;
@@ -71,7 +72,16 @@ const CustomerLookup = () => {
   const shortName = dealerName && dealerName !== "Our Dealership"
     ? dealerName.split(/\s+/)[0]
     : null;
-  const logoUrl = (config as { logo_url?: string }).logo_url || null;
+  // Resolve the logo exactly like the main-page header (SiteHeader):
+  // force the autoCURB wordmark for the AutoCurb tenant, else the
+  // tenant's uploaded logo, else "" (fall back to the name). Apply the
+  // same Supabase resize transform to keep the payload small.
+  const rawLogoSrc = tenantLogoSrc(config);
+  const logoUrl = rawLogoSrc
+    ? (rawLogoSrc.includes("supabase.co/storage/")
+        ? `${rawLogoSrc}?width=200&resize=contain&quality=75&format=origin`
+        : rawLogoSrc)
+    : null;
 
   // Header links resolve to the tenant's real contact channels. Support
   // dials the dealer; Contact opens email (falling back to phone); FAQ
@@ -134,7 +144,11 @@ const CustomerLookup = () => {
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
             {logoUrl ? (
-              <img src={logoUrl} alt={dealerName || "Home"} className="h-10 w-auto" />
+              <img
+                src={logoUrl}
+                alt={dealerName || "Home"}
+                className={`${logoUrl === AUTOCURB_LOGO ? "h-10 max-w-[200px]" : "h-12"} w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]`}
+              />
             ) : (
               <span className="text-base font-bold tracking-tight text-foreground">
                 {dealerName || "Customer Portal"}
