@@ -18,26 +18,56 @@ import { supabase } from "@/integrations/supabase/client";
  * neutral, brand-agnostic placeholder (never a specific model) until
  * the URL resolves.
  */
-export function useVehicleImage(
+export interface VehicleImageState {
+  /** Resolved image URL, or null while loading / on failure. */
+  url: string | null;
+  /** True while the edge function is resolving (or generating) the image. */
+  loading: boolean;
+  /** Origin of the resolved image: "blackbook" | "wikipedia" | "ai" |
+   *  null. Real photos (blackbook/wikipedia) carry their own background
+   *  and read best framed; AI/studio renders are clean cutouts that
+   *  float. Null on cache hits from before the source was persisted. */
+  source: string | null;
+}
+
+/**
+ * Loading-aware variant of {@link useVehicleImage}. Distinguishes the
+ * "still resolving" state from "resolved but empty / failed" so callers
+ * can show a tasteful skeleton while loading and fade the real photo in
+ * once it arrives — never a placeholder graphic mid-flight.
+ *
+ * `studioOnly` (default true) forces clean white-background AI renders.
+ * Pass `false` to prefer the customer's actual vehicle photo — Black
+ * Book (exact VIN) → Wikipedia → AI render — which the edge function
+ * also persists to storage for instant reuse on every later load.
+ */
+export function useVehicleImageState(
   year?: number | string | null,
   make?: string | null,
   model?: string | null,
   vin?: string | null,
   submissionToken?: string | null,
   uvc?: string | null,
-): string | null {
-  const [url, setUrl] = useState<string | null>(null);
+  studioOnly: boolean = true,
+): VehicleImageState {
+  const hasInputs = !!(year && make && model);
+  const [state, setState] = useState<VehicleImageState>(() => ({
+    url: null,
+    loading: hasInputs,
+    source: null,
+  }));
 
   // Stable key so we don't re-fetch on every render. Strings normalize
   // away nullish + whitespace so equivalent inputs hit the same key.
-  const key = [year, make, model, vin, uvc].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
+  const key = [year, make, model, vin, uvc, studioOnly].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
 
   useEffect(() => {
     if (!year || !make || !model) {
-      setUrl(null);
+      setState({ url: null, loading: false, source: null });
       return;
     }
     let cancelled = false;
+    setState({ url: null, loading: true, source: null });
     (async () => {
       try {
         const { data, error } = await supabase.functions.invoke("generate-vehicle-image", {
@@ -46,11 +76,10 @@ export function useVehicleImage(
             make,
             model,
             angle: "3q",
-            // Clean white-background studio render of the customer's exact
-            // year/make/model. This is the reliable path (cached per
-            // y/m/m); the BB-photo-by-VIN route produced empty results for
-            // some vehicles and fell through to the silhouette placeholder.
-            studio_only: true,
+            // Prefer the real photo of the customer's exact vehicle when
+            // studioOnly is false (Black Book by VIN → Wikipedia → AI);
+            // otherwise force a clean white-background studio render.
+            studio_only: studioOnly,
             vin: vin || undefined,
             uvc: uvc || undefined,
             submission_token: submissionToken || undefined,
@@ -58,18 +87,34 @@ export function useVehicleImage(
         });
         if (cancelled) return;
         if (error || !data?.image_url) {
-          setUrl(null);
+          setState({ url: null, loading: false, source: null });
           return;
         }
-        setUrl(data.image_url as string);
+        setState({ url: data.image_url as string, loading: false, source: (data.source as string) ?? null });
       } catch {
         if (cancelled) return;
-        setUrl(null);
+        setState({ url: null, loading: false, source: null });
       }
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return url;
+  return state;
+}
+
+/**
+ * Resolves a customer-portal hero image URL. Thin wrapper over
+ * {@link useVehicleImageState} for callers that only need the URL.
+ */
+export function useVehicleImage(
+  year?: number | string | null,
+  make?: string | null,
+  model?: string | null,
+  vin?: string | null,
+  submissionToken?: string | null,
+  uvc?: string | null,
+  studioOnly: boolean = true,
+): string | null {
+  return useVehicleImageState(year, make, model, vin, submissionToken, uvc, studioOnly).url;
 }

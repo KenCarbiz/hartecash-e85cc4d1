@@ -100,7 +100,7 @@ serve(async (req) => {
     // 1. Check the DB cache table first
     const { data: cachedRow } = await supabase
       .from("vehicle_image_cache")
-      .select("storage_path")
+      .select("storage_path, image_source")
       .eq("cache_key", cacheKey)
       .maybeSingle();
 
@@ -111,7 +111,7 @@ serve(async (req) => {
 
       if (signedData?.signedUrl) {
         console.log(`Cache HIT for ${cacheKey}`);
-        return new Response(JSON.stringify({ image_url: signedData.signedUrl, cached: true }), {
+        return new Response(JSON.stringify({ image_url: signedData.signedUrl, cached: true, source: cachedRow.image_source ?? null }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
@@ -129,7 +129,7 @@ serve(async (req) => {
     // re-fetch later if/when the color matches.
     const { data: anyColorRow } = studio_only ? { data: null } : await supabase
       .from("vehicle_image_cache")
-      .select("storage_path, exterior_color")
+      .select("storage_path, exterior_color, image_source")
       .eq("vehicle_year", String(year))
       .eq("vehicle_make", make)
       .eq("vehicle_model", model)
@@ -147,6 +147,7 @@ serve(async (req) => {
           cached: true,
           color_fallback: true,
           fallback_color: anyColorRow.exterior_color,
+          source: anyColorRow.image_source ?? null,
         }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
@@ -343,6 +344,7 @@ serve(async (req) => {
           vehicle_style: style || null,
           exterior_color: (color || "white").toLowerCase(),
           storage_path: finalStoragePath,
+          image_source: imageSource,
         }, { onConflict: "cache_key" });
 
         if (insertErr) console.error("Cache table insert failed:", insertErr);

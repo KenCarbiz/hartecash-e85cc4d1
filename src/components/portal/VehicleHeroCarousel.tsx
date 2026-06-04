@@ -7,9 +7,8 @@ import {
   CircleDot, Plus, Brain, ArrowRight,
 } from "lucide-react";
 import { fmt } from "./portalMock";
-import { NEUTRAL_VEHICLE } from "./neutralVehicle";
 import { usePortalData } from "./PortalDataContext";
-import { useVehicleImage } from "@/hooks/useVehicleImage";
+import { VehicleHeroImage } from "./VehicleHeroImage";
 
 /* ============================================================== */
 /*  Slide data — single source of truth                            */
@@ -79,18 +78,21 @@ const SLIDE_HEIGHT = "h-[280px] md:h-[300px]";
 /* ---------- 1. Vehicle Overview --------------------------------- */
 const VehicleOverviewSlide = ({ copied, onCopy }: { copied: boolean; onCopy: () => void }) => {
   const MOCK = usePortalData();
-  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model, MOCK.vehicle.vin);
   return (
   <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-4 items-center h-full">
     <div className="relative h-[140px] md:h-[200px] flex items-center justify-center overflow-hidden group">
       <div className="absolute inset-0 grid place-items-center pointer-events-none">
         <div className="w-[88%] h-[88%] rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.42)_38%,_rgba(224,231,255,0.18)_62%,_transparent_78%)] blur-[2px]" />
       </div>
-      <img
-        src={heroUrl || NEUTRAL_VEHICLE}
+      <VehicleHeroImage
+        year={MOCK.vehicle.year}
+        make={MOCK.vehicle.make}
+        model={MOCK.vehicle.model}
+        vin={MOCK.vehicle.vin}
         alt={`${MOCK.vehicle.year} ${MOCK.vehicle.make} ${MOCK.vehicle.model}`}
-        loading="lazy"
-        className="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_18px_14px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.24]"
+        priority
+        iconClassName="w-12 h-12"
+        imgClassName="relative z-10 max-h-full w-auto object-contain scale-[1.18] drop-shadow-[0_18px_14px_rgba(15,23,42,0.22)] group-hover:scale-[1.24]"
       />
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[68%] h-[10px] rounded-[50%] bg-black/25 blur-md z-0" />
     </div>
@@ -163,8 +165,7 @@ const PHOTO_STATUS: Record<string, { label: string; cls: string }> = {
 
 const PhotoGallerySlide = () => {
   const MOCK = usePortalData();
-  const heroUrl = useVehicleImage(MOCK.vehicle.year, MOCK.vehicle.make, MOCK.vehicle.model, MOCK.vehicle.vin);
-  const heroSrc = heroUrl || NEUTRAL_VEHICLE;
+  const v = MOCK.vehicle;
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const cat = PHOTO_CATEGORIES[active];
@@ -197,11 +198,15 @@ const PhotoGallerySlide = () => {
               <div className="absolute left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 w-[88%] h-[78%] rounded-full bg-[radial-gradient(ellipse_at_center,_rgba(167,139,250,0.32)_0%,_rgba(199,210,254,0.28)_42%,_transparent_72%)] blur-[2px]" />
             </div>
             {/* Vehicle — sits slightly above center, larger hero presence */}
-            <img
-              src={heroSrc}
+            <VehicleHeroImage
+              year={v.year}
+              make={v.make}
+              model={v.model}
+              vin={v.vin}
               alt={cat.label}
-              loading="lazy"
-              className="relative z-10 max-h-[92%] max-w-[94%] w-auto object-contain scale-[1.26] -translate-y-[6%] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)] transition-transform duration-500 group-hover:scale-[1.32]"
+              priority
+              iconClassName="w-14 h-14"
+              imgClassName="relative z-10 max-h-[92%] max-w-[94%] w-auto object-contain scale-[1.26] -translate-y-[6%] drop-shadow-[0_22px_18px_rgba(15,23,42,0.22)] group-hover:scale-[1.32]"
             />
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[58%] h-[10px] rounded-[50%] bg-black/22 blur-md z-0" />
 
@@ -305,8 +310,17 @@ const PhotoGallerySlide = () => {
                 </div>
               </div>
               <div className="relative bg-gradient-to-br from-[#EEF0FF] via-white to-[#F5F3FF] grid place-items-center h-[420px]">
-                <img src={heroSrc} alt={cat.label}
-                  className="max-h-[88%] w-auto object-contain drop-shadow-[0_24px_24px_rgba(15,23,42,0.22)]" />
+                <VehicleHeroImage
+                  year={v.year}
+                  make={v.make}
+                  model={v.model}
+                  vin={v.vin}
+                  alt={cat.label}
+                  priority
+                  realFit="contain"
+                  iconClassName="w-20 h-20"
+                  imgClassName="max-h-[88%] w-auto object-contain drop-shadow-[0_24px_24px_rgba(15,23,42,0.22)]"
+                />
                 <button onClick={prev} aria-label="Previous"
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg grid place-items-center text-[#06194A]">
                   <ChevronLeft className="w-5 h-5" />
