@@ -61,11 +61,11 @@ export default function TradeWidget({
   return (
     <div className="flex min-h-screen flex-col bg-white">
       {/* Branded panel header — sticky, like the MotoAcquire slide-out. */}
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 bg-white px-5 py-4">
         {logo ? (
-          <img src={logo} alt={dealerName || "Dealer"} className="h-8 w-auto object-contain" />
+          <img src={logo} alt={dealerName || "Dealer"} className="h-11 w-auto max-w-[220px] object-contain" />
         ) : (
-          <span className="text-sm font-bold tracking-tight text-zinc-900">
+          <span className="text-base font-bold tracking-tight text-zinc-900">
             {dealerName || "Value My Trade"}
           </span>
         )}
@@ -73,9 +73,9 @@ export default function TradeWidget({
           type="button"
           onClick={() => window.parent.postMessage({ type: "hartecash-close" }, "*")}
           aria-label="Close"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
         >
-          <X className="h-4 w-4" aria-hidden="true" />
+          <X className="h-5 w-5" aria-hidden="true" />
         </button>
       </header>
 
