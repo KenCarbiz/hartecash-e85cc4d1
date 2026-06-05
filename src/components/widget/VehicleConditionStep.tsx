@@ -92,6 +92,15 @@ export default function VehicleConditionStep({
               />
             )}
           </AnimatePresence>
+          {/* Soft ground shadow under the (background-free) side profile. */}
+          {imageUrl && imgLoaded && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.45, delay: 0.1 }}
+              className="pointer-events-none absolute inset-x-0 bottom-[8%] z-0 mx-auto h-3 w-[64%] rounded-[50%] bg-zinc-900/20 blur-md"
+            />
+          )}
           {imageUrl && (
             <motion.img
               src={imageUrl}
@@ -100,7 +109,7 @@ export default function VehicleConditionStep({
               initial={{ opacity: 0 }}
               animate={{ opacity: imgLoaded ? 1 : 0 }}
               transition={{ duration: 0.45 }}
-              className="absolute inset-0 h-full w-full object-contain"
+              className="absolute inset-0 z-10 h-full w-full object-contain"
             />
           )}
         </div>
