@@ -180,21 +180,12 @@ export default function TradeWidgetFlow({
   const heroUrl = useVehicleImage(
     bb?.year, bb?.make, bb?.model, bb?.vin, undefined, bb?.uvc, false, "side",
   );
-  // Re-rendered hero once the customer picks a factory color. Forces a
-  // clean studio render in the chosen color so the intent step shows
-  // *their* car (not the stock photo). We pass a simplified base color
-  // word ("blue" from "Grand Blue Pearl Met") so the AI actually paints
-  // the right hue.
-  const colorForPrompt = simplifyColorForPrompt(data.colorName);
-  const { url: coloredHeroUrl, loading: coloredHeroLoading } = useVehicleImageState(
-    bb?.year, bb?.make, bb?.model, bb?.vin, undefined, bb?.uvc,
-    !!data.colorName, "side", colorForPrompt,
-  );
-  // Once the customer has picked a color, we ONLY show the recolored
-  // render — never the stock white photo — so the image always matches
-  // their car. Falls back to the generic hero only when no color is set.
-  const intentHeroUrl = data.colorName ? coloredHeroUrl : heroUrl;
-  const intentHeroLoading = !!data.colorName && coloredHeroLoading;
+  // Instant color match: instead of waiting on an AI re-render, we tint
+  // the existing stock photo with the customer's chosen swatch via a
+  // CSS multiply overlay. White-background studio shots tint cleanly
+  // (white × swatch = swatch) while wheels/windows stay dark. Zero wait.
+  const intentHeroUrl = heroUrl;
+  const tintColor = data.colorHex || null;
 
   const goNext = () => {
     const i = WIDGET_STEP_ORDER.indexOf(step);
