@@ -15,6 +15,11 @@ import SEO from "@/components/SEO";
 const PrivacyPolicy = () => {
   const { config } = useSiteConfig();
   const dealerName = (config.dealership_name || "").trim() || "Our Dealership";
+  // Contact details are tenant-specific — never hard-code one dealership's
+  // address/phone/email into every tenant's policy.
+  const contactPhone = (config.phone || "").trim() || "your dealership";
+  const contactEmail = (config.email || "").trim();
+  const contactAddress = ((config as { dealership_address?: string }).dealership_address || "").trim();
 
   return (
     <>
@@ -70,11 +75,24 @@ const PrivacyPolicy = () => {
               lookup card. White, hairline border, soft shadow. */}
           <article className="bg-white rounded-3xl border border-border/60 shadow-[0_8px_32px_-12px_rgb(15_23_42_/_0.08)] p-7 lg:p-10 space-y-8 text-[15px] text-foreground/75 leading-relaxed">
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-2">1. Who We Are</h2>
+              <h2 className="text-lg font-bold text-foreground mb-2">1. Who We Are and Who Controls Your Data</h2>
               <p>
                 {dealerName} ("we," "us," or "our") operates this website and related
                 services. This privacy policy applies to all information collected
                 through our platform.
+              </p>
+              <p className="mt-3">
+                When you submit your information to get a vehicle valuation or offer,{" "}
+                <strong className="text-foreground">{dealerName} is the business and
+                data controller</strong> — it determines why your information is
+                collected and how it is used, and your customer relationship is with{" "}
+                {dealerName}. {dealerName} uses AutoCurb as its technology service
+                provider to operate these tools and host the data on its behalf.{" "}
+                <strong className="text-foreground">AutoCurb acts only as a service
+                provider/processor</strong>: it processes your information solely on{" "}
+                {dealerName}'s instructions to deliver the service described here, does
+                not sell your information, and does not use it for its own purposes.
+                Your information belongs to {dealerName}, not to AutoCurb.
               </p>
             </section>
 
@@ -126,8 +144,8 @@ const PrivacyPolicy = () => {
                   <li><strong className="text-foreground">Consent is not a condition of purchase.</strong> You are not required to consent to receive text messages as a condition of purchasing any goods or services.</li>
                   <li><strong className="text-foreground">Message frequency varies.</strong> You may receive up to 10 messages per month depending on your interaction with our services.</li>
                   <li><strong className="text-foreground">Message and data rates may apply.</strong> Standard messaging rates from your wireless carrier apply.</li>
-                  <li><strong className="text-foreground">Opt out at any time.</strong> Reply <strong className="text-foreground">STOP</strong> to any text message to unsubscribe. You will receive a one-time confirmation message. You may also contact us at (866) 851-7390 to opt out.</li>
-                  <li><strong className="text-foreground">Help.</strong> Reply <strong className="text-foreground">HELP</strong> for assistance or contact us at (866) 851-7390.</li>
+                  <li><strong className="text-foreground">Opt out at any time.</strong> Reply <strong className="text-foreground">STOP</strong> to any text message to unsubscribe. You will receive a one-time confirmation message. You may also contact us at {contactPhone} to opt out.</li>
+                  <li><strong className="text-foreground">Help.</strong> Reply <strong className="text-foreground">HELP</strong> for assistance or contact us at {contactPhone}.</li>
                   <li><strong className="text-foreground">Supported carriers:</strong> AT&amp;T, Verizon, T-Mobile, Sprint, and most major U.S. carriers. Carriers are not liable for delayed or undelivered messages.</li>
                 </ul>
               </div>
@@ -146,7 +164,7 @@ const PrivacyPolicy = () => {
               <p className="mb-3">
                 When you complete the appraisal flow on this site, you will see a toggle
                 labelled <strong className="text-foreground">"Track my vehicle value monthly via email"</strong>.
-                This toggle is <strong className="text-foreground">enabled by default</strong>. If you leave
+                This is an <strong className="text-foreground">optional service you choose to enable</strong> — it is never required to get your offer. If you leave
                 it enabled when you verify your phone number, you are opting in to our free
                 Vehicle Value Tracker service.
               </p>
@@ -154,7 +172,7 @@ const PrivacyPolicy = () => {
               <div className="rounded-2xl border border-border/60 bg-[hsl(220_14%_98%)] p-5 mb-4">
                 <p className="text-sm font-semibold text-foreground mb-2">What the tracker does</p>
                 <ul className="list-disc pl-5 space-y-1.5 text-sm">
-                  <li><strong className="text-foreground">Weekly recompute.</strong> We re-run your vehicle's value against the same data sources we use to price your trade-in (Kelley Blue Book and Black Book), adjusted for drifted mileage.</li>
+                  <li><strong className="text-foreground">Weekly recompute.</strong> We re-run your vehicle's value using the same data we use to price your trade-in (Black Book data and comparable vehicles currently for sale in the market), adjusted for drifted mileage.</li>
                   <li><strong className="text-foreground">Monthly email.</strong> You will receive a dealer-branded email from {dealerName} with your current estimated value and the change since you signed up.</li>
                   <li><strong className="text-foreground">Threshold alerts.</strong> If your vehicle's value moves more than $200 between checks, we may send an additional notification so you can decide whether to sell or trade.</li>
                   <li><strong className="text-foreground">One-click refresh.</strong> Each email includes a link back to a fresh appraisal page so you can update your information and request a new firm offer at any time.</li>
@@ -240,6 +258,16 @@ const PrivacyPolicy = () => {
 
             <section>
               <h2 className="text-lg font-bold text-foreground mb-2">7. How We Share Your Information</h2>
+              <p className="mb-3">
+                <strong className="text-foreground">The participating dealership.</strong>{" "}
+                When you submit your information through this site, it is provided to{" "}
+                {dealerName} so it can prepare your valuation/offer, contact you, and
+                complete a purchase if you proceed. Your information is made available{" "}
+                <strong className="text-foreground">only to {dealerName}</strong> — it is
+                never shared with other dealerships or sold to lead aggregators. The
+                AutoCurb platform keeps each dealership's customer data fully separated;
+                no other dealership can access it.
+              </p>
               <p className="mb-3">We do not sell your personal information. We may share your information with:</p>
               <p className="mb-2"><strong className="text-foreground">Service providers (sub-processors)</strong> — the named third parties below, each contractually limited to delivering the service on our behalf:</p>
               <div className="overflow-x-auto rounded-2xl border border-border/60 mb-4">
@@ -309,11 +337,24 @@ const PrivacyPolicy = () => {
             <section>
               <h2 className="text-lg font-bold text-foreground mb-2">8. Data Security</h2>
               <p>
-                We implement industry-standard security measures to protect your personal
-                information, including encrypted data transmission (SSL/TLS), access
-                controls, and secure cloud storage. However, no method of electronic
-                transmission or storage is 100% secure, and we cannot guarantee absolute
-                security.
+                We maintain a written information-security program with administrative,
+                technical, and physical safeguards designed to meet the FTC Safeguards
+                Rule under the Gramm-Leach-Bliley Act (GLBA). These include:
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 my-3">
+                <li>Encryption of personal information in transit (TLS) and at rest.</li>
+                <li>Role-based, least-privilege access controls, and strict per-dealership data isolation so one dealership's data is never accessible to another.</li>
+                <li>Multi-factor authentication available for administrative access.</li>
+                <li>Logging and monitoring of access to customer data, and audit trails.</li>
+                <li>Written data-protection agreements with every service provider, and a documented incident-response process.</li>
+                <li>Data hosted in the United States.</li>
+              </ul>
+              <p>
+                Because the dealership may help arrange vehicle financing, certain
+                information (such as loan or payoff details) is "nonpublic personal
+                information" protected under GLBA, and is handled under that program. No
+                method of electronic transmission or storage is 100% secure, but we
+                review and update our safeguards regularly.
               </p>
             </section>
 
@@ -338,7 +379,7 @@ const PrivacyPolicy = () => {
               </ul>
               <p>
                 To exercise any of these rights, contact us at{" "}
-                <strong className="text-foreground">(866) 851-7390</strong> or email us at
+                <strong className="text-foreground">{contactPhone}</strong> or email us at
                 the address listed below.
               </p>
             </section>
@@ -355,7 +396,7 @@ const PrivacyPolicy = () => {
                 <li><strong className="text-foreground">Right to delete.</strong> You can request that we delete personal information we have about you, subject to limited exceptions (legal hold, fraud prevention, completing a transaction you initiated).</li>
                 <li><strong className="text-foreground">Right to correct.</strong> You can request correction of inaccurate personal information.</li>
                 <li><strong className="text-foreground">Right to limit use of sensitive personal information.</strong> We do not use sensitive PI (driver's license images, financial account numbers) for any purpose beyond delivering the service you requested.</li>
-                <li><strong className="text-foreground">Right to opt out of sale or sharing.</strong> We do not sell or share your personal information for cross-context behavioral advertising. There is nothing to opt out of.</li>
+                <li><strong className="text-foreground">Right to opt out of sale or sharing.</strong> We do not sell or share your personal information for cross-context behavioral advertising. We also honor opt-out preference signals, including the Global Privacy Control (GPC): if your browser transmits GPC, we treat it as a valid request to opt out of any sale or sharing.</li>
                 <li><strong className="text-foreground">Right to non-discrimination.</strong> We will not deny service, charge a different price, or provide a lower quality of service because you exercised any of these rights.</li>
               </ul>
               <p className="mb-2">To exercise these rights, you (or an authorized agent) can:</p>
@@ -368,8 +409,12 @@ const PrivacyPolicy = () => {
                   notice).
                 </li>
                 <li>
-                  Call <strong className="text-foreground">(866) 851-7390</strong> or email{" "}
-                  <a href="mailto:privacy@hartecash.com" className="text-primary underline-offset-4 hover:underline">privacy@hartecash.com</a>.
+                  Call <strong className="text-foreground">{contactPhone}</strong>
+                  {contactEmail ? (
+                    <> or email{" "}
+                      <a href={`mailto:${contactEmail}`} className="text-primary underline-offset-4 hover:underline">{contactEmail}</a>
+                    </>
+                  ) : null}.
                 </li>
               </ul>
               <p className="text-sm text-foreground/60">
@@ -415,9 +460,17 @@ const PrivacyPolicy = () => {
               </p>
               <div className="rounded-2xl border border-border/60 bg-[hsl(220_14%_98%)] p-5">
                 <p className="font-semibold text-foreground">{dealerName}</p>
-                <p>150 Weston Street, Hartford, CT 06120</p>
-                <p>Phone: (866) 851-7390</p>
+                {contactAddress ? <p>{contactAddress}</p> : null}
+                <p>Phone: {contactPhone}</p>
+                {contactEmail ? <p>Email: {contactEmail}</p> : null}
               </div>
+              <p className="mt-3 text-sm text-foreground/60">
+                This Privacy Policy is published by {dealerName}, which is responsible
+                for it and for your information. The website and tools are operated for{" "}
+                {dealerName} by AutoCurb, acting solely as {dealerName}'s technology
+                service provider (processor/facilitator). AutoCurb does not own, sell,
+                or independently use your information.
+              </p>
             </section>
           </article>
 
