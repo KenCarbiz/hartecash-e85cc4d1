@@ -194,6 +194,30 @@ export default function TradeWidgetFlow({
   const decode = async () => {
     setBusy(true);
     setError(null);
+    // YMM fallback: no VIN/plate decode call — build a stub BBVehicle
+    // (same pattern as the landing page) and advance to the condition
+    // step. Real pricing fills in once mileage + condition are known.
+    if (data.entryMode === "vin" && !vinReady && ymmReady) {
+      const stub: BBVehicle = {
+        uvc: "", vin: "",
+        year: ymmYear, make: ymmMake, model: ymmModel, series: ymmTrim,
+        style: "", class_name: "",
+        msrp: 0, price_includes: "",
+        drivetrain: "", transmission: "", engine: "", fuel_type: "",
+        exterior_colors: [],
+        mileage_adj: 0, regional_adj: 0, base_whole_avg: 0,
+        add_deduct_list: [],
+        wholesale: { xclean: 0, clean: 0, avg: 0, rough: 0 },
+        tradein: { clean: 0, avg: 0, rough: 0 },
+        retail: { xclean: 0, clean: 0, avg: 0, rough: 0 },
+        _nhtsa: true,
+      };
+      setBusy(false);
+      setBb(stub);
+      setCandidates([stub]);
+      setStep("condition");
+      return;
+    }
     const { vehicles, error: err } = await decodeVehicle(data, dealershipId);
     setBusy(false);
     if (!vehicles.length) {
