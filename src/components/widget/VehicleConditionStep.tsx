@@ -6,7 +6,7 @@
 // a condensed value-tracking feature, and a quiet trust line. The image
 // carries the confirmation; copy stays small and supporting.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Lock, ArrowRight } from "lucide-react";
 import MotoPrimaryButton from "@/components/moto/MotoPrimaryButton";
@@ -51,6 +51,18 @@ export default function VehicleConditionStep({
   const stepNumber = WIDGET_STEP_ORDER.indexOf("condition") + 1;
   const [imgLoaded, setImgLoaded] = useState(false);
   useEffect(() => setImgLoaded(false), [imageUrl]);
+
+  // When a condition is picked, bring the freshly-revealed Continue into
+  // view (only scrolls if it's off-screen — important on mobile where the
+  // button appears below the condition list).
+  const continueRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!condition) return;
+    const t = setTimeout(() => {
+      continueRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 120);
+    return () => clearTimeout(t);
+  }, [condition]);
 
   const ready = !!vehicle;
   const title = vehicle ? bbVehicleLabel(vehicle) : "";
@@ -180,35 +192,49 @@ export default function VehicleConditionStep({
         </div>
       </div>
 
-      {/* ── Condensed value-tracking feature ── */}
-      <div className="mt-6 flex items-center gap-3 rounded-2xl bg-zinc-50 p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white shadow-sm">
+      {/* ── Continue — the primary action. Hidden entirely (space
+          reclaimed) until a condition is chosen, then it animates in so
+          the reveal reads as progress rather than an inert disabled CTA. */}
+      <AnimatePresence initial={false}>
+        {condition && (
+          <motion.div
+            ref={continueRef}
+            initial={{ opacity: 0, y: 14, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto", marginTop: 24 }}
+            exit={{ opacity: 0, y: 8, height: 0, marginTop: 0 }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <MotoPrimaryButton onClick={onContinue} className="min-h-[52px]">
+              Continue
+            </MotoPrimaryButton>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Track Your Vehicle Value — secondary, below Continue ── */}
+      <div className="mt-5 flex items-center gap-3 rounded-2xl bg-zinc-50 p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white shadow-sm">
           <TrendIcon />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-semibold text-zinc-900">Track Your Vehicle Value</p>
-          <p className="text-[12px] leading-snug text-zinc-500">
+          <p className="text-[13px] font-semibold text-zinc-700">Track Your Vehicle Value</p>
+          <p className="text-[11.5px] leading-snug text-zinc-500">
             Get notified when your vehicle's market value changes.
           </p>
         </div>
         <button
           type="button"
-          className="inline-flex shrink-0 items-center gap-0.5 text-[13px] font-semibold text-[hsl(var(--cta-offer))] hover:underline"
+          className="inline-flex shrink-0 items-center gap-0.5 text-[12.5px] font-semibold text-zinc-500 hover:text-[hsl(var(--cta-offer))]"
         >
           Learn More <ArrowRight className="h-3.5 w-3.5" />
         </button>
       </div>
 
-      {/* ── Sticky Continue + trust ── */}
-      <div className="sticky bottom-0 z-20 mt-6 -mx-7 border-t border-zinc-100 bg-white/95 px-7 pb-4 pt-3 backdrop-blur">
-        <MotoPrimaryButton disabled={!condition} onClick={onContinue} className="min-h-[52px]">
-          Continue
-        </MotoPrimaryButton>
-        <p className="mt-2.5 flex items-center justify-center gap-1.5 text-center text-[12px] text-zinc-400">
-          <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-          Your information is secure and only used to calculate your vehicle value.
-        </p>
-      </div>
+      {/* ── Trust ── */}
+      <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[12px] text-zinc-400">
+        <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+        Your information is secure and only used to calculate your vehicle value.
+      </p>
     </div>
   );
 }
