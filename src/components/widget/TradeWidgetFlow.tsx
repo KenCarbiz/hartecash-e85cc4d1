@@ -18,22 +18,7 @@ import MotoFormField from "@/components/moto/MotoFormField";
 import { MotoOutlinedInput, MotoOutlinedSelect } from "@/components/moto/MotoOutlinedField";
 import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "@/components/moto/ymmData";
 import { cn } from "@/lib/utils";
-import { useVehicleImage, useVehicleImageState } from "@/hooks/useVehicleImage";
-
-// Distill a verbose factory color name (e.g. "Grand Blue Pearl Met") down
-// to the base hue word the AI image model actually understands. This keeps
-// the studio render visibly the customer's color instead of a near-miss.
-const BASE_COLOR_WORDS = [
-  "white","black","silver","gray","grey","red","blue","green","brown","beige",
-  "tan","gold","yellow","orange","purple","bronze","copper","champagne","ivory",
-  "pearl","graphite","charcoal","burgundy","maroon","navy",
-] as const;
-const simplifyColorForPrompt = (raw?: string | null): string | undefined => {
-  if (!raw) return undefined;
-  const lower = raw.toLowerCase();
-  const hit = BASE_COLOR_WORDS.find((w) => lower.includes(w));
-  return hit ?? raw;
-};
+import { useVehicleImage } from "@/hooks/useVehicleImage";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
 import HowItWorksLean from "@/components/moto-sections/HowItWorksLean";
 import ValueTrackerCard from "@/components/moto-sections/ValueTrackerCard";
@@ -134,6 +119,7 @@ export default function TradeWidgetFlow({
     trackValue: true,
     colorCode: "",
     colorName: "",
+    colorHex: "",
     otp: "",
   });
   const set = (patch: Partial<typeof data>) => setData((d) => ({ ...d, ...patch }));
@@ -179,21 +165,12 @@ export default function TradeWidgetFlow({
   const heroUrl = useVehicleImage(
     bb?.year, bb?.make, bb?.model, bb?.vin, undefined, bb?.uvc, false, "side",
   );
-  // Re-rendered hero once the customer picks a factory color. Forces a
-  // clean studio render in the chosen color so the intent step shows
-  // *their* car (not the stock photo). We pass a simplified base color
-  // word ("blue" from "Grand Blue Pearl Met") so the AI actually paints
-  // the right hue.
-  const colorForPrompt = simplifyColorForPrompt(data.colorName);
-  const { url: coloredHeroUrl, loading: coloredHeroLoading } = useVehicleImageState(
-    bb?.year, bb?.make, bb?.model, bb?.vin, undefined, bb?.uvc,
-    !!data.colorName, "side", colorForPrompt,
-  );
-  // Once the customer has picked a color, we ONLY show the recolored
-  // render — never the stock white photo — so the image always matches
-  // their car. Falls back to the generic hero only when no color is set.
-  const intentHeroUrl = data.colorName ? coloredHeroUrl : heroUrl;
-  const intentHeroLoading = !!data.colorName && coloredHeroLoading;
+  // Instant color match: instead of waiting on an AI re-render, we tint
+  // the existing stock photo with the customer's chosen swatch via a
+  // CSS multiply overlay. White-background studio shots tint cleanly
+  // (white × swatch = swatch) while wheels/windows stay dark. Zero wait.
+  const intentHeroUrl = heroUrl;
+  const tintColor = data.colorHex || null;
 
   const goNext = () => {
     const i = WIDGET_STEP_ORDER.indexOf(step);
@@ -644,7 +621,7 @@ export default function TradeWidgetFlow({
                     type="button"
                     aria-pressed={selected}
                     onClick={() => {
-                      set({ colorCode: c.code, colorName: c.name });
+                      set({ colorCode: c.code, colorName: c.name, colorHex: swatch });
                       goNext();
                     }}
                     className="flex flex-col items-center gap-1.5 text-center transition"
@@ -669,7 +646,7 @@ export default function TradeWidgetFlow({
             <button
               type="button"
               onClick={() => {
-                set({ colorCode: "", colorName: "" });
+                set({ colorCode: "", colorName: "", colorHex: "" });
                 goNext();
               }}
               className="mt-6 block w-full text-center text-xs font-medium text-zinc-500 hover:underline"
@@ -704,33 +681,45 @@ export default function TradeWidgetFlow({
       {/* ── 3. INTENT ─────────────────────────────────────────────── */}
       {step === "intent" && (
         <MotoCard title="Trade it in or sell it?">
-          {(intentHeroUrl || intentHeroLoading) && (
+          {intentHeroUrl && (
             <div className="mb-4 flex flex-col items-center">
               <div className="relative mx-auto h-[34vh] max-h-[300px] w-full max-w-[380px]">
                 <span
                   aria-hidden
                   className="pointer-events-none absolute inset-x-0 bottom-[6%] z-0 mx-auto h-3.5 w-[66%] rounded-[50%] bg-zinc-900/20 blur-md"
                 />
-                {intentHeroUrl ? (
+                {/* Stock photo. When the customer picked a factory color
+                    we paint the swatch on top in multiply mode so the
+                    body color updates instantly — no AI round-trip. */}
+                <div className="absolute inset-0 z-10 h-full w-full">
                   <img
                     src={intentHeroUrl}
                     alt={detectedVehicle}
-                    className="absolute inset-0 z-10 h-full w-full object-contain transition-opacity duration-300"
+                    className="absolute inset-0 h-full w-full object-contain"
                   />
-                ) : (
-                  // Re-rendering in the customer's chosen color — show a
-                  // soft shimmer instead of flashing the stock white car.
-                  <div className="absolute inset-0 z-10 grid place-items-center">
-                    <div className="relative h-[72%] w-[82%] overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-100 to-zinc-200">
-                      <div className="absolute inset-y-0 -left-1/2 w-1/2 animate-shimmer bg-gradient-to-r from-transparent via-white/70 to-transparent" />
-                    </div>
-                  </div>
-                )}
+                  {tintColor && (
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0"
+                      style={{
+                        backgroundColor: tintColor,
+                        mixBlendMode: "multiply",
+                        WebkitMaskImage: `url(${intentHeroUrl})`,
+                        maskImage: `url(${intentHeroUrl})`,
+                        WebkitMaskRepeat: "no-repeat",
+                        maskRepeat: "no-repeat",
+                        WebkitMaskPosition: "center",
+                        maskPosition: "center",
+                        WebkitMaskSize: "contain",
+                        maskSize: "contain",
+                      }}
+                    />
+                  )}
+                </div>
               </div>
               <p className="mt-2 text-xs text-zinc-500">
                 {detectedVehicle}
                 {data.colorName ? ` · ${data.colorName}` : ""}
-                {intentHeroLoading ? " · matching your color…" : ""}
               </p>
             </div>
           )}
