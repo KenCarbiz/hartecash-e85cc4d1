@@ -951,6 +951,16 @@ export default function TradeWidgetFlow({
   );
 }
 
+/** Renders nothing; auto-advances past the color step when Black Book
+ *  didn't return factory color options for the decoded vehicle. */
+function ColorAutoSkip({ onSkip }: { onSkip: () => void }) {
+  useEffect(() => {
+    onSkip();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+}
+
 /** Minimal dotted step indicator — no labels, keeps the panel compact. */
 function StepProgress({ current }: { current: WidgetStep }) {
   const currentIndex = WIDGET_STEP_ORDER.indexOf(current);
