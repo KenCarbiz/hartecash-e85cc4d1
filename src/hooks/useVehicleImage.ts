@@ -50,6 +50,7 @@ export function useVehicleImageState(
   uvc?: string | null,
   studioOnly: boolean = true,
   angle: "3q" | "side" = "3q",
+  color?: string | null,
 ): VehicleImageState {
   const hasInputs = !!(year && make && model);
   const [state, setState] = useState<VehicleImageState>(() => ({
@@ -60,7 +61,7 @@ export function useVehicleImageState(
 
   // Stable key so we don't re-fetch on every render. Strings normalize
   // away nullish + whitespace so equivalent inputs hit the same key.
-  const key = [year, make, model, vin, uvc, studioOnly, angle].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
+  const key = [year, make, model, vin, uvc, studioOnly, angle, color].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
 
   useEffect(() => {
     if (!year || !make || !model) {
@@ -83,6 +84,7 @@ export function useVehicleImageState(
             studio_only: studioOnly,
             vin: vin || undefined,
             uvc: uvc || undefined,
+            color: color || undefined,
             submission_token: submissionToken || undefined,
           },
         });
