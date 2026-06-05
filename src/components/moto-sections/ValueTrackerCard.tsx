@@ -158,6 +158,7 @@ const POPULAR_FLAGSHIP = {
 const ValueTrackerCard = () => {
   const { tenant } = useTenant();
   const { config } = useSiteConfig();
+  const embed = useEmbedMode();
   const [showModal, setShowModal] = useState(false);
 
   let flagship;
