@@ -3,9 +3,11 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { TrendingUp, X } from "lucide-react";
 import LandingTemplateRouter from "@/components/landing/LandingTemplateRouter";
+import TradeWidget from "@/components/widget/TradeWidget";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { getTaxRateFromZip, calcTradeInValue } from "@/lib/salesTax";
 import { supabase } from "@/integrations/supabase/client";
+import type { WidgetIntent } from "@/components/widget/widgetTypes";
 
 /**
  * Embedded customer-flow page mounted at /embed/:dealershipId.
@@ -64,6 +66,21 @@ const EmbedLanding = () => {
   // detail pages where the customer is mid-shop.
   const templateOverride = searchParams.get("template");
 
+  // ?template=widget renders the watered-down trade/sell flow instead of
+  // the dealer's full landing template — the embeddable widget surface.
+  // (Per product decision: extend /embed rather than a parallel route.)
+  const isWidget = templateOverride === "widget";
+  const zip = searchParams.get("zip") || "";
+  // Intent: explicit ?intent= wins; otherwise a detected VDP promotes to
+  // "trade" (apply offer toward this car), bare floating button ⇒ "sell".
+  const explicitIntent = searchParams.get("intent");
+  const widgetIntent: WidgetIntent =
+    explicitIntent === "trade" || explicitIntent === "sell"
+      ? explicitIntent
+      : vehicleLabel
+      ? "trade"
+      : "sell";
+
   // Auto-resize — parent iframe listens for hartecash-resize and
   // adjusts its height. Same contract TradeIframe.tsx uses, so any
   // dealer site that already has the resize listener works
@@ -92,7 +109,9 @@ const EmbedLanding = () => {
   // an isolation-friendly way to override per-embed without
   // mutating site_config (which would change every browser).
   useEffect(() => {
-    if (!templateOverride) return;
+    // "widget" isn't a LandingTemplateRouter key — it swaps the whole body
+    // below, so don't leak it into the router's override slot.
+    if (!templateOverride || isWidget) return;
     try {
       sessionStorage.setItem("__landing_template_override", templateOverride);
     } catch {
@@ -181,14 +200,14 @@ const EmbedLanding = () => {
             value (cashOffer × (1 + tax_rate)), not the cash
             offer, because that's what's actually applied to the
             replacement purchase. */}
-      {vehicleLabel && vehicleMsrp > 0 && (
+      {!isWidget && vehicleLabel && vehicleMsrp > 0 && (
         <InventoryAwareBanner vehicleLabel={vehicleLabel} vehicleMsrp={vehicleMsrp} />
       )}
 
       {/* Overlay-mode close button — sits top-right above the
           template chrome. The parent embed.js script listens for
           hartecash-close and dismisses the overlay iframe. */}
-      {isOverlay && (
+      {isOverlay && !isWidget && (
         <button
           type="button"
           onClick={() => window.parent.postMessage({ type: "hartecash-close" }, "*")}
@@ -199,10 +218,19 @@ const EmbedLanding = () => {
         </button>
       )}
 
-      {/* The actual flow — template router picks the right
-          landing template based on config.landing_template (or
-          the templateOverride we stashed in sessionStorage). */}
-      <LandingTemplateRouter />
+      {/* The actual flow. In widget mode we render the watered-down
+          trade/sell flow (with its own VDP trade-in banner); otherwise
+          the template router picks the dealer's landing template. */}
+      {isWidget ? (
+        <TradeWidget
+          intent={widgetIntent}
+          vdp={vehicleLabel ? { vehicleLabel, vehicleMsrp } : null}
+          resumeToken={submissionToken}
+          zip={zip}
+        />
+      ) : (
+        <LandingTemplateRouter />
+      )}
     </div>
   );
 };

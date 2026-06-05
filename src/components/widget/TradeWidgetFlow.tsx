@@ -1,0 +1,701 @@
+// Watered-down MotoAcquire-style trade/sell flow — now wired to the real
+// engine (bb-lookup → offer calc/persist → SMS OTP → firm offer).
+//
+//   vehicle (VIN/plate + state) → confirm (BB vehicle + image)
+//   → condition (Fair/Good/Very Good/Excellent) → intent (trade/sell)
+//   → contact (name/email/phone/miles/zip + track-value toggle)
+//   → value (real KBB-style range → OTP verify → firm offer)
+//
+// Lead is captured at "See my value" (persistWidgetOffer inserts the
+// submissions row, stamped with embed attribution); the firm number is
+// gated behind SMS verification (kept per product decision).
+
+import { useRef, useState } from "react";
+import { Check, Pencil } from "lucide-react";
+import MotoCard from "@/components/moto/MotoCard";
+import MotoPrimaryButton from "@/components/moto/MotoPrimaryButton";
+import MotoFormField from "@/components/moto/MotoFormField";
+import { useVehicleImage } from "@/hooks/useVehicleImage";
+import type { BBVehicle } from "@/components/sell-form/types";
+import {
+  computeWidgetEstimate,
+  decodeVehicle,
+  markApplied,
+  persistWidgetOffer,
+  sendWidgetOtp,
+  verifyWidgetOtp,
+  type WidgetFlowData,
+} from "./widgetData";
+import {
+  WIDGET_STEP_ORDER,
+  type VdpContext,
+  type WidgetCondition,
+  type WidgetIntent,
+  type WidgetStep,
+} from "./widgetTypes";
+
+const US_STATES = [
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
+  "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
+  "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
+];
+
+const CONDITIONS: { value: WidgetCondition; label: string; blurb: string }[] = [
+  { value: "fair", label: "Fair", blurb: "Some cosmetic or mechanical issues." },
+  { value: "good", label: "Good", blurb: "Normal wear, runs well." },
+  { value: "very_good", label: "Very Good", blurb: "Minor wear, well maintained." },
+  { value: "excellent", label: "Excellent", blurb: "Like new, no notable flaws." },
+];
+
+const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+
+/** Progressive (xxx) xxx-xxxx formatting; downstream strips non-digits. */
+function formatPhone(v: string): string {
+  const d = v.replace(/\D/g, "").slice(0, 10);
+  if (d.length > 6) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+  if (d.length > 3) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+  if (d.length > 0) return `(${d}`;
+  return "";
+}
+
+type VehicleStage = "entry" | "confirm";
+// range → (verify) → firm → (boost → reeval) → done. verify is skipped
+// when require_phone_verification is off; boost/reeval only when the
+// dealer enables AI photos; done is the accept confirmation.
+type ValueStage = "range" | "verify" | "firm" | "boost" | "reeval" | "done";
+
+export default function TradeWidgetFlow({
+  initialIntent,
+  dealershipId,
+  dealershipName,
+  vdp,
+  requireVerify,
+  aiPhotosEnabled,
+  defaultZip = "",
+}: {
+  initialIntent: WidgetIntent;
+  dealershipId: string;
+  dealershipName?: string;
+  /** VDP the customer is on (drives the "apply toward this car" target). */
+  vdp: VdpContext | null;
+  /** Dealer toggle: gate the firm offer behind an SMS code. */
+  requireVerify: boolean;
+  /** Dealer toggle: offer the AI photo boost / re-evaluation. */
+  aiPhotosEnabled: boolean;
+  /** Customer ZIP from the embed context — prefilled into the form. */
+  defaultZip?: string;
+}) {
+  const [step, setStep] = useState<WidgetStep>("vehicle");
+  const [vehicleStage, setVehicleStage] = useState<VehicleStage>("entry");
+  const [valueStage, setValueStage] = useState<ValueStage>("range");
+  const [boosted, setBoosted] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [bb, setBb] = useState<BBVehicle | null>(null);
+  const [estimate, setEstimate] = useState<{ low: number | null; high: number | null } | null>(null);
+  const [firm, setFirm] = useState<number | null>(null);
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+  // The submissions row is written exactly once (on firm-offer reveal),
+  // so editing mileage / re-running the range never duplicates a lead.
+  const persistedToken = useRef<string | null>(null);
+
+  const [data, setData] = useState<WidgetFlowData & { otp: string }>({
+    entryMode: "vin",
+    vehicleId: "",
+    state: "",
+    condition: null,
+    intent: initialIntent,
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    miles: "",
+    zip: defaultZip,
+    trackValue: false,
+    otp: "",
+  });
+  const set = (patch: Partial<typeof data>) => setData((d) => ({ ...d, ...patch }));
+
+  // Cached image of the decoded vehicle (null until BB resolves Y/M/M).
+  const heroUrl = useVehicleImage(bb?.year, bb?.make, bb?.model, bb?.vin);
+
+  const goNext = () => {
+    const i = WIDGET_STEP_ORDER.indexOf(step);
+    if (i < WIDGET_STEP_ORDER.length - 1) setStep(WIDGET_STEP_ORDER[i + 1]);
+  };
+
+  const detectedVehicle = bb
+    ? `${bb.year} ${bb.make} ${bb.model}`.trim()
+    : data.vehicleId
+    ? `${data.entryMode.toUpperCase()} ${data.vehicleId.toUpperCase()}`
+    : "your vehicle";
+
+  const contactComplete =
+    !!data.firstName.trim() &&
+    !!data.lastName.trim() &&
+    /.+@.+\..+/.test(data.email) &&
+    data.phone.replace(/\D/g, "").length === 10 &&
+    !!data.miles.trim() &&
+    data.zip.length === 5;
+
+  // Accept-CTA copy — names the VDP vehicle when trading toward it.
+  const applyLabel =
+    data.intent === "trade"
+      ? vdp
+        ? `Apply toward this ${vdp.vehicleLabel}`
+        : "Apply toward a vehicle"
+      : "Lock in this offer";
+
+  // ── async actions ──────────────────────────────────────────────
+  const decode = async () => {
+    setBusy(true);
+    setError(null);
+    const { vehicle, error: err } = await decodeVehicle(data, dealershipId);
+    setBusy(false);
+    if (!vehicle) {
+      setError(err || "We couldn't find that vehicle.");
+      return;
+    }
+    setBb(vehicle);
+    setVehicleStage("confirm");
+  };
+
+  // Compute the range only — no DB write yet (so editing mileage can't
+  // duplicate a lead). The row is persisted once on firm-offer reveal.
+  const seeValue = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const est = await computeWidgetEstimate(data, bb, dealershipId);
+      setEstimate({ low: est.low, high: est.high });
+      setFirm(est.firm);
+      setStep("value");
+      setValueStage("range");
+    } catch {
+      setError("We couldn't calculate your value. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Insert the submissions row exactly once (lead capture at firm-offer
+  // reveal, matching the main flow). Best-effort: a failed write doesn't
+  // block showing the number the customer was promised.
+  const persistOnce = async () => {
+    if (persistedToken.current) return;
+    try {
+      const result = await persistWidgetOffer(data, bb, dealershipId);
+      persistedToken.current = result.submissionToken;
+      if (result.firm != null) setFirm(result.firm);
+    } catch (e) {
+      console.warn("[widget] persist failed:", e);
+    }
+  };
+
+  const revealFirm = async () => {
+    setValueStage("firm");
+    await persistOnce();
+  };
+
+  const getFirm = async () => {
+    // Dealer toggle: when phone verification is off, reveal the firm
+    // offer immediately — no SMS code (same as the main flow).
+    if (!requireVerify) {
+      await revealFirm();
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const { challengeId: cid, error: err } = await sendWidgetOtp(data.phone, dealershipName);
+    setBusy(false);
+    if (!cid) {
+      setError(err === "rate_limited" ? "Too many attempts — try again later." : "Couldn't send the code.");
+      return;
+    }
+    setChallengeId(cid);
+    setValueStage("verify");
+  };
+
+  // AI photo boost — same idea as the main flow's "Save My Offer →
+  // upload photos → AI re-inspects → new value". Stubbed re-eval for now
+  // (TODO: reuse the MotoStepPhotos upload + AI inspection pipeline and
+  // re-run the waterfall with the photo-derived condition).
+  const submitBoost = async () => {
+    setBusy(true);
+    setError(null);
+    // TODO: upload photos, run AI inspection, re-run calculateAndPersistOffer.
+    await new Promise((r) => setTimeout(r, 600));
+    setBoosted(firm != null ? Math.round(firm * 1.06) : null);
+    setBusy(false);
+    setValueStage("reeval");
+  };
+
+  const resend = async () => {
+    setBusy(true);
+    setError(null);
+    const { challengeId: cid, error: err } = await sendWidgetOtp(data.phone, dealershipName);
+    setBusy(false);
+    if (!cid) {
+      setError(err === "rate_limited" ? "Too many attempts — try again later." : "Couldn't resend the code.");
+      return;
+    }
+    setChallengeId(cid);
+    set({ otp: "" });
+  };
+
+  const verify = async () => {
+    if (!challengeId) return;
+    setBusy(true);
+    setError(null);
+    const { ok, error: err, attemptsRemaining } = await verifyWidgetOtp(challengeId, data.otp);
+    setBusy(false);
+    if (!ok) {
+      setError(
+        err === "wrong_code"
+          ? `Wrong code. ${attemptsRemaining ?? 0} attempts left.`
+          : err === "expired"
+          ? "Code expired — resend it."
+          : "Verification failed. Try again.",
+      );
+      return;
+    }
+    await revealFirm();
+  };
+
+  // Customer accepts / applies the offer. Records the trade target (which
+  // inventory car, on a VDP) and tells the parent so the floating button
+  // flips to "view your accepted offer".
+  const accept = async () => {
+    setBusy(true);
+    await persistOnce();
+    await markApplied(persistedToken.current, data.intent, vdp);
+    try {
+      window.parent.postMessage(
+        {
+          type: "hartecash-state-change",
+          token: persistedToken.current,
+          status: "deal_accepted",
+          offer: boosted ?? firm ?? 0,
+        },
+        "*",
+      );
+    } catch {
+      /* not in an iframe — ignore */
+    }
+    setBusy(false);
+    setValueStage("done");
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-[420px] px-4 py-5">
+      <StepProgress current={step} />
+
+      {/* ── 1. VEHICLE: entry → confirm ───────────────────────────── */}
+      {step === "vehicle" && vehicleStage === "entry" && (
+        <MotoCard title="What are you trading in?">
+          <div className="mb-3 grid grid-cols-2 gap-2">
+            {(["vin", "plate"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={data.entryMode === m}
+                onClick={() => set({ entryMode: m })}
+                className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
+                  data.entryMode === m
+                    ? "border-[hsl(var(--cta-offer))] ring-2 ring-[hsl(var(--cta-offer)/0.15)]"
+                    : "border-zinc-300 hover:border-zinc-400"
+                }`}
+              >
+                {m === "vin" ? "VIN" : "License plate"}
+              </button>
+            ))}
+          </div>
+          <div className="grid gap-3">
+            <MotoFormField
+              label={data.entryMode === "vin" ? "VIN" : "License plate"}
+              value={data.vehicleId}
+              onChange={(e) => set({ vehicleId: e.target.value })}
+            />
+            {data.entryMode === "plate" && (
+              <select
+                value={data.state}
+                onChange={(e) => set({ state: e.target.value })}
+                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-base outline-none focus:border-[hsl(var(--cta-offer))] focus:ring-2 focus:ring-[hsl(var(--cta-offer)/0.15)]"
+              >
+                <option value="">State</option>
+                {US_STATES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          <div className="mt-4">
+            <MotoPrimaryButton
+              loading={busy}
+              disabled={!data.vehicleId.trim() || (data.entryMode === "plate" && !data.state)}
+              onClick={decode}
+            >
+              Next
+            </MotoPrimaryButton>
+          </div>
+        </MotoCard>
+      )}
+
+      {step === "vehicle" && vehicleStage === "confirm" && (
+        <MotoCard title="Is this your vehicle?">
+          <div className="flex items-center gap-3">
+            <div className="grid h-16 w-24 shrink-0 place-items-center overflow-hidden rounded-md bg-zinc-100">
+              {heroUrl ? (
+                <img src={heroUrl} alt={detectedVehicle} className="h-full w-full object-contain" />
+              ) : (
+                <span className="text-[10px] text-zinc-400">vehicle</span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-zinc-900">{detectedVehicle}</p>
+              <p className="text-xs text-zinc-500">We matched this to your entry.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setBb(null);
+              setVehicleStage("entry");
+            }}
+            className="mt-3 text-xs font-medium text-[hsl(var(--cta-offer))] hover:underline"
+          >
+            Not your vehicle? Re-enter
+          </button>
+          <div className="mt-4">
+            <MotoPrimaryButton onClick={goNext}>Yes, continue</MotoPrimaryButton>
+          </div>
+        </MotoCard>
+      )}
+
+      {/* ── 2. CONDITION (4-point) ────────────────────────────────── */}
+      {step === "condition" && (
+        <MotoCard title="What's its condition?">
+          <div className="grid gap-2">
+            {CONDITIONS.map(({ value, label, blurb }) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={data.condition === value}
+                onClick={() => set({ condition: value })}
+                className={`rounded-md border px-4 py-3 text-left transition ${
+                  data.condition === value
+                    ? "border-[hsl(var(--cta-offer))] ring-2 ring-[hsl(var(--cta-offer)/0.15)]"
+                    : "border-zinc-300 hover:border-zinc-400"
+                }`}
+              >
+                <span className="block text-sm font-semibold text-zinc-900">{label}</span>
+                <span className="block text-xs text-zinc-500">{blurb}</span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-4">
+            <MotoPrimaryButton disabled={!data.condition} onClick={goNext}>
+              Next
+            </MotoPrimaryButton>
+          </div>
+        </MotoCard>
+      )}
+
+      {/* ── 3. INTENT ─────────────────────────────────────────────── */}
+      {step === "intent" && (
+        <MotoCard title="Trade it in or sell it?">
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                ["trade", "Trade toward a car"],
+                ["sell", "Just sell it"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={data.intent === value}
+                onClick={() => set({ intent: value })}
+                className={`rounded-md border px-4 py-3 text-center text-sm font-medium transition ${
+                  data.intent === value
+                    ? "border-[hsl(var(--cta-offer))] ring-2 ring-[hsl(var(--cta-offer)/0.15)]"
+                    : "border-zinc-300 hover:border-zinc-400"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-4">
+            <MotoPrimaryButton onClick={goNext}>Next</MotoPrimaryButton>
+          </div>
+        </MotoCard>
+      )}
+
+      {/* ── 4. CONTACT (+ track-value toggle) ─────────────────────── */}
+      {step === "contact" && (
+        <MotoCard title="Where do we send your value?">
+          <div className="grid gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <MotoFormField
+                label="First name"
+                value={data.firstName}
+                onChange={(e) => set({ firstName: e.target.value })}
+              />
+              <MotoFormField
+                label="Last name"
+                value={data.lastName}
+                onChange={(e) => set({ lastName: e.target.value })}
+              />
+            </div>
+            <MotoFormField
+              label="Email"
+              type="email"
+              value={data.email}
+              onChange={(e) => set({ email: e.target.value })}
+            />
+            <MotoFormField
+              label="Mobile phone"
+              type="tel"
+              inputMode="tel"
+              value={data.phone}
+              onChange={(e) => set({ phone: formatPhone(e.target.value) })}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <MotoFormField
+                label="Estimated miles"
+                inputMode="numeric"
+                value={data.miles}
+                onChange={(e) => set({ miles: e.target.value.replace(/\D/g, "") })}
+              />
+              <MotoFormField
+                label="ZIP code"
+                inputMode="numeric"
+                maxLength={5}
+                value={data.zip}
+                onChange={(e) => set({ zip: e.target.value.replace(/\D/g, "").slice(0, 5) })}
+              />
+            </div>
+          </div>
+
+          <label className="mt-3 flex cursor-pointer items-center gap-2.5 text-sm text-zinc-600">
+            <input
+              type="checkbox"
+              checked={data.trackValue}
+              onChange={(e) => set({ trackValue: e.target.checked })}
+              className="h-4 w-4 rounded border-zinc-300 accent-[hsl(var(--cta-offer))]"
+            />
+            Track my vehicle value monthly via email
+          </label>
+
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          <div className="mt-4">
+            <MotoPrimaryButton loading={busy} disabled={!contactComplete} onClick={seeValue}>
+              See my value
+            </MotoPrimaryButton>
+          </div>
+        </MotoCard>
+      )}
+
+      {/* ── 5. VALUE: range → verify (OTP) → firm offer ───────────── */}
+      {step === "value" && valueStage === "range" && (
+        <MotoCard title="Your estimated trade-in value">
+          <p className="text-4xl font-bold leading-none tabular-nums text-zinc-900">
+            {estimate?.low != null && estimate?.high != null
+              ? <>{usd(estimate.low)} <span className="font-semibold text-zinc-400">–</span> {usd(estimate.high)}</>
+              : "Estimate ready"}
+          </p>
+          <p className="mt-2 text-sm text-zinc-500">{detectedVehicle}</p>
+          <button
+            type="button"
+            onClick={() => setStep("contact")}
+            className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[hsl(var(--cta-offer))] hover:underline"
+          >
+            <Pencil className="h-3 w-3" /> Edit mileage
+          </button>
+          <p className="mt-3 text-[11px] leading-snug text-zinc-400">
+            Estimated range based on market data and the condition you selected. Final value
+            depends on inspection and current market factors.
+          </p>
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          <div className="mt-4">
+            <MotoPrimaryButton loading={busy} onClick={getFirm}>
+              Get Firm Offer
+            </MotoPrimaryButton>
+          </div>
+        </MotoCard>
+      )}
+
+      {step === "value" && valueStage === "verify" && (
+        <MotoCard title="Verify your number">
+          <p className="mb-3 text-sm text-zinc-500">
+            We texted a 6-digit code to {data.phone || "your phone"}.
+          </p>
+          <MotoFormField
+            label="6-digit code"
+            inputMode="numeric"
+            maxLength={6}
+            autoComplete="one-time-code"
+            value={data.otp}
+            onChange={(e) => set({ otp: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+          />
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          <div className="mt-4">
+            <MotoPrimaryButton loading={busy} disabled={data.otp.length !== 6} onClick={verify}>
+              Verify &amp; get firm offer
+            </MotoPrimaryButton>
+          </div>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={resend}
+            className="mt-3 w-full text-center text-sm font-medium text-zinc-500 hover:underline disabled:opacity-50"
+          >
+            Didn't get it? Resend code
+          </button>
+        </MotoCard>
+      )}
+
+      {step === "value" && valueStage === "firm" && (
+        <MotoCard title="Your firm offer">
+          {firm != null && firm > 0 ? (
+            <>
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                {data.intent === "trade" ? "Trade-in offer" : "Cash offer"}
+              </p>
+              <p className="mt-1 text-4xl font-bold tabular-nums text-zinc-900">{usd(firm)}</p>
+              <p className="mt-1 text-sm text-zinc-500">for your {detectedVehicle}</p>
+              <div className="mt-4">
+                <MotoPrimaryButton loading={busy} onClick={accept}>
+                  {applyLabel}
+                </MotoPrimaryButton>
+              </div>
+              {aiPhotosEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setValueStage("boost")}
+                  className="mt-3 w-full text-center text-sm font-medium text-[hsl(var(--cta-offer))] hover:underline"
+                >
+                  Add photos for a possible higher offer
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-zinc-500">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--cta-offer))]" />
+              Finalizing your number…
+            </div>
+          )}
+        </MotoCard>
+      )}
+
+      {/* AI photo boost (dealer-toggled) — mirrors the main flow's
+          "upload photos → AI re-inspects → new value → accept/save". */}
+      {step === "value" && valueStage === "boost" && (
+        <MotoCard title="Boost your offer with photos">
+          <p className="text-sm text-zinc-500">
+            Upload a few quick photos and our AI re-inspects your {detectedVehicle} — a better
+            condition read can raise your offer.
+          </p>
+          {/* TODO: real multi-slot capture (reuse MotoStepPhotos). */}
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {["Front", "Rear", "Interior"].map((slot) => (
+              <div
+                key={slot}
+                className="grid h-16 place-items-center rounded-md border border-dashed border-zinc-300 text-[11px] text-zinc-400"
+              >
+                {slot}
+              </div>
+            ))}
+          </div>
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          <div className="mt-4 grid gap-2">
+            <MotoPrimaryButton loading={busy} onClick={submitBoost}>
+              Re-evaluate with photos
+            </MotoPrimaryButton>
+            <button
+              type="button"
+              onClick={() => setValueStage("firm")}
+              className="text-center text-sm font-medium text-zinc-500 hover:underline"
+            >
+              Keep my current offer
+            </button>
+          </div>
+        </MotoCard>
+      )}
+
+      {step === "value" && valueStage === "reeval" && (
+        <MotoCard title="Your updated offer">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            {data.intent === "trade" ? "Trade-in offer" : "Cash offer"} · after photo review
+          </p>
+          <p className="mt-1 text-4xl font-bold tabular-nums text-zinc-900">
+            {boosted != null ? usd(boosted) : firm != null ? usd(firm) : "—"}
+          </p>
+          <p className="mt-1 text-sm text-zinc-500">for your {detectedVehicle}</p>
+          <div className="mt-4 grid gap-2">
+            <MotoPrimaryButton loading={busy} onClick={accept}>
+              {applyLabel}
+            </MotoPrimaryButton>
+            <button
+              type="button"
+              onClick={() => setValueStage("firm")}
+              className="text-center text-sm font-medium text-zinc-500 hover:underline"
+            >
+              Save for later
+            </button>
+          </div>
+        </MotoCard>
+      )}
+
+      {/* ── Accept confirmation ───────────────────────────────────── */}
+      {step === "value" && valueStage === "done" && (
+        <MotoCard title="You're all set">
+          <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--cta-offer)/0.12)]">
+            <Check className="h-5 w-5 text-[hsl(var(--cta-offer))]" aria-hidden="true" />
+          </div>
+          <p className="text-sm text-zinc-600">
+            Your {usd(boosted ?? firm ?? 0)}{" "}
+            {data.intent === "trade" ? "trade-in" : "cash"} offer is saved
+            {data.intent === "trade" && vdp ? ` toward the ${vdp.vehicleLabel}` : ""}. A
+            specialist will reach out to finalize the details.
+          </p>
+          <p className="mt-2 text-[11px] text-zinc-400">
+            We sent a copy to {data.email || "your email"}.
+          </p>
+        </MotoCard>
+      )}
+    </div>
+  );
+}
+
+/** Minimal dotted step indicator — no labels, keeps the panel compact. */
+function StepProgress({ current }: { current: WidgetStep }) {
+  const currentIndex = WIDGET_STEP_ORDER.indexOf(current);
+  return (
+    <div className="mb-4 flex items-center gap-1.5">
+      {WIDGET_STEP_ORDER.map((s, i) => {
+        const done = i < currentIndex;
+        const active = i === currentIndex;
+        return (
+          <span
+            key={s}
+            className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold transition ${
+              done
+                ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)]"
+                : active
+                ? "border-2 border-[hsl(var(--cta-offer))] text-[hsl(var(--cta-offer))]"
+                : "border border-zinc-300 text-zinc-400"
+            }`}
+          >
+            {done ? <Check className="h-3 w-3" /> : i + 1}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
