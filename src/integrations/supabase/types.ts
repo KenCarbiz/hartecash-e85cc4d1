@@ -3099,6 +3099,7 @@ export type Database = {
           deduction_amounts: Json
           deduction_modes: Json
           deductions_config: Json
+          firm_offer_enabled: boolean
           floor_plan_rate_pct: number
           global_adjustment_pct: number
           hide_pack_from_appraisal: boolean
@@ -3146,6 +3147,7 @@ export type Database = {
           deduction_amounts?: Json
           deduction_modes?: Json
           deductions_config?: Json
+          firm_offer_enabled?: boolean
           floor_plan_rate_pct?: number
           global_adjustment_pct?: number
           hide_pack_from_appraisal?: boolean
@@ -3193,6 +3195,7 @@ export type Database = {
           deduction_amounts?: Json
           deduction_modes?: Json
           deductions_config?: Json
+          firm_offer_enabled?: boolean
           floor_plan_rate_pct?: number
           global_adjustment_pct?: number
           hide_pack_from_appraisal?: boolean
