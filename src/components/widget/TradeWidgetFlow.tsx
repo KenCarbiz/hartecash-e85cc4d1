@@ -18,6 +18,7 @@ import MotoFormField from "@/components/moto/MotoFormField";
 import { useVehicleImage } from "@/hooks/useVehicleImage";
 import type { BBVehicle } from "@/components/sell-form/types";
 import {
+  bbVehicleLabel,
   computeWidgetEstimate,
   decodeVehicle,
   markApplied,
@@ -93,6 +94,8 @@ export default function TradeWidgetFlow({
   const [error, setError] = useState<string | null>(null);
 
   const [bb, setBb] = useState<BBVehicle | null>(null);
+  // All trims the VIN/plate decoded to — the customer picks the exact one.
+  const [candidates, setCandidates] = useState<BBVehicle[]>([]);
   const [estimate, setEstimate] = useState<{ low: number | null; high: number | null } | null>(null);
   const [firm, setFirm] = useState<number | null>(null);
   const [challengeId, setChallengeId] = useState<string | null>(null);
@@ -126,7 +129,7 @@ export default function TradeWidgetFlow({
   };
 
   const detectedVehicle = bb
-    ? `${bb.year} ${bb.make} ${bb.model}`.trim()
+    ? bbVehicleLabel(bb)
     : data.vehicleId
     ? `${data.entryMode.toUpperCase()} ${data.vehicleId.toUpperCase()}`
     : "your vehicle";
@@ -151,13 +154,15 @@ export default function TradeWidgetFlow({
   const decode = async () => {
     setBusy(true);
     setError(null);
-    const { vehicle, error: err } = await decodeVehicle(data, dealershipId);
+    const { vehicles, error: err } = await decodeVehicle(data, dealershipId);
     setBusy(false);
-    if (!vehicle) {
+    if (!vehicles.length) {
       setError(err || "We couldn't find that vehicle.");
       return;
     }
-    setBb(vehicle);
+    setCandidates(vehicles);
+    // Single match → preselect; multiple trims → make the customer pick.
+    setBb(vehicles.length === 1 ? vehicles[0] : null);
     setVehicleStage("confirm");
   };
 
@@ -288,23 +293,38 @@ export default function TradeWidgetFlow({
   };
 
   return (
-    <div className="mx-auto w-full max-w-[420px] px-4 py-5">
-      <StepProgress current={step} />
+    <div className="mx-auto w-full max-w-[440px] px-4 py-5">
+      {/* First screen leads with a headline (MotoAcquire pattern); later
+          steps show the compact progress dots. */}
+      {step === "vehicle" && vehicleStage === "entry" ? (
+        <div className="mb-5">
+          <h1 className="text-[26px] font-bold leading-[1.15] tracking-tight text-zinc-900">
+            Get an{" "}
+            <span className="text-[hsl(var(--cta-offer))]">Instant Vehicle Valuation</span>
+          </h1>
+          <p className="mt-2 text-sm leading-snug text-zinc-500">
+            Get an instant value — then add a few details to lock in your firm offer.
+          </p>
+        </div>
+      ) : (
+        <StepProgress current={step} />
+      )}
 
       {/* ── 1. VEHICLE: entry → confirm ───────────────────────────── */}
       {step === "vehicle" && vehicleStage === "entry" && (
-        <MotoCard title="What are you trading in?">
-          <div className="mb-3 grid grid-cols-2 gap-2">
+        <MotoCard>
+          {/* Segmented VIN / plate toggle — active fills with brand color. */}
+          <div className="mb-4 grid grid-cols-2 overflow-hidden rounded-lg border border-zinc-200">
             {(["vin", "plate"] as const).map((m) => (
               <button
                 key={m}
                 type="button"
                 aria-pressed={data.entryMode === m}
                 onClick={() => set({ entryMode: m })}
-                className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
+                className={`px-3 py-2.5 text-sm font-semibold transition ${
                   data.entryMode === m
-                    ? "border-[hsl(var(--cta-offer))] ring-2 ring-[hsl(var(--cta-offer)/0.15)]"
-                    : "border-zinc-300 hover:border-zinc-400"
+                    ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)]"
+                    : "bg-white text-zinc-600 hover:bg-zinc-50"
                 }`}
               >
                 {m === "vin" ? "VIN" : "License plate"}
@@ -342,28 +362,64 @@ export default function TradeWidgetFlow({
               Next
             </MotoPrimaryButton>
           </div>
+          <p className="mt-3 text-center text-sm font-semibold text-[hsl(var(--cta-offer))]">
+            Get a valuation in less than 30 seconds!
+          </p>
         </MotoCard>
       )}
 
       {step === "vehicle" && vehicleStage === "confirm" && (
-        <MotoCard title="Is this your vehicle?">
-          <div className="flex items-center gap-3">
-            <div className="grid h-16 w-24 shrink-0 place-items-center overflow-hidden rounded-md bg-zinc-100">
-              {heroUrl ? (
-                <img src={heroUrl} alt={detectedVehicle} className="h-full w-full object-contain" />
-              ) : (
-                <span className="text-[10px] text-zinc-400">vehicle</span>
-              )}
+        <MotoCard title={candidates.length > 1 ? "Please confirm your vehicle" : "Is this your vehicle?"}>
+          {candidates.length > 1 ? (
+            // Black Book returned multiple trims for this VIN/plate — the
+            // customer picks the exact one (drives the right UVC + value).
+            <div className="grid gap-2">
+              {candidates.map((c) => {
+                const selected = bb?.uvc === c.uvc;
+                return (
+                  <button
+                    key={c.uvc}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setBb(c)}
+                    className={`flex items-center gap-2.5 rounded-md border px-3 py-3 text-left text-sm transition ${
+                      selected
+                        ? "border-[hsl(var(--cta-offer))] ring-2 ring-[hsl(var(--cta-offer)/0.15)]"
+                        : "border-zinc-300 hover:border-zinc-400"
+                    }`}
+                  >
+                    <span
+                      className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border ${
+                        selected ? "border-[hsl(var(--cta-offer))]" : "border-zinc-400"
+                      }`}
+                    >
+                      {selected && <span className="h-2 w-2 rounded-full bg-[hsl(var(--cta-offer))]" />}
+                    </span>
+                    <span className="text-zinc-900">{bbVehicleLabel(c)}</span>
+                  </button>
+                );
+              })}
             </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-zinc-900">{detectedVehicle}</p>
-              <p className="text-xs text-zinc-500">We matched this to your entry.</p>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="grid h-16 w-24 shrink-0 place-items-center overflow-hidden rounded-md bg-zinc-100">
+                {heroUrl ? (
+                  <img src={heroUrl} alt={detectedVehicle} className="h-full w-full object-contain" />
+                ) : (
+                  <span className="text-[10px] text-zinc-400">vehicle</span>
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-zinc-900">{detectedVehicle}</p>
+                <p className="text-xs text-zinc-500">We matched this to your entry.</p>
+              </div>
             </div>
-          </div>
+          )}
           <button
             type="button"
             onClick={() => {
               setBb(null);
+              setCandidates([]);
               setVehicleStage("entry");
             }}
             className="mt-3 text-xs font-medium text-[hsl(var(--cta-offer))] hover:underline"
@@ -371,7 +427,9 @@ export default function TradeWidgetFlow({
             Not your vehicle? Re-enter
           </button>
           <div className="mt-4">
-            <MotoPrimaryButton onClick={goNext}>Yes, continue</MotoPrimaryButton>
+            <MotoPrimaryButton disabled={!bb} onClick={goNext}>
+              Yes, continue
+            </MotoPrimaryButton>
           </div>
         </MotoCard>
       )}
