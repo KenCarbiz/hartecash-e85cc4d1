@@ -141,13 +141,16 @@ page):
   on the locked-in window (`price_guarantee_days`, default 8, from
   `offer_made_at`), "apply toward THIS vehicle vs. a different one" on a
   VDP, and "Start a new appraisal".
+- **Accept / apply**: the firm-offer, re-eval, and ResumeCard CTAs are
+  live — `markApplied` records the chosen intent + the VDP **trade target**
+  (which inventory car) on the submission, broadcasts `deal_accepted` to
+  the parent (floating button flips to "view your accepted offer"), and
+  shows a confirmation card.
 - Slide-out panel (smooth cubic-bezier slide) + button binding in
   `embed.js`; white panel; ZIP prefilled from the embed context.
 
 ## Next refinements (polish against the live site)
 
-- [ ] **Trade-in confirm** — wire the "Apply toward this vehicle" CTAs
-      (firm offer + ResumeCard) to record the VDP target on the submission.
 - [ ] **`offer_before_details`** — honor before/after-offer ordering
       (compute estimate without persisting, collect contact later) — the
       compute/persist split is now in place to support it.

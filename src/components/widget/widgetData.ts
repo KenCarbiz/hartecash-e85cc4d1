@@ -18,7 +18,7 @@ import {
 import { calculateOffer, type OfferSettings } from "@/lib/offerCalculator";
 import { emptyMotoFlowState, type Condition, type MotoFlowState } from "@/components/moto/types";
 import type { BBVehicle } from "@/components/sell-form/types";
-import type { WidgetCondition, WidgetIntent } from "./widgetTypes";
+import type { VdpContext, WidgetCondition, WidgetIntent } from "./widgetTypes";
 
 /** Fields the widget collects, mirrored from TradeWidgetFlow. */
 export interface WidgetFlowData {
@@ -164,6 +164,30 @@ export async function persistWidgetOffer(
   }
 
   return result;
+}
+
+/**
+ * Record the customer accepting / applying their offer toward a vehicle.
+ * Stores the chosen intent (trade/sell) and, on a VDP, the target
+ * inventory vehicle the trade is being applied toward — so the dealer
+ * knows which car the lead is shopping. Best-effort.
+ */
+export async function markApplied(
+  token: string | null,
+  intent: WidgetIntent,
+  vdp: VdpContext | null,
+): Promise<void> {
+  if (!token) return;
+  try {
+    const patch: Record<string, unknown> = { next_step: intent };
+    if (vdp) {
+      patch.embed_vehicle_label = vdp.vehicleLabel;
+      if (vdp.vehicleMsrp > 0) patch.embed_vehicle_msrp = vdp.vehicleMsrp;
+    }
+    await supabase.from("submissions").update(patch as never).eq("token", token);
+  } catch (e) {
+    console.warn("[widget] markApplied failed:", e);
+  }
 }
 
 /** Send an SMS OTP. Returns the challenge id, or an error reason. */

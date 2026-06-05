@@ -86,6 +86,7 @@ export default function TradeWidget({
           <ResumeCard
             offer={offer}
             vdp={vdp}
+            intent={intent}
             guaranteeDays={guaranteeDays}
             onStartNew={() => setStartFresh(true)}
           />
@@ -94,6 +95,7 @@ export default function TradeWidget({
             initialIntent={intent}
             dealershipId={tenant.dealership_id}
             dealershipName={config.dealership_name}
+            vdp={vdp}
             requireVerify={requireVerify}
             aiPhotosEnabled={aiPhotosEnabled}
             defaultZip={zip}

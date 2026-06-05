@@ -9,10 +9,12 @@
 //
 // Choosing "Start a new appraisal" drops them into the fresh flow.
 
-import { Clock, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { Clock, ArrowRight, Check } from "lucide-react";
 import MotoCard from "@/components/moto/MotoCard";
 import MotoPrimaryButton from "@/components/moto/MotoPrimaryButton";
-import type { FirmOffer, VdpContext } from "./widgetTypes";
+import { markApplied } from "./widgetData";
+import type { FirmOffer, VdpContext, WidgetIntent } from "./widgetTypes";
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
@@ -28,24 +30,59 @@ function daysLeft(madeAt: string | null, guaranteeDays: number): number | null {
 export default function ResumeCard({
   offer,
   vdp,
+  intent,
   guaranteeDays,
   onStartNew,
 }: {
   offer: FirmOffer;
   vdp: VdpContext | null;
+  intent: WidgetIntent;
   guaranteeDays: number;
   onStartNew: () => void;
 }) {
+  const [accepted, setAccepted] = useState(false);
+  const [busy, setBusy] = useState(false);
   const left = daysLeft(offer.madeAt, guaranteeDays);
   const vehicle = offer.vehicleLabel || "your vehicle";
+
+  // Apply the existing offer — records the (possibly new) VDP target and
+  // tells the parent so the floating button flips to the accepted state.
+  const apply = async (target: VdpContext | null) => {
+    setBusy(true);
+    await markApplied(offer.token, intent, target);
+    try {
+      window.parent.postMessage(
+        { type: "hartecash-state-change", token: offer.token, status: "deal_accepted", offer: offer.amount },
+        "*",
+      );
+    } catch {
+      /* not in an iframe — ignore */
+    }
+    setBusy(false);
+    setAccepted(true);
+  };
+
+  if (accepted) {
+    return (
+      <div className="mx-auto w-full max-w-[420px] px-4 py-5">
+        <MotoCard title="You're all set">
+          <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--cta-offer)/0.12)]">
+            <Check className="h-5 w-5 text-[hsl(var(--cta-offer))]" aria-hidden="true" />
+          </div>
+          <p className="text-sm text-zinc-600">
+            Your {usd(offer.amount)} offer is saved
+            {vdp ? ` toward the ${vdp.vehicleLabel}` : ""}. A specialist will reach out to finalize.
+          </p>
+        </MotoCard>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-[420px] px-4 py-5">
       <MotoCard>
         <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Welcome back</p>
-        <p className="mt-1 text-sm text-zinc-600">
-          You have a locked-in offer for {vehicle}.
-        </p>
+        <p className="mt-1 text-sm text-zinc-600">You have a locked-in offer for {vehicle}.</p>
         <p className="mt-2 text-4xl font-bold tabular-nums text-zinc-900">{usd(offer.amount)}</p>
 
         {left != null && (
@@ -60,18 +97,22 @@ export default function ResumeCard({
               looking at; the secondary keeps the trade generic. */}
           {vdp ? (
             <>
-              <MotoPrimaryButton>
+              <MotoPrimaryButton loading={busy} onClick={() => apply(vdp)}>
                 Apply toward this {vdp.vehicleLabel}
               </MotoPrimaryButton>
               <button
                 type="button"
-                className="text-center text-sm font-medium text-zinc-500 hover:underline"
+                disabled={busy}
+                onClick={() => apply(null)}
+                className="text-center text-sm font-medium text-zinc-500 hover:underline disabled:opacity-50"
               >
                 Use it toward a different vehicle
               </button>
             </>
           ) : (
-            <MotoPrimaryButton>Continue with this offer</MotoPrimaryButton>
+            <MotoPrimaryButton loading={busy} onClick={() => apply(null)}>
+              Continue with this offer
+            </MotoPrimaryButton>
           )}
 
           <button

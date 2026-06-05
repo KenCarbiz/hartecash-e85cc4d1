@@ -20,6 +20,7 @@ import type { BBVehicle } from "@/components/sell-form/types";
 import {
   computeWidgetEstimate,
   decodeVehicle,
+  markApplied,
   persistWidgetOffer,
   sendWidgetOtp,
   verifyWidgetOtp,
@@ -27,6 +28,7 @@ import {
 } from "./widgetData";
 import {
   WIDGET_STEP_ORDER,
+  type VdpContext,
   type WidgetCondition,
   type WidgetIntent,
   type WidgetStep,
@@ -48,14 +50,16 @@ const CONDITIONS: { value: WidgetCondition; label: string; blurb: string }[] = [
 const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
 type VehicleStage = "entry" | "confirm";
-// range → (verify) → firm → (boost → reeval → firm-again, when the dealer
-// enables AI photos). verify is skipped when require_phone_verification off.
-type ValueStage = "range" | "verify" | "firm" | "boost" | "reeval";
+// range → (verify) → firm → (boost → reeval) → done. verify is skipped
+// when require_phone_verification is off; boost/reeval only when the
+// dealer enables AI photos; done is the accept confirmation.
+type ValueStage = "range" | "verify" | "firm" | "boost" | "reeval" | "done";
 
 export default function TradeWidgetFlow({
   initialIntent,
   dealershipId,
   dealershipName,
+  vdp,
   requireVerify,
   aiPhotosEnabled,
   defaultZip = "",
@@ -63,6 +67,8 @@ export default function TradeWidgetFlow({
   initialIntent: WidgetIntent;
   dealershipId: string;
   dealershipName?: string;
+  /** VDP the customer is on (drives the "apply toward this car" target). */
+  vdp: VdpContext | null;
   /** Dealer toggle: gate the firm offer behind an SMS code. */
   requireVerify: boolean;
   /** Dealer toggle: offer the AI photo boost / re-evaluation. */
@@ -123,6 +129,14 @@ export default function TradeWidgetFlow({
     data.phone.trim() &&
     data.miles.trim() &&
     data.zip.trim();
+
+  // Accept-CTA copy — names the VDP vehicle when trading toward it.
+  const applyLabel =
+    data.intent === "trade"
+      ? vdp
+        ? `Apply toward this ${vdp.vehicleLabel}`
+        : "Apply toward a vehicle"
+      : "Lock in this offer";
 
   // ── async actions ──────────────────────────────────────────────
   const decode = async () => {
@@ -225,6 +239,30 @@ export default function TradeWidgetFlow({
       return;
     }
     await revealFirm();
+  };
+
+  // Customer accepts / applies the offer. Records the trade target (which
+  // inventory car, on a VDP) and tells the parent so the floating button
+  // flips to "view your accepted offer".
+  const accept = async () => {
+    setBusy(true);
+    await persistOnce();
+    await markApplied(persistedToken.current, data.intent, vdp);
+    try {
+      window.parent.postMessage(
+        {
+          type: "hartecash-state-change",
+          token: persistedToken.current,
+          status: "deal_accepted",
+          offer: boosted ?? firm ?? 0,
+        },
+        "*",
+      );
+    } catch {
+      /* not in an iframe — ignore */
+    }
+    setBusy(false);
+    setValueStage("done");
   };
 
   return (
@@ -501,8 +539,8 @@ export default function TradeWidgetFlow({
               <p className="mt-1 text-4xl font-bold tabular-nums text-zinc-900">{usd(firm)}</p>
               <p className="mt-1 text-sm text-zinc-500">for your {detectedVehicle}</p>
               <div className="mt-4">
-                <MotoPrimaryButton>
-                  {data.intent === "trade" ? "Apply toward this vehicle" : "Lock in this offer"}
+                <MotoPrimaryButton loading={busy} onClick={accept}>
+                  {applyLabel}
                 </MotoPrimaryButton>
               </div>
               {aiPhotosEnabled && (
@@ -569,8 +607,8 @@ export default function TradeWidgetFlow({
           </p>
           <p className="mt-1 text-sm text-zinc-500">for your {detectedVehicle}</p>
           <div className="mt-4 grid gap-2">
-            <MotoPrimaryButton>
-              {data.intent === "trade" ? "Apply toward this vehicle" : "Accept this offer"}
+            <MotoPrimaryButton loading={busy} onClick={accept}>
+              {applyLabel}
             </MotoPrimaryButton>
             <button
               type="button"
@@ -580,6 +618,24 @@ export default function TradeWidgetFlow({
               Save for later
             </button>
           </div>
+        </MotoCard>
+      )}
+
+      {/* ── Accept confirmation ───────────────────────────────────── */}
+      {step === "value" && valueStage === "done" && (
+        <MotoCard title="You're all set">
+          <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--cta-offer)/0.12)]">
+            <Check className="h-5 w-5 text-[hsl(var(--cta-offer))]" aria-hidden="true" />
+          </div>
+          <p className="text-sm text-zinc-600">
+            Your {usd(boosted ?? firm ?? 0)}{" "}
+            {data.intent === "trade" ? "trade-in" : "cash"} offer is saved
+            {data.intent === "trade" && vdp ? ` toward the ${vdp.vehicleLabel}` : ""}. A
+            specialist will reach out to finalize the details.
+          </p>
+          <p className="mt-2 text-[11px] text-zinc-400">
+            We sent a copy to {data.email || "your email"}.
+          </p>
         </MotoCard>
       )}
     </div>
