@@ -164,6 +164,14 @@ export default function TradeWidgetFlow({
   const heroUrl = useVehicleImage(
     bb?.year, bb?.make, bb?.model, bb?.vin, undefined, bb?.uvc, false, "side",
   );
+  // Re-rendered hero once the customer picks a factory color. Forces a
+  // clean studio render in the chosen color so the intent step shows
+  // *their* car (not the stock photo).
+  const coloredHeroUrl = useVehicleImage(
+    bb?.year, bb?.make, bb?.model, bb?.vin, undefined, bb?.uvc,
+    !!data.colorName, "side", data.colorName || undefined,
+  );
+  const intentHeroUrl = (data.colorName && coloredHeroUrl) || heroUrl;
 
   const goNext = () => {
     const i = WIDGET_STEP_ORDER.indexOf(step);
@@ -674,6 +682,21 @@ export default function TradeWidgetFlow({
       {/* ── 3. INTENT ─────────────────────────────────────────────── */}
       {step === "intent" && (
         <MotoCard title="Trade it in or sell it?">
+          {intentHeroUrl && (
+            <div className="mb-4 flex flex-col items-center">
+              <div className="relative h-32 w-full overflow-hidden rounded-xl bg-gradient-to-br from-zinc-50 to-zinc-100">
+                <img
+                  src={intentHeroUrl}
+                  alt={detectedVehicle}
+                  className="h-full w-full object-contain p-2"
+                />
+              </div>
+              <p className="mt-2 text-xs text-zinc-500">
+                {detectedVehicle}
+                {data.colorName ? ` · ${data.colorName}` : ""}
+              </p>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
             {(
               [
