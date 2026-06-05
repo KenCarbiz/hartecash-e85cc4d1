@@ -19,8 +19,11 @@ import { tenantLogoSrc } from "@/lib/tenantLogo";
 import ResumeCard from "./ResumeCard";
 import TradeInBanner from "./TradeInBanner";
 import TradeWidgetFlow from "./TradeWidgetFlow";
+import WidgetLegalView from "./WidgetLegalView";
 import { useFirmOffer } from "./useTradeWidget";
 import type { VdpContext, WidgetIntent } from "./widgetTypes";
+
+type LegalView = "privacy" | "terms" | null;
 
 export default function TradeWidget({
   intent,
@@ -42,6 +45,9 @@ export default function TradeWidget({
   // drops them into the fresh flow.
   const [startFresh, setStartFresh] = useState(false);
   const returning = !startFresh && !!offer && offer.amount > 0;
+
+  // Privacy / Terms render in-panel (not a new tab).
+  const [legal, setLegal] = useState<LegalView>(null);
 
   const dealerName = (config.dealership_name || "").trim();
   const logo = tenantLogoSrc(config);
@@ -79,31 +85,62 @@ export default function TradeWidget({
         </button>
       </header>
 
-      <div>
-        {returning && offer ? (
-          <>
-            {/* Returning hero keeps the "apply toward this car" banner. */}
-            {vdp && <TradeInBanner vdp={vdp} offer={offer} zip={zip} />}
-            <ResumeCard
-              offer={offer}
-              vdp={vdp}
-              intent={intent}
-              guaranteeDays={guaranteeDays}
-              onStartNew={() => setStartFresh(true)}
-            />
-          </>
-        ) : (
-          <TradeWidgetFlow
-            initialIntent={intent}
-            dealershipId={tenant.dealership_id}
-            dealershipName={config.dealership_name}
-            vdp={vdp}
-            requireVerify={requireVerify}
-            aiPhotosEnabled={aiPhotosEnabled}
-            defaultZip={zip}
-          />
-        )}
-      </div>
+      {legal ? (
+        <WidgetLegalView type={legal} onBack={() => setLegal(null)} />
+      ) : (
+        <>
+          <div>
+            {returning && offer ? (
+              <>
+                {/* Returning hero keeps the "apply toward this car" banner. */}
+                {vdp && <TradeInBanner vdp={vdp} offer={offer} zip={zip} />}
+                <ResumeCard
+                  offer={offer}
+                  vdp={vdp}
+                  intent={intent}
+                  guaranteeDays={guaranteeDays}
+                  onStartNew={() => setStartFresh(true)}
+                />
+              </>
+            ) : (
+              <TradeWidgetFlow
+                initialIntent={intent}
+                dealershipId={tenant.dealership_id}
+                dealershipName={config.dealership_name}
+                vdp={vdp}
+                requireVerify={requireVerify}
+                aiPhotosEnabled={aiPhotosEnabled}
+                defaultZip={zip}
+              />
+            )}
+          </div>
+
+          {/* Dealer footer — tenant logo + in-panel legal links. */}
+          <footer className="mt-auto border-t border-zinc-100 px-6 py-7 text-center">
+            {logo ? (
+              <img
+                src={logo}
+                alt={dealerName || "Dealer"}
+                className="mx-auto h-8 w-auto max-w-[180px] object-contain opacity-90"
+              />
+            ) : (
+              <span className="text-sm font-bold tracking-tight text-zinc-700">{dealerName}</span>
+            )}
+            <div className="mt-3 flex items-center justify-center gap-2.5 text-[12.5px] text-zinc-500">
+              <button type="button" onClick={() => setLegal("privacy")} className="hover:text-zinc-800 hover:underline">
+                Privacy Policy
+              </button>
+              <span className="text-zinc-300">·</span>
+              <button type="button" onClick={() => setLegal("terms")} className="hover:text-zinc-800 hover:underline">
+                Terms of Service
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-400">
+              © {new Date().getFullYear()} {dealerName || "Dealer"} · Powered by AutoCurb
+            </p>
+          </footer>
+        </>
+      )}
     </div>
   );
 }

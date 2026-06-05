@@ -723,30 +723,33 @@ export default function TradeWidgetFlow({
               </p>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-2">
+          {/* Binary choice → auto-advance on tap (no Next button). The
+              brief delay lets the selection highlight register first. */}
+          <div className="grid gap-2.5">
             {(
               [
-                ["trade", "Trade toward a car"],
-                ["sell", "Just sell it"],
+                ["trade", "Trade toward a car", "Apply your value toward your next vehicle."],
+                ["sell", "Just sell it", "Get paid for your car — no purchase required."],
               ] as const
-            ).map(([value, label]) => (
+            ).map(([value, label, desc]) => (
               <button
                 key={value}
                 type="button"
                 aria-pressed={data.intent === value}
-                onClick={() => set({ intent: value })}
-                className={`rounded-md border px-4 py-3 text-center text-sm font-medium transition ${
+                onClick={() => {
+                  set({ intent: value });
+                  window.setTimeout(goNext, 160);
+                }}
+                className={`rounded-2xl border px-4 py-4 text-left transition ${
                   data.intent === value
-                    ? "border-[hsl(var(--cta-offer))] ring-2 ring-[hsl(var(--cta-offer)/0.15)]"
-                    : "border-zinc-300 hover:border-zinc-400"
+                    ? "border-[hsl(var(--cta-offer))] bg-[hsl(var(--cta-offer)/0.06)]"
+                    : "border-zinc-200 hover:-translate-y-0.5 hover:border-[hsl(var(--cta-offer)/0.6)] hover:shadow-sm"
                 }`}
               >
-                {label}
+                <p className="text-[15px] font-semibold text-zinc-900">{label}</p>
+                <p className="text-[13px] leading-snug text-zinc-500">{desc}</p>
               </button>
             ))}
-          </div>
-          <div className="mt-4">
-            <MotoPrimaryButton onClick={goNext}>Next</MotoPrimaryButton>
           </div>
         </MotoCard>
       )}
@@ -831,6 +834,49 @@ export default function TradeWidgetFlow({
       )}
 
       {/* ── 5. VALUE: range → verify (OTP) → firm offer ───────────── */}
+      {/* Keep the vehicle laid out (like the prior screens) through the
+          offer so the customer's car stays present. */}
+      {step === "value" && (
+        <div className="mb-5">
+          <div className="relative mx-auto h-[20vh] max-h-[170px] w-full max-w-[300px]">
+            {heroUrl ? (
+              <>
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 bottom-[6%] z-0 mx-auto h-3 w-[62%] rounded-[50%] bg-zinc-900/20 blur-md"
+                />
+                <div className="absolute inset-0 z-10 h-full w-full">
+                  <img src={heroUrl} alt={detectedVehicle} className="absolute inset-0 h-full w-full object-contain" />
+                  {tintColor && (
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0"
+                      style={{
+                        backgroundColor: tintColor,
+                        mixBlendMode: "multiply",
+                        WebkitMaskImage: `url(${heroUrl})`,
+                        maskImage: `url(${heroUrl})`,
+                        WebkitMaskRepeat: "no-repeat",
+                        maskRepeat: "no-repeat",
+                        WebkitMaskPosition: "center",
+                        maskPosition: "center",
+                        WebkitMaskSize: "contain",
+                        maskSize: "contain",
+                      }}
+                    />
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="absolute inset-0 m-auto h-[70%] w-[86%] animate-pulse rounded-2xl bg-gradient-to-br from-zinc-100 to-zinc-200" />
+            )}
+          </div>
+          <p className="mt-2 text-center text-sm font-semibold text-zinc-900">
+            {detectedVehicle}
+            {data.colorName ? ` · ${data.colorName}` : ""}
+          </p>
+        </div>
+      )}
       {step === "value" && valueStage === "range" && (
         <MotoCard title="Your estimated trade-in value">
           <p className="text-4xl font-bold leading-none tabular-nums text-zinc-900">
