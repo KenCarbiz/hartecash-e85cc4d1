@@ -740,6 +740,7 @@
   var overlayFrame = null;
   var overlayBackdrop = null;
   var overlayKeyHandler = null;
+  var overlayMsgHandler = null;
   var overlayStylesInjected = false;
 
   // Append our analytics tagging onto whichever URL the caller
@@ -848,6 +849,15 @@
     };
     document.addEventListener("keydown", overlayKeyHandler);
 
+    // Close from inside the iframe (the panel's own × posts this).
+    // Registered here so it works for every opener — including
+    // valueMyTrade / bindTrade, which don't run createInventoryEmbed.
+    overlayMsgHandler = function (e) {
+      var d = e.data;
+      if (d && typeof d === "object" && d.type === "hartecash-close") closeInventoryOverlay();
+    };
+    window.addEventListener("message", overlayMsgHandler);
+
     requestAnimationFrame(function () {
       overlayBackdrop.classList.add("hc-open");
       overlayFrame.classList.add("hc-open");
@@ -885,6 +895,10 @@
     if (overlayKeyHandler) {
       document.removeEventListener("keydown", overlayKeyHandler);
       overlayKeyHandler = null;
+    }
+    if (overlayMsgHandler) {
+      window.removeEventListener("message", overlayMsgHandler);
+      overlayMsgHandler = null;
     }
     setTimeout(function () {
       if (overlayFrame && overlayFrame.parentNode) overlayFrame.parentNode.removeChild(overlayFrame);
