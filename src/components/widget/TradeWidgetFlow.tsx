@@ -310,7 +310,7 @@ export default function TradeWidgetFlow({
     {step === "vehicle" && vehicleStage === "entry" && vdp && (
       <TradeInBanner vdp={vdp} offer={null} zip={defaultZip} />
     )}
-    <div id="sell-car-form" className="mx-auto w-full max-w-[500px] px-6 py-6">
+    <div id="sell-car-form" className="mx-auto w-full max-w-[540px] px-7 py-6">
       {/* First screen leads with a headline; the premium Step 2 renders its
           own progress; the rest show the compact progress dots. */}
       {step === "vehicle" && vehicleStage === "entry" ? (
