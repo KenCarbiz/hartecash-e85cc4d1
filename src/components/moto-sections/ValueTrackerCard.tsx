@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useEmbedMode } from "@/hooks/useEmbedMode";
 import { mergeFlagships, resolveFlagship } from "@/data/oemFlagships";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import ValueTrackingModal from "@/components/moto-sections/ValueTrackingModal";
@@ -157,6 +158,7 @@ const POPULAR_FLAGSHIP = {
 const ValueTrackerCard = () => {
   const { tenant } = useTenant();
   const { config } = useSiteConfig();
+  const embed = useEmbedMode();
   const [showModal, setShowModal] = useState(false);
 
   let flagship;
@@ -174,6 +176,92 @@ const ValueTrackerCard = () => {
     flagship = resolveFlagship(
       tenant?.display_name,
       mergeFlagships(config.tracker_oem_flagships),
+    );
+  }
+
+  // ── Compact embed/slide-out variant ─────────────────────────────
+  // When rendered inside the dealer-site iframe drawer (?embed=true),
+  // we collapse the full marketing section into a single tight card:
+  // badge + one-line headline + three inline trust chips + a mini
+  // value/sparkline strip. Same message, ~1/3 the vertical space.
+  if (embed) {
+    return (
+      <section
+        id="value-tracking"
+        aria-labelledby="value-tracking-heading"
+        className="px-4 py-6 border-t border-border/60"
+        style={{ background: "hsl(220 14% 98%)" }}
+      >
+        <div className="bg-white rounded-2xl shadow-[0_4px_16px_-8px_rgb(15_23_42_/_0.08)] p-5">
+          <div
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full mb-3"
+            style={{ background: "hsl(220 100% 96%)" }}
+          >
+            <TrendingUp className="w-3 h-3 text-primary" strokeWidth={2.25} />
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary">
+              Value Tracking
+            </span>
+          </div>
+
+          <h2
+            id="value-tracking-heading"
+            className="text-lg font-bold text-foreground leading-snug tracking-tight mb-2"
+          >
+            We track your vehicle value in real time.
+          </h2>
+          <p className="text-[13px] text-foreground/65 leading-relaxed mb-4">
+            We monitor the market and notify you when your value changes
+            or it's a good time to sell.
+          </p>
+
+          {/* Mini live value strip */}
+          <div className="rounded-xl border border-border/60 p-3 mb-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.1em] text-foreground/55 font-semibold">
+                Est. Value
+              </p>
+              <p className="text-xl font-bold text-foreground leading-none tabular-nums mt-1">
+                $23,450
+              </p>
+              <p className="text-[11px] font-semibold text-emerald-600 tabular-nums mt-1">
+                ↑ +$1,275 (5.7%) · 30d
+              </p>
+            </div>
+            <svg viewBox="0 0 120 50" className="w-24 h-12 shrink-0" aria-hidden>
+              <path
+                d="M2 40 L18 36 L34 38 L50 30 L66 32 L82 22 L98 18 L118 6"
+                fill="none"
+                stroke="#1e3a8a"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="118" cy="6" r="3" fill="#1e3a8a" />
+            </svg>
+          </div>
+
+          {/* Inline trust chips */}
+          <ul className="space-y-2 mb-4">
+            {TRUST_POINTS.map(({ Icon, title }) => (
+              <li key={title} className="flex items-center gap-2 text-[12px] text-foreground/75">
+                <Icon className="w-3.5 h-3.5 text-primary shrink-0" strokeWidth={2} />
+                <span className="font-medium text-foreground">{title}</span>
+              </li>
+            ))}
+          </ul>
+
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            Learn how it works
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <ValueTrackingModal open={showModal} onOpenChange={setShowModal} />
+      </section>
     );
   }
 
