@@ -613,7 +613,10 @@ export default function TradeWidgetFlow({
                     key={c.code || c.name}
                     type="button"
                     aria-pressed={selected}
-                    onClick={() => set({ colorCode: c.code, colorName: c.name })}
+                    onClick={() => {
+                      set({ colorCode: c.code, colorName: c.name });
+                      goNext();
+                    }}
                     className="flex flex-col items-center gap-1.5 text-center transition"
                   >
                     <span
