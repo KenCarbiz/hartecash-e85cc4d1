@@ -134,6 +134,7 @@ export default function TradeWidgetFlow({
     trackValue: true,
     colorCode: "",
     colorName: "",
+    colorHex: "",
     otp: "",
   });
   const set = (patch: Partial<typeof data>) => setData((d) => ({ ...d, ...patch }));
