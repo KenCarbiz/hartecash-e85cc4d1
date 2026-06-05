@@ -117,6 +117,8 @@ export default function TradeWidgetFlow({
     miles: "",
     zip: defaultZip,
     trackValue: false,
+    colorCode: "",
+    colorName: "",
     otp: "",
   });
   const set = (patch: Partial<typeof data>) => setData((d) => ({ ...d, ...patch }));
