@@ -121,6 +121,40 @@ export default function TradeWidgetFlow({
   });
   const set = (patch: Partial<typeof data>) => setData((d) => ({ ...d, ...patch }));
 
+  // YMM progressive fallback (mirrors MotoStepVehicleSearch on the landing
+  // page): Year → Make → Model → optional Trim, plus a VIN field under an
+  // OR divider. Either path (full YMM or 17-char VIN) enables Next.
+  const [ymmYear, setYmmYear] = useState("");
+  const [ymmMake, setYmmMake] = useState("");
+  const [ymmModel, setYmmModel] = useState("");
+  const [ymmTrim, setYmmTrim] = useState("");
+  const [modelOptions, setModelOptions] = useState<{ value: string; label: string }[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    if (!ymmYear || !ymmMake) {
+      setModelOptions([]);
+      return;
+    }
+    setModelsLoading(true);
+    fetchModelsForMakeYear(ymmMake, ymmYear).then((opts) => {
+      if (cancelled) return;
+      setModelOptions(opts);
+      setModelsLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ymmYear, ymmMake]);
+
+  const vinClean = data.entryMode === "vin" ? data.vehicleId.trim().toUpperCase() : "";
+  const plateClean = data.entryMode === "plate" ? data.vehicleId.trim().toUpperCase() : "";
+  const vinReady = vinClean.length === 17;
+  const ymmReady = !!ymmYear && !!ymmMake && !!ymmModel;
+  const plateReady = plateClean.length >= 2 && !!data.state;
+  const canSubmitEntry =
+    data.entryMode === "vin" ? vinReady || ymmReady : plateReady;
+
   // Decoded-vehicle image for the Step 2 card. Real photo first — Black
   // Book (EVOX) by the exact uvc → Wikipedia/internet → AI render — as a
   // clean side profile (no background; the card adds the under-vehicle
