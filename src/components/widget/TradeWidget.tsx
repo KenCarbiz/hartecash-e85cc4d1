@@ -79,17 +79,19 @@ export default function TradeWidget({
         </button>
       </header>
 
-      {vdp && <TradeInBanner vdp={vdp} offer={offer} zip={zip} />}
-
       <div>
         {returning && offer ? (
-          <ResumeCard
-            offer={offer}
-            vdp={vdp}
-            intent={intent}
-            guaranteeDays={guaranteeDays}
-            onStartNew={() => setStartFresh(true)}
-          />
+          <>
+            {/* Returning hero keeps the "apply toward this car" banner. */}
+            {vdp && <TradeInBanner vdp={vdp} offer={offer} zip={zip} />}
+            <ResumeCard
+              offer={offer}
+              vdp={vdp}
+              intent={intent}
+              guaranteeDays={guaranteeDays}
+              onStartNew={() => setStartFresh(true)}
+            />
+          </>
         ) : (
           <TradeWidgetFlow
             initialIntent={intent}
