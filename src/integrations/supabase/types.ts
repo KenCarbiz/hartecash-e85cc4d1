@@ -3913,6 +3913,42 @@ export type Database = {
         }
         Relationships: []
       }
+      privacy_requests: {
+        Row: {
+          created_at: string
+          dealership_id: string
+          details: string | null
+          email: string | null
+          id: string
+          name: string | null
+          phone: string | null
+          request_type: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          dealership_id: string
+          details?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          request_type: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string
+          details?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          request_type?: string
+          status?: string
+        }
+        Relationships: []
+      }
       processed_webhook_calls: {
         Row: {
           call_log_id: string | null
