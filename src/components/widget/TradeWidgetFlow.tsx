@@ -384,51 +384,120 @@ export default function TradeWidgetFlow({
       {/* ── 1. VEHICLE: entry → confirm ───────────────────────────── */}
       {step === "vehicle" && vehicleStage === "entry" && (
         <>
-        <MotoCard>
-          {/* Segmented VIN / plate toggle — active fills with brand color. */}
-          <div className="mb-4 grid grid-cols-2 overflow-hidden rounded-lg border border-zinc-200">
-            {(["vin", "plate"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                aria-pressed={data.entryMode === m}
-                onClick={() => set({ entryMode: m })}
-                className={`px-3 py-3 text-[15px] font-semibold transition ${
-                  data.entryMode === m
-                    ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)]"
-                    : "bg-white text-zinc-600 hover:bg-zinc-50"
-                }`}
-              >
-                {m === "vin" ? "VIN" : "License plate"}
-              </button>
-            ))}
+        <MotoCard className="p-6">
+          {/* Vehicle Search / License Plate tabs — same purple pill chip
+              and zinc-100 track as the landing page (MotoStepVehicleSearch). */}
+          <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
+            {([
+              { id: "vin", label: "Vehicle Search" },
+              { id: "plate", label: "License Plate" },
+            ] as const).map((t) => {
+              const active = data.entryMode === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => set({ entryMode: t.id, vehicleId: "" })}
+                  className={cn(
+                    "rounded-md px-3 py-2.5 transition",
+                    active ? "shadow-sm" : "text-zinc-700 hover:text-zinc-900",
+                  )}
+                  style={active ? { background: "#6D28D9", color: "#fff" } : undefined}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
           </div>
-          <div className="grid gap-3">
-            <MotoFormField
-              label={data.entryMode === "vin" ? "VIN" : "License plate"}
-              value={data.vehicleId}
-              onChange={(e) => set({ vehicleId: e.target.value })}
-            />
-            {data.entryMode === "plate" && (
-              <select
+
+          {data.entryMode === "vin" && (
+            <div className="space-y-4">
+              <MotoOutlinedSelect
+                label="Vehicle Year"
+                placeholder="Vehicle Year"
+                value={ymmYear}
+                onChange={(e) => {
+                  setYmmYear(e.target.value);
+                  setYmmMake("");
+                  setYmmModel("");
+                  setYmmTrim("");
+                }}
+                options={YEAR_OPTIONS}
+              />
+              {ymmYear && (
+                <MotoOutlinedSelect
+                  label="Vehicle Make"
+                  value={ymmMake}
+                  onChange={(e) => {
+                    setYmmMake(e.target.value);
+                    setYmmModel("");
+                    setYmmTrim("");
+                  }}
+                  options={MAKE_OPTIONS}
+                />
+              )}
+              {ymmYear && ymmMake && (
+                <MotoOutlinedSelect
+                  label={modelsLoading ? "Vehicle Model (loading…)" : "Vehicle Model"}
+                  value={ymmModel}
+                  onChange={(e) => {
+                    setYmmModel(e.target.value);
+                    setYmmTrim("");
+                  }}
+                  options={modelOptions}
+                  disabled={modelsLoading || modelOptions.length === 0}
+                />
+              )}
+              {ymmYear && ymmMake && ymmModel && (
+                <MotoOutlinedInput
+                  label="Vehicle Trim"
+                  value={ymmTrim}
+                  onChange={(e) => setYmmTrim(e.target.value)}
+                  placeholder="e.g. EX-L, Sport, Premium Luxury"
+                />
+              )}
+              <div className="text-center text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                OR
+              </div>
+              <MotoOutlinedInput
+                label="VIN"
+                value={data.vehicleId}
+                onChange={(e) => set({ vehicleId: e.target.value.toUpperCase() })}
+                maxLength={17}
+                autoComplete="off"
+                placeholder="VIN"
+              />
+            </div>
+          )}
+
+          {data.entryMode === "plate" && (
+            <div className="grid grid-cols-2 gap-3">
+              <MotoOutlinedInput
+                label="License Plate*"
+                value={data.vehicleId}
+                onChange={(e) => set({ vehicleId: e.target.value.toUpperCase() })}
+                autoComplete="off"
+              />
+              <MotoOutlinedSelect
+                label="State*"
                 value={data.state}
                 onChange={(e) => set({ state: e.target.value })}
-                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-base outline-none focus:border-[hsl(var(--cta-offer))] focus:ring-2 focus:ring-[hsl(var(--cta-offer)/0.15)]"
-              >
-                <option value="">State</option>
-                {US_STATES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+                options={US_STATES.map((s) => ({ value: s, label: s }))}
+              />
+            </div>
+          )}
+
           {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
-          <div className="mt-4">
+          <div className="mt-6">
+            {/* Thin, pill-shaped Next CTA. Greyed out until inputs are valid;
+                fills with the dealer's CTA color the moment they are. */}
             <MotoPrimaryButton
+              className={cn(
+                "w-full rounded-full py-2.5 text-sm transition-colors",
+                !canSubmitEntry && "bg-zinc-100 text-zinc-500 hover:bg-zinc-100",
+              )}
               loading={busy}
-              disabled={!data.vehicleId.trim() || (data.entryMode === "plate" && !data.state)}
+              disabled={!canSubmitEntry}
               onClick={decode}
             >
               Next
