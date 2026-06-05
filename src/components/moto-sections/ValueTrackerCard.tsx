@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useEmbedMode } from "@/hooks/useEmbedMode";
 import { mergeFlagships, resolveFlagship } from "@/data/oemFlagships";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import ValueTrackingModal from "@/components/moto-sections/ValueTrackingModal";
