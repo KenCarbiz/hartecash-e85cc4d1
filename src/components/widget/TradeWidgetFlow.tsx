@@ -661,7 +661,7 @@ export default function TradeWidgetFlow({
             <button
               type="button"
               onClick={() => {
-                set({ colorCode: "", colorName: "" });
+                set({ colorCode: "", colorName: "", colorHex: "" });
                 goNext();
               }}
               className="mt-6 block w-full text-center text-xs font-medium text-zinc-500 hover:underline"
