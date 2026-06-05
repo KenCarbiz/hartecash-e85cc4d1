@@ -62,6 +62,7 @@ const SECTION_MAP: { key: string; label: string; icon: React.ElementType; group:
   // ── Setup · Process ──
   { key: "marketing", label: "Marketing", icon: Megaphone, group: "Setup · Process" },
   { key: "embed-toolkit", label: "Website Embed", icon: Wrench, group: "Setup · Process" },
+  { key: "trade-widget", label: "Trade Widget", icon: Wrench, group: "Setup · Process" },
 
   // ── Integrations (enterprise) ──
   { key: "integrations", label: "Integrations", icon: Activity, group: "Integrations" },

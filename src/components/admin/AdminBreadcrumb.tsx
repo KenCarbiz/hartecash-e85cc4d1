@@ -66,6 +66,7 @@ const SECTION_GROUPS: Record<string, string> = {
   testimonials: "Setup · Process",
   "rooftop-websites": "Setup · Process",
   "embed-toolkit": "Setup · Process",
+  "trade-widget": "Setup · Process",
 
   // Integrations (enterprise)
   integrations: "Integrations",
@@ -148,6 +149,7 @@ const SECTION_LABELS: Record<string, string> = {
   testimonials: "Marketing · Testimonials",
   "rooftop-websites": "Rooftop Websites",
   "embed-toolkit": "Website Embed",
+  "trade-widget": "Trade Widget",
 
   // Integrations
   integrations: "Integrations",

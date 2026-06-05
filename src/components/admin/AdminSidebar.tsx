@@ -24,7 +24,7 @@ import {
   // Form & Inspection Sheet, LogIn replaces ScanLine on Inspection
   // Check-In.
   RotateCcw, Image as ImageIcon, Mic, LineChart, Sparkles, FileText, LogIn,
-  Target, Clock,
+  Target, Clock, PanelRightOpen,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -250,6 +250,7 @@ const AdminSidebar = ({
     { key: "marketing", label: "Marketing", icon: Megaphone },
     ...(locationCount > 1 ? [{ key: "rooftop-websites", label: "Rooftop Websites", icon: Globe }] : []),
     { key: "embed-toolkit", label: "Website Embed", icon: Code2 },
+    { key: "trade-widget", label: "Trade Widget", icon: PanelRightOpen },
   ].filter((item) => isAllowed(item.key));
 
   // ── INTEGRATIONS ── Enterprise-gated. Status + API + vAuto +
@@ -316,7 +317,7 @@ const AdminSidebar = ({
     // Marketing: legacy "promotions" / "referrals" / "testimonials" still resolve.
     "marketing", "promotions", "referrals", "testimonials",
     "offer-settings",
-    "locations", "rooftop-websites", "embed-toolkit",
+    "locations", "rooftop-websites", "embed-toolkit", "trade-widget",
     "my-lead-link", "my-availability", "my-referrals",
     "staff", "reports", "image-inventory", "data-egress", "changelog",
     "onboarding", "system-settings", "pricing-model",

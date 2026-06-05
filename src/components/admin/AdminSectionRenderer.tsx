@@ -56,6 +56,7 @@ const MyReferrals = React.lazy(() => import("./MyReferrals"));
 const MyLeadLink = React.lazy(() => import("./MyLeadLink"));
 const MyAvailability = React.lazy(() => import("./MyAvailability"));
 const EmbedToolkit = React.lazy(() => import("./EmbedToolkit"));
+const TradeWidgetAdmin = React.lazy(() => import("./TradeWidgetAdmin"));
 const ProspectDemo = React.lazy(() => import("./ProspectDemo"));
 // PromotionManagement now imported by MarketingHub.tsx.
 
@@ -794,6 +795,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "my-lead-link" && <MyLeadLink />}
       {activeSection === "my-availability" && <MyAvailability />}
       {activeSection === "embed-toolkit" && canManageAccess && <EmbedToolkit />}
+      {activeSection === "trade-widget" && canManageAccess && <TradeWidgetAdmin />}
       {activeSection === "prospect-demo" && canManageAccess && isPlatformAdmin && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <ProspectDemo />

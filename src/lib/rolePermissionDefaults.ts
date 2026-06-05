@@ -111,6 +111,7 @@ export const SECTION_GROUPS: Array<{ label: string; sections: Array<{ key: strin
       { key: "rooftop-websites", label: "Rooftop Websites" },
       { key: "testimonials", label: "Testimonials" },
       { key: "embed-toolkit", label: "Website Embed" },
+      { key: "trade-widget", label: "Trade Widget" },
     ],
   },
   {
