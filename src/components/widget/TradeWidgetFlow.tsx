@@ -10,11 +10,14 @@
 // submissions row, stamped with embed attribution); the firm number is
 // gated behind SMS verification (kept per product decision).
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Pencil } from "lucide-react";
 import MotoCard from "@/components/moto/MotoCard";
 import MotoPrimaryButton from "@/components/moto/MotoPrimaryButton";
 import MotoFormField from "@/components/moto/MotoFormField";
+import { MotoOutlinedInput, MotoOutlinedSelect } from "@/components/moto/MotoOutlinedField";
+import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "@/components/moto/ymmData";
+import { cn } from "@/lib/utils";
 import { useVehicleImage } from "@/hooks/useVehicleImage";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
 import HowItWorksLean from "@/components/moto-sections/HowItWorksLean";
