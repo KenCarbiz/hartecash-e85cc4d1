@@ -24,11 +24,12 @@ export type WidgetIntent = "trade" | "sell";
  * flow (TCPA wall, 8-question damage matrix, photo capture, scheduling)
  * are intentionally dropped.
  */
-export type WidgetStep = "vehicle" | "condition" | "intent" | "contact" | "value";
+export type WidgetStep = "vehicle" | "condition" | "color" | "intent" | "contact" | "value";
 
 export const WIDGET_STEP_ORDER: readonly WidgetStep[] = [
   "vehicle",
   "condition",
+  "color",
   "intent",
   "contact",
   "value",

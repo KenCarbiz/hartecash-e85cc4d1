@@ -60,7 +60,7 @@ function formatPhone(v: string): string {
   return "";
 }
 
-type VehicleStage = "entry" | "confirm" | "color";
+type VehicleStage = "entry" | "confirm";
 // range → (verify) → firm → (boost → reeval) → done. verify is skipped
 // when require_phone_verification is off; boost/reeval only when the
 // dealer enables AI photos; done is the accept confirmation.
@@ -228,14 +228,10 @@ export default function TradeWidgetFlow({
     }
     setCandidates(vehicles);
     if (vehicles.length === 1) {
-      // Single match → straight to color (if BB returned factory colors)
-      // or the premium confirm + condition screen.
+      // Single match → straight to condition. Color picker comes AFTER
+      // condition (only if Black Book returned factory color options).
       setBb(vehicles[0]);
-      if (vehicles[0].exterior_colors?.length) {
-        setVehicleStage("color");
-      } else {
-        setStep("condition");
-      }
+      setStep("condition");
     } else {
       // Multiple trims → make the customer pick first.
       setBb(null);
@@ -586,13 +582,7 @@ export default function TradeWidgetFlow({
           <div className="mt-4">
             <MotoPrimaryButton
               disabled={!bb}
-              onClick={() => {
-                if (bb?.exterior_colors?.length) {
-                  setVehicleStage("color");
-                } else {
-                  setStep("condition");
-                }
-              }}
+              onClick={() => setStep("condition")}
             >
               Yes, continue
             </MotoPrimaryButton>
@@ -600,56 +590,68 @@ export default function TradeWidgetFlow({
         </MotoCard>
       )}
 
-      {/* ── 1b. COLOR (factory choices from Black Book) ───────────── */}
-      {step === "vehicle" && vehicleStage === "color" && bb && (
-        <MotoCard title="Pick your vehicle's color">
-          <p className="mb-3 text-sm text-zinc-500">
-            Factory color options for your {bb.year} {bb.make} {bb.model}.
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {bb.exterior_colors.map((c) => {
-              const selected = data.colorCode === c.code;
-              const swatch = c.hex
-                ? c.hex.startsWith("#") ? c.hex : `#${c.hex}`
-                : c.rgb
-                ? `rgb(${c.rgb})`
-                : "#e4e4e7";
-              return (
-                <button
-                  key={c.code || c.name}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => set({ colorCode: c.code, colorName: c.name })}
-                  className={`flex items-center gap-2.5 rounded-md border px-3 py-2.5 text-left text-sm transition ${
-                    selected
-                      ? "border-[hsl(var(--cta-offer))] ring-2 ring-[hsl(var(--cta-offer)/0.15)]"
-                      : "border-zinc-300 hover:border-zinc-400"
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="h-6 w-6 shrink-0 rounded-full border border-zinc-300"
-                    style={{ background: swatch }}
-                  />
-                  <span className="truncate text-zinc-900">{c.name}</span>
-                </button>
-              );
-            })}
-          </div>
-          <button
-            type="button"
-            onClick={() => set({ colorCode: "", colorName: "" })}
-            className="mt-3 text-xs font-medium text-zinc-500 hover:underline"
-          >
-            My color isn't listed — skip
-          </button>
-          <div className="mt-4">
-            <MotoPrimaryButton onClick={() => setStep("condition")}>
-              Continue
-            </MotoPrimaryButton>
-          </div>
-        </MotoCard>
+      {/* ── 2b. COLOR (factory choices from Black Book) ───────────────
+          Comes AFTER condition. Auto-skips to "intent" when Black Book
+          didn't return any factory color options (YMM fallback, older
+          vehicles, etc.). */}
+      {step === "color" && (
+        bb?.exterior_colors?.length ? (
+          <MotoCard title="Pick your vehicle's color">
+            <p className="mb-4 text-sm text-zinc-500">
+              Factory color options for your {bb.year} {bb.make} {bb.model}.
+            </p>
+            <div className="grid grid-cols-4 gap-x-3 gap-y-5">
+              {bb.exterior_colors.map((c) => {
+                const selected = data.colorCode === c.code;
+                const swatch = c.hex
+                  ? c.hex.startsWith("#") ? c.hex : `#${c.hex}`
+                  : c.rgb
+                  ? `rgb(${c.rgb})`
+                  : "#e4e4e7";
+                return (
+                  <button
+                    key={c.code || c.name}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => set({ colorCode: c.code, colorName: c.name })}
+                    className="flex flex-col items-center gap-1.5 text-center transition"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "h-12 w-12 rounded-full border shadow-sm transition",
+                        selected
+                          ? "border-[hsl(var(--cta-offer))] ring-2 ring-[hsl(var(--cta-offer)/0.25)] ring-offset-2"
+                          : "border-zinc-300 hover:border-zinc-400",
+                      )}
+                      style={{ background: swatch }}
+                    />
+                    <span className="line-clamp-2 text-[11px] leading-tight text-zinc-700">
+                      {c.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-6 grid gap-2">
+              <MotoPrimaryButton onClick={goNext}>Continue</MotoPrimaryButton>
+              <button
+                type="button"
+                onClick={() => {
+                  set({ colorCode: "", colorName: "" });
+                  goNext();
+                }}
+                className="text-center text-xs font-medium text-zinc-500 hover:underline"
+              >
+                Skip color selection
+              </button>
+            </div>
+          </MotoCard>
+        ) : (
+          <ColorAutoSkip onSkip={goNext} />
+        )
       )}
+
 
       {/* ── 2. CONDITION (4-point) ────────────────────────────────── */}
       {/* ── 2. CONFIRM + CONDITION (premium Step 2) ───────────────── */}
@@ -947,6 +949,16 @@ export default function TradeWidgetFlow({
     )}
     </>
   );
+}
+
+/** Renders nothing; auto-advances past the color step when Black Book
+ *  didn't return factory color options for the decoded vehicle. */
+function ColorAutoSkip({ onSkip }: { onSkip: () => void }) {
+  useEffect(() => {
+    onSkip();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
 }
 
 /** Minimal dotted step indicator — no labels, keeps the panel compact. */
