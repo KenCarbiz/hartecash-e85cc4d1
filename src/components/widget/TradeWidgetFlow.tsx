@@ -42,6 +42,7 @@ import {
   type WidgetIntent,
   type WidgetStep,
 } from "./widgetTypes";
+import { getOfferTerms, type OfferMode } from "@/lib/offerTerms";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
@@ -99,6 +100,7 @@ export default function TradeWidgetFlow({
   const [candidates, setCandidates] = useState<BBVehicle[]>([]);
   const [estimate, setEstimate] = useState<{ low: number | null; high: number | null } | null>(null);
   const [firm, setFirm] = useState<number | null>(null);
+  const [offerMode, setOfferMode] = useState<OfferMode>("estimate");
   const [challengeId, setChallengeId] = useState<string | null>(null);
   // The submissions row is written exactly once (on firm-offer reveal),
   // so editing mileage / re-running the range never duplicates a lead.
@@ -183,6 +185,14 @@ export default function TradeWidgetFlow({
     ? `${data.entryMode.toUpperCase()} ${data.vehicleId.toUpperCase()}`
     : "your vehicle";
 
+  // Customer-facing offer wording, in the dealer's voice, adapting to
+  // whether the dealership opted into firm offers (offerMode resolved from
+  // their offer_settings). 8-day window matches price_guarantee_days default.
+  const offerTerms = getOfferTerms(offerMode, {
+    dealerName: (dealershipName || "").trim() || "the dealership",
+    guaranteeDays: 8,
+  });
+
   const contactComplete =
     !!data.firstName.trim() &&
     !!data.lastName.trim() &&
@@ -255,6 +265,7 @@ export default function TradeWidgetFlow({
       const est = await computeWidgetEstimate(data, bb, dealershipId);
       setEstimate({ low: est.low, high: est.high });
       setFirm(est.firm);
+      setOfferMode(est.mode);
       setStep("value");
       setValueStage("range");
     } catch {
@@ -384,7 +395,7 @@ export default function TradeWidgetFlow({
             <span className="text-[hsl(var(--cta-offer))]">Instant Vehicle Valuation</span>
           </h1>
           <p className="mt-2.5 text-[15px] leading-snug text-zinc-500">
-            Get an instant value — then add a few details to lock in your firm offer.
+            Get an instant value — then add a few details to see your real offer.
           </p>
         </div>
       ) : step === "condition" ? null : (
@@ -899,7 +910,7 @@ export default function TradeWidgetFlow({
           {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
           <div className="mt-4">
             <MotoPrimaryButton loading={busy} onClick={getFirm}>
-              Get Firm Offer
+              {offerMode === "firm" ? "Get Firm Offer" : "Get My Offer"}
             </MotoPrimaryButton>
           </div>
         </MotoCard>
@@ -921,7 +932,7 @@ export default function TradeWidgetFlow({
           {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
           <div className="mt-4">
             <MotoPrimaryButton loading={busy} disabled={data.otp.length !== 6} onClick={verify}>
-              Verify &amp; get firm offer
+              {offerMode === "firm" ? "Verify & get firm offer" : "Verify & see my offer"}
             </MotoPrimaryButton>
           </div>
           <button
@@ -936,7 +947,7 @@ export default function TradeWidgetFlow({
       )}
 
       {step === "value" && valueStage === "firm" && (
-        <MotoCard title="Your firm offer">
+        <MotoCard title={offerMode === "firm" ? "Your firm offer" : "Your offer"}>
           {firm != null && firm > 0 ? (
             <>
               <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -944,6 +955,7 @@ export default function TradeWidgetFlow({
               </p>
               <p className="mt-1 text-4xl font-bold tabular-nums text-zinc-900">{usd(firm)}</p>
               <p className="mt-1 text-sm text-zinc-500">for your {detectedVehicle}</p>
+              <p className="mt-2 text-[12px] leading-snug text-zinc-500">{offerTerms.subtext}</p>
               <div className="mt-4">
                 <MotoPrimaryButton loading={busy} onClick={accept}>
                   {applyLabel}
@@ -958,6 +970,7 @@ export default function TradeWidgetFlow({
                   Add photos for a possible higher offer
                 </button>
               )}
+              <p className="mt-4 text-[10px] leading-snug text-zinc-400">{offerTerms.disclosure}</p>
             </>
           ) : (
             <div className="flex items-center gap-2 text-sm text-zinc-500">
