@@ -116,7 +116,7 @@ export default function TradeWidgetFlow({
     phone: "",
     miles: "",
     zip: defaultZip,
-    trackValue: false,
+    trackValue: true,
     colorCode: "",
     colorName: "",
     otp: "",
