@@ -682,6 +682,21 @@ export default function TradeWidgetFlow({
       {/* ── 3. INTENT ─────────────────────────────────────────────── */}
       {step === "intent" && (
         <MotoCard title="Trade it in or sell it?">
+          {intentHeroUrl && (
+            <div className="mb-4 flex flex-col items-center">
+              <div className="relative h-32 w-full overflow-hidden rounded-xl bg-gradient-to-br from-zinc-50 to-zinc-100">
+                <img
+                  src={intentHeroUrl}
+                  alt={detectedVehicle}
+                  className="h-full w-full object-contain p-2"
+                />
+              </div>
+              <p className="mt-2 text-xs text-zinc-500">
+                {detectedVehicle}
+                {data.colorName ? ` · ${data.colorName}` : ""}
+              </p>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
             {(
               [
