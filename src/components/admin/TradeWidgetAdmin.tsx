@@ -146,7 +146,7 @@ export default function TradeWidgetAdmin() {
               key={previewKey}
               title="Trade widget preview"
               src={previewUrl}
-              className="h-[700px] w-[500px] max-w-full rounded-xl border border-border bg-white shadow-sm"
+              className="h-[700px] w-[580px] max-w-full rounded-xl border border-border bg-white shadow-sm"
             />
           </div>
 
