@@ -76,7 +76,7 @@ export default function VehicleConditionStep({
       </div>
 
       {/* ── Vehicle hero — the image IS the confirmation, no card ── */}
-      <div className="relative mx-auto mt-4 h-[34vh] max-h-[280px] w-full max-w-[340px]">
+      <div className="relative mx-auto mt-4 h-[34vh] max-h-[300px] w-full max-w-[380px]">
         <AnimatePresence>
           {!(imageUrl && imgLoaded) && (
             <motion.div
@@ -200,7 +200,7 @@ export default function VehicleConditionStep({
       </div>
 
       {/* ── Sticky Continue + trust ── */}
-      <div className="sticky bottom-0 z-20 mt-6 -mx-6 border-t border-zinc-100 bg-white/95 px-6 pb-4 pt-3 backdrop-blur">
+      <div className="sticky bottom-0 z-20 mt-6 -mx-7 border-t border-zinc-100 bg-white/95 px-7 pb-4 pt-3 backdrop-blur">
         <MotoPrimaryButton disabled={!condition} onClick={onContinue} className="min-h-[52px]">
           Continue
         </MotoPrimaryButton>
