@@ -228,9 +228,14 @@ export default function TradeWidgetFlow({
     }
     setCandidates(vehicles);
     if (vehicles.length === 1) {
-      // Single match → straight to the premium confirm + condition screen.
+      // Single match → straight to color (if BB returned factory colors)
+      // or the premium confirm + condition screen.
       setBb(vehicles[0]);
-      setStep("condition");
+      if (vehicles[0].exterior_colors?.length) {
+        setVehicleStage("color");
+      } else {
+        setStep("condition");
+      }
     } else {
       // Multiple trims → make the customer pick first.
       setBb(null);
