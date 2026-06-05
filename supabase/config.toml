@@ -51,6 +51,13 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # the user-entered code, with attempt-count throttling in-table.
   [functions.verify-customer-otp]
     verify_jwt = false
+  # Customer-facing: self-service data ACCESS (export) / DELETE from
+  # /my-data-rights. No JWT (customer has no auth session); the function
+  # gates the action behind an SMS one-time code (verifies the challenge_id +
+  # code, with per-IP rate limiting) before minting a server-side fulfillment
+  # token and running export/purge. The token never leaves the server.
+  [functions.self-service-data-action]
+    verify_jwt = false
   # Customer-facing: public ScheduleVisit form invokes this.
   # Function validates the appointment/submission token.
   [functions.notify-appointment]
