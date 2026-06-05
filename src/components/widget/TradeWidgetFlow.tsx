@@ -293,16 +293,16 @@ export default function TradeWidgetFlow({
   };
 
   return (
-    <div className="mx-auto w-full max-w-[440px] px-4 py-5">
+    <div className="mx-auto w-full max-w-[500px] px-6 py-6">
       {/* First screen leads with a headline (MotoAcquire pattern); later
           steps show the compact progress dots. */}
       {step === "vehicle" && vehicleStage === "entry" ? (
         <div className="mb-5">
-          <h1 className="text-[26px] font-bold leading-[1.15] tracking-tight text-zinc-900">
+          <h1 className="text-[32px] font-bold leading-[1.12] tracking-tight text-zinc-900">
             Get an{" "}
             <span className="text-[hsl(var(--cta-offer))]">Instant Vehicle Valuation</span>
           </h1>
-          <p className="mt-2 text-sm leading-snug text-zinc-500">
+          <p className="mt-2.5 text-[15px] leading-snug text-zinc-500">
             Get an instant value — then add a few details to lock in your firm offer.
           </p>
         </div>
@@ -321,7 +321,7 @@ export default function TradeWidgetFlow({
                 type="button"
                 aria-pressed={data.entryMode === m}
                 onClick={() => set({ entryMode: m })}
-                className={`px-3 py-2.5 text-sm font-semibold transition ${
+                className={`px-3 py-3 text-[15px] font-semibold transition ${
                   data.entryMode === m
                     ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)]"
                     : "bg-white text-zinc-600 hover:bg-zinc-50"
@@ -362,7 +362,7 @@ export default function TradeWidgetFlow({
               Next
             </MotoPrimaryButton>
           </div>
-          <p className="mt-3 text-center text-sm font-semibold text-[hsl(var(--cta-offer))]">
+          <p className="mt-3.5 text-center text-[15px] font-semibold text-[hsl(var(--cta-offer))]">
             Get a valuation in less than 30 seconds!
           </p>
         </MotoCard>

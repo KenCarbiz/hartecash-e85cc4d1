@@ -64,7 +64,7 @@ export default function ResumeCard({
 
   if (accepted) {
     return (
-      <div className="mx-auto w-full max-w-[420px] px-4 py-5">
+      <div className="mx-auto w-full max-w-[500px] px-6 py-6">
         <MotoCard title="You're all set">
           <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--cta-offer)/0.12)]">
             <Check className="h-5 w-5 text-[hsl(var(--cta-offer))]" aria-hidden="true" />
@@ -79,7 +79,7 @@ export default function ResumeCard({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[420px] px-4 py-5">
+    <div className="mx-auto w-full max-w-[500px] px-6 py-6">
       <MotoCard>
         <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Welcome back</p>
         <p className="mt-1 text-sm text-zinc-600">You have a locked-in offer for {vehicle}.</p>
