@@ -771,21 +771,35 @@ export default function TradeWidgetFlow({
             </div>
           </div>
 
-          <label className="mt-3 flex cursor-pointer items-center gap-2.5 text-sm text-zinc-600">
-            <input
-              type="checkbox"
-              checked={data.trackValue}
-              onChange={(e) => set({ trackValue: e.target.checked })}
-              className="h-4 w-4 rounded border-zinc-300 accent-[hsl(var(--cta-offer))]"
-            />
-            Track my vehicle value monthly via email
+          <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 px-3.5 py-2.5 text-sm text-zinc-700">
+            <span>Track my vehicle value monthly via email</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={data.trackValue}
+              onClick={() => set({ trackValue: !data.trackValue })}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                data.trackValue ? "bg-[hsl(var(--cta-offer))]" : "bg-zinc-300"
+              }`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                  data.trackValue ? "translate-x-[22px]" : "translate-x-0.5"
+                }`}
+              />
+            </button>
           </label>
 
           {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
           <div className="mt-4">
-            <MotoPrimaryButton loading={busy} disabled={!contactComplete} onClick={seeValue}>
-              See my value
-            </MotoPrimaryButton>
+            <button
+              type="button"
+              disabled={!contactComplete || busy}
+              onClick={seeValue}
+              className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[hsl(var(--cta-offer))] px-6 text-sm font-semibold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {busy ? "Loading…" : "See my value"}
+            </button>
           </div>
         </MotoCard>
       )}
