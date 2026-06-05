@@ -36,11 +36,20 @@ export interface WidgetFlowData {
   trackValue: boolean;
 }
 
-/** Decode a VIN or plate to a Black Book vehicle (null on no match). */
+/** Human label for a decoded trim, e.g. "2027 INFINITI QX60 AUTOGRAPH Sport Utility 4D". */
+export function bbVehicleLabel(v: BBVehicle): string {
+  return [v.year, v.make, v.model, v.series, v.style].filter(Boolean).join(" ").trim();
+}
+
+/**
+ * Decode a VIN or plate to Black Book vehicle(s). A VIN often resolves to
+ * MULTIPLE trims/UVCs (e.g. two QX60 AUTOGRAPH variants), so we return the
+ * whole list and let the customer confirm the exact one.
+ */
 export async function decodeVehicle(
   data: Pick<WidgetFlowData, "entryMode" | "vehicleId" | "state">,
   dealershipId: string,
-): Promise<{ vehicle: BBVehicle | null; error: string | null }> {
+): Promise<{ vehicles: BBVehicle[]; error: string | null }> {
   const id = data.vehicleId.trim();
   const body =
     data.entryMode === "vin"
@@ -49,11 +58,11 @@ export async function decodeVehicle(
   try {
     const { data: res, error } = await supabase.functions.invoke("bb-lookup", { body });
     if (error || !res?.vehicles?.length) {
-      return { vehicle: null, error: error?.message || "We couldn't find that vehicle." };
+      return { vehicles: [], error: error?.message || "We couldn't find that vehicle." };
     }
-    return { vehicle: res.vehicles[0] as BBVehicle, error: null };
+    return { vehicles: res.vehicles as BBVehicle[], error: null };
   } catch (e) {
-    return { vehicle: null, error: (e as Error).message || "Lookup failed." };
+    return { vehicles: [], error: (e as Error).message || "Lookup failed." };
   }
 }
 
