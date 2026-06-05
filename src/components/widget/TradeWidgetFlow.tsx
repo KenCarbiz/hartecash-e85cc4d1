@@ -281,7 +281,7 @@ export default function TradeWidgetFlow({
   const persistOnce = async () => {
     if (persistedToken.current) return;
     try {
-      const result = await persistWidgetOffer(data, bb, dealershipId);
+      const result = await persistWidgetOffer(data, bb, dealershipId, dealershipName);
       persistedToken.current = result.submissionToken;
       if (result.firm != null) setFirm(result.firm);
     } catch (e) {

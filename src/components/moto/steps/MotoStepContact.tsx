@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -15,6 +15,7 @@ import {
   loadPricingRevealMode,
 } from "../motoSubmission";
 import { useFormConfig } from "@/hooks/useFormConfig";
+import { logConsent } from "@/lib/consent";
 
 const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
@@ -50,6 +51,9 @@ const MotoStepContact = ({
   const [mileage, setMileage] = useState(state.mileage);
   const [zip, setZip] = useState(state.contact.zip);
   const [trackValue, setTrackValue] = useState(state.trackValue);
+
+  // Guards against double-logging consent within one mount.
+  const consentLogged = useRef(false);
 
   const [phase, setPhase] = useState<Phase>("form");
   const [challengeId, setChallengeId] = useState<string | null>(null);
@@ -111,7 +115,7 @@ const MotoStepContact = ({
         contact: persistContactToState(),
         mileage: mileage.replace(/\D/g, ""),
       };
-      const result = await calculateAndPersistOffer(transient, tenant.dealership_id);
+      const result = await calculateAndPersistOffer(transient, tenant.dealership_id, config.dealership_name);
       setRangeLow(result.estimate?.low ?? null);
       setRangeHigh(result.estimate?.high ?? null);
       onNext({
@@ -188,11 +192,31 @@ const MotoStepContact = ({
     });
   };
 
+  // Record TCPA/payoff consent the moment the customer submits the contact
+  // form (the disclosure is shown on this screen). When the submission row
+  // doesn't exist yet (contact_first), calculateAndPersistOffer logs consent
+  // as part of the insert, so we only log here when the row already exists
+  // (price_first: offer shown before contact) — otherwise we'd double-log.
+  const logContactConsent = () => {
+    if (consentLogged.current || !state.submissionToken) return;
+    consentLogged.current = true;
+    void logConsent({
+      customerName: `${firstName.trim()} ${lastName.trim()}`.trim() || undefined,
+      customerPhone: phone.replace(/\D/g, "") || undefined,
+      customerEmail: email.trim() || undefined,
+      formSource: state.intent === "trade" ? "moto_trade_flow" : "moto_sell_flow",
+      submissionToken: state.submissionToken,
+      dealershipName: config.dealership_name,
+      loanStatus: state.ownership || null,
+    });
+  };
+
   // From the form: range dealers go to the range page first;
   // everyone else (price_first / contact_first) jumps straight to OTP
   // — unless the dealer has disabled phone verification, in which
   // case we skip OTP entirely and reveal the firm offer.
   const submitForm = async () => {
+    logContactConsent();
     if (revealMode === "range_then_price") {
       await goToRange();
     } else if (requireVerify) {

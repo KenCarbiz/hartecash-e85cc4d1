@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { calculateOffer, type OfferEstimate, type OfferSettings } from "@/lib/offerCalculator";
 import { buildSubmissionBBPayload } from "@/lib/submissionOffer";
 import { initialFormData, type FormData as SellFormData } from "@/components/sell-form/types";
+import { logConsent } from "@/lib/consent";
 import type { MotoFlowState } from "./types";
 
 /**
@@ -71,6 +72,7 @@ export async function loadPricingRevealMode(
 export async function calculateAndPersistOffer(
   state: MotoFlowState,
   dealershipId: string,
+  dealershipName?: string,
 ): Promise<MotoOfferResult> {
   const fd = motoStateToFormData(state);
   const bb = state.bbVehicle;
@@ -152,6 +154,27 @@ export async function calculateAndPersistOffer(
   } catch (e) {
     console.error("[moto] submission insert failed:", e);
     throw e;
+  }
+
+  // Record TCPA (and, when a loan is reported, payoff-authorization) consent
+  // tied to this submission token, so the dealership has provable, versioned
+  // proof of opt-in for every lead this flow produces. Only logged once the
+  // customer has actually provided contact info (phone or email) — i.e. the
+  // moment they submit the form with the consent disclosure shown. The
+  // offer-before-details path persists the row before contact exists; that
+  // call is intentionally skipped here and consent is logged when contact is
+  // submitted later. Fire-and-forget.
+  const consentPhone = fd.phone.replace(/\D/g, "");
+  if (consentPhone || fd.email) {
+    void logConsent({
+      customerName: fd.name || undefined,
+      customerPhone: consentPhone || undefined,
+      customerEmail: fd.email || undefined,
+      formSource: fd.nextStep === "trade" ? "moto_trade_flow" : "moto_sell_flow",
+      submissionToken: token,
+      dealershipName,
+      loanStatus: fd.loanStatus || null,
+    });
   }
 
   return { estimate, firm, submissionToken: token, submissionId };

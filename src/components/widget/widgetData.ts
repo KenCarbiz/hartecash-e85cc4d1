@@ -165,8 +165,9 @@ export async function persistWidgetOffer(
   data: WidgetFlowData,
   bb: BBVehicle | null,
   dealershipId: string,
+  dealershipName?: string,
 ): Promise<MotoOfferResult> {
-  const result = await calculateAndPersistOffer(buildMotoState(data, bb), dealershipId);
+  const result = await calculateAndPersistOffer(buildMotoState(data, bb), dealershipId, dealershipName);
 
   try {
     const source = sessionStorage.getItem("__embed_lead_source");
