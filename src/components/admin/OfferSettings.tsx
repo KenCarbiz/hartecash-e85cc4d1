@@ -175,6 +175,7 @@ interface OfferSettingsRow {
   learning_threshold?: number;
   archetype_deduction_overrides?: ArchetypeDeductionOverrides | null;
   auto_firm_offer_pct?: number | null;
+  firm_offer_enabled?: boolean | null;
   strategy_mode?: StrategyMode;
 }
 
@@ -405,6 +406,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       archetype_deduction_overrides: settings.archetype_deduction_overrides ?? null,
       strategy_mode: strategyMode,
       auto_firm_offer_pct: settings.auto_firm_offer_pct ?? null,
+      firm_offer_enabled: settings.firm_offer_enabled ?? false,
       updated_at: new Date().toISOString(),
     })).eq("id", settings.id);
 
@@ -839,6 +841,39 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
                     disable
                   </button>
                 )}
+              </div>
+            </div>
+
+            {/* Firm-offer opt-in — the legal/verbiage switch. When ON (and a
+                QuickOffer % is set above), the customer sees a "firm offer"
+                the dealership commits to honoring subject to in-person
+                inspection. When OFF, the customer sees a non-binding
+                "estimate". See src/lib/offerTerms.ts for the exact wording. */}
+            <div className="sm:col-span-2 rounded-lg border border-border bg-muted/30 p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <Label className="text-sm font-semibold flex items-center gap-1.5">
+                    <Shield className="w-4 h-4 text-primary" />
+                    Present this as a firm offer
+                  </Label>
+                  <p className="text-micro text-muted-foreground mt-1">
+                    When on, customers see a <strong>firm offer</strong> your store commits to honoring for
+                    the offer-validity window — provided an in-person inspection confirms the vehicle is as
+                    described (clean title, no prior accident, no undisclosed issues). When off, customers
+                    see a non-binding <strong>estimate</strong>. Requires the Auto-Firm QuickOffer % above to
+                    be set so a single number can be shown.
+                  </p>
+                  {settings.firm_offer_enabled && settings.auto_firm_offer_pct == null && (
+                    <p className="text-micro text-amber-600 mt-1.5 font-medium">
+                      Set an Auto-Firm QuickOffer % above for firm wording to take effect — otherwise the
+                      customer still sees an estimate.
+                    </p>
+                  )}
+                </div>
+                <Switch
+                  checked={!!settings.firm_offer_enabled}
+                  onCheckedChange={(v) => setSettings({ ...settings, firm_offer_enabled: v })}
+                />
               </div>
             </div>
           </div>

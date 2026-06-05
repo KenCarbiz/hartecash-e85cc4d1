@@ -16,6 +16,7 @@ import {
   type MotoOfferResult,
 } from "@/components/moto/motoSubmission";
 import { calculateOffer, type OfferSettings } from "@/lib/offerCalculator";
+import { resolveOfferMode, type OfferMode } from "@/lib/offerTerms";
 import { emptyMotoFlowState, type Condition, type MotoFlowState } from "@/components/moto/types";
 import type { BBVehicle } from "@/components/sell-form/types";
 import type { VdpContext, WidgetCondition, WidgetIntent } from "./widgetTypes";
@@ -113,6 +114,8 @@ export interface WidgetEstimate {
   low: number | null;
   high: number | null;
   firm: number | null;
+  /** "firm" only when the dealer opted in AND a firm % is configured. */
+  mode: OfferMode;
 }
 
 /**
@@ -146,7 +149,10 @@ export async function computeWidgetEstimate(
   const est = calculateOffer(bb, fd, [], settings);
   const firm =
     autoFirmPct != null && est?.high ? Math.round(est.high * autoFirmPct) : est?.low ?? null;
-  return { low: est?.low ?? null, high: est?.high ?? null, firm };
+  const mode = resolveOfferMode(
+    settings as { firm_offer_enabled?: boolean | null; auto_firm_offer_pct?: number | null } | null,
+  );
+  return { low: est?.low ?? null, high: est?.high ?? null, firm, mode };
 }
 
 /**
@@ -159,8 +165,9 @@ export async function persistWidgetOffer(
   data: WidgetFlowData,
   bb: BBVehicle | null,
   dealershipId: string,
+  dealershipName?: string,
 ): Promise<MotoOfferResult> {
-  const result = await calculateAndPersistOffer(buildMotoState(data, bb), dealershipId);
+  const result = await calculateAndPersistOffer(buildMotoState(data, bb), dealershipId, dealershipName);
 
   try {
     const source = sessionStorage.getItem("__embed_lead_source");

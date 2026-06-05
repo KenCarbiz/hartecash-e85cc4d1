@@ -53,6 +53,9 @@ const ServiceLinkGen = lazy(() => import("./pages/ServiceLinkGen"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const MyDataRights = lazy(() => import("./pages/MyDataRights"));
+const SecurityTrust = lazy(() => import("./pages/SecurityTrust"));
+const DataProcessingAddendum = lazy(() => import("./pages/DataProcessingAddendum"));
+const SubProcessors = lazy(() => import("./pages/SubProcessors"));
 const OfferPage = lazy(() => import("./pages/OfferPage"));
 const QuickOfferPage = lazy(() => import("./pages/QuickOfferPage"));
 const Sitemap = lazy(() => import("./pages/Sitemap"));
@@ -236,6 +239,9 @@ const AnimatedRoutes = () => {
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/my-data-rights" element={<MyDataRights />} />
+          <Route path="/security" element={<SecurityTrust />} />
+          <Route path="/dpa" element={<DataProcessingAddendum />} />
+          <Route path="/sub-processors" element={<SubProcessors />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/disclosure" element={<OfferDisclosure />} />
         </Route>

@@ -40,7 +40,7 @@ const MotoStepOffer = ({
         return;
       }
       try {
-        const result = await calculateAndPersistOffer(state, tenant.dealership_id);
+        const result = await calculateAndPersistOffer(state, tenant.dealership_id, config.dealership_name);
         if (cancelled) return;
         setLow(result.estimate?.low ?? null);
         setHigh(result.estimate?.high ?? null);

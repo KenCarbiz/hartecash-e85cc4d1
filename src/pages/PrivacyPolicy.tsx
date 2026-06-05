@@ -120,6 +120,12 @@ const PrivacyPolicy = () => {
                 <li>To improve our website and services.</li>
                 <li>To comply with legal obligations.</li>
               </ul>
+              <p className="mt-3 text-sm text-foreground/70">
+                <strong className="text-foreground">We do not</strong> sell your personal information, use it for
+                targeted (cross-context behavioral) advertising, or use it to train any third party's large
+                language models. Our AI vendors process your data only to deliver this service and are
+                contractually barred from training their models on it.
+              </p>
             </section>
 
             <section id="sms-consent">
@@ -425,13 +431,40 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-2">10b. Other state privacy rights</h2>
-              <p>
-                Residents of Virginia (VCDPA), Colorado (CPA), Connecticut (CTDPA), Utah
-                (UCPA), and other states with comprehensive privacy laws have substantially
-                similar rights, including the right to know, delete, correct, opt out of
-                sale or targeted advertising, and appeal a denied request. The same
-                self-service request flow above applies.
+              <h2 className="text-lg font-bold text-foreground mb-2">10b. Connecticut residents (Connecticut Data Privacy Act)</h2>
+              <p className="mb-2">
+                If you are a Connecticut resident, the Connecticut Data Privacy Act (CTDPA),
+                as amended effective July 1, 2026, gives you the right to:
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 mb-3">
+                <li><strong className="text-foreground">Confirm and access</strong> the personal data {dealerName} processes about you, including any inferences, and obtain a portable copy.</li>
+                <li><strong className="text-foreground">Correct</strong> inaccuracies in your personal data.</li>
+                <li><strong className="text-foreground">Delete</strong> personal data you provided or that we obtained about you.</li>
+                <li><strong className="text-foreground">Opt out</strong> of (i) the sale of your personal data, (ii) targeted advertising, and (iii) profiling with legal or similarly significant effects. {dealerName} does not sell your data, use it for targeted advertising, or use it to train large language models.</li>
+              </ul>
+              <p className="mb-2">
+                <strong className="text-foreground">How to exercise these rights.</strong> Submit a request at{" "}
+                <a href="/my-data-rights" className="text-primary underline-offset-4 hover:underline">/my-data-rights</a>, or call{" "}
+                <strong className="text-foreground">{contactPhone}</strong>
+                {contactEmail ? <> or email <a href={`mailto:${contactEmail}`} className="text-primary underline-offset-4 hover:underline">{contactEmail}</a></> : null}.
+                We respond within 45 days (extendable once by 45 days with notice).
+              </p>
+              <p className="mb-2">
+                <strong className="text-foreground">Universal opt-out / Global Privacy Control.</strong> {dealerName}
+                {" "}honors opt-out preference signals, including the Global Privacy Control (GPC). If your browser
+                transmits a recognized opt-out signal, we treat it as a valid request to opt out of any sale of
+                your personal data and any targeted advertising.
+              </p>
+              <p className="mb-2">
+                <strong className="text-foreground">Right to appeal.</strong> If we decline to act on your request,
+                you may appeal by contacting us at {contactPhone}. We respond to appeals in writing within 60 days.
+                If we deny your appeal, you may submit a complaint to the Connecticut Attorney General at{" "}
+                <a href="https://portal.ct.gov/ag/sections/privacy/the-connecticut-data-privacy-act" target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-4 hover:underline">the Connecticut Attorney General's Office</a>{" "}
+                (165 Capitol Avenue, Hartford, CT 06106).
+              </p>
+              <p className="text-sm text-foreground/60">
+                Residents of other states with comprehensive privacy laws (e.g., Virginia, Colorado, Utah, Texas)
+                have substantially similar rights; the same self-service request flow applies.
               </p>
             </section>
 
