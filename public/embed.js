@@ -811,12 +811,16 @@
 
     // Always-visible close affordance for mobile (the backdrop
     // tap is hidden behind the full-screen iframe at ≤640px).
-    var close = document.createElement("button");
-    close.className = "hc-embed-close";
-    close.setAttribute("aria-label", "Close");
-    close.innerHTML = "&times;";
-    close.addEventListener("click", closeInventoryOverlay);
-    overlayFrame.appendChild(close);
+    // The panel (trade widget) renders its own branded × in its header
+    // and posts hartecash-close, so we skip this one there to avoid two.
+    if (variant !== "panel") {
+      var close = document.createElement("button");
+      close.className = "hc-embed-close";
+      close.setAttribute("aria-label", "Close");
+      close.innerHTML = "&times;";
+      close.addEventListener("click", closeInventoryOverlay);
+      overlayFrame.appendChild(close);
+    }
 
     var iframe = document.createElement("iframe");
     iframe.src = tagUrl(src);

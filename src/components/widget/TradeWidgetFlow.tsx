@@ -21,7 +21,6 @@ import HowItWorksLean from "@/components/moto-sections/HowItWorksLean";
 import ValueTrackerCard from "@/components/moto-sections/ValueTrackerCard";
 import FAQLean from "@/components/moto-sections/FAQLean";
 import type { BBVehicle } from "@/components/sell-form/types";
-import TradeInBanner from "./TradeInBanner";
 import VehicleConditionStep from "./VehicleConditionStep";
 import {
   bbVehicleLabel,
@@ -304,12 +303,6 @@ export default function TradeWidgetFlow({
 
   return (
     <>
-    {/* VDP "apply your trade toward this car" banner — hero only; it's
-        removed once the customer is past the entry screen so deeper
-        steps stay clean. */}
-    {step === "vehicle" && vehicleStage === "entry" && vdp && (
-      <TradeInBanner vdp={vdp} offer={null} zip={defaultZip} />
-    )}
     <div id="sell-car-form" className="mx-auto w-full max-w-[540px] px-7 py-6">
       {/* First screen leads with a headline; the premium Step 2 renders its
           own progress; the rest show the compact progress dots. */}
