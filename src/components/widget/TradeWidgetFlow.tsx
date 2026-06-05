@@ -18,22 +18,7 @@ import MotoFormField from "@/components/moto/MotoFormField";
 import { MotoOutlinedInput, MotoOutlinedSelect } from "@/components/moto/MotoOutlinedField";
 import { fetchModelsForMakeYear, MAKE_OPTIONS, YEAR_OPTIONS } from "@/components/moto/ymmData";
 import { cn } from "@/lib/utils";
-import { useVehicleImage, useVehicleImageState } from "@/hooks/useVehicleImage";
-
-// Distill a verbose factory color name (e.g. "Grand Blue Pearl Met") down
-// to the base hue word the AI image model actually understands. This keeps
-// the studio render visibly the customer's color instead of a near-miss.
-const BASE_COLOR_WORDS = [
-  "white","black","silver","gray","grey","red","blue","green","brown","beige",
-  "tan","gold","yellow","orange","purple","bronze","copper","champagne","ivory",
-  "pearl","graphite","charcoal","burgundy","maroon","navy",
-] as const;
-const simplifyColorForPrompt = (raw?: string | null): string | undefined => {
-  if (!raw) return undefined;
-  const lower = raw.toLowerCase();
-  const hit = BASE_COLOR_WORDS.find((w) => lower.includes(w));
-  return hit ?? raw;
-};
+import { useVehicleImage } from "@/hooks/useVehicleImage";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
 import HowItWorksLean from "@/components/moto-sections/HowItWorksLean";
 import ValueTrackerCard from "@/components/moto-sections/ValueTrackerCard";
