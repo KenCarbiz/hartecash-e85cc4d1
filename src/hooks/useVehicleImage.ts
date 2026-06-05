@@ -119,6 +119,7 @@ export function useVehicleImage(
   uvc?: string | null,
   studioOnly: boolean = true,
   angle: "3q" | "side" = "3q",
+  color?: string | null,
 ): string | null {
-  return useVehicleImageState(year, make, model, vin, submissionToken, uvc, studioOnly, angle).url;
+  return useVehicleImageState(year, make, model, vin, submissionToken, uvc, studioOnly, angle, color).url;
 }
