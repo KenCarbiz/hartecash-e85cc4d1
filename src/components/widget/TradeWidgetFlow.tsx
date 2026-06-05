@@ -49,6 +49,15 @@ const CONDITIONS: { value: WidgetCondition; label: string; blurb: string }[] = [
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
+/** Progressive (xxx) xxx-xxxx formatting; downstream strips non-digits. */
+function formatPhone(v: string): string {
+  const d = v.replace(/\D/g, "").slice(0, 10);
+  if (d.length > 6) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+  if (d.length > 3) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+  if (d.length > 0) return `(${d}`;
+  return "";
+}
+
 type VehicleStage = "entry" | "confirm";
 // range → (verify) → firm → (boost → reeval) → done. verify is skipped
 // when require_phone_verification is off; boost/reeval only when the
@@ -123,12 +132,12 @@ export default function TradeWidgetFlow({
     : "your vehicle";
 
   const contactComplete =
-    data.firstName.trim() &&
-    data.lastName.trim() &&
-    data.email.trim() &&
-    data.phone.trim() &&
-    data.miles.trim() &&
-    data.zip.trim();
+    !!data.firstName.trim() &&
+    !!data.lastName.trim() &&
+    /.+@.+\..+/.test(data.email) &&
+    data.phone.replace(/\D/g, "").length === 10 &&
+    !!data.miles.trim() &&
+    data.zip.length === 5;
 
   // Accept-CTA copy — names the VDP vehicle when trading toward it.
   const applyLabel =
@@ -220,6 +229,19 @@ export default function TradeWidgetFlow({
     setBoosted(firm != null ? Math.round(firm * 1.06) : null);
     setBusy(false);
     setValueStage("reeval");
+  };
+
+  const resend = async () => {
+    setBusy(true);
+    setError(null);
+    const { challengeId: cid, error: err } = await sendWidgetOtp(data.phone, dealershipName);
+    setBusy(false);
+    if (!cid) {
+      setError(err === "rate_limited" ? "Too many attempts — try again later." : "Couldn't resend the code.");
+      return;
+    }
+    setChallengeId(cid);
+    set({ otp: "" });
   };
 
   const verify = async () => {
@@ -439,8 +461,9 @@ export default function TradeWidgetFlow({
             <MotoFormField
               label="Mobile phone"
               type="tel"
+              inputMode="tel"
               value={data.phone}
-              onChange={(e) => set({ phone: e.target.value })}
+              onChange={(e) => set({ phone: formatPhone(e.target.value) })}
             />
             <div className="grid grid-cols-2 gap-3">
               <MotoFormField
@@ -526,6 +549,14 @@ export default function TradeWidgetFlow({
               Verify &amp; get firm offer
             </MotoPrimaryButton>
           </div>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={resend}
+            className="mt-3 w-full text-center text-sm font-medium text-zinc-500 hover:underline disabled:opacity-50"
+          >
+            Didn't get it? Resend code
+          </button>
         </MotoCard>
       )}
 
