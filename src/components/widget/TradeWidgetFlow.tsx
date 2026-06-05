@@ -164,6 +164,14 @@ export default function TradeWidgetFlow({
   const heroUrl = useVehicleImage(
     bb?.year, bb?.make, bb?.model, bb?.vin, undefined, bb?.uvc, false, "side",
   );
+  // Re-rendered hero once the customer picks a factory color. Forces a
+  // clean studio render in the chosen color so the intent step shows
+  // *their* car (not the stock photo).
+  const coloredHeroUrl = useVehicleImage(
+    bb?.year, bb?.make, bb?.model, bb?.vin, undefined, bb?.uvc,
+    !!data.colorName, "side", data.colorName || undefined,
+  );
+  const intentHeroUrl = (data.colorName && coloredHeroUrl) || heroUrl;
 
   const goNext = () => {
     const i = WIDGET_STEP_ORDER.indexOf(step);
