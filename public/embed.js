@@ -50,7 +50,7 @@
     injectStyles([
       ".hc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;opacity:0;transition:opacity .3s ease;pointer-events:none}",
       ".hc-overlay.hc-open{opacity:1;pointer-events:auto}",
-      ".hc-drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,92vw);z-index:99999;background:#fff;box-shadow:-8px 0 40px rgba(0,0,0,.2);transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;border-radius:16px 0 0 16px}",
+      ".hc-drawer{position:fixed;top:0;right:0;bottom:0;width:min(580px,94vw);z-index:99999;background:#fff;box-shadow:-8px 0 40px rgba(0,0,0,.2);transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;border-radius:16px 0 0 16px}",
       ".hc-drawer.hc-open{transform:translateX(0)}",
       ".hc-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #e5e7eb;flex-shrink:0;background:#fafafa;border-radius:16px 0 0 0}",
       ".hc-drawer-title{font-family:system-ui,-apple-system,sans-serif;font-size:15px;font-weight:700;color:#1a1a1a;margin:0}",
