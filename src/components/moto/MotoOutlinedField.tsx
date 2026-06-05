@@ -146,7 +146,11 @@ export const MotoOutlinedSelect = forwardRef<HTMLSelectElement, SelectProps>(
             className="max-h-72 w-[var(--radix-select-trigger-width)] bg-white"
           >
             {options.map((o) => (
-              <RSelectItem key={o.value} value={o.value} className="text-base">
+              <RSelectItem
+                key={o.value}
+                value={o.value}
+                className="text-base focus:!bg-zinc-100 focus:!text-zinc-900 data-[state=checked]:!bg-zinc-100 data-[state=checked]:!text-zinc-900"
+              >
                 {o.label}
               </RSelectItem>
             ))}
