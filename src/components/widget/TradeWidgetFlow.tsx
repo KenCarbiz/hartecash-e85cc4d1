@@ -636,19 +636,16 @@ export default function TradeWidgetFlow({
                 );
               })}
             </div>
-            <div className="mt-6 grid gap-2">
-              <MotoPrimaryButton onClick={goNext}>Continue</MotoPrimaryButton>
-              <button
-                type="button"
-                onClick={() => {
-                  set({ colorCode: "", colorName: "" });
-                  goNext();
-                }}
-                className="text-center text-xs font-medium text-zinc-500 hover:underline"
-              >
-                Skip color selection
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                set({ colorCode: "", colorName: "" });
+                goNext();
+              }}
+              className="mt-6 block w-full text-center text-xs font-medium text-zinc-500 hover:underline"
+            >
+              Skip color selection
+            </button>
           </MotoCard>
         ) : (
           <ColorAutoSkip onSkip={goNext} />
