@@ -684,11 +684,15 @@ export default function TradeWidgetFlow({
         <MotoCard title="Trade it in or sell it?">
           {intentHeroUrl && (
             <div className="mb-4 flex flex-col items-center">
-              <div className="relative h-32 w-full overflow-hidden rounded-xl bg-gradient-to-br from-zinc-50 to-zinc-100">
+              <div className="relative mx-auto h-[34vh] max-h-[300px] w-full max-w-[380px]">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 bottom-[6%] z-0 mx-auto h-3.5 w-[66%] rounded-[50%] bg-zinc-900/20 blur-md"
+                />
                 <img
                   src={intentHeroUrl}
                   alt={detectedVehicle}
-                  className="h-full w-full object-contain p-2"
+                  className="absolute inset-0 z-10 h-full w-full object-contain"
                 />
               </div>
               <p className="mt-2 text-xs text-zinc-500">
