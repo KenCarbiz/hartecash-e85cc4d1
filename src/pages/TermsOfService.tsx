@@ -84,15 +84,29 @@ const TermsOfService = () => {
                 {dealerName} ("we," "us," or "our"), you agree to be bound by these Terms of
                 Service. If you do not agree to these terms, please do not use our services.
               </p>
+              <p className="mt-3 text-sm text-foreground/60">
+                These Terms are between you and {dealerName}. {dealerName} operates this
+                website using AutoCurb, a third-party technology platform acting solely
+                as {dealerName}'s service provider and facilitator. {dealerName} — not
+                AutoCurb — is the party you are transacting with and is responsible for
+                the offers and communications you receive.
+              </p>
             </section>
 
             <section>
               <h2 className="text-lg font-bold text-foreground mb-2">2. Services</h2>
               <p>
                 {dealerName} provides an online platform for vehicle appraisals, trade-in
-                offers, appointment scheduling, and related automotive services. All offers
-                and valuations provided through our website are estimates and subject to
-                in-person vehicle inspection and verification.
+                offers, appointment scheduling, and related automotive services.{" "}
+                <strong className="text-foreground">Any value, estimate, or "offer" you
+                receive through this website is an estimate only. It is not a binding
+                offer to purchase your vehicle, not a guarantee of price, and creates no
+                obligation on you or {dealerName}.</strong> Every estimate is conditioned
+                on in-person inspection and verification of the vehicle's actual
+                condition, mileage, equipment, title, and history, and may be revised
+                upward or downward or withdrawn. No purchase obligation exists on either
+                party unless and until a written purchase agreement is signed by both
+                parties. See our <a href="/disclosure" className="text-primary underline-offset-4 hover:underline">Offer Disclosure</a> for how offers are calculated.
               </p>
             </section>
 
@@ -136,11 +150,34 @@ const TermsOfService = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-2">6. Limitation of Liability</h2>
+              <h2 className="text-lg font-bold text-foreground mb-2">6. Disclaimer of Warranties; Limitation of Liability</h2>
+              <p className="font-semibold text-foreground">
+                THE WEBSITE AND SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE,"
+                WITHOUT WARRANTIES OF ANY KIND. TO THE FULLEST EXTENT PERMITTED BY LAW,
+                {" "}{dealerName} DISCLAIMS ALL EXPRESS AND IMPLIED WARRANTIES,
+                INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+                NON-INFRINGEMENT, AND ACCURACY.
+              </p>
+              <p className="mt-3">
+                To the fullest extent permitted by law, {dealerName} shall not be liable
+                for any indirect, incidental, consequential, special, or punitive
+                damages arising from your use of the services or any estimate, including
+                any claim that you declined or forfeited another offer in reliance on an
+                estimate. {dealerName}'s total liability shall not exceed the final
+                purchase offer amount stated in a signed purchase agreement, if any.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-2">7. Acceptable Use &amp; Intellectual Property</h2>
               <p>
-                Our website and services are provided "as is" without warranties of any
-                kind. {dealerName} shall not be liable for any indirect, incidental, or
-                consequential damages arising from your use of our services.
+                You agree not to submit false, fraudulent, or another person's
+                information; misrepresent a vehicle's condition, mileage, title, or
+                ownership; use the services unlawfully; or attempt to disrupt, scrape, or
+                gain unauthorized access to the services. The website, its content, and
+                the underlying software platform are owned by {dealerName} or its
+                technology providers; you receive only a limited, revocable license to
+                use the services for your personal vehicle transaction.
               </p>
             </section>
 

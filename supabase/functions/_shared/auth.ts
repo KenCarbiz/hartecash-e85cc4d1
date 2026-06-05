@@ -42,13 +42,19 @@ export async function resolveCaller(
   const admin = createClient(supabaseUrl, serviceKey);
   const { data: roles } = await admin
     .from("user_roles")
-    .select("dealership_id, role")
+    .select("dealership_id, role, is_platform_admin")
     .eq("user_id", user.id);
 
   if (!roles?.length) return { kind: "no_role", userId: user.id };
 
+  // Platform (cross-tenant) admin = the explicit is_platform_admin flag.
+  // The legacy dealership_id === "default" convention is kept only as a
+  // fallback for any row not yet backfilled, matching the DB
+  // is_platform_admin() helper.
   const isPlatform = roles.some(
-    (r: any) => r.dealership_id === "default" && r.role === "admin",
+    (r: any) =>
+      r.role === "admin" &&
+      (r.is_platform_admin === true || r.dealership_id === "default"),
   );
   if (isPlatform) return { kind: "platform_admin", userId: user.id };
 

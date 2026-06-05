@@ -104,6 +104,9 @@ const transactionSteps = [
 const OfferDisclosure = () => {
   const { config } = useSiteConfig();
   const dealerName = (config.dealership_name || "").trim() || "Our Dealership";
+  // Offer-validity window — dealer-configured, defaults to 8 days. Keeps
+  // this page in sync with the live widget instead of a hard-coded number.
+  const guaranteeDays = Number((config as { price_guarantee_days?: number }).price_guarantee_days) || 8;
 
   return (
     <>
@@ -224,7 +227,7 @@ const OfferDisclosure = () => {
               <p className="mb-3">
                 Your {dealerName} Offer is a genuine estimated offer generated from
                 the vehicle details you provide. It is valid for{" "}
-                <strong className="text-foreground">eight (8) calendar days</strong>{" "}
+                <strong className="text-foreground">{guaranteeDays} calendar days</strong>{" "}
                 from the date and time of issuance. This Offer is not a guaranteed
                 purchase price and is contingent upon our in-person verification of
                 your vehicle's actual condition, mileage, use, and history.
@@ -340,14 +343,13 @@ const OfferDisclosure = () => {
                 useful life relative to industry-standard replacement thresholds, as
                 determined solely by our qualified inspection staff.{" "}
                 <strong className="text-foreground">
-                  All inspection measurements, condition assessments, and Fair Value
-                  Credit determinations are made at the sole and final discretion of
-                  the {dealerName} inspector. These determinations are not subject
-                  to customer dispute or negotiation as a condition of the
-                  transaction.
+                  Inspection measurements, condition assessments, and Fair Value
+                  Credit determinations are made by the {dealerName} inspector based on
+                  the vehicle's actual condition.
                 </strong>{" "}
-                The customer retains the right to decline the Final Offer in its
-                entirety.
+                If you disagree with any assessment, you may discuss it with the
+                {" "}{dealerName} team, and you always retain the right to decline the
+                Final Offer in its entirety with no obligation.
               </p>
 
               <div className="rounded-2xl border border-border/60 bg-[hsl(220_14%_98%)] p-5">
@@ -374,19 +376,22 @@ const OfferDisclosure = () => {
               </h2>
 
               <p className="mb-3">
-                {dealerName} determines your vehicle's value exclusively through our{" "}
-                <strong className="text-foreground">proprietary valuation methodology</strong>{" "}
-                — an independent system developed and maintained by our team. Our
-                valuations are not derived from, affiliated with, or endorsed by any
-                third-party pricing service including Kelley Blue Book, Edmunds,
-                Black Book, NADA Guides, or any other external platform.
+                {dealerName} determines your vehicle's value using third-party
+                automotive valuation data — including data licensed from{" "}
+                <strong className="text-foreground">Black Book&reg;</strong> — combined
+                with current wholesale and retail market activity and the prices of
+                comparable vehicles currently for sale in the market. We then apply
+                our own adjustments for the condition, mileage, equipment, and history
+                you report. <strong className="text-foreground">{dealerName} makes the
+                final determination of value.</strong>
               </p>
               <p className="mb-3">
-                Our system analyzes thousands of data points from wholesale market
-                transactions, regional and national retail sales, current inventory
-                demand, internal acquisition data, and continuously evolving market
-                conditions — all interpreted through our own proprietary pricing
-                intelligence.
+                Your offer is <strong className="text-foreground">not provided, set,
+                endorsed, or guaranteed</strong> by Black Book or any other valuation
+                provider. Third-party valuation data is one input only; the final
+                number is determined by {dealerName}. Valuation data is provided "as
+                is," and we do not guarantee its accuracy, completeness, or that it
+                matches any other published value you may have seen elsewhere.
               </p>
               <p className="mb-4">
                 The factors below are assessed at in-person inspection and may
@@ -659,6 +664,14 @@ const OfferDisclosure = () => {
               shall be governed by the laws of the applicable state.
             </p>
           </div>
+
+          {/* Third-party trademark attribution. */}
+          <p className="mt-6 text-[11px] leading-relaxed text-foreground/45">
+            Black Book&reg; is a registered trademark of Hearst Autos, Inc. Use of this
+            name is for identification of a data source only and does not imply any
+            endorsement, sponsorship, or affiliation. Vehicle valuation data is
+            provided "as is" without warranty of accuracy or completeness.
+          </p>
 
           {/* Bottom recovery — same calm voice as the rest of the
               new system. */}

@@ -158,6 +158,9 @@ const BrandFooter = () => {
           <Link to="/privacy" className="hover:text-foreground transition-colors">
             Privacy
           </Link>
+          <Link to="/my-data-rights" className="hover:text-foreground transition-colors">
+            Your privacy choices
+          </Link>
           <Link to="/terms" className="hover:text-foreground transition-colors">
             Terms
           </Link>
