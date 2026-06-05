@@ -20,6 +20,12 @@ CREATE TABLE IF NOT EXISTS public.privacy_requests (
 
 ALTER TABLE public.privacy_requests ENABLE ROW LEVEL SECURITY;
 
+-- PostgREST needs table-level privileges in addition to RLS policies:
+-- anon can only INSERT (submit a request); authenticated staff get full
+-- CRUD but every row is still gated by the RLS policies below.
+GRANT INSERT ON public.privacy_requests TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.privacy_requests TO authenticated;
+
 CREATE INDEX IF NOT EXISTS idx_privacy_requests_dealership ON public.privacy_requests (dealership_id, created_at DESC);
 
 -- A consumer (anonymous) may submit a request.

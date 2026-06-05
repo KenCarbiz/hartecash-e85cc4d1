@@ -111,6 +111,12 @@ const MyDataRights = () => {
                 {contactPhone ? <>, call <strong className="text-foreground">{contactPhone}</strong></> : null}
                 {contactEmail ? <> or email <a href={`mailto:${contactEmail}`} className="text-primary underline-offset-4 hover:underline">{contactEmail}</a></> : null}.
               </p>
+              <p className="text-[13px] text-foreground/55 mt-3">
+                If {dealerName} declines your request, you have the right to appeal — reply to our decision or
+                contact us, and we will respond within 60 days. If your appeal is denied, Connecticut residents
+                may submit a complaint to the Connecticut Attorney General at{" "}
+                <a href="https://portal.ct.gov/ag/sections/privacy/the-connecticut-data-privacy-act" target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-4 hover:underline">portal.ct.gov/ag</a>.
+              </p>
             </div>
           ) : (
             <form onSubmit={submit} className="bg-white rounded-3xl border border-border/60 shadow-[0_8px_32px_-12px_rgb(15_23_42_/_0.08)] p-7 lg:p-10 space-y-5">

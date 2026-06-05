@@ -182,7 +182,7 @@ const TermsOfService = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-2">7. Governing Law</h2>
+              <h2 className="text-lg font-bold text-foreground mb-2">8. Governing Law</h2>
               <p>
                 These Terms shall be governed by and construed in accordance with the laws
                 of the State of Connecticut, without regard to its conflict of law
@@ -191,7 +191,7 @@ const TermsOfService = () => {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-2">8. Contact</h2>
+              <h2 className="text-lg font-bold text-foreground mb-2">9. Contact</h2>
               <p>
                 Questions about these Terms should be directed to {dealerName} at (866)
                 851-7390 or at 150 Weston Street, Hartford, CT 06120.
