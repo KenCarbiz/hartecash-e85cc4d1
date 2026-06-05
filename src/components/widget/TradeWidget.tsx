@@ -16,9 +16,6 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useFormConfig } from "@/hooks/useFormConfig";
 import { useTenant } from "@/contexts/TenantContext";
 import { tenantLogoSrc } from "@/lib/tenantLogo";
-import HowItWorksLean from "@/components/moto-sections/HowItWorksLean";
-import ValueTrackerCard from "@/components/moto-sections/ValueTrackerCard";
-import FAQLean from "@/components/moto-sections/FAQLean";
 import ResumeCard from "./ResumeCard";
 import TradeInBanner from "./TradeInBanner";
 import TradeWidgetFlow from "./TradeWidgetFlow";
@@ -105,13 +102,6 @@ export default function TradeWidget({
           />
         )}
       </div>
-
-      {/* Below-fold marketing assets — the same sections as the main
-          landing page, so the slide-out mirrors the full site experience
-          (scroll past the form for How It Works, Value Tracking, FAQ). */}
-      <HowItWorksLean />
-      <ValueTrackerCard />
-      <FAQLean />
     </div>
   );
 }
