@@ -34,6 +34,10 @@ export interface WidgetFlowData {
   miles: string;
   zip: string;
   trackValue: boolean;
+  /** Black Book factory color code the customer picked (optional). */
+  colorCode?: string;
+  /** Display name of the selected color (for receipts / lead notes). */
+  colorName?: string;
 }
 
 /** Human label for a decoded trim, e.g. "2027 INFINITI QX60 AUTOGRAPH Sport Utility 4D". */
