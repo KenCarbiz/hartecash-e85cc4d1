@@ -228,14 +228,10 @@ export default function TradeWidgetFlow({
     }
     setCandidates(vehicles);
     if (vehicles.length === 1) {
-      // Single match → straight to color (if BB returned factory colors)
-      // or the premium confirm + condition screen.
+      // Single match → straight to condition. Color picker comes AFTER
+      // condition (only if Black Book returned factory color options).
       setBb(vehicles[0]);
-      if (vehicles[0].exterior_colors?.length) {
-        setVehicleStage("color");
-      } else {
-        setStep("condition");
-      }
+      setStep("condition");
     } else {
       // Multiple trims → make the customer pick first.
       setBb(null);
