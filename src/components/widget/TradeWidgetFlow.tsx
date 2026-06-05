@@ -60,7 +60,7 @@ function formatPhone(v: string): string {
   return "";
 }
 
-type VehicleStage = "entry" | "confirm" | "color";
+type VehicleStage = "entry" | "confirm";
 // range → (verify) → firm → (boost → reeval) → done. verify is skipped
 // when require_phone_verification is off; boost/reeval only when the
 // dealer enables AI photos; done is the accept confirmation.
