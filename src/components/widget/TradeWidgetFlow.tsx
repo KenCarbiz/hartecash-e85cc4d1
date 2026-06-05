@@ -118,8 +118,13 @@ export default function TradeWidgetFlow({
   });
   const set = (patch: Partial<typeof data>) => setData((d) => ({ ...d, ...patch }));
 
-  // Cached image of the decoded vehicle (null until BB resolves Y/M/M).
-  const heroUrl = useVehicleImage(bb?.year, bb?.make, bb?.model, bb?.vin);
+  // Decoded-vehicle image for the Step 2 card. Real photo first — Black
+  // Book (EVOX) by the exact uvc → Wikipedia/internet → AI render — as a
+  // clean side profile (no background; the card adds the under-vehicle
+  // shadow). studioOnly=false enables the BB/internet path.
+  const heroUrl = useVehicleImage(
+    bb?.year, bb?.make, bb?.model, bb?.vin, undefined, bb?.uvc, false, "side",
+  );
 
   const goNext = () => {
     const i = WIDGET_STEP_ORDER.indexOf(step);

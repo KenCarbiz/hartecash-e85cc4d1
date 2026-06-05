@@ -49,6 +49,7 @@ export function useVehicleImageState(
   submissionToken?: string | null,
   uvc?: string | null,
   studioOnly: boolean = true,
+  angle: "3q" | "side" = "3q",
 ): VehicleImageState {
   const hasInputs = !!(year && make && model);
   const [state, setState] = useState<VehicleImageState>(() => ({
@@ -59,7 +60,7 @@ export function useVehicleImageState(
 
   // Stable key so we don't re-fetch on every render. Strings normalize
   // away nullish + whitespace so equivalent inputs hit the same key.
-  const key = [year, make, model, vin, uvc, studioOnly].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
+  const key = [year, make, model, vin, uvc, studioOnly, angle].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
 
   useEffect(() => {
     if (!year || !make || !model) {
@@ -75,7 +76,7 @@ export function useVehicleImageState(
             year: String(year),
             make,
             model,
-            angle: "3q",
+            angle,
             // Prefer the real photo of the customer's exact vehicle when
             // studioOnly is false (Black Book by VIN → Wikipedia → AI);
             // otherwise force a clean white-background studio render.
@@ -115,6 +116,7 @@ export function useVehicleImage(
   submissionToken?: string | null,
   uvc?: string | null,
   studioOnly: boolean = true,
+  angle: "3q" | "side" = "3q",
 ): string | null {
-  return useVehicleImageState(year, make, model, vin, submissionToken, uvc, studioOnly).url;
+  return useVehicleImageState(year, make, model, vin, submissionToken, uvc, studioOnly, angle).url;
 }
