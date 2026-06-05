@@ -293,7 +293,7 @@ export default function TradeWidgetFlow({
   };
 
   return (
-    <div className="mx-auto w-full max-w-[500px] px-6 py-6">
+    <div id="sell-car-form" className="mx-auto w-full max-w-[500px] px-6 py-6">
       {/* First screen leads with a headline (MotoAcquire pattern); later
           steps show the compact progress dots. */}
       {step === "vehicle" && vehicleStage === "entry" ? (
