@@ -17,7 +17,11 @@ import MotoPrimaryButton from "@/components/moto/MotoPrimaryButton";
 import MotoFormField from "@/components/moto/MotoFormField";
 import { useVehicleImage } from "@/hooks/useVehicleImage";
 import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
+import HowItWorksLean from "@/components/moto-sections/HowItWorksLean";
+import ValueTrackerCard from "@/components/moto-sections/ValueTrackerCard";
+import FAQLean from "@/components/moto-sections/FAQLean";
 import type { BBVehicle } from "@/components/sell-form/types";
+import VehicleConditionStep from "./VehicleConditionStep";
 import {
   bbVehicleLabel,
   computeWidgetEstimate,
@@ -40,13 +44,6 @@ const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
   "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
   "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
-];
-
-const CONDITIONS: { value: WidgetCondition; label: string; blurb: string }[] = [
-  { value: "fair", label: "Fair", blurb: "Some cosmetic or mechanical issues." },
-  { value: "good", label: "Good", blurb: "Normal wear, runs well." },
-  { value: "very_good", label: "Very Good", blurb: "Minor wear, well maintained." },
-  { value: "excellent", label: "Excellent", blurb: "Like new, no notable flaws." },
 ];
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
@@ -162,9 +159,15 @@ export default function TradeWidgetFlow({
       return;
     }
     setCandidates(vehicles);
-    // Single match → preselect; multiple trims → make the customer pick.
-    setBb(vehicles.length === 1 ? vehicles[0] : null);
-    setVehicleStage("confirm");
+    if (vehicles.length === 1) {
+      // Single match → straight to the premium confirm + condition screen.
+      setBb(vehicles[0]);
+      setStep("condition");
+    } else {
+      // Multiple trims → make the customer pick first.
+      setBb(null);
+      setVehicleStage("confirm");
+    }
   };
 
   // Compute the range only — no DB write yet (so editing mileage can't
@@ -294,9 +297,10 @@ export default function TradeWidgetFlow({
   };
 
   return (
+    <>
     <div id="sell-car-form" className="mx-auto w-full max-w-[500px] px-6 py-6">
-      {/* First screen leads with a headline (MotoAcquire pattern); later
-          steps show the compact progress dots. */}
+      {/* First screen leads with a headline; the premium Step 2 renders its
+          own progress; the rest show the compact progress dots. */}
       {step === "vehicle" && vehicleStage === "entry" ? (
         <div className="mb-5">
           <h1 className="text-[32px] font-bold leading-[1.12] tracking-tight text-zinc-900">
@@ -307,7 +311,7 @@ export default function TradeWidgetFlow({
             Get an instant value — then add a few details to lock in your firm offer.
           </p>
         </div>
-      ) : (
+      ) : step === "condition" ? null : (
         <StepProgress current={step} />
       )}
 
@@ -446,32 +450,21 @@ export default function TradeWidgetFlow({
       )}
 
       {/* ── 2. CONDITION (4-point) ────────────────────────────────── */}
+      {/* ── 2. CONFIRM + CONDITION (premium Step 2) ───────────────── */}
       {step === "condition" && (
-        <MotoCard title="What's its condition?">
-          <div className="grid gap-2">
-            {CONDITIONS.map(({ value, label, blurb }) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={data.condition === value}
-                onClick={() => set({ condition: value })}
-                className={`rounded-md border px-4 py-3 text-left transition ${
-                  data.condition === value
-                    ? "border-[hsl(var(--cta-offer))] ring-2 ring-[hsl(var(--cta-offer)/0.15)]"
-                    : "border-zinc-300 hover:border-zinc-400"
-                }`}
-              >
-                <span className="block text-sm font-semibold text-zinc-900">{label}</span>
-                <span className="block text-xs text-zinc-500">{blurb}</span>
-              </button>
-            ))}
-          </div>
-          <div className="mt-4">
-            <MotoPrimaryButton disabled={!data.condition} onClick={goNext}>
-              Next
-            </MotoPrimaryButton>
-          </div>
-        </MotoCard>
+        <VehicleConditionStep
+          vehicle={bb}
+          imageUrl={heroUrl}
+          condition={data.condition}
+          onSelect={(c) => set({ condition: c })}
+          onContinue={goNext}
+          onReenter={() => {
+            setBb(null);
+            setCandidates([]);
+            setVehicleStage("entry");
+            setStep("vehicle");
+          }}
+        />
       )}
 
       {/* ── 3. INTENT ─────────────────────────────────────────────── */}
@@ -739,6 +732,18 @@ export default function TradeWidgetFlow({
         </MotoCard>
       )}
     </div>
+
+    {/* Below-fold marketing assets — full-bleed, shown only on the hero
+        (entry) screen so deeper steps stay focused. Same sections as the
+        main moto landing page. */}
+    {step === "vehicle" && vehicleStage === "entry" && (
+      <>
+        <HowItWorksLean />
+        <ValueTrackerCard />
+        <FAQLean />
+      </>
+    )}
+    </>
   );
 }
 
