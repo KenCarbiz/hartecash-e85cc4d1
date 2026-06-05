@@ -38,6 +38,8 @@ export interface WidgetFlowData {
   colorCode?: string;
   /** Display name of the selected color (for receipts / lead notes). */
   colorName?: string;
+  /** Swatch (hex/rgb string) used for the instant CSS color-tint overlay. */
+  colorHex?: string;
 }
 
 /** Human label for a decoded trim, e.g. "2027 INFINITI QX60 AUTOGRAPH Sport Utility 4D". */
