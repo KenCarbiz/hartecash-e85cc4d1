@@ -16,6 +16,7 @@ import MotoCard from "@/components/moto/MotoCard";
 import MotoPrimaryButton from "@/components/moto/MotoPrimaryButton";
 import MotoFormField from "@/components/moto/MotoFormField";
 import { useVehicleImage } from "@/hooks/useVehicleImage";
+import tenantHeroVehicle from "@/assets/tenant-hero-vehicle.webp";
 import type { BBVehicle } from "@/components/sell-form/types";
 import {
   bbVehicleLabel,
@@ -312,6 +313,7 @@ export default function TradeWidgetFlow({
 
       {/* ── 1. VEHICLE: entry → confirm ───────────────────────────── */}
       {step === "vehicle" && vehicleStage === "entry" && (
+        <>
         <MotoCard>
           {/* Segmented VIN / plate toggle — active fills with brand color. */}
           <div className="mb-4 grid grid-cols-2 overflow-hidden rounded-lg border border-zinc-200">
@@ -362,10 +364,19 @@ export default function TradeWidgetFlow({
               Next
             </MotoPrimaryButton>
           </div>
-          <p className="mt-3.5 text-center text-[15px] font-semibold text-[hsl(var(--cta-offer))]">
-            Get a valuation in less than 30 seconds!
-          </p>
         </MotoCard>
+        {/* Reassurance banner + hero vehicle image, stacked under the form
+            (the main-page hero, rearranged for the narrow panel). */}
+        <div className="mt-4 rounded-lg bg-[hsl(var(--cta-offer))] px-4 py-3 text-center text-[15px] font-semibold text-[color:var(--cta-offer-text)]">
+          Get a valuation in less than 30 seconds!
+        </div>
+        <img
+          src={tenantHeroVehicle}
+          alt=""
+          aria-hidden="true"
+          className="mx-auto mt-6 w-full max-w-[440px] object-contain"
+        />
+        </>
       )}
 
       {step === "vehicle" && vehicleStage === "confirm" && (
