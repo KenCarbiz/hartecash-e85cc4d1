@@ -10,11 +10,13 @@
 // preserves page context) is provided by the parent /public/embed.js
 // drawer — this renders the panel CONTENTS.
 
+import { useState } from "react";
 import { X } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useFormConfig } from "@/hooks/useFormConfig";
 import { useTenant } from "@/contexts/TenantContext";
 import { tenantLogoSrc } from "@/lib/tenantLogo";
+import ResumeCard from "./ResumeCard";
 import TradeInBanner from "./TradeInBanner";
 import TradeWidgetFlow from "./TradeWidgetFlow";
 import { useFirmOffer } from "./useTradeWidget";
@@ -36,8 +38,15 @@ export default function TradeWidget({
   const { tenant } = useTenant();
   const { offer } = useFirmOffer(resumeToken);
 
+  // Returning customers see a resume card first; "Start a new appraisal"
+  // drops them into the fresh flow.
+  const [startFresh, setStartFresh] = useState(false);
+  const returning = !startFresh && !!offer && offer.amount > 0;
+
   const dealerName = (config.dealership_name || "").trim();
   const logo = tenantLogoSrc(config);
+  // Locked-in window — dealer-configured, defaults to 8 days.
+  const guaranteeDays = Number((config as { price_guarantee_days?: number }).price_guarantee_days) || 8;
 
   // Everything below honors the dealer's admin settings — same flags the
   // main landing flow reads — so the widget stays "customizable like the
@@ -50,7 +59,7 @@ export default function TradeWidget({
   // compute-before-persist split; tracked as the next refinement.
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50">
+    <div className="flex min-h-screen flex-col bg-white">
       {/* Branded panel header — sticky, like the MotoAcquire slide-out. */}
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3">
         {logo ? (
@@ -73,13 +82,23 @@ export default function TradeWidget({
       {vdp && <TradeInBanner vdp={vdp} offer={offer} zip={zip} />}
 
       <div className="flex-1">
-        <TradeWidgetFlow
-          initialIntent={intent}
-          dealershipId={tenant.dealership_id}
-          dealershipName={config.dealership_name}
-          requireVerify={requireVerify}
-          aiPhotosEnabled={aiPhotosEnabled}
-        />
+        {returning && offer ? (
+          <ResumeCard
+            offer={offer}
+            vdp={vdp}
+            guaranteeDays={guaranteeDays}
+            onStartNew={() => setStartFresh(true)}
+          />
+        ) : (
+          <TradeWidgetFlow
+            initialIntent={intent}
+            dealershipId={tenant.dealership_id}
+            dealershipName={config.dealership_name}
+            requireVerify={requireVerify}
+            aiPhotosEnabled={aiPhotosEnabled}
+            defaultZip={zip}
+          />
+        )}
       </div>
     </div>
   );

@@ -127,28 +127,33 @@ page):
 
 - Vehicle: real `bb-lookup` VIN/plate decode → confirm screen with the
   cached vehicle image.
-- Value: real `estimated_offer_low/high` from the waterfall.
+- Value: real `estimated_offer_low/high` from the waterfall, **computed
+  without persisting** (`computeWidgetEstimate`) so editing mileage can't
+  duplicate a lead.
+- Firm offer: persisted **exactly once** on reveal (`persistOnce` +
+  `persistWidgetOffer`), stamped with embed attribution.
 - OTP: real `send-customer-otp` / `verify-customer-otp`, gated by the
   dealer toggle (skips cleanly when off).
-- Firm offer: `calculateAndPersistOffer` inserts the submission (stamped
-  with embed attribution) and returns the firm number.
 - AI boost: dealer-toggled "add photos for a higher offer" → re-eval →
   accept/save (UI complete; photo upload + AI re-inspection stubbed).
-- Slide-out panel + button binding in `embed.js`.
+- **Returning customer**: `ResumeCard` welcomes a customer whose resume
+  token resolves a locked-in offer — shows the number, the **days left**
+  on the locked-in window (`price_guarantee_days`, default 8, from
+  `offer_made_at`), "apply toward THIS vehicle vs. a different one" on a
+  VDP, and "Start a new appraisal".
+- Slide-out panel (smooth cubic-bezier slide) + button binding in
+  `embed.js`; white panel; ZIP prefilled from the embed context.
 
-## Next refinements (foundation is in; polish against the live site)
+## Next refinements (polish against the live site)
 
-- [ ] **Fluid panel polish** — match MotoAcquire's exact width / easing;
-      optionally push page content rather than overlay.
-- [ ] **Returning-customer prompt** — when a resume token resolves an
-      offer: "use it toward THIS vehicle, or the one you're viewing?" plus
-      the **8-day locked-in countdown** (`price_guarantee_days` from
-      `offer_made_at`). Hooks are in place (`useFirmOffer`, `TradeInBanner`).
+- [ ] **Trade-in confirm** — wire the "Apply toward this vehicle" CTAs
+      (firm offer + ResumeCard) to record the VDP target on the submission.
 - [ ] **`offer_before_details`** — honor before/after-offer ordering
-      (compute estimate without persisting, collect contact later).
+      (compute estimate without persisting, collect contact later) — the
+      compute/persist split is now in place to support it.
 - [ ] **Real AI photo pipeline** — replace the stubbed boost with the
       `MotoStepPhotos` upload + AI inspection, then re-run the waterfall.
-- [ ] **Trade-in confirm** — "Apply toward this vehicle" records the VDP
-      target on the submission.
+- [ ] **Panel width/push** — optionally push page content vs. overlay to
+      match the live MotoAcquire exactly.
 - [ ] **Admin toggle** — enable/disable the trade widget asset in the
       dealer's embed config.

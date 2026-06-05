@@ -32,7 +32,7 @@ export function useFirmOffer(token: string): { offer: FirmOffer | null; loading:
       const { data } = await (supabase
         .from("submissions")
         .select(
-          "progress_status, offered_price, estimated_offer_high, bb_tradein_avg, bb_wholesale_avg, vehicle_year, vehicle_make, vehicle_model",
+          "progress_status, offered_price, estimated_offer_high, bb_tradein_avg, bb_wholesale_avg, vehicle_year, vehicle_make, vehicle_model, offer_made_at, created_at",
         )
         .eq("token", token)
         .maybeSingle() as any);
@@ -58,7 +58,13 @@ export function useFirmOffer(token: string): { offer: FirmOffer | null; loading:
         .filter(Boolean)
         .join(" ")
         .trim();
-      setOffer({ token, amount, status, vehicleLabel: ymm || null });
+      setOffer({
+        token,
+        amount,
+        status,
+        vehicleLabel: ymm || null,
+        madeAt: data.offer_made_at || data.created_at || null,
+      });
     })();
     return () => {
       cancelled = true;

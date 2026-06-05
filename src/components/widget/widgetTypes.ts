@@ -63,4 +63,6 @@ export interface FirmOffer {
   status: "in_progress" | "offer_made" | "deal_accepted";
   /** The customer's OWN vehicle (their trade), e.g. "2019 Toyota Camry". */
   vehicleLabel: string | null;
+  /** When the offer was made (ISO) — anchors the locked-in countdown. */
+  madeAt: string | null;
 }

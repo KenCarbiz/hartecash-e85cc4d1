@@ -10,7 +10,12 @@
 // canonical MotoFlowState here so calculateAndPersistOffer just works.
 
 import { supabase } from "@/integrations/supabase/client";
-import { calculateAndPersistOffer, type MotoOfferResult } from "@/components/moto/motoSubmission";
+import {
+  calculateAndPersistOffer,
+  motoStateToFormData,
+  type MotoOfferResult,
+} from "@/components/moto/motoSubmission";
+import { calculateOffer, type OfferSettings } from "@/lib/offerCalculator";
 import { emptyMotoFlowState, type Condition, type MotoFlowState } from "@/components/moto/types";
 import type { BBVehicle } from "@/components/sell-form/types";
 import type { WidgetCondition, WidgetIntent } from "./widgetTypes";
@@ -87,6 +92,46 @@ export function buildMotoState(data: WidgetFlowData, bb: BBVehicle | null): Moto
     },
     trackValue: data.trackValue,
   };
+}
+
+export interface WidgetEstimate {
+  low: number | null;
+  high: number | null;
+  firm: number | null;
+}
+
+/**
+ * Compute the estimate range + firm number WITHOUT persisting — used for
+ * the range screen so the customer can freely edit mileage / re-run
+ * without creating duplicate submissions. Runs the same waterfall
+ * (`calculateOffer` + the dealer's `offer_settings`) as the persist path;
+ * the row is written once, later, by `persistWidgetOffer`.
+ */
+export async function computeWidgetEstimate(
+  data: WidgetFlowData,
+  bb: BBVehicle | null,
+  dealershipId: string,
+): Promise<WidgetEstimate> {
+  const fd = motoStateToFormData(buildMotoState(data, bb));
+  let settings: OfferSettings | null = null;
+  let autoFirmPct: number | null = null;
+  try {
+    const { data: s } = await supabase
+      .from("offer_settings")
+      .select("*")
+      .eq("dealership_id", dealershipId)
+      .maybeSingle();
+    if (s) {
+      settings = s as unknown as OfferSettings;
+      autoFirmPct = (s as { auto_firm_offer_pct?: number | null }).auto_firm_offer_pct ?? null;
+    }
+  } catch (e) {
+    console.warn("[widget] offer_settings load failed (defaults):", e);
+  }
+  const est = calculateOffer(bb, fd, [], settings);
+  const firm =
+    autoFirmPct != null && est?.high ? Math.round(est.high * autoFirmPct) : est?.low ?? null;
+  return { low: est?.low ?? null, high: est?.high ?? null, firm };
 }
 
 /**

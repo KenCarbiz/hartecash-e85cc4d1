@@ -10,7 +10,7 @@
 // submissions row, stamped with embed attribution); the firm number is
 // gated behind SMS verification (kept per product decision).
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, Pencil } from "lucide-react";
 import MotoCard from "@/components/moto/MotoCard";
 import MotoPrimaryButton from "@/components/moto/MotoPrimaryButton";
@@ -18,6 +18,7 @@ import MotoFormField from "@/components/moto/MotoFormField";
 import { useVehicleImage } from "@/hooks/useVehicleImage";
 import type { BBVehicle } from "@/components/sell-form/types";
 import {
+  computeWidgetEstimate,
   decodeVehicle,
   persistWidgetOffer,
   sendWidgetOtp,
@@ -57,6 +58,7 @@ export default function TradeWidgetFlow({
   dealershipName,
   requireVerify,
   aiPhotosEnabled,
+  defaultZip = "",
 }: {
   initialIntent: WidgetIntent;
   dealershipId: string;
@@ -65,6 +67,8 @@ export default function TradeWidgetFlow({
   requireVerify: boolean;
   /** Dealer toggle: offer the AI photo boost / re-evaluation. */
   aiPhotosEnabled: boolean;
+  /** Customer ZIP from the embed context — prefilled into the form. */
+  defaultZip?: string;
 }) {
   const [step, setStep] = useState<WidgetStep>("vehicle");
   const [vehicleStage, setVehicleStage] = useState<VehicleStage>("entry");
@@ -77,6 +81,9 @@ export default function TradeWidgetFlow({
   const [estimate, setEstimate] = useState<{ low: number | null; high: number | null } | null>(null);
   const [firm, setFirm] = useState<number | null>(null);
   const [challengeId, setChallengeId] = useState<string | null>(null);
+  // The submissions row is written exactly once (on firm-offer reveal),
+  // so editing mileage / re-running the range never duplicates a lead.
+  const persistedToken = useRef<string | null>(null);
 
   const [data, setData] = useState<WidgetFlowData & { otp: string }>({
     entryMode: "vin",
@@ -89,7 +96,7 @@ export default function TradeWidgetFlow({
     email: "",
     phone: "",
     miles: "",
-    zip: "",
+    zip: defaultZip,
     trackValue: false,
     otp: "",
   });
@@ -131,13 +138,15 @@ export default function TradeWidgetFlow({
     setVehicleStage("confirm");
   };
 
+  // Compute the range only — no DB write yet (so editing mileage can't
+  // duplicate a lead). The row is persisted once on firm-offer reveal.
   const seeValue = async () => {
     setBusy(true);
     setError(null);
     try {
-      const result = await persistWidgetOffer(data, bb, dealershipId);
-      setEstimate(result.estimate ? { low: result.estimate.low, high: result.estimate.high } : null);
-      setFirm(result.firm);
+      const est = await computeWidgetEstimate(data, bb, dealershipId);
+      setEstimate({ low: est.low, high: est.high });
+      setFirm(est.firm);
       setStep("value");
       setValueStage("range");
     } catch {
@@ -147,11 +156,30 @@ export default function TradeWidgetFlow({
     }
   };
 
+  // Insert the submissions row exactly once (lead capture at firm-offer
+  // reveal, matching the main flow). Best-effort: a failed write doesn't
+  // block showing the number the customer was promised.
+  const persistOnce = async () => {
+    if (persistedToken.current) return;
+    try {
+      const result = await persistWidgetOffer(data, bb, dealershipId);
+      persistedToken.current = result.submissionToken;
+      if (result.firm != null) setFirm(result.firm);
+    } catch (e) {
+      console.warn("[widget] persist failed:", e);
+    }
+  };
+
+  const revealFirm = async () => {
+    setValueStage("firm");
+    await persistOnce();
+  };
+
   const getFirm = async () => {
     // Dealer toggle: when phone verification is off, reveal the firm
     // offer immediately — no SMS code (same as the main flow).
     if (!requireVerify) {
-      setValueStage("firm");
+      await revealFirm();
       return;
     }
     setBusy(true);
@@ -196,7 +224,7 @@ export default function TradeWidgetFlow({
       );
       return;
     }
-    setValueStage("firm");
+    await revealFirm();
   };
 
   return (
@@ -211,6 +239,7 @@ export default function TradeWidgetFlow({
               <button
                 key={m}
                 type="button"
+                aria-pressed={data.entryMode === m}
                 onClick={() => set({ entryMode: m })}
                 className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
                   data.entryMode === m
@@ -295,6 +324,7 @@ export default function TradeWidgetFlow({
               <button
                 key={value}
                 type="button"
+                aria-pressed={data.condition === value}
                 onClick={() => set({ condition: value })}
                 className={`rounded-md border px-4 py-3 text-left transition ${
                   data.condition === value
@@ -328,6 +358,7 @@ export default function TradeWidgetFlow({
               <button
                 key={value}
                 type="button"
+                aria-pressed={data.intent === value}
                 onClick={() => set({ intent: value })}
                 className={`rounded-md border px-4 py-3 text-center text-sm font-medium transition ${
                   data.intent === value
@@ -420,10 +451,7 @@ export default function TradeWidgetFlow({
           <p className="mt-2 text-sm text-zinc-500">{detectedVehicle}</p>
           <button
             type="button"
-            onClick={() => {
-              setStep("vehicle");
-              setVehicleStage("confirm");
-            }}
+            onClick={() => setStep("contact")}
             className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[hsl(var(--cta-offer))] hover:underline"
           >
             <Pencil className="h-3 w-3" /> Edit mileage
