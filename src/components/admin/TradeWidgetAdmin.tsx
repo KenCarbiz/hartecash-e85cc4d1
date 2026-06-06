@@ -96,7 +96,7 @@ export default function TradeWidgetAdmin() {
 
 <script>
   window.addEventListener('load', function () {
-    HarteCash.bindTrade({ dealerId: '${dealershipId}' });
+    HarteCash.bindTrade({ dealerId: '${dealershipId}', width: ${size.px} });
   });
 </script>`;
 
