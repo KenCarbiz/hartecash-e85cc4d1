@@ -79,6 +79,7 @@ export const ONBOARDING_SECTIONS: Section[] = [
     icon: "📝",
     questions: [
       { id: "flow_style", label: "Flow style", type: "choice", choices: ["Details First", "Offer First"], hint: "When should customer see their offer?" },
+      { id: "offer_type", label: "Offer type", type: "choice", choices: ["Cash estimate", "Firm offer"], hint: "Firm = your store commits to the number (subject to inspection); Cash estimate = non-binding." },
       { id: "step_vehicle_build", label: "Include Vehicle Build step?", type: "choice", choices: ["Yes", "No"] },
       { id: "step_condition", label: "Include Condition & History step?", type: "choice", choices: ["Yes", "No"] },
       { id: "guarantee_days", label: "Price Guarantee Days", type: "text", hint: "Default: 8" },

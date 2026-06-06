@@ -19,6 +19,9 @@ type OfferRulesInsert    = Database["public"]["Tables"]["offer_rules"]["Insert"]
 // columns serialize fine; this just bridges TypeScript's Json invariance.
 const toSettingsPayload = (p: Record<string, unknown>) => p as unknown as OfferSettingsInsert;
 const toRulePayload     = (p: Record<string, unknown>) => p as unknown as OfferRulesInsert;
+// Default firm number when a dealer flips on Firm offers without a configured
+// percentage — 90% of the high estimate. Keeps the toggle self-applying.
+const DEFAULT_FIRM_OFFER_PCT = 0.9;
 import { STRATEGY_MODE_PRESETS, STRATEGY_PRESETS, DEFAULT_MARKET_ADJUSTMENT } from "@/lib/offerCalculator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -854,25 +857,38 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
                 <div>
                   <Label className="text-sm font-semibold flex items-center gap-1.5">
                     <Shield className="w-4 h-4 text-primary" />
-                    Present this as a firm offer
+                    Offer type: {settings.firm_offer_enabled ? "Firm offer" : "Cash estimate"}
                   </Label>
                   <p className="text-micro text-muted-foreground mt-1">
-                    When on, customers see a <strong>firm offer</strong> your store commits to honoring for
+                    <strong>Firm offer:</strong> customers see a number your store commits to honoring for
                     the offer-validity window — provided an in-person inspection confirms the vehicle is as
-                    described (clean title, no prior accident, no undisclosed issues). When off, customers
-                    see a non-binding <strong>estimate</strong>. Requires the Auto-Firm QuickOffer % above to
-                    be set so a single number can be shown.
+                    described (clean title, no prior accident, no undisclosed issues).{" "}
+                    <strong>Cash estimate:</strong> customers see a non-binding estimate. Flip this and it
+                    applies everywhere automatically — no other field needed.
                   </p>
-                  {settings.firm_offer_enabled && settings.auto_firm_offer_pct == null && (
-                    <p className="text-micro text-amber-600 mt-1.5 font-medium">
-                      Set an Auto-Firm QuickOffer % above for firm wording to take effect — otherwise the
-                      customer still sees an estimate.
+                  {settings.firm_offer_enabled && (
+                    <p className="text-micro text-emerald-600 mt-1.5 font-medium">
+                      Firm wording is live. Firm number = {Math.round((settings.auto_firm_offer_pct ?? DEFAULT_FIRM_OFFER_PCT) * 100)}% of the high estimate
+                      (adjust under “Auto-Firm QuickOffer %” above).
                     </p>
                   )}
                 </div>
                 <Switch
                   checked={!!settings.firm_offer_enabled}
-                  onCheckedChange={(v) => setSettings({ ...settings, firm_offer_enabled: v })}
+                  onCheckedChange={(v) =>
+                    setSettings({
+                      ...settings,
+                      firm_offer_enabled: v,
+                      // Self-applying: turning Firm on auto-sets a sensible firm
+                      // % if none is configured, so the change takes effect
+                      // immediately (resolveOfferMode needs both). Turning it
+                      // off leaves the % untouched.
+                      auto_firm_offer_pct:
+                        v && settings.auto_firm_offer_pct == null
+                          ? DEFAULT_FIRM_OFFER_PCT
+                          : settings.auto_firm_offer_pct,
+                    })
+                  }
                 />
               </div>
             </div>

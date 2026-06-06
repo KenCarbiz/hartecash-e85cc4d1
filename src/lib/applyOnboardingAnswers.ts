@@ -167,6 +167,25 @@ export async function applyOnboardingAnswers(
     errors.push(`Form Config: ${e.message}`);
   }
 
+  // ── 2b. Offer Settings (offer type: firm vs cash estimate) ──
+  // Self-applying: choosing "Firm offer" sets firm_offer_enabled AND a default
+  // firm percentage so firm wording takes effect immediately (resolveOfferMode
+  // needs both). "Cash estimate" turns the firm flag off.
+  try {
+    if (answers.offer_type) {
+      const firm = answers.offer_type === "Firm offer";
+      const offerUpdates: Record<string, any> = { firm_offer_enabled: firm };
+      if (firm) offerUpdates.auto_firm_offer_pct = 0.9;
+      const { error } = await supabase
+        .from("offer_settings" as any)
+        .upsert({ dealership_id: dealershipId, ...offerUpdates }, { onConflict: "dealership_id" });
+      if (error) throw error;
+      applied.push(`Offer Settings (offer type: ${firm ? "Firm offer" : "Cash estimate"})`);
+    }
+  } catch (e: any) {
+    errors.push(`Offer Settings: ${e.message}`);
+  }
+
   // ── 3. Notification Settings ──
   try {
     const notifUpdates: Record<string, any> = {};
