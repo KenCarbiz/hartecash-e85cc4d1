@@ -11,7 +11,7 @@
 // drawer — this renders the panel CONTENTS.
 
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { LogIn, Menu, X } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useFormConfig } from "@/hooks/useFormConfig";
 import { useTenant } from "@/contexts/TenantContext";
@@ -55,6 +55,19 @@ export default function TradeWidget({
 
   // Value Tracker explainer popup (blurred backdrop + our car illustration).
   const [showTracker, setShowTracker] = useState(false);
+
+  // Dealer toggle: returning customers can sign in to re-open their offer.
+  const signInEnabled = formConfig.widget_customer_signin === true;
+  const openSignIn = () => {
+    setMenuOpen(false);
+    // The widget runs on the AutoCurb origin, so /my-submission resolves to
+    // the customer lookup → portal. New tab keeps the dealer page intact.
+    try {
+      window.open(`${window.location.origin}/my-submission`, "_blank", "noopener,noreferrer");
+    } catch {
+      /* popup blocked — nothing to recover */
+    }
+  };
 
   // Menu navigation: drop out of any legal view, close the menu, and return
   // the flow to its home/entry screen (so How it Works / FAQ are mounted),
@@ -131,6 +144,8 @@ export default function TradeWidget({
             setMenuOpen(false);
             setShowTracker(true);
           }}
+          showSignIn={signInEnabled}
+          onSignIn={openSignIn}
         />
       )}
 
@@ -209,12 +224,16 @@ function WidgetNavMenu({
   onClose,
   onNavigate,
   onOpenTracker,
+  showSignIn,
+  onSignIn,
 }: {
   logo: string | null;
   dealerName: string;
   onClose: () => void;
   onNavigate: (id: string) => void;
   onOpenTracker: () => void;
+  showSignIn: boolean;
+  onSignIn: () => void;
 }) {
   // `action: "tracker"` opens the Value Tracker popup; the rest scroll
   // to their section anchor.
@@ -265,6 +284,19 @@ function WidgetNavMenu({
         >
           Get My Offer
         </button>
+
+        {/* Returning-customer sign-in — only when the dealer enables it.
+            Opens the customer lookup/portal so they can re-open their offer. */}
+        {showSignIn && (
+          <button
+            type="button"
+            onClick={onSignIn}
+            className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-zinc-600 transition-colors hover:text-[hsl(var(--cta-offer))]"
+          >
+            <LogIn className="h-4 w-4" aria-hidden="true" />
+            Sign in to your offer
+          </button>
+        )}
       </nav>
     </div>
   );
