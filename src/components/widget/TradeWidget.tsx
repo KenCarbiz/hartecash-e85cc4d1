@@ -246,58 +246,69 @@ function WidgetNavMenu({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white/80 backdrop-blur-md">
-      {/* Mirror the panel header — logo left, × closes the menu. */}
-      <div className="flex items-center justify-between px-5 py-4">
-        {logo ? (
-          <img src={logo} alt={dealerName || "Dealer"} className="h-11 w-auto max-w-[220px] object-contain" />
-        ) : (
-          <span className="text-base font-bold tracking-tight text-zinc-900">
-            {dealerName || "Value My Trade"}
-          </span>
-        )}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close menu"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-        >
-          <X className="h-5 w-5" aria-hidden="true" />
-        </button>
+    <div className="fixed inset-0 z-50">
+      {/* Blurred backdrop — everything behind the menu is dimmed + blurred.
+          Click anywhere outside the card to close. */}
+      <div
+        className="absolute inset-0 bg-zinc-900/20 backdrop-blur-md animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+
+      {/* Menu card — slides down from the top of the slide-out, rounded
+          bottom corners, soft shadow (the MotoAcquire pattern). */}
+      <div className="absolute inset-x-0 top-0 rounded-b-2xl bg-white shadow-[0_18px_50px_-12px_rgba(0,0,0,0.35)] animate-in slide-in-from-top duration-300">
+        {/* Header — logo left, × closes the menu. */}
+        <div className="flex items-center justify-between px-5 py-3">
+          {logo ? (
+            <img src={logo} alt={dealerName || "Dealer"} className="h-8 w-auto max-w-[200px] object-contain" />
+          ) : (
+            <span className="text-[15px] font-bold tracking-tight text-zinc-900">
+              {dealerName || "Value My Trade"}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close menu"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <nav className="flex flex-col items-stretch px-5 pb-5 pt-2">
+          {items.map((it) => (
+            <button
+              key={it.label}
+              type="button"
+              onClick={() => (it.action === "tracker" ? onOpenTracker() : onNavigate(it.target!))}
+              className="rounded-lg py-3 text-center text-[17px] font-semibold text-zinc-800 transition-colors hover:bg-zinc-50 hover:text-[hsl(var(--cta-offer))]"
+            >
+              {it.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => onNavigate("top")}
+            className="mt-3 w-full rounded-full bg-[hsl(var(--cta-offer))] py-3.5 text-sm font-semibold text-[color:var(--cta-offer-text)] shadow-sm transition-all hover:brightness-110"
+          >
+            Get My Offer
+          </button>
+
+          {/* Returning-customer sign-in — only when the dealer enables it.
+              Opens the customer lookup/portal so they can re-open their offer. */}
+          {showSignIn && (
+            <button
+              type="button"
+              onClick={onSignIn}
+              className="mt-3 inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-zinc-600 transition-colors hover:text-[hsl(var(--cta-offer))]"
+            >
+              <LogIn className="h-4 w-4" aria-hidden="true" />
+              Sign in to your offer
+            </button>
+          )}
+        </nav>
       </div>
-
-      <nav className="flex flex-col items-center gap-7 px-8 pt-8">
-        {items.map((it) => (
-          <button
-            key={it.label}
-            type="button"
-            onClick={() => (it.action === "tracker" ? onOpenTracker() : onNavigate(it.target!))}
-            className="text-[19px] font-semibold text-zinc-800 transition-colors hover:text-[hsl(var(--cta-offer))]"
-          >
-            {it.label}
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => onNavigate("top")}
-          className="mt-4 w-full rounded-full bg-[hsl(var(--cta-offer))] py-3.5 text-sm font-semibold text-[color:var(--cta-offer-text)] shadow-sm transition-all hover:brightness-110"
-        >
-          Get My Offer
-        </button>
-
-        {/* Returning-customer sign-in — only when the dealer enables it.
-            Opens the customer lookup/portal so they can re-open their offer. */}
-        {showSignIn && (
-          <button
-            type="button"
-            onClick={onSignIn}
-            className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-zinc-600 transition-colors hover:text-[hsl(var(--cta-offer))]"
-          >
-            <LogIn className="h-4 w-4" aria-hidden="true" />
-            Sign in to your offer
-          </button>
-        )}
-      </nav>
     </div>
   );
 }
