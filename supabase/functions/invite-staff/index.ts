@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("invite-staff error", e);
-    return json({ error: (e as Error).message || "Internal error" }, 500);
+    return json({ error: "Internal error" }, 500);
   }
 });
 
