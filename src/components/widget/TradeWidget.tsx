@@ -104,12 +104,12 @@ export default function TradeWidget({
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      {/* Branded panel header — sticky, like the MotoAcquire slide-out. */}
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 bg-white px-5 py-4">
+      {/* Branded panel header — slim sticky bar, like the MotoAcquire slide-out. */}
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 bg-white px-5 py-2">
         {logo ? (
-          <img src={logo} alt={dealerName || "Dealer"} className="h-11 w-auto max-w-[220px] object-contain" />
+          <img src={logo} alt={dealerName || "Dealer"} className="h-8 w-auto max-w-[200px] object-contain" />
         ) : (
-          <span className="text-base font-bold tracking-tight text-zinc-900">
+          <span className="text-[15px] font-bold tracking-tight text-zinc-900">
             {dealerName || "Value My Trade"}
           </span>
         )}

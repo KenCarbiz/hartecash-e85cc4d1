@@ -435,7 +435,7 @@ export default function TradeWidgetFlow({
                     "rounded-md px-3 py-2.5 transition",
                     active ? "shadow-sm" : "text-zinc-700 hover:text-zinc-900",
                   )}
-                  style={active ? { background: "#6D28D9", color: "#fff" } : undefined}
+                  style={active ? { background: "hsl(var(--cta-offer))", color: "var(--cta-offer-text)" } : undefined}
                 >
                   {t.label}
                 </button>
