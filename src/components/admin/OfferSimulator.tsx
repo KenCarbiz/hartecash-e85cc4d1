@@ -588,6 +588,11 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   // Landed / cost-to-market = what we pay + recon + pack + warranty.
   const ckLanded = ckOffer ? ckOffer + ckCosts : 0;
   const ckCostToMarketPct = ckMarketSale && ckLanded ? ckLanded / ckMarketSale : null;
+  // Projected gross margin at the current offer = selling price − landed cost.
+  const ckMargin = ckMarketSale && ckLanded ? ckMarketSale - ckLanded : null;
+  const ckMarginPct = ckMargin != null && ckMarketSale ? ckMargin / ckMarketSale : null;
+  const marginTone = ckMargin == null
+    ? "" : ckMargin <= 0 ? "text-destructive" : ckMargin < targetGross ? "text-warning" : "text-success";
   // Ceiling: the most we can pay and still net the target gross at market.
   const ckMaxOffer = ckMarketSale ? Math.max(0, ckMarketSale - ckCosts - targetGross) : null;
   const ckHeadroom = ckMaxOffer != null && ckOffer ? ckMaxOffer - ckOffer : null;
@@ -643,7 +648,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
           </div>
 
           {/* Row 2: the decision — what it sells for → what it costs us → how high we can go */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
             {/* Market sale (anchor) */}
             <CockpitTile
               label="Market Sale"
@@ -676,6 +681,17 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                 ckCostToMarketPct == null ? "" : ckCostToMarketPct <= 0.86 ? "text-success" : ckCostToMarketPct <= 0.93 ? "text-primary" : "text-destructive"
               }
               sub={ckCostToMarketPct != null ? `${Math.round(ckCostToMarketPct * 100)}% of market` : "landed cost"}
+            />
+            {/* Projected gross margin at this offer = selling price − landed */}
+            <CockpitTile
+              label="Projected Margin"
+              value={ckMargin != null ? usd0(ckMargin) : "—"}
+              valueClass={marginTone}
+              sub={
+                ckMargin != null
+                  ? `${Math.round((ckMarginPct ?? 0) * 100)}% · goal ${usd0(targetGross)}`
+                  : "sale − landed"
+              }
             />
             {/* Max offer (ceiling) with editable target gross */}
             <div className="rounded-lg border border-success/30 bg-success/5 px-2.5 py-1.5">
