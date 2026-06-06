@@ -175,16 +175,16 @@ export default function TradeWidgetFlow({
   // Decoded-vehicle image for the Step 2 card. Real photo first — Black
   // Book (EVOX) by the exact uvc → Wikipedia/internet → AI render — as a
   // clean side profile (no background; the card adds the under-vehicle
-  // shadow). studioOnly=false enables the BB/internet path.
+  // shadow). studioOnly=false enables the BB/internet path. Once the
+  // customer picks a factory color we pass it through so the edge function
+  // RE-PULLS a real image that matches the year/make/model in that color
+  // (Black Book by uvc → internet → AI render) — not a CSS tint of the
+  // original. The hook re-resolves whenever the chosen color changes.
   const heroUrl = useVehicleImage(
     bb?.year, bb?.make, bb?.model, bb?.vin, undefined, bb?.uvc, false, "side",
+    data.colorName || undefined,
   );
-  // Instant color match: instead of waiting on an AI re-render, we tint
-  // the existing stock photo with the customer's chosen swatch via a
-  // CSS multiply overlay. White-background studio shots tint cleanly
-  // (white × swatch = swatch) while wheels/windows stay dark. Zero wait.
   const intentHeroUrl = heroUrl;
-  const tintColor = data.colorHex || null;
 
   const goNext = () => {
     const i = WIDGET_STEP_ORDER.indexOf(step);
@@ -620,78 +620,23 @@ export default function TradeWidgetFlow({
         </MotoCard>
       )}
 
-      {/* ── 2b. COLOR (factory choices from Black Book) ───────────────
-          Comes AFTER condition. Auto-skips to "intent" when Black Book
-          didn't return any factory color options (YMM fallback, older
-          vehicles, etc.). */}
-      {step === "color" && (
-        bb?.exterior_colors?.length ? (
-          <MotoCard title="Pick your vehicle's color">
-            <p className="mb-4 text-sm text-zinc-500">
-              Factory color options for your {bb.year} {bb.make} {bb.model}.
-            </p>
-            <div className="grid grid-cols-4 gap-x-3 gap-y-5">
-              {bb.exterior_colors.map((c) => {
-                const selected = data.colorCode === c.code;
-                const swatch = c.hex
-                  ? c.hex.startsWith("#") ? c.hex : `#${c.hex}`
-                  : c.rgb
-                  ? `rgb(${c.rgb})`
-                  : "#e4e4e7";
-                return (
-                  <button
-                    key={c.code || c.name}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => {
-                      set({ colorCode: c.code, colorName: c.name, colorHex: swatch });
-                      goNext();
-                    }}
-                    className="flex flex-col items-center gap-1.5 text-center transition"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        "h-12 w-12 rounded-full border shadow-sm transition",
-                        selected
-                          ? "border-[hsl(var(--cta-offer))] ring-2 ring-[hsl(var(--cta-offer)/0.25)] ring-offset-2"
-                          : "border-zinc-300 hover:border-zinc-400",
-                      )}
-                      style={{ background: swatch }}
-                    />
-                    <span className="line-clamp-2 text-[11px] leading-tight text-zinc-700">
-                      {c.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                set({ colorCode: "", colorName: "", colorHex: "" });
-                goNext();
-              }}
-              className="mt-6 block w-full text-center text-xs font-medium text-zinc-500 hover:underline"
-            >
-              Skip color selection
-            </button>
-          </MotoCard>
-        ) : (
-          <ColorAutoSkip onSkip={goNext} />
-        )
-      )}
-
-
-      {/* ── 2. CONDITION (4-point) ────────────────────────────────── */}
-      {/* ── 2. CONFIRM + CONDITION (premium Step 2) ───────────────── */}
+      {/* ── 2. CONFIRM + CONDITION + COLOR (premium Step 2) ───────────
+          One persistent hero: clicking a condition swaps the panel to the
+          Black Book color picker IN PLACE (image + assets stay fixed);
+          picking a color (or Skip) advances to intent. Color selection
+          re-pulls a real color-matched image via heroUrl. The separate
+          "color" step is folded in here — onDone jumps straight to intent. */}
       {step === "condition" && (
         <VehicleConditionStep
           vehicle={bb}
           imageUrl={heroUrl}
           condition={data.condition}
-          onSelect={(c) => set({ condition: c })}
-          onContinue={goNext}
+          colorCode={data.colorCode}
+          onSelectCondition={(c) => set({ condition: c })}
+          onSelectColor={({ code, name, hex }) =>
+            set({ colorCode: code, colorName: name, colorHex: hex })
+          }
+          onDone={() => setStep("intent")}
           onReenter={() => {
             setBb(null);
             setCandidates([]);
@@ -711,34 +656,13 @@ export default function TradeWidgetFlow({
                   aria-hidden
                   className="pointer-events-none absolute inset-x-0 bottom-[6%] z-0 mx-auto h-3.5 w-[66%] rounded-[50%] bg-zinc-900/20 blur-md"
                 />
-                {/* Stock photo. When the customer picked a factory color
-                    we paint the swatch on top in multiply mode so the
-                    body color updates instantly — no AI round-trip. */}
-                <div className="absolute inset-0 z-10 h-full w-full">
-                  <img
-                    src={intentHeroUrl}
-                    alt={detectedVehicle}
-                    className="absolute inset-0 h-full w-full object-contain"
-                  />
-                  {tintColor && (
-                    <div
-                      aria-hidden
-                      className="pointer-events-none absolute inset-0"
-                      style={{
-                        backgroundColor: tintColor,
-                        mixBlendMode: "multiply",
-                        WebkitMaskImage: `url(${intentHeroUrl})`,
-                        maskImage: `url(${intentHeroUrl})`,
-                        WebkitMaskRepeat: "no-repeat",
-                        maskRepeat: "no-repeat",
-                        WebkitMaskPosition: "center",
-                        maskPosition: "center",
-                        WebkitMaskSize: "contain",
-                        maskSize: "contain",
-                      }}
-                    />
-                  )}
-                </div>
+                {/* Real color-matched photo (re-pulled by useVehicleImage
+                    with the chosen color) — no CSS tint. */}
+                <img
+                  src={intentHeroUrl}
+                  alt={detectedVehicle}
+                  className="absolute inset-0 z-10 h-full w-full object-contain"
+                />
               </div>
               <p className="mt-2 text-xs text-zinc-500">
                 {detectedVehicle}
@@ -848,7 +772,7 @@ export default function TradeWidgetFlow({
               type="button"
               disabled={!contactComplete || busy}
               onClick={seeValue}
-              className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[hsl(var(--cta-offer))] px-6 text-sm font-semibold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 w-full items-center justify-center rounded-full bg-[hsl(var(--cta-offer))] px-6 text-[13px] font-semibold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? "Loading…" : "See my value"}
             </button>
@@ -874,27 +798,7 @@ export default function TradeWidgetFlow({
                   aria-hidden
                   className="pointer-events-none absolute inset-x-0 bottom-[6%] z-0 mx-auto h-3 w-[62%] rounded-[50%] bg-zinc-900/20 blur-md"
                 />
-                <div className="absolute inset-0 z-10 h-full w-full">
-                  <img src={heroUrl} alt={detectedVehicle} className="absolute inset-0 h-full w-full object-contain" />
-                  {tintColor && (
-                    <div
-                      aria-hidden
-                      className="pointer-events-none absolute inset-0"
-                      style={{
-                        backgroundColor: tintColor,
-                        mixBlendMode: "multiply",
-                        WebkitMaskImage: `url(${heroUrl})`,
-                        maskImage: `url(${heroUrl})`,
-                        WebkitMaskRepeat: "no-repeat",
-                        maskRepeat: "no-repeat",
-                        WebkitMaskPosition: "center",
-                        maskPosition: "center",
-                        WebkitMaskSize: "contain",
-                        maskSize: "contain",
-                      }}
-                    />
-                  )}
-                </div>
+                <img src={heroUrl} alt={detectedVehicle} className="absolute inset-0 z-10 h-full w-full object-contain" />
               </>
             ) : (
               <div className="absolute inset-0 m-auto h-[70%] w-[86%] animate-pulse rounded-2xl bg-gradient-to-br from-zinc-100 to-zinc-200" />
@@ -1089,16 +993,6 @@ export default function TradeWidgetFlow({
     )}
     </>
   );
-}
-
-/** Renders nothing; auto-advances past the color step when Black Book
- *  didn't return factory color options for the decoded vehicle. */
-function ColorAutoSkip({ onSkip }: { onSkip: () => void }) {
-  useEffect(() => {
-    onSkip();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return null;
 }
 
 /** Minimal dotted step indicator — no labels, keeps the panel compact. */
