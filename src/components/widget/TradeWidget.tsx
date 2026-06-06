@@ -94,6 +94,20 @@ export default function TradeWidget({
 
       {legal ? (
         <WidgetLegalView type={legal} onBack={() => setLegal(null)} />
+      ) : !themeReady ? (
+        // Neutral skeleton while tenant config + theme load — prevents the
+        // default yellow/purple flash before the dealer's brand resolves.
+        <div className="flex-1 px-6 py-10">
+          <div className="mx-auto w-full max-w-[440px] space-y-4">
+            <div className="h-8 w-3/4 rounded bg-zinc-100" />
+            <div className="h-4 w-full rounded bg-zinc-100" />
+            <div className="h-4 w-5/6 rounded bg-zinc-100" />
+            <div className="mt-6 h-44 rounded-2xl bg-zinc-50" />
+            <div className="h-10 rounded-full bg-zinc-100" />
+          </div>
+        </div>
+      ) : (
+        <WidgetLegalView type={legal} onBack={() => setLegal(null)} />
       ) : (
         <>
           <div>
