@@ -49,6 +49,22 @@ export function hasLoanFromStatus(loanStatus: string | null | undefined): boolea
   return false;
 }
 
+/**
+ * Normalize a US phone to E.164 (+1XXXXXXXXXX) so consent rows, submission
+ * rows, and opt_outs (which store Twilio's +1… form) all key on the same
+ * value — making consent↔opt-out↔outbound reconciliation airtight in a
+ * dispute. Returns the original trimmed value if it can't be normalized.
+ */
+export function toE164(raw: string | null | undefined): string | null {
+  const v = (raw ?? "").trim();
+  if (!v) return null;
+  const d = v.replace(/\D/g, "");
+  if (d.length === 10) return `+1${d}`;
+  if (d.length === 11 && d.startsWith("1")) return `+${d}`;
+  if (v.startsWith("+") && d.length >= 10) return `+${d}`;
+  return v;
+}
+
 const TCPA_BASE = (dealerName: string) =>
   `By submitting this form, you consent to receive autodialed calls, texts (SMS/MMS), and emails from ${dealerName} at the phone number and email provided regarding your vehicle submission, offer, and appointment. Consent is not a condition of purchase. Msg & data rates may apply. Msg frequency varies. Reply STOP to opt out.`;
 
@@ -94,7 +110,7 @@ export async function logConsent({
       : "sms_calls_email";
     const payload = {
       customer_name: customerName || null,
-      customer_phone: customerPhone || null,
+      customer_phone: toE164(customerPhone),
       customer_email: customerEmail || null,
       consent_type: consentType,
       consent_text: buildConsentText(dealershipName || "our dealership", includesPayoff),

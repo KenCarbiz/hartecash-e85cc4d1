@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
+import { logConsent } from "@/lib/consent";
 import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, ArrowRight, Car, Gauge, Palette, Settings2, Pencil, User, Clock, Star, Zap, Shield, BadgeCheck, Handshake, Camera, Sparkles } from "lucide-react";
 import InspectionConfidence from "@/components/InspectionConfidence";
 import { AiVerifiedBadge } from "@/components/offer/AiVerifiedBadge";
@@ -670,23 +671,21 @@ const OfferPageLegacy = () => {
         })
         .eq("token", token!);
 
-      // If customer ticked SMS opt-in, also log a consent_log entry so
-      // the dealer's TCPA gate (launch-voice-call etc.) recognises it.
+      // Explicit SMS/marketing opt-in: when ticked, record a full,
+      // versioned, IP/UA-stamped consent_log row tied to this submission
+      // token (via logConsent) — not a bare, unattributed insert. When the
+      // customer unticks the box they've declined, so we log nothing and the
+      // sms_opt_in=false flag suppresses outbound.
       if (smsOptIn) {
-        try {
-          await supabase.from("consent_log").insert({
-            customer_phone: contactForm.phone.trim(),
-            customer_email: contactForm.email.trim(),
-            consent_type: "sms_calls_email",
-            consent_text: "Customer accepted offer and consented to receive SMS, calls, and emails about their vehicle.",
-            // Required by the consent_log schema — identifies where the
-            // consent was captured. Was missing before, hidden by an
-            // `as never` cast; now type-checked.
-            form_source: "offer_page",
-          });
-        } catch {
-          /* non-fatal — submissions row still has the flag */
-        }
+        void logConsent({
+          customerName: contactForm.name.trim() || undefined,
+          customerPhone: contactForm.phone.trim() || undefined,
+          customerEmail: contactForm.email.trim() || undefined,
+          formSource: "offer_page",
+          submissionToken: token || undefined,
+          dealershipName: config.dealership_name,
+          loanStatus: s.loan_status || null,
+        });
       }
 
       // Fire acceptance notifications. The contact gate is the

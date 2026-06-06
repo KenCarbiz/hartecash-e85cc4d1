@@ -12,7 +12,6 @@ import { calculateOffer, type OfferSettings, type OfferRule } from "@/lib/offerC
 import { resolveEffectiveSettings } from "@/lib/resolvePricingModel";
 import { buildSubmissionBBPayload } from "@/lib/submissionOffer";
 import { initialFormData, type FormData, type BBVehicle } from "./sell-form/types";
-import { logConsent } from "@/lib/consent";
 import { track } from "@/lib/analytics";
 
 const STATE_LIST = [
@@ -233,15 +232,10 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
 
       if (insertErr) throw insertErr;
 
-      // Track + log consent for compliance (the customer confirmed
-      // their ZIP and intent by submitting; SMS/email come later when
-      // they enter contact info on the offer page).
-      logConsent({
-        customerName: "",
-        customerPhone: "",
-        customerEmail: "",
-        formSource: "quick_offer",
-      });
+      // No consent is logged here: this step collects only ZIP + intent, not
+      // contact info, so a consent_log row would be empty and prove nothing.
+      // Consent is recorded on the offer page when the customer enters their
+      // name/phone/email (tied to this submission token).
       track("quick_offer_submitted", { dealership_id: tenant.dealership_id });
 
       navigate(`/offer/${generatedToken}`);
