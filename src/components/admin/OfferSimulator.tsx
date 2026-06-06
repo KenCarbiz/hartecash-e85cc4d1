@@ -550,7 +550,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   // === Pricing Command Bar metrics (derived) ===
   const cmdRetailAvg = liveBbVehicle ? Number(liveBbVehicle.retail?.avg || 0) : 0;
   const cmdProfitSpread = (liveResult && liveBbVehicle)
-    ? cmdRetailAvg - liveResult.high - (activeSettings.recon_cost || 0) - ((activeSettings as { dealer_pack?: number }).dealer_pack || 0)
+    ? cmdRetailAvg - liveResult.high - (activeSettings.recon_cost || 0) - (activeSettings.dealer_pack || 0) - (activeSettings.pack_warranty || 0)
     : null;
   const cmdMarketOn = !!activeSettings.market_adjustment?.enabled;
 
@@ -571,15 +571,18 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const ckUnits = ckActive?.vehicle_count ?? null;
   const ckRecon = activeSettings.recon_cost || 0;
   const ckPack = activeSettings.dealer_pack || 0;
+  const ckWarranty = activeSettings.pack_warranty || 0;
+  // All dealer-entered costs that sit on top of what we pay.
+  const ckCosts = ckRecon + ckPack + ckWarranty;
   // Target gross = the existing offer_settings field (single source of
   // truth, also editable in the Offer Settings form). Drives the ceiling.
   const targetGross = activeSettings.target_gross_min || 0;
   const ckOffer = liveResult?.high ?? 0;
-  // Landed / cost-to-market = what we pay + recon + pack.
-  const ckLanded = ckOffer ? ckOffer + ckRecon + ckPack : 0;
+  // Landed / cost-to-market = what we pay + recon + pack + warranty.
+  const ckLanded = ckOffer ? ckOffer + ckCosts : 0;
   const ckCostToMarketPct = ckMarketSale && ckLanded ? ckLanded / ckMarketSale : null;
   // Ceiling: the most we can pay and still net the target gross at market.
-  const ckMaxOffer = ckMarketSale ? Math.max(0, ckMarketSale - ckRecon - ckPack - targetGross) : null;
+  const ckMaxOffer = ckMarketSale ? Math.max(0, ckMarketSale - ckCosts - targetGross) : null;
   const ckHeadroom = ckMaxOffer != null && ckOffer ? ckMaxOffer - ckOffer : null;
   const supplyTone = ckDaysSupply == null ? "text-muted-foreground"
     : ckDaysSupply < 30 ? "text-success" : ckDaysSupply < 60 ? "text-primary" : "text-destructive";
@@ -645,11 +648,11 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                   : "market velocity"
               }
             />
-            {/* Our costs */}
+            {/* Our costs — recon + pack + packed warranty */}
             <CockpitTile
-              label="Recon + Pack"
-              value={ckRecon || ckPack ? usd0(ckRecon + ckPack) : "$0"}
-              sub={`recon ${usd0(ckRecon)} · pack ${usd0(ckPack)}`}
+              label="Dealer Costs"
+              value={ckCosts ? usd0(ckCosts) : "$0"}
+              sub={`recon ${usd0(ckRecon)} · pack ${usd0(ckPack)} · war ${usd0(ckWarranty)}`}
             />
             {/* Cost to market */}
             <CockpitTile

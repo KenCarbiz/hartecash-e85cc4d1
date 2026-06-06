@@ -367,6 +367,7 @@ export interface OfferSettings {
   // Persisted on offer_settings; optional here so the calculator core
   // (which doesn't need them) stays untouched.
   dealer_pack?: number;
+  pack_warranty?: number;
   target_gross_min?: number;
 
   // EXISTING (all unchanged)
