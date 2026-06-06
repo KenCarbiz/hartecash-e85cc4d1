@@ -64,11 +64,15 @@ interface Props {
   onStatsLoaded?: (stats: RetailStats | null) => void;
   onClosestCompPrice?: (price: number | null) => void;
   onListingsLoaded?: (listings: RetailListing[]) => void;
+  /** Compact mode — hides the "Live Market Data" heading and the
+   *  velocity metrics row when the host already shows them (e.g. the
+   *  OfferSimulator Deal Cockpit), so they aren't duplicated. */
+  compact?: boolean;
 }
 
 export type { RetailListing };
 
-export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radiusMiles = 100, offerHigh, vehicleMileage, currentAcv, onStatsLoaded, onClosestCompPrice, onListingsLoaded }: Props) {
+export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radiusMiles = 100, offerHigh, vehicleMileage, currentAcv, onStatsLoaded, onClosestCompPrice, onListingsLoaded, compact = false }: Props) {
   const [stats, setStats] = useState<RetailStats | null>(null);
   const [listings, setListings] = useState<RetailListing[]>([]);
   const [loading, setLoading] = useState(false);
@@ -202,15 +206,21 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
 
   return (
     <div className="space-y-3">
-      {/* Header with ZIP + radius */}
+      {/* Header with ZIP + radius. In compact mode the host already shows
+          the "Live Market Intelligence" title, so we drop the duplicate
+          label and keep just the ZIP / radius control. */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <Store className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Live Market Data
-            </span>
-          </div>
+          {compact ? (
+            <span className="text-micro text-muted-foreground">Search area</span>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <Store className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Live Market Data
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-1.5 text-micro text-muted-foreground">
             <MapPin className="w-3 h-3" />
             <Input
@@ -230,28 +240,31 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
         </div>
       </div>
 
-      {/* Key metrics row */}
-      <div className="grid grid-cols-3 gap-2">
-        {active && (
-          <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-center">
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Active Listings</div>
-            <div className="text-lg font-bold text-card-foreground">{active.vehicle_count}</div>
-          </div>
-        )}
-        {stats.mean_days_to_turn != null && (
-          <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-center">
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Avg Days to Sell</div>
-            <div className="text-lg font-bold text-card-foreground">{Math.round(stats.mean_days_to_turn)}</div>
-          </div>
-        )}
-        {stats.market_days_supply != null && (
-          <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-center">
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Days Supply</div>
-            <div className={`text-lg font-bold ${supplyColor}`}>{Math.round(stats.market_days_supply)}</div>
-            {supplyLabel && <div className={`text-[9px] font-semibold ${supplyColor}`}>{supplyLabel}</div>}
-          </div>
-        )}
-      </div>
+      {/* Key metrics row — hidden in compact mode (the Deal Cockpit's
+          Velocity tile already shows listings / days-to-sell / supply). */}
+      {!compact && (
+        <div className="grid grid-cols-3 gap-2">
+          {active && (
+            <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-center">
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Active Listings</div>
+              <div className="text-lg font-bold text-card-foreground">{active.vehicle_count}</div>
+            </div>
+          )}
+          {stats.mean_days_to_turn != null && (
+            <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-center">
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Avg Days to Sell</div>
+              <div className="text-lg font-bold text-card-foreground">{Math.round(stats.mean_days_to_turn)}</div>
+            </div>
+          )}
+          {stats.market_days_supply != null && (
+            <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-center">
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Days Supply</div>
+              <div className={`text-lg font-bold ${supplyColor}`}>{Math.round(stats.market_days_supply)}</div>
+              {supplyLabel && <div className={`text-[9px] font-semibold ${supplyColor}`}>{supplyLabel}</div>}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Active price stats */}
       {active && active.mean_price > 0 && (

@@ -1649,6 +1649,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         currentAcv={liveResult.high}
                         onStatsLoaded={setRetailStats}
                         onListingsLoaded={setRetailListings}
+                        compact
                       />
                     </div>
                   </div>
