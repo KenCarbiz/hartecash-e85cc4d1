@@ -548,6 +548,11 @@ const OfferPageClarity = () => {
                       <ShieldCheck className="w-3 h-3" aria-hidden="true" />
                       Subject to in-person inspection
                     </p>
+                    <p className="mt-1 max-w-md mx-auto text-[10px] leading-snug text-zinc-400">
+                      Based on the condition you described; assumes a clean, non-branded title with no
+                      undisclosed accident or material issues. If the vehicle matches what you told us,
+                      the price holds — if anything differs, we'll review any adjustment before signing.
+                    </p>
                     {/* AI-Verified condition badge — shows when our vision model
                         confirmed the customer's self-reported condition. Builds
                         trust before pickup so the customer doesn't feel

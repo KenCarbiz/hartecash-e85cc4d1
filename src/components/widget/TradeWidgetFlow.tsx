@@ -841,6 +841,12 @@ export default function TradeWidgetFlow({
               {busy ? "Loading…" : "See my value"}
             </button>
           </div>
+          <p className="mt-3 text-[10px] leading-snug text-zinc-400">
+            By continuing you consent to receive autodialed calls, texts (SMS/MMS), and emails from{" "}
+            {(dealershipName || "the dealership").trim()} regarding your vehicle, offer, and
+            appointment. Consent is not a condition of purchase. Msg &amp; data rates may apply; msg
+            frequency varies. Reply STOP to opt out. See the Privacy &amp; Terms links below.
+          </p>
         </MotoCard>
       )}
 

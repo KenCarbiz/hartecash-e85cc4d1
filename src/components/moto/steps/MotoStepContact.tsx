@@ -446,12 +446,18 @@ const MotoStepContact = ({
             </MotoPrimaryButton>
           </div>
           <p className="text-[11px] leading-relaxed text-zinc-500">
-            By tapping {ctaLabel} you agree to receive a one-time SMS verification code at the
-            number above. Standard message and data rates may apply. See our{" "}
+            By tapping {ctaLabel} you consent to receive autodialed calls, texts (SMS/MMS), and
+            emails from {(config.dealership_name || "the dealership").trim()} at the number and email
+            above regarding your vehicle, offer, and appointment. Consent is not a condition of
+            purchase. Msg &amp; data rates may apply; msg frequency varies. Reply STOP to opt out,
+            HELP for help. See our{" "}
             <a href="/privacy" className="font-medium text-[hsl(var(--cta-offer))] underline-offset-2 hover:underline">
               Privacy Policy
             </a>{" "}
-            for how we use your information.
+            and{" "}
+            <a href="/terms" className="font-medium text-[hsl(var(--cta-offer))] underline-offset-2 hover:underline">
+              Terms
+            </a>.
           </p>
         </div>
       </MotoCard>
