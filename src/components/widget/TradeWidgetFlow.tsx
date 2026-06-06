@@ -152,6 +152,18 @@ export default function TradeWidgetFlow({
     };
   }, [ymmYear, ymmMake]);
 
+  // Header menu "Home / Vehicle Valuation / How it Works / FAQ" return the
+  // flow to its entry screen so those sections (which only render on home)
+  // are mounted for the menu's snap-scroll. Field data is preserved.
+  useEffect(() => {
+    const goHome = () => {
+      setStep("vehicle");
+      setVehicleStage("entry");
+    };
+    window.addEventListener("hartecash-widget-home", goHome);
+    return () => window.removeEventListener("hartecash-widget-home", goHome);
+  }, []);
+
   const vinClean = data.entryMode === "vin" ? data.vehicleId.trim().toUpperCase() : "";
   const plateClean = data.entryMode === "plate" ? data.vehicleId.trim().toUpperCase() : "";
   const vinReady = vinClean.length === 17;

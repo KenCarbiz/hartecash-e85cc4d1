@@ -56,19 +56,22 @@ export default function TradeWidget({
   // Value Tracker explainer popup (blurred backdrop + our car illustration).
   const [showTracker, setShowTracker] = useState(false);
 
-  // Menu navigation: drop out of any legal view, close the menu, then
-  // smooth-scroll to the target. "top" returns to the top of the slide-out
-  // (the valuation form); other ids scroll to their section anchor.
+  // Menu navigation: drop out of any legal view, close the menu, and return
+  // the flow to its home/entry screen (so How it Works / FAQ are mounted),
+  // then smooth-scroll to the target. "top" returns to the top of the
+  // slide-out (the valuation form); other ids snap to their section anchor.
   const navTo = (id: string) => {
     setLegal(null);
     setMenuOpen(false);
+    // Reset the flow to home so the section anchors exist before we scroll.
+    window.dispatchEvent(new CustomEvent("hartecash-widget-home"));
     window.setTimeout(() => {
       if (id === "top") {
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
         document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-    }, 70);
+    }, 130);
   };
 
   const dealerName = (config.dealership_name || "").trim();
