@@ -57,12 +57,17 @@ export default function TradeWidget({
   const [showTracker, setShowTracker] = useState(false);
 
   // Menu navigation: drop out of any legal view, close the menu, then
-  // smooth-scroll to the target section once the flow has re-rendered.
+  // smooth-scroll to the target. "top" returns to the top of the slide-out
+  // (the valuation form); other ids scroll to their section anchor.
   const navTo = (id: string) => {
     setLegal(null);
     setMenuOpen(false);
     window.setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (id === "top") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }, 70);
   };
 
@@ -211,8 +216,8 @@ function WidgetNavMenu({
   // `action: "tracker"` opens the Value Tracker popup; the rest scroll
   // to their section anchor.
   const items: { label: string; target?: string; action?: "tracker" }[] = [
-    { label: "Home", target: "sell-car-form" },
-    { label: "Vehicle Valuation", target: "sell-car-form" },
+    { label: "Home", target: "top" },
+    { label: "Vehicle Valuation", target: "top" },
     { label: "Value Tracker", action: "tracker" },
     { label: "How it Works", target: "widget-how-it-works" },
     { label: "FAQ", target: "widget-faq" },
@@ -252,7 +257,7 @@ function WidgetNavMenu({
         ))}
         <button
           type="button"
-          onClick={() => onNavigate("sell-car-form")}
+          onClick={() => onNavigate("top")}
           className="mt-4 w-full rounded-full bg-[hsl(var(--cta-offer))] py-3.5 text-sm font-semibold text-[color:var(--cta-offer-text)] shadow-sm transition-all hover:brightness-110"
         >
           Get My Offer

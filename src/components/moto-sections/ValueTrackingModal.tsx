@@ -94,18 +94,17 @@ const ValueTrackingModal = ({ open, onOpenChange }: ValueTrackingModalProps) => 
             <X className="w-4 h-4" strokeWidth={2} />
           </DialogPrimitive.Close>
 
-          {/* Eyebrow — small icon tile + "Value Tracking" label.
-              Header row stays minimal: icon left, title left of
-              center, close X positioned absolutely top-right (above). */}
-          <div className="flex items-center gap-2 mb-5">
+          {/* Eyebrow — small icon tile + "Value Tracker" label, centered
+              like the product wordmark. Close X sits absolutely top-right. */}
+          <div className="flex items-center justify-center gap-2 mb-5">
             <div
               className="w-7 h-7 rounded-md flex items-center justify-center"
               style={{ background: "hsl(142 71% 95%)" }}
             >
               <TrendingUp className="w-4 h-4 text-emerald-600" strokeWidth={2} />
             </div>
-            <DialogPrimitive.Title className="text-base font-bold text-foreground tracking-tight">
-              Value Tracking
+            <DialogPrimitive.Title className="text-lg font-bold text-foreground tracking-tight">
+              Value Tracker
             </DialogPrimitive.Title>
           </div>
 
@@ -122,26 +121,27 @@ const ValueTrackingModal = ({ open, onOpenChange }: ValueTrackingModalProps) => 
             />
           </div>
 
-          {/* Headline */}
+          {/* Headline — our own copy (not lifted from the reference art). */}
           <h3
             id="value-tracking-modal-title"
             className="text-xl font-bold text-foreground text-center leading-tight tracking-tight mb-3"
           >
-            Track your car's value over time.
+            Always know what your car is worth.
           </h3>
 
-          {/* Body */}
+          {/* Body — our own copy. */}
           <DialogPrimitive.Description
             id="value-tracking-modal-desc"
             className="text-sm text-foreground/65 leading-relaxed text-center mb-4"
           >
-            Get regular updates when your vehicle's value changes, so you know
-            when it may be the right time to sell or trade.
+            We keep an eye on the market and refresh your vehicle's value as
+            prices move — then give you a heads-up the moment it changes, so
+            you can spot the right time to sell or trade.
           </DialogPrimitive.Description>
 
           {/* Reassurance */}
           <p className="text-sm text-foreground/55 text-center mb-7">
-            It's free to use, and there's no obligation.
+            Free to use, no obligation — just real numbers on your schedule.
           </p>
 
           {/* Primary CTA — full-width inside the modal, rounded-xl
