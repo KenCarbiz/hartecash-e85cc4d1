@@ -84,6 +84,14 @@ export default function TradeWidgetAdmin() {
   const [intent, setIntent] = useState<"trade" | "sell">("trade");
   const [previewKey, setPreviewKey] = useState(0); // bump to reload iframe
   const [copied, setCopied] = useState(false);
+  // Slide-out width preset — matches the real panel sizes a dealer can ship.
+  const SIZES = [
+    { id: "compact", label: "Compact", px: 400 },
+    { id: "standard", label: "Standard", px: 460 },
+    { id: "wide", label: "Wide", px: 560 },
+  ] as const;
+  const [sizeId, setSizeId] = useState<(typeof SIZES)[number]["id"]>("standard");
+  const size = SIZES.find((s) => s.id === sizeId) ?? SIZES[1];
 
   // Offer aggressiveness / reveal mode live in offer_settings, not config.
   const [offer, setOffer] = useState<{ autoFirmPct: number | null; revealMode: string | null }>({
@@ -123,7 +131,7 @@ export default function TradeWidgetAdmin() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any;
     const run = () =>
-      w.HarteCash?.valueMyTrade({ dealerId: dealershipId, host: origin });
+      w.HarteCash?.valueMyTrade({ dealerId: dealershipId, host: origin, width: size.px });
     if (w.HarteCash) return run();
     if (launchedRef.current) return;
     launchedRef.current = true;
@@ -142,7 +150,7 @@ export default function TradeWidgetAdmin() {
 
 <script>
   window.addEventListener('load', function () {
-    HarteCash.bindTrade({ dealerId: '${dealershipId}' });
+    HarteCash.bindTrade({ dealerId: '${dealershipId}', width: ${size.px} });
   });
 </script>`;
 
@@ -183,6 +191,16 @@ export default function TradeWidgetAdmin() {
               <ToggleChip active={intent === "sell"} onClick={() => { setIntent("sell"); setPreviewKey((k) => k + 1); }}>
                 Sell
               </ToggleChip>
+              <span className="mx-1 hidden h-4 w-px bg-border sm:inline-block" aria-hidden />
+              {SIZES.map((s) => (
+                <ToggleChip
+                  key={s.id}
+                  active={sizeId === s.id}
+                  onClick={() => { setSizeId(s.id); setPreviewKey((k) => k + 1); }}
+                >
+                  {s.label} <span className="text-[10px] text-muted-foreground">{s.px}px</span>
+                </ToggleChip>
+              ))}
               <button
                 type="button"
                 onClick={() => setPreviewKey((k) => k + 1)}
@@ -200,7 +218,8 @@ export default function TradeWidgetAdmin() {
               key={previewKey}
               title="Trade widget preview"
               src={previewUrl}
-              className="h-[700px] w-[580px] max-w-full rounded-xl border border-border bg-white shadow-sm"
+              style={{ width: size.px }}
+              className="h-[700px] max-w-full rounded-xl border border-border bg-white shadow-sm"
             />
           </div>
 

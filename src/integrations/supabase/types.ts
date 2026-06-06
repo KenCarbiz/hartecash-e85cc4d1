@@ -2064,6 +2064,7 @@ export type Database = {
           step_condition_history: boolean
           step_vehicle_build: boolean
           updated_at: string
+          widget_customer_signin: boolean
         }
         Insert: {
           ai_photos_min_required?: number
@@ -2094,6 +2095,7 @@ export type Database = {
           step_condition_history?: boolean
           step_vehicle_build?: boolean
           updated_at?: string
+          widget_customer_signin?: boolean
         }
         Update: {
           ai_photos_min_required?: number
@@ -2124,6 +2126,7 @@ export type Database = {
           step_condition_history?: boolean
           step_vehicle_build?: boolean
           updated_at?: string
+          widget_customer_signin?: boolean
         }
         Relationships: []
       }
