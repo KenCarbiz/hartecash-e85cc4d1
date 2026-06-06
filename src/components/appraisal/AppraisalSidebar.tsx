@@ -41,6 +41,7 @@ interface Props {
   tradeinAvg: number;
   retailAvg: number;
   reconCost: number;
+  packWarranty: number;
   effectivePack: number;
   projectedProfit: number;
   profitMargin: number;
@@ -57,7 +58,7 @@ interface Props {
 export default function AppraisalSidebar({
   sub, userRole, bbVehicle, offerResult, finalValue, currentOffer,
   wholesaleAvg, tradeinAvg, retailAvg,
-  reconCost, effectivePack, projectedProfit, profitMargin, activeSettings, dealerZip,
+  reconCost, packWarranty, effectivePack, projectedProfit, profitMargin, activeSettings, dealerZip,
   closestCompPrice, wholesaleRough, soldAvg,
   onRefreshInspection, onRetailStatsLoaded, onClosestCompPrice,
 }: Props) {
@@ -186,10 +187,16 @@ export default function AppraisalSidebar({
             <span className="text-muted-foreground">+ Dealer Pack</span>
             <span className="font-bold text-destructive">${effectivePack.toLocaleString()}</span>
           </div>
+          {packWarranty > 0 && (
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">+ Packed Warranty</span>
+              <span className="font-bold text-destructive">${packWarranty.toLocaleString()}</span>
+            </div>
+          )}
           <Separator className="my-2" />
           <div className="flex justify-between text-xs">
             <span className="font-semibold text-card-foreground">TAC</span>
-            <span className="font-bold text-card-foreground">${(finalValue + reconCost + effectivePack).toLocaleString()}</span>
+            <span className="font-bold text-card-foreground">${(finalValue + reconCost + effectivePack + packWarranty).toLocaleString()}</span>
           </div>
           <Separator className="my-2" />
           <div className="flex justify-between text-xs">

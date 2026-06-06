@@ -3121,6 +3121,7 @@ export type Database = {
           mileage_tiers: Json
           offer_ceiling: number | null
           offer_floor: number
+          pack_warranty: number
           payment_selection_timing: string
           pricing_reveal_mode: string
           range_high_mode: string
@@ -3169,6 +3170,7 @@ export type Database = {
           mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
+          pack_warranty?: number
           payment_selection_timing?: string
           pricing_reveal_mode?: string
           range_high_mode?: string
@@ -3217,6 +3219,7 @@ export type Database = {
           mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
+          pack_warranty?: number
           payment_selection_timing?: string
           pricing_reveal_mode?: string
           range_high_mode?: string
