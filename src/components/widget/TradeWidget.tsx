@@ -10,7 +10,7 @@
 // preserves page context) is provided by the parent /public/embed.js
 // drawer — this renders the panel CONTENTS.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LogIn, Menu, X } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useFormConfig } from "@/hooks/useFormConfig";
@@ -61,7 +61,14 @@ export default function TradeWidget({
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Value Tracker explainer popup (blurred backdrop + our car illustration).
+  // Opened from the menu's "Value Tracker" item AND the in-flow "Track Your
+  // Vehicle Value → Learn More" card (which dispatches this event).
   const [showTracker, setShowTracker] = useState(false);
+  useEffect(() => {
+    const open = () => setShowTracker(true);
+    window.addEventListener("hartecash-open-tracker", open);
+    return () => window.removeEventListener("hartecash-open-tracker", open);
+  }, []);
 
   // Dealer toggle: returning customers can sign in to re-open their offer.
   const signInEnabled = formConfig.widget_customer_signin === true;
@@ -158,7 +165,7 @@ export default function TradeWidget({
 
       {/* Value Tracker explainer — blurred backdrop + our car-on-a-rising-
           value-curve illustration, with the dealer's CTA color. */}
-      <ValueTrackingModal open={showTracker} onOpenChange={setShowTracker} />
+      <ValueTrackingModal open={showTracker} onOpenChange={setShowTracker} placement="top" />
 
       {legal ? (
         <WidgetLegalView type={legal} onBack={() => setLegal(null)} />

@@ -224,6 +224,7 @@ export default function VehicleConditionStep({
         </div>
         <button
           type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("hartecash-open-tracker"))}
           className="inline-flex shrink-0 items-center gap-0.5 text-[12.5px] font-semibold text-zinc-500 hover:text-[hsl(var(--cta-offer))]"
         >
           Learn More <ArrowRight className="h-3.5 w-3.5" />

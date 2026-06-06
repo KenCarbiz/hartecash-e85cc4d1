@@ -36,9 +36,12 @@ const ILLUSTRATION_ALT =
 interface ValueTrackingModalProps {
   open: boolean;
   onOpenChange: (next: boolean) => void;
+  /** "center" (default, landing page) or "top" — slides down from the top
+   *  of the viewport/panel, used inside the trade widget slide-out. */
+  placement?: "center" | "top";
 }
 
-const ValueTrackingModal = ({ open, onOpenChange }: ValueTrackingModalProps) => {
+const ValueTrackingModal = ({ open, onOpenChange, placement = "center" }: ValueTrackingModalProps) => {
   const handleGetStarted = () => {
     onOpenChange(false);
     // Defer the scroll until after the close animation has started so
@@ -76,14 +79,17 @@ const ValueTrackingModal = ({ open, onOpenChange }: ValueTrackingModalProps) => 
           aria-labelledby="value-tracking-modal-title"
           aria-describedby="value-tracking-modal-desc"
           className={cn(
-            "fixed left-1/2 top-1/2 z-[150] -translate-x-1/2 -translate-y-1/2",
-            "w-[calc(100vw-32px)] max-w-[480px]",
-            "max-h-[calc(100vh-32px)] overflow-y-auto",
+            "fixed left-1/2 z-[150] -translate-x-1/2",
+            "w-[calc(100vw-32px)] max-w-[480px] overflow-y-auto",
             "rounded-[22px] bg-white p-6 sm:p-7 lg:p-8",
             "shadow-[0_24px_60px_-20px_rgb(15_23_42_/_0.25)]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            placement === "top"
+              ? // Anchored to the top — slides down from above (slide-out menu vibe).
+                "top-3 max-h-[calc(100vh-24px)] data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top"
+              : // Centered (landing page) — zooms in.
+                "top-1/2 -translate-y-1/2 max-h-[calc(100vh-32px)] data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           )}
         >
           {/* Close X — top-right, subtle. */}
