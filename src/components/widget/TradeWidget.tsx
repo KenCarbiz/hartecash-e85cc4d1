@@ -264,7 +264,6 @@ function WidgetNavMenu({
   // `action: "tracker"` opens the Value Tracker popup; the rest scroll
   // to their section anchor.
   const items: { label: string; target?: string; action?: "tracker" }[] = [
-    { label: "Home", target: "top" },
     { label: "Vehicle Valuation", target: "top" },
     { label: "Value Tracker", action: "tracker" },
     { label: "How it Works", target: "widget-how-it-works" },

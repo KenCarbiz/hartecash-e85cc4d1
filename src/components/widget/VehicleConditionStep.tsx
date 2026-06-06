@@ -80,8 +80,9 @@ export default function VehicleConditionStep({
 
   // Sub-view: condition first, then color (in place). Active dot tracks it.
   const [view, setView] = useState<"condition" | "color">("condition");
-  const stepKey = view === "color" ? "color" : "condition";
-  const stepNumber = WIDGET_STEP_ORDER.indexOf(stepKey) + 1;
+  // Color is a sub-view of this same step, so both views share the
+  // "condition" position in the progress (no phantom extra step).
+  const stepNumber = WIDGET_STEP_ORDER.indexOf("condition") + 1;
 
   const [imgLoaded, setImgLoaded] = useState(false);
   useEffect(() => setImgLoaded(false), [imageUrl]);
@@ -176,7 +177,7 @@ export default function VehicleConditionStep({
               <p className="mt-1 font-mono text-[13px] tracking-wide text-zinc-500">VIN: {maskedVin}</p>
             )}
             <p className="mt-1.5 inline-flex items-center gap-1 text-[13px] font-semibold text-[hsl(var(--cta-offer))]">
-              <Check className="h-4 w-4" /> Matched from your VIN
+              <Check className="h-4 w-4" /> {maskedVin ? "Matched from your VIN" : "We matched your vehicle"}
             </p>
           </motion.div>
         ) : (
