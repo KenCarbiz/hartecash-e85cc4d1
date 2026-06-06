@@ -11,7 +11,7 @@
 // drawer — this renders the panel CONTENTS.
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useFormConfig } from "@/hooks/useFormConfig";
 import { useTenant } from "@/contexts/TenantContext";
@@ -49,6 +49,19 @@ export default function TradeWidget({
   // Privacy / Terms render in-panel (not a new tab).
   const [legal, setLegal] = useState<LegalView>(null);
 
+  // Hamburger nav menu (blurred overlay over the panel).
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Menu navigation: drop out of any legal view, close the menu, then
+  // smooth-scroll to the target section once the flow has re-rendered.
+  const navTo = (id: string) => {
+    setLegal(null);
+    setMenuOpen(false);
+    window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 70);
+  };
+
   const dealerName = (config.dealership_name || "").trim();
   const logo = tenantLogoSrc(config);
   // Locked-in window — dealer-configured, defaults to 8 days.
@@ -75,15 +88,35 @@ export default function TradeWidget({
             {dealerName || "Value My Trade"}
           </span>
         )}
-        <button
-          type="button"
-          onClick={() => window.parent.postMessage({ type: "hartecash-close" }, "*")}
-          aria-label="Close"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
-        >
-          <X className="h-5 w-5" aria-hidden="true" />
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => window.parent.postMessage({ type: "hartecash-close" }, "*")}
+            aria-label="Close"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
       </header>
+
+      {/* Hamburger nav — full-panel overlay with a blurred backdrop. */}
+      {menuOpen && (
+        <WidgetNavMenu
+          logo={logo}
+          dealerName={dealerName}
+          onClose={() => setMenuOpen(false)}
+          onNavigate={navTo}
+        />
+      )}
 
       {legal ? (
         <WidgetLegalView type={legal} onBack={() => setLegal(null)} />
@@ -142,6 +175,73 @@ export default function TradeWidget({
           </footer>
         </>
       )}
+    </div>
+  );
+}
+
+/** Full-panel slide-out nav. Opens from the header hamburger, dims +
+ *  blurs the panel behind it, and links to the widget's key sections
+ *  (which live on the entry screen). Each link scrolls to its section
+ *  and dismisses the menu; the CTA jumps to the valuation form. */
+function WidgetNavMenu({
+  logo,
+  dealerName,
+  onClose,
+  onNavigate,
+}: {
+  logo: string | null;
+  dealerName: string;
+  onClose: () => void;
+  onNavigate: (id: string) => void;
+}) {
+  const items: { label: string; target: string }[] = [
+    { label: "Home", target: "sell-car-form" },
+    { label: "Vehicle Valuation", target: "sell-car-form" },
+    { label: "Value Monitor", target: "widget-value-monitor" },
+    { label: "How it Works", target: "widget-how-it-works" },
+    { label: "FAQ", target: "widget-faq" },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-white/80 backdrop-blur-md">
+      {/* Mirror the panel header — logo left, × closes the menu. */}
+      <div className="flex items-center justify-between px-5 py-4">
+        {logo ? (
+          <img src={logo} alt={dealerName || "Dealer"} className="h-11 w-auto max-w-[220px] object-contain" />
+        ) : (
+          <span className="text-base font-bold tracking-tight text-zinc-900">
+            {dealerName || "Value My Trade"}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close menu"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+        >
+          <X className="h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
+
+      <nav className="flex flex-col items-center gap-7 px-8 pt-8">
+        {items.map((it) => (
+          <button
+            key={it.label}
+            type="button"
+            onClick={() => onNavigate(it.target)}
+            className="text-[19px] font-semibold text-zinc-800 transition-colors hover:text-[hsl(var(--cta-offer))]"
+          >
+            {it.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => onNavigate("sell-car-form")}
+          className="mt-4 w-full rounded-full bg-[hsl(var(--cta-offer))] py-3.5 text-sm font-semibold text-[color:var(--cta-offer-text)] shadow-sm transition-all hover:brightness-110"
+        >
+          Get My Offer
+        </button>
+      </nav>
     </div>
   );
 }

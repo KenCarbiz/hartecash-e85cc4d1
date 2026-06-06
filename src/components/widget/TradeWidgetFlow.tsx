@@ -1070,9 +1070,9 @@ export default function TradeWidgetFlow({
         main moto landing page. */}
     {step === "vehicle" && vehicleStage === "entry" && (
       <>
-        <HowItWorksLean />
-        <ValueTrackerCard />
-        <FAQLean />
+        <div id="widget-how-it-works"><HowItWorksLean /></div>
+        <div id="widget-value-monitor"><ValueTrackerCard /></div>
+        <div id="widget-faq"><FAQLean /></div>
       </>
     )}
     </>
