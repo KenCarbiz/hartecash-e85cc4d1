@@ -34,6 +34,9 @@ const TermsOfService = () => {
   // address into a contract that names a different dealership as counterparty.
   const contactPhone = (config.phone || "").trim();
   const contactAddress = ((config as { dealership_address?: string }).dealership_address || "").trim();
+  // Governing-law state is tenant-driven (a CT forum clause is unenforceable
+  // against an out-of-state dealer's customer); default to Connecticut.
+  const governingState = ((config as { governing_law_state?: string }).governing_law_state || "").trim() || "Connecticut";
 
   return (
     <>
@@ -196,7 +199,7 @@ const TermsOfService = () => {
               <h2 className="text-lg font-bold text-foreground mb-2">8. Governing Law</h2>
               <p>
                 These Terms shall be governed by and construed in accordance with the laws
-                of the State of Connecticut, without regard to its conflict of law
+                of the State of {governingState}, without regard to its conflict of law
                 provisions.
               </p>
             </section>

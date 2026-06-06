@@ -107,6 +107,7 @@ const OfferDisclosure = () => {
   // Offer-validity window — dealer-configured, defaults to 8 days. Keeps
   // this page in sync with the live widget instead of a hard-coded number.
   const guaranteeDays = Number((config as { price_guarantee_days?: number }).price_guarantee_days) || 8;
+  const governingState = ((config as { governing_law_state?: string }).governing_law_state || "").trim() || "Connecticut";
 
   return (
     <>
@@ -637,10 +638,10 @@ const OfferDisclosure = () => {
                   out of or relating to the {dealerName} vehicle valuation program,
                   any Estimated Offer, or any related transaction shall be governed
                   by and construed in accordance with the laws of the State of
-                  Connecticut, without regard to its conflict of law provisions.
+                  {" "}{governingState}, without regard to its conflict of law provisions.
                   Any legal action or proceeding shall be brought exclusively in
                   the state or federal courts of competent jurisdiction located in
-                  the State of Connecticut, and each party irrevocably consents to
+                  the State of {governingState}, and each party irrevocably consents to
                   the personal jurisdiction of such courts.
                 </p>
               </div>
