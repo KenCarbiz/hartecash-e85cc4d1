@@ -115,18 +115,22 @@ export default function TradeWidget({
             )}
           </div>
 
-          {/* Dealer footer — tenant logo + in-panel legal links. */}
-          <footer className="mt-auto border-t border-zinc-100 px-6 py-7 text-center">
+          {/* Dealer footer — tenant logo, AutoCurb copyright, in-panel
+              legal links (mirrors the MotoAcquire slide-out footer). */}
+          <footer className="mt-auto border-t border-zinc-100 px-6 py-8 text-center">
             {logo ? (
               <img
                 src={logo}
                 alt={dealerName || "Dealer"}
-                className="mx-auto h-8 w-auto max-w-[180px] object-contain opacity-90"
+                className="mx-auto h-9 w-auto max-w-[200px] object-contain"
               />
             ) : (
-              <span className="text-sm font-bold tracking-tight text-zinc-700">{dealerName}</span>
+              <span className="text-base font-bold tracking-tight text-zinc-800">{dealerName}</span>
             )}
-            <div className="mt-3 flex items-center justify-center gap-2.5 text-[12.5px] text-zinc-500">
+            <p className="mt-3 text-[12px] font-medium text-zinc-500">
+              Copyright · {new Date().getFullYear()} AutoCurb
+            </p>
+            <div className="mt-2 flex items-center justify-center gap-2.5 text-[12.5px] text-zinc-500">
               <button type="button" onClick={() => setLegal("privacy")} className="hover:text-zinc-800 hover:underline">
                 Privacy Policy
               </button>
@@ -135,9 +139,6 @@ export default function TradeWidget({
                 Terms of Service
               </button>
             </div>
-            <p className="mt-2 text-[11px] text-zinc-400">
-              © {new Date().getFullYear()} {dealerName || "Dealer"} · Powered by AutoCurb
-            </p>
           </footer>
         </>
       )}
