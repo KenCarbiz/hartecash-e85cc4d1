@@ -69,6 +69,7 @@ interface ACVSheetProps {
   tradeinAvg: number;
   retailAvg: number;
   reconCost: number;
+  packWarranty?: number;
   dealerPack: number;
   projectedProfit: number;
   profitMargin: number;
@@ -98,13 +99,13 @@ const fmtSigned = (n: number) => `${n >= 0 ? "+" : ""}$${n.toLocaleString()}`;
 const ACVSheet = forwardRef<HTMLDivElement, ACVSheetProps>(({
   sub, bbVehicle, offerResult, finalValue,
   wholesaleAvg, tradeinAvg, retailAvg,
-  reconCost, dealerPack, projectedProfit, profitMargin, condition,
+  reconCost, packWarranty = 0, dealerPack, projectedProfit, profitMargin, condition,
   dealerName, retailMarketData, waterfallBlocks, deductionDetails,
 }, ref) => {
   const privatePartyAvg = Number(bbVehicle?.private_party?.avg || 0);
   const financeAdvAvg = Number(bbVehicle?.finance_advance?.avg || 0);
   const msrp = Number(bbVehicle?.msrp || 0);
-  const inventoryCost = finalValue + reconCost + dealerPack;
+  const inventoryCost = finalValue + reconCost + dealerPack + packWarranty;
   const hasTires = !!(sub.tire_lf && sub.tire_rf && sub.tire_lr && sub.tire_rr);
   const avgTireDepth = hasTires ? ((sub.tire_lf! + sub.tire_rf! + sub.tire_lr! + sub.tire_rr!) / 4).toFixed(1) : null;
   const hasBrakes = !!(sub.brake_lf || sub.brake_rf || sub.brake_lr || sub.brake_rr);
