@@ -105,6 +105,9 @@ export default function TradeWidgetFlow({
   // The submissions row is written exactly once (on firm-offer reveal),
   // so editing mileage / re-running the range never duplicates a lead.
   const persistedToken = useRef<string | null>(null);
+  // In-flight guard so a tap that triggers persist twice (e.g. accept fired
+  // before the firm-reveal insert resolves) can't create a duplicate lead.
+  const persistInFlight = useRef<Promise<void> | null>(null);
 
   const [data, setData] = useState<WidgetFlowData & { otp: string }>({
     entryMode: "vin",
@@ -290,15 +293,22 @@ export default function TradeWidgetFlow({
   // Insert the submissions row exactly once (lead capture at firm-offer
   // reveal, matching the main flow). Best-effort: a failed write doesn't
   // block showing the number the customer was promised.
-  const persistOnce = async () => {
-    if (persistedToken.current) return;
-    try {
-      const result = await persistWidgetOffer(data, bb, dealershipId, dealershipName);
-      persistedToken.current = result.submissionToken;
-      if (result.firm != null) setFirm(result.firm);
-    } catch (e) {
-      console.warn("[widget] persist failed:", e);
-    }
+  const persistOnce = (): Promise<void> => {
+    if (persistedToken.current) return Promise.resolve();
+    // Coalesce concurrent callers onto a single insert.
+    if (persistInFlight.current) return persistInFlight.current;
+    persistInFlight.current = (async () => {
+      try {
+        const result = await persistWidgetOffer(data, bb, dealershipId, dealershipName);
+        persistedToken.current = result.submissionToken;
+        if (result.firm != null) setFirm(result.firm);
+      } catch (e) {
+        console.warn("[widget] persist failed:", e);
+      } finally {
+        persistInFlight.current = null;
+      }
+    })();
+    return persistInFlight.current;
   };
 
   const revealFirm = async () => {
@@ -376,7 +386,15 @@ export default function TradeWidgetFlow({
   // flips to "view your accepted offer".
   const accept = async () => {
     setBusy(true);
+    setError(null);
     await persistOnce();
+    // If the lead row never wrote (network/db error), don't tell the dealer
+    // site a deal was accepted with no submission behind it — surface a retry.
+    if (!persistedToken.current) {
+      setBusy(false);
+      setError("We couldn't save your acceptance. Please try again.");
+      return;
+    }
     await markApplied(persistedToken.current, data.intent, vdp);
     try {
       window.parent.postMessage(
@@ -883,13 +901,17 @@ export default function TradeWidgetFlow({
                   {applyLabel}
                 </MotoPrimaryButton>
               </div>
+              {/* Accept is the primary action. We don't promote the photo
+                  boost as a shortcut here (don't encourage skipping the
+                  accept) — it's offered on the "save for later" path below
+                  when the dealer has AI photos enabled. */}
               {aiPhotosEnabled && (
                 <button
                   type="button"
                   onClick={() => setValueStage("boost")}
-                  className="mt-3 w-full text-center text-sm font-medium text-[hsl(var(--cta-offer))] hover:underline"
+                  className="mt-3 w-full text-center text-sm font-medium text-zinc-500 hover:text-zinc-700 hover:underline"
                 >
-                  Add photos for a possible higher offer
+                  Not ready? Save my offer for later
                 </button>
               )}
               <p className="mt-4 text-[10px] leading-snug text-zinc-400">{offerTerms.disclosure}</p>
@@ -906,10 +928,10 @@ export default function TradeWidgetFlow({
       {/* AI photo boost (dealer-toggled) — mirrors the main flow's
           "upload photos → AI re-inspects → new value → accept/save". */}
       {step === "value" && valueStage === "boost" && (
-        <MotoCard title="Boost your offer with photos">
+        <MotoCard title="Save your offer">
           <p className="text-sm text-zinc-500">
-            Upload a few quick photos and our AI re-inspects your {detectedVehicle} — a better
-            condition read can raise your offer.
+            Your offer is saved — no rush. Want a shot at more? Add a few quick photos and our AI
+            re-inspects your {detectedVehicle}; a better condition read can raise it.
           </p>
           {/* TODO: real multi-slot capture (reuse MotoStepPhotos). */}
           <div className="mt-3 grid grid-cols-3 gap-2">
@@ -925,14 +947,14 @@ export default function TradeWidgetFlow({
           {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
           <div className="mt-4 grid gap-2">
             <MotoPrimaryButton loading={busy} onClick={submitBoost}>
-              Re-evaluate with photos
+              Add photos to boost it
             </MotoPrimaryButton>
             <button
               type="button"
-              onClick={() => setValueStage("firm")}
+              onClick={() => setValueStage("done")}
               className="text-center text-sm font-medium text-zinc-500 hover:underline"
             >
-              Keep my current offer
+              Just save it for now
             </button>
           </div>
         </MotoCard>
@@ -975,7 +997,7 @@ export default function TradeWidgetFlow({
             specialist will reach out to finalize the details.
           </p>
           <p className="mt-2 text-[11px] text-zinc-400">
-            We sent a copy to {data.email || "your email"}.
+            We'll send a copy to {data.email || "your email"}.
           </p>
         </MotoCard>
       )}
