@@ -311,6 +311,7 @@ const ACVSheet = forwardRef<HTMLDivElement, ACVSheetProps>(({
             <div className="flex justify-between"><span className="text-gray-500">ACV (Purchase Price)</span><span className="font-bold">{fmt(finalValue)}</span></div>
             <div className="flex justify-between"><span className="text-gray-500">+ Estimated Recon</span><span className="font-bold">{fmt(reconCost)}</span></div>
             <div className="flex justify-between"><span className="text-gray-500">+ Dealer Pack</span><span className="font-bold">{fmt(dealerPack)}</span></div>
+            {packWarranty > 0 && <div className="flex justify-between"><span className="text-gray-500">+ Packed Warranty</span><span className="font-bold">{fmt(packWarranty)}</span></div>}
             <div className="flex justify-between border-t border-gray-300 pt-0.5 font-black"><span>Total Inventory Cost</span><span>{fmt(inventoryCost)}</span></div>
             <div className="flex justify-between mt-1"><span className="text-gray-500">Retail Benchmark</span><span className="font-bold">{fmt(retailAvg)}</span></div>
             <div className={`flex justify-between font-bold ${projectedProfit >= 0 ? "text-green-700" : "text-red-700"}`}>
