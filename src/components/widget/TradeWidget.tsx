@@ -20,6 +20,7 @@ import ResumeCard from "./ResumeCard";
 import TradeInBanner from "./TradeInBanner";
 import TradeWidgetFlow from "./TradeWidgetFlow";
 import WidgetLegalView from "./WidgetLegalView";
+import ValueTrackingModal from "@/components/moto-sections/ValueTrackingModal";
 import { useFirmOffer } from "./useTradeWidget";
 import type { VdpContext, WidgetIntent } from "./widgetTypes";
 
@@ -51,6 +52,9 @@ export default function TradeWidget({
 
   // Hamburger nav menu (blurred overlay over the panel).
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Value Tracker explainer popup (blurred backdrop + our car illustration).
+  const [showTracker, setShowTracker] = useState(false);
 
   // Menu navigation: drop out of any legal view, close the menu, then
   // smooth-scroll to the target section once the flow has re-rendered.
@@ -115,8 +119,16 @@ export default function TradeWidget({
           dealerName={dealerName}
           onClose={() => setMenuOpen(false)}
           onNavigate={navTo}
+          onOpenTracker={() => {
+            setMenuOpen(false);
+            setShowTracker(true);
+          }}
         />
       )}
+
+      {/* Value Tracker explainer — blurred backdrop + our car-on-a-rising-
+          value-curve illustration, with the dealer's CTA color. */}
+      <ValueTrackingModal open={showTracker} onOpenChange={setShowTracker} />
 
       {legal ? (
         <WidgetLegalView type={legal} onBack={() => setLegal(null)} />
@@ -188,16 +200,20 @@ function WidgetNavMenu({
   dealerName,
   onClose,
   onNavigate,
+  onOpenTracker,
 }: {
   logo: string | null;
   dealerName: string;
   onClose: () => void;
   onNavigate: (id: string) => void;
+  onOpenTracker: () => void;
 }) {
-  const items: { label: string; target: string }[] = [
+  // `action: "tracker"` opens the Value Tracker popup; the rest scroll
+  // to their section anchor.
+  const items: { label: string; target?: string; action?: "tracker" }[] = [
     { label: "Home", target: "sell-car-form" },
     { label: "Vehicle Valuation", target: "sell-car-form" },
-    { label: "Value Monitor", target: "widget-value-monitor" },
+    { label: "Value Tracker", action: "tracker" },
     { label: "How it Works", target: "widget-how-it-works" },
     { label: "FAQ", target: "widget-faq" },
   ];
@@ -228,7 +244,7 @@ function WidgetNavMenu({
           <button
             key={it.label}
             type="button"
-            onClick={() => onNavigate(it.target)}
+            onClick={() => (it.action === "tracker" ? onOpenTracker() : onNavigate(it.target!))}
             className="text-[19px] font-semibold text-zinc-800 transition-colors hover:text-[hsl(var(--cta-offer))]"
           >
             {it.label}
