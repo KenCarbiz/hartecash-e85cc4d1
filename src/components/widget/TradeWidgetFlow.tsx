@@ -93,6 +93,9 @@ export default function TradeWidgetFlow({
   const [valueStage, setValueStage] = useState<ValueStage>("range");
   const [boosted, setBoosted] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+  // True while the firm offer is being finalized/persisted, so the firm card
+  // can show a spinner vs. a terminal "no online offer" state.
+  const [revealing, setRevealing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [bb, setBb] = useState<BBVehicle | null>(null);
@@ -313,7 +316,9 @@ export default function TradeWidgetFlow({
 
   const revealFirm = async () => {
     setValueStage("firm");
+    setRevealing(true);
     await persistOnce();
+    setRevealing(false);
   };
 
   const getFirm = async () => {
@@ -666,7 +671,7 @@ export default function TradeWidgetFlow({
         <MotoCard title="Trade it in or sell it?">
           {intentHeroUrl && (
             <div className="mb-4 flex flex-col items-center">
-              <div className="relative mx-auto h-[34vh] max-h-[300px] w-full max-w-[380px]">
+              <div className="relative mx-auto h-[24vh] max-h-[220px] w-full max-w-[340px]">
                 <span
                   aria-hidden
                   className="pointer-events-none absolute inset-x-0 bottom-[6%] z-0 mx-auto h-3.5 w-[66%] rounded-[50%] bg-zinc-900/20 blur-md"
@@ -792,7 +797,7 @@ export default function TradeWidgetFlow({
               {busy ? "Loading…" : "See my value"}
             </button>
           </div>
-          <p className="mt-3 text-[10px] leading-snug text-zinc-400">
+          <p className="mt-3 text-[11px] leading-snug text-zinc-400">
             By continuing you consent to receive autodialed calls, texts (SMS/MMS), and emails from{" "}
             {(dealershipName || "the dealership").trim()} regarding your vehicle, offer, and
             appointment. Consent is not a condition of purchase. Msg &amp; data rates may apply; msg
@@ -827,11 +832,15 @@ export default function TradeWidgetFlow({
       )}
       {step === "value" && valueStage === "range" && (
         <MotoCard title="Your estimated trade-in value">
-          <p className="text-4xl font-bold leading-none tabular-nums text-zinc-900">
-            {estimate?.low != null && estimate?.high != null
-              ? <>{usd(estimate.low)} <span className="font-semibold text-zinc-400">–</span> {usd(estimate.high)}</>
-              : "Estimate ready"}
-          </p>
+          {estimate?.low != null && estimate?.high != null ? (
+            <p className="text-4xl font-bold leading-none tabular-nums text-zinc-900">
+              {usd(estimate.low)} <span className="font-semibold text-zinc-400">–</span> {usd(estimate.high)}
+            </p>
+          ) : (
+            <p className="text-lg font-semibold leading-tight text-zinc-900">
+              Your offer is ready — tap below to view it.
+            </p>
+          )}
           <p className="mt-2 text-sm text-zinc-500">{detectedVehicle}</p>
           <button
             type="button"
@@ -911,12 +920,22 @@ export default function TradeWidgetFlow({
                   Not ready? Save my offer for later
                 </button>
               )}
-              <p className="mt-4 text-[10px] leading-snug text-zinc-400">{offerTerms.disclosure}</p>
+              <p className="mt-4 text-[11px] leading-snug text-zinc-400">{offerTerms.disclosure}</p>
             </>
-          ) : (
+          ) : revealing ? (
             <div className="flex items-center gap-2 text-sm text-zinc-500">
               <span className="h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--cta-offer))]" />
               Finalizing your number…
+            </div>
+          ) : (
+            // Resolved with no online number — the lead is already saved, so
+            // reassure rather than spin forever.
+            <div>
+              <p className="text-sm text-zinc-600">
+                We couldn't generate an instant online offer for your {detectedVehicle}. Your details
+                are saved and a specialist will reach out shortly with your offer.
+              </p>
+              {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
             </div>
           )}
         </MotoCard>

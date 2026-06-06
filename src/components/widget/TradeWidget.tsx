@@ -132,7 +132,7 @@ export default function TradeWidget({
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
           >
             <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -140,7 +140,7 @@ export default function TradeWidget({
             type="button"
             onClick={() => window.parent.postMessage({ type: "hartecash-close" }, "*")}
             aria-label="Close"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -295,7 +295,7 @@ function WidgetNavMenu({
             type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>

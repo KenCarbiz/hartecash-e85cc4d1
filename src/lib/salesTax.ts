@@ -98,10 +98,22 @@ export function getStateTaxRate(stateCode: string): number {
   return STATE_TAX_RATES[stateCode] ?? 0;
 }
 
-export function getTaxRateFromZip(zip: string): { state: string | null; rate: number } {
+// Connecticut applies a luxury motor-vehicle rate of 7.75% to vehicles sold
+// for more than $50,000 (the standard rate is 6.35%). The rate that governs
+// a trade-in tax credit is the rate on the vehicle being PURCHASED, so the
+// price-aware variants take the sale price of that vehicle.
+const CT_LUXURY_THRESHOLD = 50000;
+const CT_LUXURY_RATE = 0.0775;
+
+export function getStateTaxRateForPrice(stateCode: string, salePrice = 0): number {
+  if (stateCode === "CT" && salePrice > CT_LUXURY_THRESHOLD) return CT_LUXURY_RATE;
+  return getStateTaxRate(stateCode);
+}
+
+export function getTaxRateFromZip(zip: string, salePrice = 0): { state: string | null; rate: number } {
   const state = getStateFromZip(zip);
   if (!state) return { state: null, rate: 0 };
-  return { state, rate: getStateTaxRate(state) };
+  return { state, rate: getStateTaxRateForPrice(state, salePrice) };
 }
 
 export function calcTradeInValue(cashOffer: number, taxRate: number): number {
