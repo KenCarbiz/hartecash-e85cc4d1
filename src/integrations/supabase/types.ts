@@ -838,30 +838,36 @@ export type Database = {
           attempts: number
           challenge_id: string
           code_hash: string
+          consumed_at: string | null
           created_at: string
           expires_at: string
           id: string
           phone_e164: string
+          purpose: string
           verified_at: string | null
         }
         Insert: {
           attempts?: number
           challenge_id?: string
           code_hash: string
+          consumed_at?: string | null
           created_at?: string
           expires_at: string
           id?: string
           phone_e164: string
+          purpose?: string
           verified_at?: string | null
         }
         Update: {
           attempts?: number
           challenge_id?: string
           code_hash?: string
+          consumed_at?: string | null
           created_at?: string
           expires_at?: string
           id?: string
           phone_e164?: string
+          purpose?: string
           verified_at?: string | null
         }
         Relationships: []
@@ -7744,10 +7750,20 @@ export type Database = {
         }
         Returns: string
       }
-      request_customer_data_action: {
-        Args: { _email?: string; _kind?: string; _phone?: string }
-        Returns: Json
-      }
+      request_customer_data_action:
+        | {
+            Args: { _email?: string; _kind?: string; _phone?: string }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _dealership_id?: string
+              _email?: string
+              _kind?: string
+              _phone?: string
+            }
+            Returns: Json
+          }
       request_offer_increase: {
         Args: {
           _reason?: string
