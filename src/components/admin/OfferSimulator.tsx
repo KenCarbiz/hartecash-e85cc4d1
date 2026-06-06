@@ -307,6 +307,8 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const [showDetailPanel, setShowDetailPanel] = useState<string | null>(null);
   const [retailStats, setRetailStats] = useState<RetailStats | null>(null);
   const [retailListings, setRetailListings] = useState<RetailListing[]>([]);
+  // Condition inputs collapse — compact when there are no deductions.
+  const [conditionInputsOpen, setConditionInputsOpen] = useState(false);
 
   // Sync when parent settings change
   const prevSettingsRef = useRef(settings);
@@ -924,13 +926,30 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                   </span>
                 );
 
+                const condDeductTotal = liveResult?.totalDeductions ?? 0;
+                const hasCondDeduct = condDeductTotal > 0;
                 return (
-                  <div className="rounded-lg border border-border p-3">
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <Car className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">② Customer Condition Inputs</span>
-                    </div>
-                    <div className="space-y-2">
+                  <Collapsible
+                    open={conditionInputsOpen || hasCondDeduct}
+                    onOpenChange={setConditionInputsOpen}
+                    className="rounded-lg border border-border"
+                  >
+                    <CollapsibleTrigger asChild>
+                      <button className="flex w-full items-center justify-between px-3 py-2.5 text-left rounded-lg hover:bg-muted/30 transition-colors">
+                        <span className="flex items-center gap-1.5">
+                          <Car className="w-3.5 h-3.5 text-primary" />
+                          <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">② Customer Condition Inputs</span>
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${hasCondDeduct ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+                            {CONDITION_LABELS[liveCondition]} · {hasCondDeduct ? `−$${condDeductTotal.toLocaleString()}` : "No adjustments"}
+                          </span>
+                          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${conditionInputsOpen || hasCondDeduct ? "rotate-180" : ""}`} />
+                        </span>
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                    <div className="space-y-2 px-3 pb-3 pt-1">
                       {/* Row: Condition Tier */}
                       <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
                         <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Condition</span>
@@ -1157,7 +1176,8 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </div>
                       )}
                     </div>
-                  </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 );
               })()}
 
