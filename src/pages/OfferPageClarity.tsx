@@ -5,6 +5,7 @@ import { ArrowRight, CheckCircle, ShieldCheck, Loader2, DollarSign, TrendingUp, 
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { getOfferTerms } from "@/lib/offerTerms";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -192,6 +193,13 @@ const OfferPageClarity = () => {
 
   const s = submission;
   const isAccepted = !!s.progress_status && LOCKED_OFFER_STATUSES.has(s.progress_status);
+  // Firm vs estimate — read from the submission (offer_settings isn't
+  // anon-readable); drives the offer wording like every other surface.
+  const offerIsFirm = !!(s as { offer_is_firm?: boolean }).offer_is_firm;
+  const offerTerms = getOfferTerms(offerIsFirm ? "firm" : "estimate", {
+    dealerName: config.dealership_name || "the dealership",
+    guaranteeDays: Number(config.price_guarantee_days) || 8,
+  });
   // Demo-mode fallback. When site_config.demo_mode is on, every
   // customer-facing offer clamps to demo_offer_amount — including
   // submissions that were created BEFORE demo mode was switched on
@@ -527,7 +535,7 @@ const OfferPageClarity = () => {
                     className="space-y-2"
                   >
                     <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                      {isAccepted ? "Accepted cash offer" : "Your cash offer"}
+                      {isAccepted ? "Accepted " : "Your "}{offerIsFirm ? "firm offer" : "cash offer"}
                     </p>
                     <p className="font-sans text-[64px] md:text-[88px] font-bold tracking-[-0.035em] leading-[1] text-zinc-900 tabular-nums">
                       ${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}
@@ -549,9 +557,7 @@ const OfferPageClarity = () => {
                       Subject to in-person inspection
                     </p>
                     <p className="mt-1 max-w-md mx-auto text-[10px] leading-snug text-zinc-400">
-                      Based on the condition you described; assumes a clean, non-branded title with no
-                      undisclosed accident or material issues. If the vehicle matches what you told us,
-                      the price holds — if anything differs, we'll review any adjustment before signing.
+                      {offerTerms.disclosure}
                     </p>
                     {/* AI-Verified condition badge — shows when our vision model
                         confirmed the customer's self-reported condition. Builds

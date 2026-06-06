@@ -11,8 +11,9 @@ const MotoDisclosureBar = () => {
     <footer className="mt-12 border-t border-zinc-200 bg-white py-6">
       <div className="mx-auto max-w-screen-sm px-4 text-center text-xs leading-relaxed text-zinc-500">
         <p>
-          Values shown are estimates from third-party providers (Kelley Blue Book / Black Book)
-          based on the information you supplied. Final offer is subject to inspection.
+          Values shown are based on Black Book data and comparable market listings together with the
+          information you supplied; {config.dealership_name || "the dealership"} makes the final
+          determination of value. Final offer is subject to inspection.
         </p>
         <p className="mt-2">
           © {year} {config.dealership_name || "Dealer"} · Images provided by EVOX IMAGES®

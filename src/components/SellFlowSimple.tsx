@@ -138,10 +138,10 @@ import { Info } from "lucide-react";
 // text on the legacy SellCarForm so dealers can switch flows
 // without their condition prompts changing wording.
 const KBB_CONDITION_OPTIONS = [
-  { value: "excellent", label: "Excellent", desc: "(2% of cars KBB values) - Looks new and is in excellent mechanical condition." },
-  { value: "very_good", label: "Very Good", desc: "(28% of cars KBB values) - Has minor cosmetic defects and is in good mechanical condition." },
-  { value: "good",      label: "Good",      desc: "(50% of cars KBB values) - Has repairable cosmetic defects and mechanical problems." },
-  { value: "fair",      label: "Fair",      desc: "(20% of cars KBB values) - Requires some mechanical repairs." },
+  { value: "excellent", label: "Excellent", desc: "(about 2% of vehicles) - Looks new and is in excellent mechanical condition." },
+  { value: "very_good", label: "Very Good", desc: "(about 28% of vehicles) - Has minor cosmetic defects and is in good mechanical condition." },
+  { value: "good",      label: "Good",      desc: "(about 50% of vehicles) - Has repairable cosmetic defects and mechanical problems." },
+  { value: "fair",      label: "Fair",      desc: "(about 20% of vehicles) - Requires some mechanical repairs." },
 ] as const;
 
 const KBB_FULL_DEFINITIONS = [

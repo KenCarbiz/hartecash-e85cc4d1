@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { logConsent } from "@/lib/consent";
+import { getOfferTerms } from "@/lib/offerTerms";
 import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, ArrowRight, Car, Gauge, Palette, Settings2, Pencil, User, Clock, Star, Zap, Shield, BadgeCheck, Handshake, Camera, Sparkles } from "lucide-react";
 import InspectionConfidence from "@/components/InspectionConfidence";
 import { AiVerifiedBadge } from "@/components/offer/AiVerifiedBadge";
@@ -547,6 +548,14 @@ const OfferPageLegacy = () => {
   // Offer stays editable until it has moved into a locked post-acceptance state.
   const canEdit = !isAccepted && hasStoredOfferData;
 
+  // Firm vs estimate — read from the submission (offer_settings isn't
+  // anon-readable), drives the offer-page wording like every other surface.
+  const offerIsFirm = !!(s as { offer_is_firm?: boolean }).offer_is_firm;
+  const offerTerms = getOfferTerms(offerIsFirm ? "firm" : "estimate", {
+    dealerName: config.dealership_name || "the dealership",
+    guaranteeDays: Number(config.price_guarantee_days) || 8,
+  });
+
   // Price guarantee countdown
   const guaranteeDays = config.price_guarantee_days || 8;
   const createdDate = s.created_at ? new Date(s.created_at) : null;
@@ -789,7 +798,7 @@ const OfferPageLegacy = () => {
           className="text-center py-2"
         >
           <p className="text-[11px] text-muted-foreground/70 uppercase tracking-widest font-semibold mb-2">
-            {isAccepted ? "Accepted Cash Offer" : "Your Cash Offer"}
+            {isAccepted ? "Accepted " : "Your "}{offerIsFirm ? "Firm Offer" : "Cash Offer"}
           </p>
           <div className="relative inline-block">
             {/* Subtle glow behind price */}
@@ -833,20 +842,13 @@ const OfferPageLegacy = () => {
               they're looking at is better than the algorithm's own
               ceiling — because that's when the dealer most needs the
               expectation set that the final price is inspection-dependent. */}
-          {/* Protective inspection conditions — always shown (not just on
-              bumped offers) so the customer sees, adjacent to the price, that
-              the number holds only if the vehicle matches what they described
-              (clean title, no undisclosed accident or issues). */}
+          {/* Protective conditions — always shown adjacent to the price, and
+              mode-correct: firm dealers see the firm commitment + its
+              conditions; estimate dealers see non-binding wording. */}
           <div className="mt-4 mx-auto max-w-lg bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-2 text-left">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
             <p className="text-xs text-amber-900 dark:text-amber-100 leading-relaxed">
-              <strong>Subject to physical inspection.</strong> This number is
-              based on the condition you described and assumes a clean,
-              non-branded title with no undisclosed accident or material issues.
-              The final price is confirmed in person — if the vehicle matches
-              what you told us, the price is locked. If anything comes back
-              different, we'll walk you through the adjustment before anything
-              is signed.
+              {offerTerms.disclosure}
             </p>
           </div>
         </motion.div>

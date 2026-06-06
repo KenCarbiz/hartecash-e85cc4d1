@@ -87,6 +87,22 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Honor the opt-out list — a customer who unsubscribed (channel 'email'
+    // or 'all') must not receive a marketing-adjacent review-request email.
+    const { data: optedOut } = await serviceClient
+      .from("opt_outs")
+      .select("id")
+      .eq("email", submission.email)
+      .in("channel", ["email", "all"])
+      .limit(1)
+      .maybeSingle();
+    if (optedOut) {
+      return new Response(JSON.stringify({ skipped: true, reason: "opted_out" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Get site config for the email message using the submission's dealership_id
     const { data: siteConfig } = await serviceClient
       .from("site_config")

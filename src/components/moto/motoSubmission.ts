@@ -132,6 +132,10 @@ export async function calculateAndPersistOffer(
     estimated_offer_low: estimate?.low ?? null,
     estimated_offer_high: estimate?.high ?? null,
     offered_price: firm,
+    // Carry the firm/estimate decision to the public offer page (which can't
+    // read offer_settings). Dropped automatically by the retry path if the
+    // column isn't present yet.
+    offer_is_firm: mode === "firm",
   };
 
   let submissionId: string | null = null;
