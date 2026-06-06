@@ -307,6 +307,10 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const [showDetailPanel, setShowDetailPanel] = useState<string | null>(null);
   const [retailStats, setRetailStats] = useState<RetailStats | null>(null);
   const [retailListings, setRetailListings] = useState<RetailListing[]>([]);
+  // Target gross the desk wants to net at retail — drives the Max-Offer
+  // ceiling in the Deal Cockpit. Local for now (default $1,500); can be
+  // persisted to offer_settings in a later pass.
+  const [targetGross, setTargetGross] = useState(1500);
 
   // Sync when parent settings change
   const prevSettingsRef = useRef(settings);
@@ -552,6 +556,34 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     : null;
   const cmdMarketOn = !!activeSettings.market_adjustment?.enabled;
 
+  // === Deal Cockpit metrics ===
+  // What it actually sells for in the radius: prefer recently-SOLD median
+  // (truth), fall back to active-listing median, then Black Book retail avg.
+  const ckSold = retailStats?.sold;
+  const ckActive = retailStats?.active;
+  const ckMarketSale =
+    (ckSold?.median_price || 0) ||
+    (ckActive?.median_price || 0) ||
+    cmdRetailAvg ||
+    0;
+  const ckMarketSource = ckSold?.median_price ? "sold median" : ckActive?.median_price ? "listing median" : "BB retail avg";
+  const ckCompCount = ckSold?.vehicle_count || ckActive?.vehicle_count || 0;
+  const ckDaysSupply = retailStats?.market_days_supply ?? null;
+  const ckDaysToSell = retailStats?.mean_days_to_turn ?? null;
+  const ckUnits = ckActive?.vehicle_count ?? null;
+  const ckRecon = activeSettings.recon_cost || 0;
+  const ckPack = (activeSettings as { dealer_pack?: number }).dealer_pack || 0;
+  const ckOffer = liveResult?.high ?? 0;
+  // Landed / cost-to-market = what we pay + recon + pack.
+  const ckLanded = ckOffer ? ckOffer + ckRecon + ckPack : 0;
+  const ckCostToMarketPct = ckMarketSale && ckLanded ? ckLanded / ckMarketSale : null;
+  // Ceiling: the most we can pay and still net the target gross at market.
+  const ckMaxOffer = ckMarketSale ? Math.max(0, ckMarketSale - ckRecon - ckPack - targetGross) : null;
+  const ckHeadroom = ckMaxOffer != null && ckOffer ? ckMaxOffer - ckOffer : null;
+  const supplyTone = ckDaysSupply == null ? "text-muted-foreground"
+    : ckDaysSupply < 30 ? "text-success" : ckDaysSupply < 60 ? "text-primary" : "text-destructive";
+  const usd0 = (n: number) => `$${Math.round(n).toLocaleString()}`;
+
   return (
     <div className="space-y-3">
       {/* ═══════════════════════════════════════════════════════
@@ -561,56 +593,106 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
           anchor while they edit pricing below.
           ═══════════════════════════════════════════════════════ */}
       <div className="sticky top-0 z-30 -mx-1 px-1 py-1.5 bg-slate-50/95 dark:bg-background/95 backdrop-blur-sm">
-        <div className="rounded-2xl border border-border/80 bg-card shadow-sm px-4 py-3 flex flex-wrap items-center gap-x-5 gap-y-2">
-          <div className="flex items-center gap-2 min-w-0 max-w-[260px]">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <div className="rounded-2xl border border-border/80 bg-card shadow-sm px-4 py-2.5">
+          {/* Row 1: identity + live status */}
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <Car className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Vehicle</div>
-              <div className="text-xs font-bold truncate">
+              <div className="text-xs font-bold truncate leading-tight">
                 {liveBbVehicle ? `${liveBbVehicle.year} ${liveBbVehicle.make} ${liveBbVehicle.model}` : "No VIN loaded"}
               </div>
+              <div className="text-[10px] text-muted-foreground leading-tight">
+                Condition: <span className="font-semibold text-primary">{CONDITION_LABELS[liveCondition]}</span>
+              </div>
             </div>
-          </div>
-          <div className="hidden md:block h-8 w-px bg-border" />
-          <div>
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Condition</div>
-            <div className="text-xs font-bold text-primary">{CONDITION_LABELS[liveCondition]}</div>
-          </div>
-          <div className="hidden md:block h-8 w-px bg-border" />
-          <div>
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Configured Offer</div>
-            <div className="text-base font-bold text-primary leading-tight">
-              {liveResult ? `$${liveResult.high.toLocaleString()}` : "—"}
-            </div>
-          </div>
-          <div className="hidden md:block h-8 w-px bg-border" />
-          <div>
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Retail Avg</div>
-            <div className="text-xs font-bold">{cmdRetailAvg ? `$${cmdRetailAvg.toLocaleString()}` : "—"}</div>
-          </div>
-          <div className="hidden lg:block h-8 w-px bg-border" />
-          <div className="hidden lg:block">
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Profit Spread</div>
-            <div className={`text-xs font-bold ${cmdProfitSpread == null ? "text-muted-foreground" : cmdProfitSpread > 0 ? "text-success" : "text-destructive"}`}>
-              {cmdProfitSpread == null ? "—" : `${cmdProfitSpread >= 0 ? "+" : ""}$${cmdProfitSpread.toLocaleString()}`}
-            </div>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <span className={`hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full ${
-              cmdMarketOn
-                ? "bg-success/10 text-success border border-success/30"
-                : "bg-muted text-muted-foreground border border-border"
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${cmdMarketOn ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
-              Live Market {cmdMarketOn ? "ON" : "OFF"}
-            </span>
-            {liveResult?.isHotLead && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/30">
-                🔥 Hot
+            <div className="ml-auto flex items-center gap-2">
+              <span className={`hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full ${
+                cmdMarketOn
+                  ? "bg-success/10 text-success border border-success/30"
+                  : "bg-muted text-muted-foreground border border-border"
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${cmdMarketOn ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
+                Live Market {cmdMarketOn ? "ON" : "OFF"}
               </span>
-            )}
+              {liveResult?.isHotLead && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/30">
+                  🔥 Hot
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Row 2: the decision — what it sells for → what it costs us → how high we can go */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            {/* Market sale (anchor) */}
+            <CockpitTile
+              label="Market Sale"
+              value={ckMarketSale ? usd0(ckMarketSale) : "—"}
+              sub={ckMarketSale ? `${ckMarketSource} · ${ckCompCount} comps` : "look up a VIN"}
+              accent
+            />
+            {/* Velocity / scarcity */}
+            <CockpitTile
+              label="Velocity"
+              value={ckDaysSupply != null ? `${Math.round(ckDaysSupply)}d supply` : "—"}
+              valueClass={supplyTone}
+              sub={
+                ckDaysToSell != null || ckUnits != null
+                  ? `${ckDaysToSell != null ? `${Math.round(ckDaysToSell)}d to sell` : "—"} · ${ckUnits ?? "—"} in mkt`
+                  : "market velocity"
+              }
+            />
+            {/* Our costs */}
+            <CockpitTile
+              label="Recon + Pack"
+              value={ckRecon || ckPack ? usd0(ckRecon + ckPack) : "$0"}
+              sub={`recon ${usd0(ckRecon)} · pack ${usd0(ckPack)}`}
+            />
+            {/* Cost to market */}
+            <CockpitTile
+              label="Cost to Market"
+              value={ckLanded ? usd0(ckLanded) : "—"}
+              valueClass={
+                ckCostToMarketPct == null ? "" : ckCostToMarketPct <= 0.86 ? "text-success" : ckCostToMarketPct <= 0.93 ? "text-primary" : "text-destructive"
+              }
+              sub={ckCostToMarketPct != null ? `${Math.round(ckCostToMarketPct * 100)}% of market` : "landed cost"}
+            />
+            {/* Max offer (ceiling) with editable target gross */}
+            <div className="rounded-lg border border-success/30 bg-success/5 px-2.5 py-1.5">
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Max Offer</div>
+              <div className="text-base font-bold leading-tight text-success">
+                {ckMaxOffer != null ? usd0(ckMaxOffer) : "—"}
+              </div>
+              <div className="mt-0.5 flex items-center gap-1 text-[9px] text-muted-foreground">
+                <span>gross</span>
+                <span className="text-muted-foreground">$</span>
+                <input
+                  type="number"
+                  value={targetGross}
+                  onChange={(e) => setTargetGross(Math.max(0, parseInt(e.target.value || "0", 10)))}
+                  step={250}
+                  className="w-12 bg-transparent border-b border-border/60 text-[10px] font-semibold text-card-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+            {/* Your offer + headroom */}
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-2.5 py-1.5">
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Your Offer</div>
+              <div className="text-base font-bold leading-tight text-primary">
+                {ckOffer ? usd0(ckOffer) : "—"}
+              </div>
+              <div className={`mt-0.5 text-[9px] font-semibold ${
+                ckHeadroom == null ? "text-muted-foreground" : ckHeadroom >= 0 ? "text-success" : "text-destructive"
+              }`}>
+                {ckHeadroom == null
+                  ? "headroom —"
+                  : ckHeadroom >= 0
+                  ? `${usd0(ckHeadroom)} under ceiling`
+                  : `${usd0(Math.abs(ckHeadroom))} over ceiling`}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1649,6 +1731,29 @@ function calcEquipmentTotal(bbVehicle: BBVehicle, selectedUocs: string[]): numbe
   return (bbVehicle.add_deduct_list || [])
     .filter(ad => selectedUocs.includes(ad.uoc))
     .reduce((sum, ad) => sum + (ad.avg || 0), 0);
+}
+
+/** Compact metric tile for the Deal Cockpit row. */
+function CockpitTile({
+  label,
+  value,
+  sub,
+  valueClass = "",
+  accent = false,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  valueClass?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className={`rounded-lg border px-2.5 py-1.5 ${accent ? "border-border bg-muted/40" : "border-border/70 bg-card"}`}>
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
+      <div className={`text-base font-bold leading-tight ${valueClass || "text-card-foreground"}`}>{value}</div>
+      {sub && <div className="mt-0.5 text-[9px] text-muted-foreground truncate">{sub}</div>}
+    </div>
+  );
 }
 
 export default OfferSimulator;
