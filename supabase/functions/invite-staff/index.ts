@@ -77,7 +77,8 @@ Deno.serve(async (req) => {
         },
       });
       if (inviteErr || !invited?.user) {
-        return json({ error: inviteErr?.message || "Failed to send invite" }, 400);
+        console.error("inviteUserByEmail failed:", inviteErr);
+        return json({ error: "Failed to send invite — contact support." }, 400);
       }
       userId = invited.user.id;
       invitedNew = true;
@@ -89,7 +90,10 @@ Deno.serve(async (req) => {
         email,
         options: { emailRedirectTo: redirectTo, shouldCreateUser: false },
       });
-      if (linkErr) return json({ error: linkErr.message }, 400);
+      if (linkErr) {
+        console.error("signInWithOtp failed:", linkErr);
+        return json({ error: "Failed to send magic link — contact support." }, 400);
+      }
     }
 
     // Pre-assign role (idempotent on (user_id, role) unique)
@@ -102,7 +106,8 @@ Deno.serve(async (req) => {
         location_id: role === "admin" ? null : locationId,
       });
     if (roleErr && !String(roleErr.message).toLowerCase().includes("duplicate")) {
-      return json({ error: `Invite sent but role assignment failed: ${roleErr.message}` }, 207);
+      console.error("role assignment failed:", roleErr);
+      return json({ error: "Invite sent but role assignment failed — contact support." }, 207);
     }
 
     // Clear any pending request for this email since they're now approved
