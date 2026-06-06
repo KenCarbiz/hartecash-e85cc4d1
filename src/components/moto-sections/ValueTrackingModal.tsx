@@ -42,6 +42,15 @@ interface ValueTrackingModalProps {
 }
 
 const ValueTrackingModal = ({ open, onOpenChange, placement = "center" }: ValueTrackingModalProps) => {
+  // Warm the browser cache for the illustration the moment this component
+  // mounts (i.e. as soon as the slide-out/page loads) — so when the customer
+  // opens the popup the image is already cached and paints instantly instead
+  // of the half-second lazy-load flash.
+  React.useEffect(() => {
+    const img = new Image();
+    img.src = ILLUSTRATION_SRC;
+  }, []);
+
   const handleGetStarted = () => {
     onOpenChange(false);
     // Defer the scroll until after the close animation has started so
@@ -81,7 +90,7 @@ const ValueTrackingModal = ({ open, onOpenChange, placement = "center" }: ValueT
           className={cn(
             "fixed left-1/2 z-[150] -translate-x-1/2",
             "w-[calc(100vw-32px)] max-w-[480px] overflow-y-auto",
-            "rounded-[22px] bg-white p-6 sm:p-7 lg:p-8",
+            "rounded-[16px] bg-white p-6 sm:p-7 lg:p-8",
             "shadow-[0_24px_60px_-20px_rgb(15_23_42_/_0.25)]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -122,7 +131,7 @@ const ValueTrackingModal = ({ open, onOpenChange, placement = "center" }: ValueT
               src={ILLUSTRATION_SRC}
               alt={ILLUSTRATION_ALT}
               className="block h-auto w-[92%]"
-              loading="lazy"
+              loading="eager"
               decoding="async"
             />
           </div>
@@ -157,7 +166,7 @@ const ValueTrackingModal = ({ open, onOpenChange, placement = "center" }: ValueT
             type="button"
             onClick={handleGetStarted}
             className={cn(
-              "w-full rounded-xl py-3.5 text-base font-semibold tracking-wide transition",
+              "w-full rounded-[8px] py-3.5 text-base font-semibold tracking-wide transition",
               "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)]",
               "hover:opacity-95 active:opacity-90",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--cta-offer))]",

@@ -416,9 +416,8 @@ export default function TradeWidgetFlow({
   return (
     <>
     <div id="sell-car-form" className="mx-auto w-full max-w-[640px] px-7 py-6">
-      {/* First screen leads with a headline; the premium Step 2 renders its
-          own progress; the rest show the compact progress dots. */}
-      {step === "vehicle" && vehicleStage === "entry" ? (
+      {/* First screen leads with a headline; no step tracker on later steps. */}
+      {step === "vehicle" && vehicleStage === "entry" && (
         <div className="mb-5">
           <h1 className="text-[32px] font-bold leading-[1.12] tracking-tight text-zinc-900">
             Get an{" "}
@@ -428,8 +427,6 @@ export default function TradeWidgetFlow({
             Get an instant value — then add a few details to see your real offer.
           </p>
         </div>
-      ) : step === "condition" ? null : (
-        <StepProgress current={step} />
       )}
 
       {/* ── 1. VEHICLE: entry → confirm ───────────────────────────── */}
@@ -438,7 +435,7 @@ export default function TradeWidgetFlow({
         <MotoCard className="p-6">
           {/* Vehicle Search / License Plate tabs — same purple pill chip
               and zinc-100 track as the landing page (MotoStepVehicleSearch). */}
-          <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
+          <div className="mb-5 grid grid-cols-2 gap-2 rounded-[8px] bg-zinc-100 p-1 text-sm font-semibold">
             {([
               { id: "vin", label: "Vehicle Search" },
               { id: "plate", label: "License Plate" },
@@ -450,7 +447,7 @@ export default function TradeWidgetFlow({
                   type="button"
                   onClick={() => set({ entryMode: t.id, vehicleId: "" })}
                   className={cn(
-                    "rounded-md px-3 py-2.5 transition",
+                    "rounded-[6px] px-3 py-2.5 transition",
                     active ? "shadow-sm" : "text-zinc-700 hover:text-zinc-900",
                   )}
                   style={active ? { background: "hsl(var(--cta-offer))", color: "var(--cta-offer-text)" } : undefined}
@@ -544,7 +541,7 @@ export default function TradeWidgetFlow({
                 fills with the dealer's CTA color the moment they are. */}
             <MotoPrimaryButton
               className={cn(
-                "w-full rounded-full py-2.5 text-sm transition-colors",
+                "w-full rounded-[8px] py-2.5 text-sm transition-colors",
                 !canSubmitEntry && "bg-zinc-100 text-zinc-500 hover:bg-zinc-100",
               )}
               loading={busy}
@@ -790,7 +787,7 @@ export default function TradeWidgetFlow({
               type="button"
               disabled={!contactComplete || busy}
               onClick={seeValue}
-              className="inline-flex h-9 w-full items-center justify-center rounded-full bg-[hsl(var(--cta-offer))] px-6 text-[13px] font-semibold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 w-full items-center justify-center rounded-[8px] bg-[hsl(var(--cta-offer))] px-6 text-[13px] font-semibold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? "Loading…" : "See my value"}
             </button>
@@ -1014,32 +1011,5 @@ export default function TradeWidgetFlow({
       </>
     )}
     </>
-  );
-}
-
-/** Minimal dotted step indicator — no labels, keeps the panel compact. */
-function StepProgress({ current }: { current: WidgetStep }) {
-  const currentIndex = WIDGET_STEP_ORDER.indexOf(current);
-  return (
-    <div className="mb-4 flex items-center gap-1.5">
-      {WIDGET_STEP_ORDER.map((s, i) => {
-        const done = i < currentIndex;
-        const active = i === currentIndex;
-        return (
-          <span
-            key={s}
-            className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold transition ${
-              done
-                ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)]"
-                : active
-                ? "border-2 border-[hsl(var(--cta-offer))] text-[hsl(var(--cta-offer))]"
-                : "border border-zinc-300 text-zinc-400"
-            }`}
-          >
-            {done ? <Check className="h-3 w-3" /> : i + 1}
-          </span>
-        );
-      })}
-    </div>
   );
 }

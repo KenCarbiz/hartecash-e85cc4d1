@@ -40,7 +40,7 @@ const renderLabel = (label: string, required?: boolean) => {
 
 const wrapperClasses = (focused: boolean, error?: string) =>
   cn(
-    "relative rounded-md border bg-white transition-colors",
+    "relative rounded-[8px] border bg-white transition-colors",
     focused
       ? "border-[hsl(var(--cta-offer))] ring-1 ring-[hsl(var(--cta-offer))]"
       : "border-zinc-300 hover:border-zinc-400",
@@ -124,7 +124,7 @@ export const MotoOutlinedSelect = forwardRef<HTMLSelectElement, SelectProps>(
           <RSelectTrigger
             id={inputId}
             className={cn(
-              "relative h-[52px] w-full justify-between rounded-md border bg-white px-3 py-3.5 pr-8 text-base text-zinc-900 hover:border-zinc-400 focus:ring-0 focus:ring-offset-0 transition-colors",
+              "relative h-[52px] w-full justify-between rounded-[8px] border bg-white px-3 py-3.5 pr-8 text-base text-zinc-900 hover:border-zinc-400 focus:ring-0 focus:ring-offset-0 transition-colors",
               focused && !error
                 ? "border-[hsl(var(--cta-offer))] ring-1 ring-[hsl(var(--cta-offer))]"
                 : "border-zinc-300",

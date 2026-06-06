@@ -315,7 +315,7 @@ function WidgetNavMenu({
           <button
             type="button"
             onClick={() => onNavigate("top")}
-            className="mt-3 w-full rounded-full bg-[hsl(var(--cta-offer))] py-3.5 text-sm font-semibold text-[color:var(--cta-offer-text)] shadow-sm transition-all hover:brightness-110"
+            className="mt-3 w-full rounded-[8px] bg-[hsl(var(--cta-offer))] py-3.5 text-sm font-semibold text-[color:var(--cta-offer-text)] shadow-sm transition-all hover:brightness-110"
           >
             Get My Offer
           </button>
