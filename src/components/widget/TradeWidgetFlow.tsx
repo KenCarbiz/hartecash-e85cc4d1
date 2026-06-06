@@ -416,9 +416,8 @@ export default function TradeWidgetFlow({
   return (
     <>
     <div id="sell-car-form" className="mx-auto w-full max-w-[640px] px-7 py-6">
-      {/* First screen leads with a headline; the premium Step 2 renders its
-          own progress; the rest show the compact progress dots. */}
-      {step === "vehicle" && vehicleStage === "entry" ? (
+      {/* First screen leads with a headline; no step tracker on later steps. */}
+      {step === "vehicle" && vehicleStage === "entry" && (
         <div className="mb-5">
           <h1 className="text-[32px] font-bold leading-[1.12] tracking-tight text-zinc-900">
             Get an{" "}
@@ -428,8 +427,6 @@ export default function TradeWidgetFlow({
             Get an instant value — then add a few details to see your real offer.
           </p>
         </div>
-      ) : step === "condition" ? null : (
-        <StepProgress current={step} />
       )}
 
       {/* ── 1. VEHICLE: entry → confirm ───────────────────────────── */}
@@ -1014,32 +1011,5 @@ export default function TradeWidgetFlow({
       </>
     )}
     </>
-  );
-}
-
-/** Minimal dotted step indicator — no labels, keeps the panel compact. */
-function StepProgress({ current }: { current: WidgetStep }) {
-  const currentIndex = WIDGET_STEP_ORDER.indexOf(current);
-  return (
-    <div className="mb-4 flex items-center gap-1.5">
-      {WIDGET_STEP_ORDER.map((s, i) => {
-        const done = i < currentIndex;
-        const active = i === currentIndex;
-        return (
-          <span
-            key={s}
-            className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold transition ${
-              done
-                ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)]"
-                : active
-                ? "border-2 border-[hsl(var(--cta-offer))] text-[hsl(var(--cta-offer))]"
-                : "border border-zinc-300 text-zinc-400"
-            }`}
-          >
-            {done ? <Check className="h-3 w-3" /> : i + 1}
-          </span>
-        );
-      })}
-    </div>
   );
 }

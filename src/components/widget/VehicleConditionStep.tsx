@@ -18,7 +18,7 @@ import { Check, Lock, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BBVehicle } from "@/components/sell-form/types";
 import { bbVehicleLabel } from "./widgetData";
-import { WIDGET_STEP_ORDER, type WidgetCondition } from "./widgetTypes";
+import { type WidgetCondition } from "./widgetTypes";
 
 const CONDITIONS: { value: WidgetCondition; label: string; desc: string }[] = [
   { value: "fair", label: "Fair", desc: "Noticeable wear and mechanical or cosmetic issues." },
@@ -80,9 +80,6 @@ export default function VehicleConditionStep({
 
   // Sub-view: condition first, then color (in place). Active dot tracks it.
   const [view, setView] = useState<"condition" | "color">("condition");
-  // Color is a sub-view of this same step, so both views share the
-  // "condition" position in the progress (no phantom extra step).
-  const stepNumber = WIDGET_STEP_ORDER.indexOf("condition") + 1;
 
   const [imgLoaded, setImgLoaded] = useState(false);
   useEffect(() => setImgLoaded(false), [imageUrl]);
@@ -118,23 +115,6 @@ export default function VehicleConditionStep({
 
   return (
     <div className="w-full">
-      {/* Progress — minimal dots (advances when the panel switches to color) */}
-      <div className="flex flex-col items-center gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
-          Step {stepNumber} of {WIDGET_STEP_ORDER.length}
-        </p>
-        <div className="flex items-center gap-2">
-          {WIDGET_STEP_ORDER.map((s, i) => (
-            <span
-              key={s}
-              className={`h-2 w-2 rounded-full transition ${
-                i <= stepNumber - 1 ? "bg-[hsl(var(--cta-offer))]" : "bg-zinc-200"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-
       {/* ── Persistent vehicle hero — never unmounts between sub-views, so
           the image + assets below stay perfectly still. ── */}
       <div className="relative mx-auto mt-4 h-[34vh] max-h-[300px] w-full max-w-[380px]">
