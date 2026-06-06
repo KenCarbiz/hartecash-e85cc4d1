@@ -107,8 +107,6 @@ export default function TradeWidget({
           </div>
         </div>
       ) : (
-        <WidgetLegalView type={legal} onBack={() => setLegal(null)} />
-      ) : (
         <>
           <div>
             {returning && offer ? (
