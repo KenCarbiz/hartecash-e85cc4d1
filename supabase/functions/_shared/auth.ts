@@ -12,7 +12,7 @@ export type CallerIdentity =
  *
  * - anonymous       → no auth header or invalid token
  * - no_role         → authenticated but has no user_roles row
- * - platform_admin  → user has admin role at dealership_id "default"
+ * - platform_admin  → user has admin role with is_platform_admin = true
  * - tenant_staff    → user has a role at a specific dealership_id
  *
  * Edge functions decide which kinds are allowed for their use case:
@@ -47,14 +47,13 @@ export async function resolveCaller(
 
   if (!roles?.length) return { kind: "no_role", userId: user.id };
 
-  // Platform (cross-tenant) admin = the explicit is_platform_admin flag.
-  // The legacy dealership_id === "default" convention is kept only as a
-  // fallback for any row not yet backfilled, matching the DB
-  // is_platform_admin() helper.
+  // Platform (cross-tenant) admin = the explicit is_platform_admin flag,
+  // ONLY. The legacy dealership_id === "default" convention was removed from
+  // the DB is_platform_admin() helper (migration 20260605190000 backfilled
+  // the boolean first); honoring it here would silently re-open cross-tenant
+  // access at the edge layer that the DB layer deliberately closed.
   const isPlatform = roles.some(
-    (r: any) =>
-      r.role === "admin" &&
-      (r.is_platform_admin === true || r.dealership_id === "default"),
+    (r: any) => r.role === "admin" && r.is_platform_admin === true,
   );
   if (isPlatform) return { kind: "platform_admin", userId: user.id };
 

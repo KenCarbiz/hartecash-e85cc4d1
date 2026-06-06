@@ -49,7 +49,9 @@ Deno.serve(async (req) => {
 
     const { data: row, error: selErr } = await supabase
       .from("customer_otp_codes")
-      .select("id, phone_e164, code_hash, attempts, verified_at, expires_at")
+      // select("*") so we can read `purpose` when present without breaking if
+      // the migration hasn't been applied yet.
+      .select("*")
       .eq("challenge_id", challenge_id)
       .maybeSingle();
 
@@ -64,6 +66,14 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "not_found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    // A code issued for the data-rights flow must not authorize sell-flow
+    // verification (purpose-binding; tolerated when the column is absent).
+    if (row.purpose !== undefined && row.purpose !== "sell_flow") {
+      return new Response(
+        JSON.stringify({ error: "wrong_purpose" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
     if (row.verified_at) {

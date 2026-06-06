@@ -30,6 +30,10 @@ function legalEntityName(raw: string | null | undefined): string {
 const TermsOfService = () => {
   const { config } = useSiteConfig();
   const dealerName = legalEntityName(config.dealership_name);
+  // Tenant-driven contact details — never hard-code one dealership's phone or
+  // address into a contract that names a different dealership as counterparty.
+  const contactPhone = (config.phone || "").trim();
+  const contactAddress = ((config as { dealership_address?: string }).dealership_address || "").trim();
 
   return (
     <>
@@ -193,8 +197,9 @@ const TermsOfService = () => {
             <section>
               <h2 className="text-lg font-bold text-foreground mb-2">9. Contact</h2>
               <p>
-                Questions about these Terms should be directed to {dealerName} at (866)
-                851-7390 or at 150 Weston Street, Hartford, CT 06120.
+                Questions about these Terms should be directed to {dealerName}
+                {contactPhone ? <> at {contactPhone}</> : null}
+                {contactAddress ? <> or at {contactAddress}</> : null}.
               </p>
             </section>
           </article>

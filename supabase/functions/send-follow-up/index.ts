@@ -217,13 +217,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check opt-out status
+    // Check opt-out status. The STOP handler writes the canonical opt-out
+    // with channel "all", so a channel-specific equality match would miss it
+    // — match the specific channel OR "all".
     const emailOptedOut = sub.email
-      ? !!(await supabase.from("opt_outs").select("id").eq("email", sub.email).eq("channel", "email").maybeSingle()).data
+      ? !!(await supabase.from("opt_outs").select("id").eq("email", sub.email).in("channel", ["email", "all"]).limit(1).maybeSingle()).data
       : false;
 
     const smsOptedOut = sub.phone
-      ? !!(await supabase.from("opt_outs").select("id").eq("phone", sub.phone).eq("channel", "sms").maybeSingle()).data
+      ? !!(await supabase.from("opt_outs").select("id").eq("phone", sub.phone).in("channel", ["sms", "all"]).limit(1).maybeSingle()).data
       : false;
 
     const siteUrl = Deno.env.get("SITE_URL") || "https://app.autocurb.io";
