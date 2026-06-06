@@ -801,10 +801,142 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
             </div>
           </div>
 
-          {/* ══ TWO-COLUMN LAYOUT ══ */}
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-4 items-start">
+          {/* ══ STACKED DECISION LAYOUT: Market → Build the Offer ══ */}
+          <div className="space-y-4">
+
+          {/* ══ ZONE ① ══ */}
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Market &amp; Offer Summary</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+            {/* ── RIGHT: Final Offer + Live Market (elevated) + Profit — sticky on desktop ── */}
+            <div className="space-y-3">
+
+              {liveResult && (
+                <>
+                  {/* Final Offer Card */}
+                  <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
+                    <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground mb-1">Customer Offer</div>
+                    <div className="text-3xl font-bold text-primary">
+                      ${liveResult.high.toLocaleString()}
+                    </div>
+                    {compareMode && liveSavedResult && whatIfDelta !== 0 && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">vs. saved:</span>
+                        <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${whatIfDelta > 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                          {whatIfDelta > 0 ? "+" : ""}${whatIfDelta.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    {liveResult.matchedRuleIds.length > 0 && (
+                      <div className="flex items-center gap-1 mt-2">
+                        <Badge variant="secondary" className="text-micro">{liveResult.matchedRuleIds.length} rule(s) applied</Badge>
+                        {liveResult.isHotLead && <Badge variant="destructive" className="text-micro">🔥 Hot</Badge>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── LIVE MARKET INTELLIGENCE — elevated, green-accent ── */}
+                  <div className="rounded-2xl border-2 border-success/40 bg-gradient-to-br from-success/5 via-card to-card shadow-lg overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-success/10 border-b border-success/30">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                        </span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-success">Live Market Intelligence</span>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] border-success/40 text-success bg-success/5">REAL-TIME</Badge>
+                    </div>
+                    <div className="p-3">
+                      <RetailMarketPanel
+                        vin={liveVin}
+                        uvc={liveBbVehicle.uvc}
+                        zipcode={liveZip}
+                        dealerZip={liveZip}
+                        radiusMiles={Number(activeSettings.retail_search_radius) || 50}
+                        offerHigh={liveResult.high}
+                        vehicleMileage={liveMileage}
+                        currentAcv={liveResult.high}
+                        onStatsLoaded={setRetailStats}
+                        onListingsLoaded={setRetailListings}
+                        compact
+                      />
+                    </div>
+                  </div>
 
 
+
+                  {/* What-If Toggle */}
+                  {savedSettings && (
+                    <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-border bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <ArrowRight className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-xs font-semibold text-card-foreground">What-If Comparison</span>
+                      </div>
+                      <Switch checked={compareMode} onCheckedChange={setCompareMode} className="scale-90" />
+                    </div>
+                  )}
+
+                  {compareMode && liveSavedResult && (
+                     <div className="rounded-lg border border-border bg-muted/20 p-3">
+                      <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground mb-1">Saved Logic Offer</div>
+                      <div className="text-lg font-bold text-muted-foreground">
+                        ${liveSavedResult.high.toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Market Calibration Strip */}
+                  <MarketCalibrationStrip
+                    listings={retailListings}
+                    stats={retailStats}
+                    vehicleMileage={liveMileage}
+                    currentOffer={liveResult.high}
+                  />
+
+                  {/* Profit Gauge */}
+                  <div className="rounded-lg border border-border bg-muted/20 p-4">
+                    <ProfitSpreadGauge
+                      offerHigh={liveResult.high}
+                      wholesaleAvg={Number(liveBbVehicle.wholesale?.avg || 0)}
+                      tradeinAvg={Number(liveBbVehicle.tradein?.avg || 0)}
+                      retailAvg={(() => {
+                        const basis = (settings as SimulatorSettings).retail_profit_basis || "retail_avg";
+                        const tierMap: Record<string, number> = {
+                          retail_xclean: Number(liveBbVehicle.retail?.xclean || 0),
+                          retail_clean: Number(liveBbVehicle.retail?.clean || 0),
+                          retail_avg: Number(liveBbVehicle.retail?.avg || 0),
+                          retail_rough: Number(liveBbVehicle.retail?.rough || 0),
+                        };
+                        return tierMap[basis] || Number(liveBbVehicle.retail?.avg || 0);
+                      })()}
+                      msrp={Number(liveBbVehicle.msrp || 0)}
+                    />
+                  </div>
+
+                  {/* Market Context */}
+                  <div className="rounded-lg border border-border bg-muted/20 p-4">
+                    <MarketContextPanel bbVehicle={liveBbVehicle} offerHigh={liveResult.high} />
+                  </div>
+
+                  {/* (Live Retail Market moved up — see elevated panel below Final Offer) */}
+
+                </>
+              )}
+
+              {!liveResult && (
+                <div className="bg-muted/40 rounded-lg p-6 text-sm text-muted-foreground text-center">
+                  Set vehicle condition to see the offer calculation.
+                </div>
+              )}
+            </div>
+
+          {/* ══ ZONE ② ══ */}
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Build the Offer</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
             {/* ── LEFT: Active Tier Config + Waterfall ── */}
             <div className="space-y-4">
               {/* Active Tier Configuration */}
@@ -1614,129 +1746,6 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
-                </div>
-              )}
-            </div>
-
-            {/* ── RIGHT: Final Offer + Live Market (elevated) + Profit — sticky on desktop ── */}
-            <div className="space-y-3 lg:sticky lg:top-24 lg:self-start">
-
-              {liveResult && (
-                <>
-                  {/* Final Offer Card */}
-                  <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
-                    <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground mb-1">Customer Offer</div>
-                    <div className="text-3xl font-bold text-primary">
-                      ${liveResult.high.toLocaleString()}
-                    </div>
-                    {compareMode && liveSavedResult && whatIfDelta !== 0 && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">vs. saved:</span>
-                        <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${whatIfDelta > 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                          {whatIfDelta > 0 ? "+" : ""}${whatIfDelta.toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                    {liveResult.matchedRuleIds.length > 0 && (
-                      <div className="flex items-center gap-1 mt-2">
-                        <Badge variant="secondary" className="text-micro">{liveResult.matchedRuleIds.length} rule(s) applied</Badge>
-                        {liveResult.isHotLead && <Badge variant="destructive" className="text-micro">🔥 Hot</Badge>}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ── LIVE MARKET INTELLIGENCE — elevated, green-accent ── */}
-                  <div className="rounded-2xl border-2 border-success/40 bg-gradient-to-br from-success/5 via-card to-card shadow-lg overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-2.5 bg-success/10 border-b border-success/30">
-                      <div className="flex items-center gap-2">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
-                        </span>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-success">Live Market Intelligence</span>
-                      </div>
-                      <Badge variant="outline" className="text-[9px] border-success/40 text-success bg-success/5">REAL-TIME</Badge>
-                    </div>
-                    <div className="p-3">
-                      <RetailMarketPanel
-                        vin={liveVin}
-                        uvc={liveBbVehicle.uvc}
-                        zipcode={liveZip}
-                        dealerZip={liveZip}
-                        radiusMiles={Number(activeSettings.retail_search_radius) || 50}
-                        offerHigh={liveResult.high}
-                        vehicleMileage={liveMileage}
-                        currentAcv={liveResult.high}
-                        onStatsLoaded={setRetailStats}
-                        onListingsLoaded={setRetailListings}
-                        compact
-                      />
-                    </div>
-                  </div>
-
-
-
-                  {/* What-If Toggle */}
-                  {savedSettings && (
-                    <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-border bg-muted/30">
-                      <div className="flex items-center gap-2">
-                        <ArrowRight className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-xs font-semibold text-card-foreground">What-If Comparison</span>
-                      </div>
-                      <Switch checked={compareMode} onCheckedChange={setCompareMode} className="scale-90" />
-                    </div>
-                  )}
-
-                  {compareMode && liveSavedResult && (
-                     <div className="rounded-lg border border-border bg-muted/20 p-3">
-                      <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground mb-1">Saved Logic Offer</div>
-                      <div className="text-lg font-bold text-muted-foreground">
-                        ${liveSavedResult.high.toLocaleString()}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Market Calibration Strip */}
-                  <MarketCalibrationStrip
-                    listings={retailListings}
-                    stats={retailStats}
-                    vehicleMileage={liveMileage}
-                    currentOffer={liveResult.high}
-                  />
-
-                  {/* Profit Gauge */}
-                  <div className="rounded-lg border border-border bg-muted/20 p-4">
-                    <ProfitSpreadGauge
-                      offerHigh={liveResult.high}
-                      wholesaleAvg={Number(liveBbVehicle.wholesale?.avg || 0)}
-                      tradeinAvg={Number(liveBbVehicle.tradein?.avg || 0)}
-                      retailAvg={(() => {
-                        const basis = (settings as SimulatorSettings).retail_profit_basis || "retail_avg";
-                        const tierMap: Record<string, number> = {
-                          retail_xclean: Number(liveBbVehicle.retail?.xclean || 0),
-                          retail_clean: Number(liveBbVehicle.retail?.clean || 0),
-                          retail_avg: Number(liveBbVehicle.retail?.avg || 0),
-                          retail_rough: Number(liveBbVehicle.retail?.rough || 0),
-                        };
-                        return tierMap[basis] || Number(liveBbVehicle.retail?.avg || 0);
-                      })()}
-                      msrp={Number(liveBbVehicle.msrp || 0)}
-                    />
-                  </div>
-
-                  {/* Market Context */}
-                  <div className="rounded-lg border border-border bg-muted/20 p-4">
-                    <MarketContextPanel bbVehicle={liveBbVehicle} offerHigh={liveResult.high} />
-                  </div>
-
-                  {/* (Live Retail Market moved up — see elevated panel below Final Offer) */}
-
-                </>
-              )}
-
-              {!liveResult && (
-                <div className="bg-muted/40 rounded-lg p-6 text-sm text-muted-foreground text-center">
-                  Set vehicle condition to see the offer calculation.
                 </div>
               )}
             </div>
