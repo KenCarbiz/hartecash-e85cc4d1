@@ -77,7 +77,7 @@ export default function TradeWidgetAdmin() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any;
     const run = () =>
-      w.HarteCash?.valueMyTrade({ dealerId: dealershipId, host: origin });
+      w.HarteCash?.valueMyTrade({ dealerId: dealershipId, host: origin, width: size.px });
     if (w.HarteCash) return run();
     if (launchedRef.current) return;
     launchedRef.current = true;
