@@ -307,10 +307,6 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const [showDetailPanel, setShowDetailPanel] = useState<string | null>(null);
   const [retailStats, setRetailStats] = useState<RetailStats | null>(null);
   const [retailListings, setRetailListings] = useState<RetailListing[]>([]);
-  // Target gross the desk wants to net at retail — drives the Max-Offer
-  // ceiling in the Deal Cockpit. Local for now (default $1,500); can be
-  // persisted to offer_settings in a later pass.
-  const [targetGross, setTargetGross] = useState(1500);
 
   // Sync when parent settings change
   const prevSettingsRef = useRef(settings);
@@ -572,7 +568,10 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const ckDaysToSell = retailStats?.mean_days_to_turn ?? null;
   const ckUnits = ckActive?.vehicle_count ?? null;
   const ckRecon = activeSettings.recon_cost || 0;
-  const ckPack = (activeSettings as { dealer_pack?: number }).dealer_pack || 0;
+  const ckPack = activeSettings.dealer_pack || 0;
+  // Target gross = the existing offer_settings field (single source of
+  // truth, also editable in the Offer Settings form). Drives the ceiling.
+  const targetGross = activeSettings.target_gross_min || 0;
   const ckOffer = liveResult?.high ?? 0;
   // Landed / cost-to-market = what we pay + recon + pack.
   const ckLanded = ckOffer ? ckOffer + ckRecon + ckPack : 0;
@@ -671,7 +670,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                 <input
                   type="number"
                   value={targetGross}
-                  onChange={(e) => setTargetGross(Math.max(0, parseInt(e.target.value || "0", 10)))}
+                  onChange={(e) => updateLocalSetting("target_gross_min", Math.max(0, parseInt(e.target.value || "0", 10)))}
                   step={250}
                   className="w-12 bg-transparent border-b border-border/60 text-[10px] font-semibold text-card-foreground focus:outline-none focus:border-primary"
                 />

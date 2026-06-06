@@ -363,6 +363,11 @@ export interface OfferSettings {
   floor_plan_rate_pct?: number;
   lot_cost_per_day?: number;
   learning_threshold?: number;
+  // Desk's costs / gross goal — surfaced in the Deal Cockpit ceiling.
+  // Persisted on offer_settings; optional here so the calculator core
+  // (which doesn't need them) stays untouched.
+  dealer_pack?: number;
+  target_gross_min?: number;
 
   // EXISTING (all unchanged)
   bb_value_basis: string;
