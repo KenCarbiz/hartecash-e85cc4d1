@@ -36,10 +36,17 @@ export default function TradeWidget({
   resumeToken: string;
   zip: string;
 }) {
-  const { config } = useSiteConfig();
-  const { formConfig } = useFormConfig();
+  const { config, loading: siteLoading } = useSiteConfig();
+  const { formConfig, loading: formLoading } = useFormConfig();
   const { tenant } = useTenant();
   const { offer } = useFirmOffer(resumeToken);
+
+  // Wait for tenant config + theme to resolve before painting the body —
+  // otherwise the first frame uses index.css defaults (yellow --cta-offer,
+  // purple tabs) and only "snaps" to the dealer's saved brand once the
+  // queries land. Header logo can render eagerly since it reads from the
+  // tenant logo helper (cached / blank-tolerant).
+  const themeReady = !siteLoading && !formLoading;
 
   // Returning customers see a resume card first; "Start a new appraisal"
   // drops them into the fresh flow.
