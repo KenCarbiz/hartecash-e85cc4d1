@@ -152,6 +152,18 @@ export default function TradeWidgetFlow({
     };
   }, [ymmYear, ymmMake]);
 
+  // Header menu "Home / Vehicle Valuation / How it Works / FAQ" return the
+  // flow to its entry screen so those sections (which only render on home)
+  // are mounted for the menu's snap-scroll. Field data is preserved.
+  useEffect(() => {
+    const goHome = () => {
+      setStep("vehicle");
+      setVehicleStage("entry");
+    };
+    window.addEventListener("hartecash-widget-home", goHome);
+    return () => window.removeEventListener("hartecash-widget-home", goHome);
+  }, []);
+
   const vinClean = data.entryMode === "vin" ? data.vehicleId.trim().toUpperCase() : "";
   const plateClean = data.entryMode === "plate" ? data.vehicleId.trim().toUpperCase() : "";
   const vinReady = vinClean.length === 17;
@@ -423,7 +435,7 @@ export default function TradeWidgetFlow({
                     "rounded-md px-3 py-2.5 transition",
                     active ? "shadow-sm" : "text-zinc-700 hover:text-zinc-900",
                   )}
-                  style={active ? { background: "#6D28D9", color: "#fff" } : undefined}
+                  style={active ? { background: "hsl(var(--cta-offer))", color: "var(--cta-offer-text)" } : undefined}
                 >
                   {t.label}
                 </button>
@@ -527,7 +539,7 @@ export default function TradeWidgetFlow({
         </MotoCard>
         {/* Reassurance banner + hero vehicle image, stacked under the form
             (the main-page hero, rearranged for the narrow panel). */}
-        <div className="mt-4 rounded-lg bg-[hsl(var(--cta-offer))] px-4 py-3 text-center text-[15px] font-semibold text-[color:var(--cta-offer-text)]">
+        <div className="mt-4 rounded-lg bg-zinc-100 px-4 py-2.5 text-center text-[13px] font-medium text-[hsl(var(--cta-offer))]">
           Get a valuation in less than 30 seconds!
         </div>
         <img
@@ -1070,9 +1082,9 @@ export default function TradeWidgetFlow({
         main moto landing page. */}
     {step === "vehicle" && vehicleStage === "entry" && (
       <>
-        <HowItWorksLean />
-        <ValueTrackerCard />
-        <FAQLean />
+        <div id="widget-how-it-works"><HowItWorksLean /></div>
+        <div id="widget-value-monitor"><ValueTrackerCard /></div>
+        <div id="widget-faq"><FAQLean /></div>
       </>
     )}
     </>

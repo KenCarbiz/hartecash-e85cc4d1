@@ -15,6 +15,10 @@ export interface FormConfig {
   // immediately after they enter their contact info.
   require_phone_verification: boolean;
   offer_before_details: boolean;
+  // When true, the trade widget shows a "Sign In" entry so returning
+  // customers can re-open their saved offer via /my-submission. Dealer
+  // toggle (Admin · Trade Widget); off by default.
+  widget_customer_signin: boolean;
   q_overall_condition: boolean;
   q_exterior_damage: boolean;
   q_windshield_damage: boolean;
@@ -60,6 +64,8 @@ const DEFAULTS: FormConfig = {
   ai_photos_min_required: 4,
   require_phone_verification: true,
   offer_before_details: false,
+  // Off by default — dealers opt in to the returning-customer sign-in.
+  widget_customer_signin: false,
   // Offer-math drivers — keep on.
   q_overall_condition: true,
   q_drivable: true,

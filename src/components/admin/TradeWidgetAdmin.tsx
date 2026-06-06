@@ -7,12 +7,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  PanelRightOpen, Copy, Check, ExternalLink, RefreshCw, Car, Settings2,
+  PanelRightOpen, Copy, Check, ExternalLink, RefreshCw, Car, Settings2, LogIn,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useFormConfig } from "@/hooks/useFormConfig";
+import { useToast } from "@/hooks/use-toast";
 
 // A representative VDP vehicle so staff can preview the "apply your trade
 // toward this car" framing without standing on a real inventory page.
@@ -22,9 +24,61 @@ export default function TradeWidgetAdmin() {
   const { tenant } = useTenant();
   const { config } = useSiteConfig();
   const { formConfig } = useFormConfig();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const dealershipId = tenant.dealership_id;
   const origin = typeof window !== "undefined" ? window.location.origin : "";
+
+  // Dealer toggle: let returning customers sign in to re-open their offer.
+  // Persisted on form_config.widget_customer_signin; the slide-out shows a
+  // "Sign In" entry (routing to /my-submission) when this is on.
+  const [signinOn, setSigninOn] = useState(false);
+  const [savingSignin, setSavingSignin] = useState(false);
+  useEffect(() => {
+    setSigninOn(formConfig.widget_customer_signin === true);
+  }, [formConfig.widget_customer_signin]);
+
+  const toggleSignin = async () => {
+    const next = !signinOn;
+    setSigninOn(next); // optimistic
+    setSavingSignin(true);
+    const { data: existing } = await supabase
+      .from("form_config")
+      .select("id")
+      .eq("dealership_id", dealershipId)
+      .maybeSingle();
+    let error;
+    if (existing) {
+      ({ error } = await supabase
+        .from("form_config")
+        .update({ widget_customer_signin: next, updated_at: new Date().toISOString() })
+        .eq("id", (existing as { id: string }).id));
+    } else {
+      ({ error } = await supabase
+        .from("form_config")
+        .insert({ dealership_id: dealershipId, widget_customer_signin: next }));
+    }
+    setSavingSignin(false);
+    if (error) {
+      setSigninOn(!next); // revert
+      const msg = error.message || "";
+      const missingCol =
+        /schema cache/i.test(msg) ||
+        (/column/i.test(msg) && /does not exist/i.test(msg)) ||
+        /widget_customer_signin/.test(msg);
+      toast({
+        title: missingCol ? "Pending migration" : "Save failed",
+        description: missingCol
+          ? "Run the widget_customer_signin migration to enable this toggle."
+          : msg || "Could not update the sign-in setting.",
+        variant: "destructive",
+      });
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["form_config", dealershipId] });
+    setPreviewKey((k) => k + 1); // reload the preview so it reflects the change
+  };
 
   const [onVdp, setOnVdp] = useState(true);
   const [intent, setIntent] = useState<"trade" | "sell">("trade");
@@ -210,6 +264,40 @@ export default function TradeWidgetAdmin() {
             >
               {copied ? <><Check className="h-4 w-4 text-emerald-600" /> Copied</> : <><Copy className="h-4 w-4" /> Copy snippet</>}
             </button>
+          </section>
+
+          <section className="rounded-2xl border border-border bg-card p-4">
+            <h2 className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              <LogIn className="h-4 w-4" /> Customer access
+            </h2>
+            <label className="flex cursor-pointer items-start justify-between gap-3">
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-foreground">
+                  Let customers sign in to their offer
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Adds a <span className="font-medium text-foreground">Sign In</span> option to the
+                  slide-out so returning customers can re-open their saved offer (via your customer
+                  portal at <code className="rounded bg-muted px-1">/my-submission</code>).
+                </span>
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={signinOn}
+                disabled={savingSignin}
+                onClick={toggleSignin}
+                className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-60 ${
+                  signinOn ? "bg-primary" : "bg-muted-foreground/30"
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                    signinOn ? "translate-x-[22px]" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </label>
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-4">

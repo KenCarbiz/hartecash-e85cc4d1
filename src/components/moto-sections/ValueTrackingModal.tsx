@@ -11,14 +11,12 @@
 //   * "Get Started" closes the modal and smooth-scrolls to the
 //     #sell-car-form anchor at the top of the landing
 //
-// Illustration: top image is the supplied PNG (silver crossover +
-// rising blue value line with $ / $$ callouts). Asset path:
+// Illustration: supplied PNG of our flagship vehicle riding a rising
+// value curve with "Current Value" → "Best Time To Sell" markers, at:
 //   public/brand/autocurb/value-tracker-illustration.png
 //     →  /brand/autocurb/value-tracker-illustration.png  at runtime.
-// Drop the supplied image at exactly that path. The folder currently
-// holds AutoCurb logo design proofs; the car-graph illustration is
-// a separate file that needs to be saved with the filename above
-// (or update ILLUSTRATION_SRC below to whatever filename you give it).
+// Save the supplied image at exactly that path (or update
+// ILLUSTRATION_SRC below to match the filename you give it).
 //
 // CTA matches the landing form's primary button language exactly:
 // `--cta-offer` / `--cta-offer-text` CSS vars from ThemeProvider so
@@ -28,9 +26,12 @@ import { X, TrendingUp } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 
+// Supplied illustration — our flagship vehicle riding a rising value
+// curve with "Current Value" → "Best Time To Sell" markers. Drop the
+// PNG at: public/brand/autocurb/value-tracker-illustration.png
 const ILLUSTRATION_SRC = "/brand/autocurb/value-tracker-illustration.png";
 const ILLUSTRATION_ALT =
-  "A silver crossover beneath a rising blue value line with $ and $$ callout bubbles, indicating vehicle value increasing over time.";
+  "A vehicle on a rising blue value line marked Current Value and Best Time To Sell, showing how a car's value changes over time.";
 
 interface ValueTrackingModalProps {
   open: boolean;
@@ -93,54 +94,54 @@ const ValueTrackingModal = ({ open, onOpenChange }: ValueTrackingModalProps) => 
             <X className="w-4 h-4" strokeWidth={2} />
           </DialogPrimitive.Close>
 
-          {/* Eyebrow — small icon tile + "Value Tracking" label.
-              Header row stays minimal: icon left, title left of
-              center, close X positioned absolutely top-right (above). */}
-          <div className="flex items-center gap-2 mb-5">
+          {/* Eyebrow — small icon tile + "Value Tracker" label, centered
+              like the product wordmark. Close X sits absolutely top-right. */}
+          <div className="flex items-center justify-center gap-2 mb-5">
             <div
               className="w-7 h-7 rounded-md flex items-center justify-center"
               style={{ background: "hsl(142 71% 95%)" }}
             >
               <TrendingUp className="w-4 h-4 text-emerald-600" strokeWidth={2} />
             </div>
-            <DialogPrimitive.Title className="text-base font-bold text-foreground tracking-tight">
-              Value Tracking
+            <DialogPrimitive.Title className="text-lg font-bold text-foreground tracking-tight">
+              Value Tracker
             </DialogPrimitive.Title>
           </div>
 
-          {/* Supplied illustration — silver crossover + rising blue
-              value line with $/$$ callouts. ~90% modal width, soft
-              breathing room below before the headline. No border. */}
+          {/* Supplied illustration — vehicle on a rising value curve with
+              Current Value → Best Time To Sell markers. ~92% modal width,
+              soft breathing room below before the headline. */}
           <div className="mb-6 flex justify-center">
             <img
               src={ILLUSTRATION_SRC}
               alt={ILLUSTRATION_ALT}
-              className="w-[90%] h-auto block"
+              className="block h-auto w-[92%]"
               loading="lazy"
               decoding="async"
             />
           </div>
 
-          {/* Headline */}
+          {/* Headline — our own copy (not lifted from the reference art). */}
           <h3
             id="value-tracking-modal-title"
             className="text-xl font-bold text-foreground text-center leading-tight tracking-tight mb-3"
           >
-            Track your car's value over time.
+            Always know what your car is worth.
           </h3>
 
-          {/* Body */}
+          {/* Body — our own copy. */}
           <DialogPrimitive.Description
             id="value-tracking-modal-desc"
             className="text-sm text-foreground/65 leading-relaxed text-center mb-4"
           >
-            Get regular updates when your vehicle's value changes, so you know
-            when it may be the right time to sell or trade.
+            We keep an eye on the market and refresh your vehicle's value as
+            prices move — then give you a heads-up the moment it changes, so
+            you can spot the right time to sell or trade.
           </DialogPrimitive.Description>
 
           {/* Reassurance */}
           <p className="text-sm text-foreground/55 text-center mb-7">
-            It's free to use, and there's no obligation.
+            Free to use, no obligation — just real numbers on your schedule.
           </p>
 
           {/* Primary CTA — full-width inside the modal, rounded-xl
