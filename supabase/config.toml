@@ -58,6 +58,12 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # token and running export/purge. The token never leaves the server.
   [functions.self-service-data-action]
     verify_jwt = false
+  # Customer-facing: server-side consent recorder. No JWT (anonymous form
+  # submissions); writes consent_log with the client IP (x-forwarded-for) +
+  # user agent that the browser itself can't supply. consent_log already
+  # allows anonymous INSERT; the service role here only adds the IP stamp.
+  [functions.log-consent]
+    verify_jwt = false
   # Customer-facing: public ScheduleVisit form invokes this.
   # Function validates the appointment/submission token.
   [functions.notify-appointment]

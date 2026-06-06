@@ -92,7 +92,7 @@ export async function logConsent({
     const consentType = includesPayoff
       ? "sms_calls_email_and_payoff_auth"
       : "sms_calls_email";
-    await supabase.from("consent_log" as any).insert({
+    const payload = {
       customer_name: customerName || null,
       customer_phone: customerPhone || null,
       customer_email: customerEmail || null,
@@ -102,7 +102,18 @@ export async function logConsent({
       form_source: formSource,
       submission_token: submissionToken || null,
       user_agent: navigator.userAgent || null,
-    });
+    };
+
+    // Route through the edge function so the server can stamp the client IP
+    // (the browser can't read its own public IP). If the function is
+    // unavailable, fall back to a direct insert so we never lose the consent
+    // record — we just won't have the IP on that row.
+    try {
+      const { error } = await supabase.functions.invoke("log-consent", { body: payload });
+      if (error) throw error;
+    } catch {
+      await supabase.from("consent_log" as any).insert(payload);
+    }
   } catch {
     // Fire-and-forget — don't block form submission
   }
