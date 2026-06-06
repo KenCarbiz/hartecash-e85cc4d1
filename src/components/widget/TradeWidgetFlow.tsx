@@ -527,7 +527,7 @@ export default function TradeWidgetFlow({
         </MotoCard>
         {/* Reassurance banner + hero vehicle image, stacked under the form
             (the main-page hero, rearranged for the narrow panel). */}
-        <div className="mt-4 rounded-lg bg-[hsl(var(--cta-offer))] px-4 py-3 text-center text-[15px] font-semibold text-[color:var(--cta-offer-text)]">
+        <div className="mt-4 rounded-lg bg-zinc-100 px-4 py-2.5 text-center text-[13px] font-medium text-zinc-500">
           Get a valuation in less than 30 seconds!
         </div>
         <img
