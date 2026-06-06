@@ -17,6 +17,7 @@ import {
   calcHighMileagePenaltyPct, calcColorAdjustmentPct,
   DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY,
   DEFAULT_SEASONAL_ADJUSTMENT, DEFAULT_DEDUCTION_MODES, DEFAULT_DEDUCTION_AMOUNTS,
+  DEFAULT_MARKET_ADJUSTMENT,
   type OfferSettings, type OfferRule, type OfferEstimate,
   type ConditionBasisMap, type ConditionEquipmentMap,
 } from "@/lib/offerCalculator";
@@ -553,6 +554,12 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     ? cmdRetailAvg - liveResult.high - (activeSettings.recon_cost || 0) - (activeSettings.dealer_pack || 0) - (activeSettings.pack_warranty || 0)
     : null;
   const cmdMarketOn = !!activeSettings.market_adjustment?.enabled;
+  // Toggle the real-time market adjustment on/off (off by default). Seeds
+  // the default bracket config the first time it's switched on.
+  const toggleLiveMarket = () => {
+    const cur = activeSettings.market_adjustment ?? DEFAULT_MARKET_ADJUSTMENT;
+    updateLocalSetting("market_adjustment", { ...cur, enabled: !cmdMarketOn });
+  };
 
   // === Deal Cockpit metrics ===
   // What it actually sells for in the radius: prefer recently-SOLD median
@@ -612,14 +619,21 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
               </div>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <span className={`hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full ${
-                cmdMarketOn
-                  ? "bg-success/10 text-success border border-success/30"
-                  : "bg-muted text-muted-foreground border border-border"
-              }`}>
+              <button
+                type="button"
+                onClick={toggleLiveMarket}
+                title={cmdMarketOn
+                  ? "Live Market ON — offers auto-adjust for local supply/demand. Click to turn off."
+                  : "Live Market OFF — offers ignore local supply/demand. Click to turn on."}
+                className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors ${
+                  cmdMarketOn
+                    ? "bg-success/10 text-success border border-success/30 hover:bg-success/20"
+                    : "bg-muted text-muted-foreground border border-border hover:bg-muted/70"
+                }`}
+              >
                 <span className={`w-1.5 h-1.5 rounded-full ${cmdMarketOn ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
                 Live Market {cmdMarketOn ? "ON" : "OFF"}
-              </span>
+              </button>
               {liveResult?.isHotLead && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/30">
                   🔥 Hot
