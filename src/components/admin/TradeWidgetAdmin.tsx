@@ -137,6 +137,16 @@ export default function TradeWidgetAdmin() {
               <ToggleChip active={intent === "sell"} onClick={() => { setIntent("sell"); setPreviewKey((k) => k + 1); }}>
                 Sell
               </ToggleChip>
+              <span className="mx-1 hidden h-4 w-px bg-border sm:inline-block" aria-hidden />
+              {SIZES.map((s) => (
+                <ToggleChip
+                  key={s.id}
+                  active={sizeId === s.id}
+                  onClick={() => { setSizeId(s.id); setPreviewKey((k) => k + 1); }}
+                >
+                  {s.label} <span className="text-[10px] text-muted-foreground">{s.px}px</span>
+                </ToggleChip>
+              ))}
               <button
                 type="button"
                 onClick={() => setPreviewKey((k) => k + 1)}
@@ -154,7 +164,8 @@ export default function TradeWidgetAdmin() {
               key={previewKey}
               title="Trade widget preview"
               src={previewUrl}
-              className="h-[700px] w-[580px] max-w-full rounded-xl border border-border bg-white shadow-sm"
+              style={{ width: size.px }}
+              className="h-[700px] max-w-full rounded-xl border border-border bg-white shadow-sm"
             />
           </div>
 
