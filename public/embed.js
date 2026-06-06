@@ -785,7 +785,7 @@
       // the backdrop dims (but preserves) the dealer page. Higher
       // specificity than the modal rules so it overrides the centered
       // transform regardless of source order.
-      ".hc-embed-overlay.hc-panel{top:0;right:0;bottom:0;left:auto;width:clamp(420px,44vw,600px);height:100vh;height:100dvh;max-width:none;max-height:none;border-radius:0;transform:translateX(100%);box-shadow:-24px 0 60px rgba(0,0,0,.28);transition:transform .42s cubic-bezier(.16,1,.3,1),opacity .3s ease}",
+      ".hc-embed-overlay.hc-panel{top:0;right:0;bottom:0;left:auto;width:clamp(380px,32vw,460px);height:100vh;height:100dvh;max-width:none;max-height:none;border-radius:0;transform:translateX(100%);box-shadow:-24px 0 60px rgba(0,0,0,.28);transition:transform .42s cubic-bezier(.16,1,.3,1),opacity .3s ease}",
       ".hc-embed-overlay.hc-panel.hc-open{transform:translateX(0)}",
       "@media (max-width:640px){.hc-embed-overlay.hc-panel{width:100vw}}",
       "@media (prefers-reduced-motion:reduce){.hc-embed-backdrop,.hc-embed-overlay{transition:none}.hc-embed-overlay{transform:translate(-50%,-50%)}.hc-pulse{animation:none}}",
@@ -795,7 +795,7 @@
   // One overlay shell, two callers:
   //   openInventoryOverlay(cfg, vehicle) → /embed/:dealershipId
   //   openDirectOverlay(url)             → /boost-offer, /deal, etc.
-  function mountOverlay(src, ariaLabel, variant) {
+  function mountOverlay(src, ariaLabel, variant, panelWidth) {
     if (overlayFrame) return;
     ensureOverlayStyles();
 
@@ -809,6 +809,12 @@
     overlayFrame.setAttribute("role", "dialog");
     overlayFrame.setAttribute("aria-modal", "true");
     if (ariaLabel) overlayFrame.setAttribute("aria-label", ariaLabel);
+    // Optional per-call width override for the slide-out panel.
+    // Accepts a number (px) or any CSS length string ("420px", "32vw", "min(420px,94vw)").
+    if (variant === "panel" && panelWidth) {
+      var w = typeof panelWidth === "number" ? panelWidth + "px" : String(panelWidth);
+      overlayFrame.style.width = "min(" + w + ", 94vw)";
+    }
 
     // Always-visible close affordance for mobile (the backdrop
     // tap is hidden behind the full-screen iframe at ≤640px).
@@ -875,7 +881,8 @@
     mountOverlay(
       buildEmbedUrl(Object.assign({}, cfg, { displayMode: "overlay", template: "widget" }), vehicle),
       "Value My Trade",
-      "panel"
+      "panel",
+      cfg && cfg.width
     );
   }
 
