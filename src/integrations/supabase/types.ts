@@ -7750,10 +7750,20 @@ export type Database = {
         }
         Returns: string
       }
-      request_customer_data_action: {
-        Args: { _email?: string; _kind?: string; _phone?: string }
-        Returns: Json
-      }
+      request_customer_data_action:
+        | {
+            Args: { _email?: string; _kind?: string; _phone?: string }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _dealership_id?: string
+              _email?: string
+              _kind?: string
+              _phone?: string
+            }
+            Returns: Json
+          }
       request_offer_increase: {
         Args: {
           _reason?: string
