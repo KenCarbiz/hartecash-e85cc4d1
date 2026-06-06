@@ -881,7 +881,8 @@
     mountOverlay(
       buildEmbedUrl(Object.assign({}, cfg, { displayMode: "overlay", template: "widget" }), vehicle),
       "Value My Trade",
-      "panel"
+      "panel",
+      cfg && cfg.width
     );
   }
 
