@@ -17,7 +17,7 @@ const MotoPrimaryButton = forwardRef<HTMLButtonElement, Props>(
       type={type}
       disabled={disabled || loading}
       className={cn(
-        "w-full rounded-md py-4 text-base font-semibold tracking-wide transition",
+        "w-full rounded-[8px] py-4 text-base font-semibold tracking-wide transition",
         "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)]",
         "hover:opacity-95 active:opacity-90",
         "disabled:opacity-50 disabled:cursor-not-allowed",

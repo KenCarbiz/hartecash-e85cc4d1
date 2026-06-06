@@ -16,7 +16,7 @@ const MotoCard = ({
 }) => (
   <section
     className={cn(
-      "w-full rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
+      "w-full rounded-[12px] border border-zinc-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
       className,
     )}
   >

@@ -435,7 +435,7 @@ export default function TradeWidgetFlow({
         <MotoCard className="p-6">
           {/* Vehicle Search / License Plate tabs — same purple pill chip
               and zinc-100 track as the landing page (MotoStepVehicleSearch). */}
-          <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
+          <div className="mb-5 grid grid-cols-2 gap-2 rounded-[8px] bg-zinc-100 p-1 text-sm font-semibold">
             {([
               { id: "vin", label: "Vehicle Search" },
               { id: "plate", label: "License Plate" },
@@ -447,7 +447,7 @@ export default function TradeWidgetFlow({
                   type="button"
                   onClick={() => set({ entryMode: t.id, vehicleId: "" })}
                   className={cn(
-                    "rounded-md px-3 py-2.5 transition",
+                    "rounded-[6px] px-3 py-2.5 transition",
                     active ? "shadow-sm" : "text-zinc-700 hover:text-zinc-900",
                   )}
                   style={active ? { background: "hsl(var(--cta-offer))", color: "var(--cta-offer-text)" } : undefined}
@@ -541,7 +541,7 @@ export default function TradeWidgetFlow({
                 fills with the dealer's CTA color the moment they are. */}
             <MotoPrimaryButton
               className={cn(
-                "w-full rounded-full py-2.5 text-sm transition-colors",
+                "w-full rounded-[8px] py-2.5 text-sm transition-colors",
                 !canSubmitEntry && "bg-zinc-100 text-zinc-500 hover:bg-zinc-100",
               )}
               loading={busy}
@@ -787,7 +787,7 @@ export default function TradeWidgetFlow({
               type="button"
               disabled={!contactComplete || busy}
               onClick={seeValue}
-              className="inline-flex h-9 w-full items-center justify-center rounded-full bg-[hsl(var(--cta-offer))] px-6 text-[13px] font-semibold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 w-full items-center justify-center rounded-[8px] bg-[hsl(var(--cta-offer))] px-6 text-[13px] font-semibold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? "Loading…" : "See my value"}
             </button>
