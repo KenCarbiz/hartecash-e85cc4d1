@@ -7589,6 +7589,10 @@ export type Database = {
       is_login_locked: { Args: { _email: string; _ip?: string }; Returns: Json }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_staff_of: {
+        Args: { _dealership_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_submission_token_valid: { Args: { _token: string }; Returns: boolean }
       is_tcpa_quiet_hour: {
         Args: { _state: string; _ts?: string }
