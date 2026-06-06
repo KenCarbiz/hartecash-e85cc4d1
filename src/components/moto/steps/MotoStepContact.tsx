@@ -50,7 +50,10 @@ const MotoStepContact = ({
   const [phone, setPhone] = useState(state.contact.phone);
   const [mileage, setMileage] = useState(state.mileage);
   const [zip, setZip] = useState(state.contact.zip);
-  const [trackValue, setTrackValue] = useState(state.trackValue);
+  // Track-my-value is opt-out: default ON unless the customer explicitly
+  // turned it off (state.trackValue === false). Guards against a resumed /
+  // rebuilt state where the flag is missing rendering the toggle off.
+  const [trackValue, setTrackValue] = useState(state.trackValue !== false);
 
   // Guards against double-logging consent within one mount.
   const consentLogged = useRef(false);

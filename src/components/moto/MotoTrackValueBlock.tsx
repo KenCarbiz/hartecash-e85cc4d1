@@ -172,9 +172,9 @@ const MotoTrackValueBlock = ({ state }: { state: MotoFlowState }) => {
       </button>
       {expanded ? (
         <div className="mt-2 rounded-md bg-zinc-50 p-3 text-sm leading-relaxed text-zinc-600">
-          We use the same data sources that power our dealer pricing (Kelley Blue Book and
-          Black Book) to recompute your vehicle's value every week. You'll get a monthly
-          email when the value moves more than $200. No spam, unsubscribe anytime.
+          We use the same data sources that power our dealer pricing (Black Book data and
+          comparable market listings) to recompute your vehicle's value every week. You'll
+          get a monthly email when the value moves more than $200. No spam, unsubscribe anytime.
           {state.contact.phoneVerified && !state.trackValue ? (
             <span className="mt-2 block text-xs text-zinc-500">
               You opted out at the previous step — re-toggle "Track my vehicle value
