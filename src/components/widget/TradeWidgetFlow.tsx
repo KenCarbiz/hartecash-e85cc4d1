@@ -666,7 +666,7 @@ export default function TradeWidgetFlow({
         <MotoCard title="Trade it in or sell it?">
           {intentHeroUrl && (
             <div className="mb-4 flex flex-col items-center">
-              <div className="relative mx-auto h-[34vh] max-h-[300px] w-full max-w-[380px]">
+              <div className="relative mx-auto h-[24vh] max-h-[220px] w-full max-w-[340px]">
                 <span
                   aria-hidden
                   className="pointer-events-none absolute inset-x-0 bottom-[6%] z-0 mx-auto h-3.5 w-[66%] rounded-[50%] bg-zinc-900/20 blur-md"
@@ -792,7 +792,7 @@ export default function TradeWidgetFlow({
               {busy ? "Loading…" : "See my value"}
             </button>
           </div>
-          <p className="mt-3 text-[10px] leading-snug text-zinc-400">
+          <p className="mt-3 text-[11px] leading-snug text-zinc-400">
             By continuing you consent to receive autodialed calls, texts (SMS/MMS), and emails from{" "}
             {(dealershipName || "the dealership").trim()} regarding your vehicle, offer, and
             appointment. Consent is not a condition of purchase. Msg &amp; data rates may apply; msg
@@ -911,7 +911,7 @@ export default function TradeWidgetFlow({
                   Not ready? Save my offer for later
                 </button>
               )}
-              <p className="mt-4 text-[10px] leading-snug text-zinc-400">{offerTerms.disclosure}</p>
+              <p className="mt-4 text-[11px] leading-snug text-zinc-400">{offerTerms.disclosure}</p>
             </>
           ) : (
             <div className="flex items-center gap-2 text-sm text-zinc-500">

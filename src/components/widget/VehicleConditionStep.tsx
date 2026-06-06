@@ -117,7 +117,7 @@ export default function VehicleConditionStep({
     <div className="w-full">
       {/* ── Persistent vehicle hero — never unmounts between sub-views, so
           the image + assets below stay perfectly still. ── */}
-      <div className="relative mx-auto mt-4 h-[34vh] max-h-[300px] w-full max-w-[380px]">
+      <div className="relative mx-auto mt-3 h-[24vh] max-h-[220px] w-full max-w-[340px]">
         <AnimatePresence>
           {!(imageUrl && imgLoaded) && (
             <motion.div
@@ -231,7 +231,7 @@ export default function VehicleConditionStep({
               </p>
 
               {/* Black Book swatches — each a formatted, clickable box. */}
-              <div className="mt-3 grid grid-cols-3 gap-2.5">
+              <div className="mt-3 grid grid-cols-2 gap-2.5">
                 {colors.map((c) => {
                   const swatch = swatchColor(c);
                   const selected = colorCode === c.code;
