@@ -728,7 +728,8 @@ export default function AppraisalTool() {
   const waterfallFinal = waterfallBlocks.find(b => b.id === "final")?.runningTotal ?? 0;
   const finalValue = acvOverride != null && acvOverride > 0 ? acvOverride : waterfallFinal;
   const reconCost = activeSettings?.recon_cost || 0;
-  const projectedProfit = retailAvg > 0 ? retailAvg - finalValue - effectivePack - reconCost : 0;
+  const packWarranty = activeSettings?.pack_warranty || 0;
+  const projectedProfit = retailAvg > 0 ? retailAvg - finalValue - effectivePack - reconCost - packWarranty : 0;
   const profitMargin = retailAvg > 0 ? (projectedProfit / retailAvg) * 100 : 0;
 
   const handleBlockValueChange = useCallback((editKey: string, value: number, editType: string) => {
