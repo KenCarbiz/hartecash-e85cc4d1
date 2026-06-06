@@ -5252,6 +5252,7 @@ export type Database = {
           obd_mil_on: boolean | null
           obd_odometer_verified: boolean | null
           obd_scan_completed: boolean | null
+          offer_is_firm: boolean
           offer_locked_at: string | null
           offer_made_at: string | null
           offer_subject_to_inspection: boolean
@@ -5419,6 +5420,7 @@ export type Database = {
           obd_mil_on?: boolean | null
           obd_odometer_verified?: boolean | null
           obd_scan_completed?: boolean | null
+          offer_is_firm?: boolean
           offer_locked_at?: string | null
           offer_made_at?: string | null
           offer_subject_to_inspection?: boolean
@@ -5586,6 +5588,7 @@ export type Database = {
           obd_mil_on?: boolean | null
           obd_odometer_verified?: boolean | null
           obd_scan_completed?: boolean | null
+          offer_is_firm?: boolean
           offer_locked_at?: string | null
           offer_made_at?: string | null
           offer_subject_to_inspection?: boolean
