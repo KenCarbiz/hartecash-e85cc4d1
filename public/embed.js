@@ -795,7 +795,7 @@
   // One overlay shell, two callers:
   //   openInventoryOverlay(cfg, vehicle) → /embed/:dealershipId
   //   openDirectOverlay(url)             → /boost-offer, /deal, etc.
-  function mountOverlay(src, ariaLabel, variant) {
+  function mountOverlay(src, ariaLabel, variant, panelWidth) {
     if (overlayFrame) return;
     ensureOverlayStyles();
 
@@ -809,6 +809,12 @@
     overlayFrame.setAttribute("role", "dialog");
     overlayFrame.setAttribute("aria-modal", "true");
     if (ariaLabel) overlayFrame.setAttribute("aria-label", ariaLabel);
+    // Optional per-call width override for the slide-out panel.
+    // Accepts a number (px) or any CSS length string ("420px", "32vw", "min(420px,94vw)").
+    if (variant === "panel" && panelWidth) {
+      var w = typeof panelWidth === "number" ? panelWidth + "px" : String(panelWidth);
+      overlayFrame.style.width = "min(" + w + ", 94vw)";
+    }
 
     // Always-visible close affordance for mobile (the backdrop
     // tap is hidden behind the full-screen iframe at ≤640px).
