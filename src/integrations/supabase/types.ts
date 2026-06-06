@@ -838,30 +838,36 @@ export type Database = {
           attempts: number
           challenge_id: string
           code_hash: string
+          consumed_at: string | null
           created_at: string
           expires_at: string
           id: string
           phone_e164: string
+          purpose: string
           verified_at: string | null
         }
         Insert: {
           attempts?: number
           challenge_id?: string
           code_hash: string
+          consumed_at?: string | null
           created_at?: string
           expires_at: string
           id?: string
           phone_e164: string
+          purpose?: string
           verified_at?: string | null
         }
         Update: {
           attempts?: number
           challenge_id?: string
           code_hash?: string
+          consumed_at?: string | null
           created_at?: string
           expires_at?: string
           id?: string
           phone_e164?: string
+          purpose?: string
           verified_at?: string | null
         }
         Relationships: []
