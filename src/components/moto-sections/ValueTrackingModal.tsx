@@ -11,11 +11,12 @@
 //   * "Get Started" closes the modal and smooth-scrolls to the
 //     #sell-car-form anchor at the top of the landing
 //
-// Illustration: composed from our own assets — the flagship vehicle
-// PNG (src/assets/value-tracker-vehicle.png) riding a navy/blue rising
-// value curve (inline SVG) with $ / $$ callout bubbles. No external
-// illustration file dependency, and the navy chart matches the
-// ValueTrackerCard section's styling.
+// Illustration: supplied PNG of our flagship vehicle riding a rising
+// value curve with "Current Value" → "Best Time To Sell" markers, at:
+//   public/brand/autocurb/value-tracker-illustration.png
+//     →  /brand/autocurb/value-tracker-illustration.png  at runtime.
+// Save the supplied image at exactly that path (or update
+// ILLUSTRATION_SRC below to match the filename you give it).
 //
 // CTA matches the landing form's primary button language exactly:
 // `--cta-offer` / `--cta-offer-text` CSS vars from ThemeProvider so
@@ -24,10 +25,13 @@ import * as React from "react";
 import { X, TrendingUp } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
-import valueTrackerVehicle from "@/assets/value-tracker-vehicle.png";
 
+// Supplied illustration — our flagship vehicle riding a rising value
+// curve with "Current Value" → "Best Time To Sell" markers. Drop the
+// PNG at: public/brand/autocurb/value-tracker-illustration.png
+const ILLUSTRATION_SRC = "/brand/autocurb/value-tracker-illustration.png";
 const ILLUSTRATION_ALT =
-  "Our flagship vehicle on a rising blue value line with $ and $$ callout bubbles, indicating vehicle value increasing over time.";
+  "A vehicle on a rising blue value line marked Current Value and Best Time To Sell, showing how a car's value changes over time.";
 
 interface ValueTrackingModalProps {
   open: boolean;
@@ -105,55 +109,17 @@ const ValueTrackingModal = ({ open, onOpenChange }: ValueTrackingModalProps) => 
             </DialogPrimitive.Title>
           </div>
 
-          {/* Brand-matched illustration — our flagship vehicle riding a
-              rising value curve with $ / $$ callouts (navy/blue, not a
-              generic green promo graphic). Composed from our own assets
-              so there's no external illustration dependency. */}
-          <div className="mb-6">
-            <div className="relative mx-auto aspect-[16/10] w-[90%]" aria-hidden>
-              <svg viewBox="0 0 320 200" className="absolute inset-0 h-full w-full">
-                <defs>
-                  <linearGradient id="vt-modal-fill" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.20" />
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                {/* Area fill under the rising curve */}
-                <path
-                  d="M20 172 C 90 162, 150 154, 200 116 S 282 52, 300 38 L300 188 L20 188 Z"
-                  fill="url(#vt-modal-fill)"
-                />
-                {/* Rising value curve — navy, matches the tracker chart */}
-                <path
-                  d="M20 172 C 90 162, 150 154, 200 116 S 282 52, 300 38"
-                  fill="none"
-                  stroke="#1e3a8a"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                />
-                {/* End marker with soft green glow */}
-                <circle cx="300" cy="38" r="11" fill="#86efac" fillOpacity="0.5" />
-                <circle cx="300" cy="38" r="5.5" fill="white" stroke="#1e3a8a" strokeWidth="3" />
-              </svg>
-
-              {/* $ low callout */}
-              <span className="absolute left-[3%] top-[66%] inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-[14px] font-bold text-[#1e3a8a] shadow-md ring-1 ring-zinc-100">
-                $
-              </span>
-              {/* $$ high callout */}
-              <span className="absolute right-[1%] top-[4%] inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#1e3a8a] text-[14px] font-bold text-white shadow-md">
-                $$
-              </span>
-
-              {/* Our flagship vehicle, sitting on the curve */}
-              <img
-                src={valueTrackerVehicle}
-                alt={ILLUSTRATION_ALT}
-                className="absolute left-1/2 top-[30%] w-[58%] -translate-x-1/2"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
+          {/* Supplied illustration — vehicle on a rising value curve with
+              Current Value → Best Time To Sell markers. ~92% modal width,
+              soft breathing room below before the headline. */}
+          <div className="mb-6 flex justify-center">
+            <img
+              src={ILLUSTRATION_SRC}
+              alt={ILLUSTRATION_ALT}
+              className="block h-auto w-[92%]"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
 
           {/* Headline */}
