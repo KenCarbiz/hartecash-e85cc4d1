@@ -16,8 +16,10 @@
  * existing imports working.
  */
 
+import { useEffect, useRef } from "react";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
 import SubmissionDetailSheetClassic from "./SubmissionDetailSheetClassic";
+import { logCustomerDataAccess } from "@/lib/logCustomerDataAccess";
 
 export interface SubmissionDetailSheetProps {
   selected: Submission | null;
@@ -57,5 +59,19 @@ export interface SubmissionDetailSheetProps {
 }
 
 export default function SubmissionDetailSheet(props: SubmissionDetailSheetProps) {
+  // Audit: record each time a staff member opens a customer's record (the
+  // moment their PII, transcripts, and recordings become visible). Logged
+  // once per distinct submission open so the anomaly dashboard sees real
+  // "who viewed whom" data.
+  const loggedRef = useRef<string | null>(null);
+  const openId = props.selected?.id ?? null;
+  useEffect(() => {
+    if (openId && loggedRef.current !== openId) {
+      loggedRef.current = openId;
+      logCustomerDataAccess({ submissionId: openId, resourceKind: "submission_view" });
+    }
+    if (!openId) loggedRef.current = null;
+  }, [openId]);
+
   return <SubmissionDetailSheetClassic {...props} />;
 }

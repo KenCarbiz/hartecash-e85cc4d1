@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Phone, PhoneIncoming, PhoneOutgoing, MessageSquare, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { logCustomerDataAccess } from "@/lib/logCustomerDataAccess";
 
 /**
  * Shape of a voice_call_log row that's safe to render. Required
@@ -65,6 +66,9 @@ interface Props {
  */
 export default function VoiceCallCard({ call, compact = false }: Props) {
   const [expanded, setExpanded] = useState(false);
+  // Audit: log transcript reads / recording plays once per mount.
+  const transcriptLoggedRef = useRef(false);
+  const recordingLoggedRef = useRef(false);
 
   const direction = (call.direction || "").toLowerCase();
   const outcome = (call.outcome || call.status || "").toLowerCase();
@@ -129,6 +133,12 @@ export default function VoiceCallCard({ call, compact = false }: Props) {
               preload="none"
               src={call.recording_url || undefined}
               className="w-full max-w-[420px] h-9"
+              onPlay={() => {
+                if (!recordingLoggedRef.current) {
+                  recordingLoggedRef.current = true;
+                  logCustomerDataAccess({ voiceCallId: call.id, resourceKind: "recording_play" });
+                }
+              }}
             >
               <a href={call.recording_url || "#"} target="_blank" rel="noopener noreferrer" className="text-xs text-info hover:underline inline-flex items-center gap-1">
                 Open recording <ExternalLink className="w-3 h-3" />
@@ -139,7 +149,16 @@ export default function VoiceCallCard({ call, compact = false }: Props) {
 
         {hasDetail && (
           <button
-            onClick={() => setExpanded((v) => !v)}
+            onClick={() => {
+              setExpanded((v) => {
+                const next = !v;
+                if (next && !transcriptLoggedRef.current) {
+                  transcriptLoggedRef.current = true;
+                  logCustomerDataAccess({ voiceCallId: call.id, resourceKind: "transcript_view" });
+                }
+                return next;
+              });
+            }}
             className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors"
           >
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}

@@ -60,7 +60,8 @@ const SecurityTrust = () => (
 
           <Section icon={Eye} title="Monitoring & audit logs">
             <p><strong className="text-foreground">Staff‑action log:</strong> high‑risk actions (role changes, rooftop merges, data overrides) are recorded in a tenant‑scoped, append‑only audit trail.</p>
-            <p><strong className="text-foreground">Customer‑data access logging</strong> and the supporting <strong className="text-foreground">bulk‑access anomaly dashboard</strong> are being rolled out to record staff views of sensitive records (submissions, transcripts, recordings) with who, what, when, and source, and to surface unusual bulk‑access patterns for review. <span className="text-foreground/55">(Capture is enabled on some surfaces today and is being extended to all sensitive‑record reads — see roadmap. We describe it here as a commitment, not a completed control.)</span></p>
+            <p><strong className="text-foreground">Customer‑data access log:</strong> when a staff member opens a customer's file, reads a call transcript, or plays a recording, we record who, what, when, and from where in a tenant‑scoped log — a precise "who saw what" answer for any privacy request or investigation.</p>
+            <p><strong className="text-foreground">Anomaly detection:</strong> from that log, bulk‑access patterns (for example one account viewing an unusually large number of distinct customer records in a short window) surface in a compliance dashboard for review — the detective control for a stolen credential or a rogue employee. <span className="text-foreground/55">(Coverage spans the primary sensitive‑record views today and continues to expand to additional surfaces.)</span></p>
           </Section>
 
           <Section icon={History} title="Data retention & secure deletion">
