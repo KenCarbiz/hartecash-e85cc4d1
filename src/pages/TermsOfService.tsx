@@ -30,6 +30,13 @@ function legalEntityName(raw: string | null | undefined): string {
 const TermsOfService = () => {
   const { config } = useSiteConfig();
   const dealerName = legalEntityName(config.dealership_name);
+  // Tenant-driven contact details — never hard-code one dealership's phone or
+  // address into a contract that names a different dealership as counterparty.
+  const contactPhone = (config.phone || "").trim();
+  const contactAddress = ((config as { dealership_address?: string }).dealership_address || "").trim();
+  // Governing-law state is tenant-driven (a CT forum clause is unenforceable
+  // against an out-of-state dealer's customer); default to Connecticut.
+  const governingState = ((config as { governing_law_state?: string }).governing_law_state || "").trim() || "Connecticut";
 
   return (
     <>
@@ -98,15 +105,22 @@ const TermsOfService = () => {
               <p>
                 {dealerName} provides an online platform for vehicle appraisals, trade-in
                 offers, appointment scheduling, and related automotive services.{" "}
-                <strong className="text-foreground">Any value, estimate, or "offer" you
-                receive through this website is an estimate only. It is not a binding
-                offer to purchase your vehicle, not a guarantee of price, and creates no
-                obligation on you or {dealerName}.</strong> Every estimate is conditioned
-                on in-person inspection and verification of the vehicle's actual
-                condition, mileage, equipment, title, and history, and may be revised
-                upward or downward or withdrawn. No purchase obligation exists on either
-                party unless and until a written purchase agreement is signed by both
-                parties. See our <a href="/disclosure" className="text-primary underline-offset-4 hover:underline">Offer Disclosure</a> for how offers are calculated.
+                <strong className="text-foreground">Unless a value is expressly labeled a
+                "firm offer," any value, estimate, or "offer" you receive through this
+                website is an estimate only — it is not a binding offer to purchase your
+                vehicle, not a guarantee of price, and creates no obligation on you or
+                {" "}{dealerName}.</strong> Where {dealerName} expressly presents a value as
+                a firm offer, {dealerName} commits to honoring that amount for the stated
+                validity period <strong className="text-foreground">provided an in-person
+                inspection confirms the vehicle matches your description and has a clean,
+                non-branded title with no prior accident and no undisclosed material
+                issues</strong>; if inspection reveals something materially different,
+                {dealerName} is not bound by that amount. Every value is conditioned on
+                in-person inspection and verification of the vehicle's actual condition,
+                mileage, equipment, title, and history, and may be revised upward or
+                downward or withdrawn. No purchase obligation exists on either party
+                unless and until a written purchase agreement is signed by both parties.
+                See our <a href="/disclosure" className="text-primary underline-offset-4 hover:underline">Offer Disclosure</a> for how offers are calculated.
               </p>
             </section>
 
@@ -185,7 +199,7 @@ const TermsOfService = () => {
               <h2 className="text-lg font-bold text-foreground mb-2">8. Governing Law</h2>
               <p>
                 These Terms shall be governed by and construed in accordance with the laws
-                of the State of Connecticut, without regard to its conflict of law
+                of the State of {governingState}, without regard to its conflict of law
                 provisions.
               </p>
             </section>
@@ -193,8 +207,9 @@ const TermsOfService = () => {
             <section>
               <h2 className="text-lg font-bold text-foreground mb-2">9. Contact</h2>
               <p>
-                Questions about these Terms should be directed to {dealerName} at (866)
-                851-7390 or at 150 Weston Street, Hartford, CT 06120.
+                Questions about these Terms should be directed to {dealerName}
+                {contactPhone ? <> at {contactPhone}</> : null}
+                {contactAddress ? <> or at {contactAddress}</> : null}.
               </p>
             </section>
           </article>

@@ -60,8 +60,7 @@ const SecurityTrust = () => (
 
           <Section icon={Eye} title="Monitoring & audit logs">
             <p><strong className="text-foreground">Staff‑action log:</strong> high‑risk actions (role changes, rooftop merges, data overrides) are recorded in a tenant‑scoped, append‑only audit trail.</p>
-            <p><strong className="text-foreground">Customer‑data access log:</strong> staff views of sensitive records (submissions, transcripts, recordings) are logged with who, what, when, and source — a precise "who saw what" answer for any privacy request or investigation.</p>
-            <p><strong className="text-foreground">Anomaly detection:</strong> bulk‑access patterns surface in a compliance dashboard for review.</p>
+            <p><strong className="text-foreground">Customer‑data access logging</strong> and the supporting <strong className="text-foreground">bulk‑access anomaly dashboard</strong> are being rolled out to record staff views of sensitive records (submissions, transcripts, recordings) with who, what, when, and source, and to surface unusual bulk‑access patterns for review. <span className="text-foreground/55">(Capture is enabled on some surfaces today and is being extended to all sensitive‑record reads — see roadmap. We describe it here as a commitment, not a completed control.)</span></p>
           </Section>
 
           <Section icon={History} title="Data retention & secure deletion">

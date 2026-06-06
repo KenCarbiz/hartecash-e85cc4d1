@@ -43,9 +43,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { challenge_id, code, kind } = await req.json().catch(() => ({}));
+    const { challenge_id, code, kind, dealership_id } = await req.json().catch(() => ({}));
     const cleanCode = typeof code === "string" ? code.replace(/\D/g, "") : "";
     const action = kind === "delete" ? "delete" : kind === "export" ? "export" : null;
+    const tenantId = typeof dealership_id === "string" && dealership_id.trim() ? dealership_id.trim() : null;
 
     if (!challenge_id || cleanCode.length !== 6 || !action) {
       return json({ error: "invalid_input" }, 400);
@@ -69,7 +70,9 @@ Deno.serve(async (req) => {
     // ── Verify the OTP (mirrors verify-customer-otp) ────────────────
     const { data: row, error: selErr } = await supabase
       .from("customer_otp_codes")
-      .select("id, phone_e164, code_hash, attempts, verified_at, expires_at")
+      // select("*") so purpose/consumed_at are read when present without
+      // breaking if the migration hasn't been applied yet.
+      .select("*")
       .eq("challenge_id", challenge_id)
       .maybeSingle();
 
@@ -81,32 +84,63 @@ Deno.serve(async (req) => {
     if (new Date(row.expires_at).getTime() < Date.now()) {
       return json({ error: "expired" }, 410);
     }
-    if (!row.verified_at) {
-      if (row.attempts >= MAX_ATTEMPTS) return json({ error: "too_many_attempts" }, 429);
-      const candidate = await sha256Hex(cleanCode);
-      if (candidate !== row.code_hash) {
-        await supabase
-          .from("customer_otp_codes")
-          .update({ attempts: row.attempts + 1 })
-          .eq("id", row.id);
-        return json(
-          { error: "wrong_code", attempts_remaining: Math.max(0, MAX_ATTEMPTS - (row.attempts + 1)) },
-          401,
-        );
-      }
+
+    // Purpose-binding: when the column exists, a code issued for the sell flow
+    // (or anything other than data_rights) must NOT authorize export/delete.
+    if (row.purpose !== undefined && row.purpose !== "data_rights") {
+      return json({ error: "wrong_purpose" }, 403);
+    }
+    // Single-use: a data_rights code can't be replayed once consumed.
+    if (row.consumed_at) {
+      return json({ error: "already_used" }, 409);
+    }
+    // ALWAYS verify the submitted code — never trust a pre-verified challenge
+    // (that was the cross-flow replay hole). attempts cap + hash compare.
+    if (row.attempts >= MAX_ATTEMPTS) return json({ error: "too_many_attempts" }, 429);
+    const candidate = await sha256Hex(cleanCode);
+    if (candidate !== row.code_hash) {
       await supabase
         .from("customer_otp_codes")
-        .update({ verified_at: new Date().toISOString() })
+        .update({ attempts: row.attempts + 1 })
         .eq("id", row.id);
+      return json(
+        { error: "wrong_code", attempts_remaining: Math.max(0, MAX_ATTEMPTS - (row.attempts + 1)) },
+        401,
+      );
+    }
+    // Mark verified + consumed (single-use). Tolerate consumed_at not existing
+    // yet by retrying with just verified_at.
+    {
+      const nowIso = new Date().toISOString();
+      const { error: upErr } = await supabase
+        .from("customer_otp_codes")
+        .update({ verified_at: nowIso, consumed_at: nowIso })
+        .eq("id", row.id);
+      if (upErr && /consumed_at/i.test(upErr.message || "")) {
+        await supabase
+          .from("customer_otp_codes")
+          .update({ verified_at: nowIso })
+          .eq("id", row.id);
+      }
     }
 
     const phone = row.phone_e164 as string;
 
     // ── Mint a server-side fulfillment token, then run the action ───
-    const { data: reqRes, error: reqErr } = await supabase.rpc(
+    // Scope to the tenant the customer is on so the action only ever touches
+    // that dealership's rows. Tolerate the pre-migration 3-arg signature.
+    let reqRes: unknown = null;
+    let reqErr: { message?: string } | null = null;
+    ({ data: reqRes, error: reqErr } = await supabase.rpc(
       "request_customer_data_action",
-      { _phone: phone, _email: null, _kind: action },
-    );
+      { _phone: phone, _email: null, _kind: action, _dealership_id: tenantId },
+    ));
+    if (reqErr && /_dealership_id|function|argument|schema cache/i.test(reqErr.message || "")) {
+      ({ data: reqRes, error: reqErr } = await supabase.rpc(
+        "request_customer_data_action",
+        { _phone: phone, _email: null, _kind: action },
+      ));
+    }
     if (reqErr) {
       console.error("request_customer_data_action failed:", reqErr);
       return json({ error: "request_failed" }, 500);

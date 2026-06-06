@@ -67,7 +67,7 @@ Short answer: **Your customer data is encrypted, isolated per dealership, and mo
 ## 8. The firm‑offer option (your call)
 
 - Choose **Firm Offer** (a guaranteed number, honored when the vehicle is as the customer described) or **Estimated Offer** — one admin toggle controls the wording everywhere.
-- Legally defensible: **FTC CARS Rule** and state UDAP‑aware. The conditions that can change a firm number (undisclosed accident, branded title, wrong mileage, undisclosed material issues) are disclosed **clearly and adjacent to the price** — disclosed items never reduce the offer.
+- Legally defensible: built to state UDAP / CUTPA standards and the FTC's general unfair‑and‑deceptive‑practices authority (the FTC CARS Rule was vacated in 2025 and withdrawn in 2026; we hold to its transparency principles voluntarily). The conditions that can change a firm number (undisclosed accident, branded title, wrong mileage, undisclosed material issues) are disclosed **clearly and adjacent to the price** — disclosed items never reduce the offer.
 - The customer is **never obligated** and can always walk away at no cost.
 
 ---

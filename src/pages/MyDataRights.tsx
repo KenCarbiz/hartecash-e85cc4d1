@@ -81,7 +81,7 @@ const MyDataRights = () => {
     setVerr(null);
     try {
       const { data, error: e } = await supabase.functions.invoke("send-customer-otp", {
-        body: { phone: vphone.replace(/\D/g, ""), dealership_name: dealerName },
+        body: { phone: vphone.replace(/\D/g, ""), dealership_name: dealerName, purpose: "data_rights" },
       });
       if (e || !data?.challenge_id) {
         setVerr("We couldn't send a code. Check the number and try again.");
@@ -101,13 +101,15 @@ const MyDataRights = () => {
     setPhase("working");
     try {
       const { data, error: e } = await supabase.functions.invoke("self-service-data-action", {
-        body: { challenge_id: challengeId, code: otp, kind: type },
+        body: { challenge_id: challengeId, code: otp, kind: type, dealership_id: tenant.dealership_id },
       });
       if (e || !data?.ok) {
         const reason = data?.error;
         setVerr(
           reason === "wrong_code" ? `Wrong code. ${data?.attempts_remaining ?? 0} attempts left.` :
           reason === "expired" ? "That code expired — request a new one." :
+          reason === "already_used" ? "That code was already used. Please start over." :
+          reason === "wrong_purpose" ? "Please request a fresh code from this page." :
           reason === "rate_limited" ? "Too many attempts. Please try again later." :
           "We couldn't complete that. Please try again.",
         );

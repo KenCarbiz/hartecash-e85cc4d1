@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
+import { logConsent } from "@/lib/consent";
 import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, ArrowRight, Car, Gauge, Palette, Settings2, Pencil, User, Clock, Star, Zap, Shield, BadgeCheck, Handshake, Camera, Sparkles } from "lucide-react";
 import InspectionConfidence from "@/components/InspectionConfidence";
 import { AiVerifiedBadge } from "@/components/offer/AiVerifiedBadge";
@@ -670,23 +671,21 @@ const OfferPageLegacy = () => {
         })
         .eq("token", token!);
 
-      // If customer ticked SMS opt-in, also log a consent_log entry so
-      // the dealer's TCPA gate (launch-voice-call etc.) recognises it.
+      // Explicit SMS/marketing opt-in: when ticked, record a full,
+      // versioned, IP/UA-stamped consent_log row tied to this submission
+      // token (via logConsent) — not a bare, unattributed insert. When the
+      // customer unticks the box they've declined, so we log nothing and the
+      // sms_opt_in=false flag suppresses outbound.
       if (smsOptIn) {
-        try {
-          await supabase.from("consent_log").insert({
-            customer_phone: contactForm.phone.trim(),
-            customer_email: contactForm.email.trim(),
-            consent_type: "sms_calls_email",
-            consent_text: "Customer accepted offer and consented to receive SMS, calls, and emails about their vehicle.",
-            // Required by the consent_log schema — identifies where the
-            // consent was captured. Was missing before, hidden by an
-            // `as never` cast; now type-checked.
-            form_source: "offer_page",
-          });
-        } catch {
-          /* non-fatal — submissions row still has the flag */
-        }
+        void logConsent({
+          customerName: contactForm.name.trim() || undefined,
+          customerPhone: contactForm.phone.trim() || undefined,
+          customerEmail: contactForm.email.trim() || undefined,
+          formSource: "offer_page",
+          submissionToken: token || undefined,
+          dealershipName: config.dealership_name,
+          loanStatus: s.loan_status || null,
+        });
       }
 
       // Fire acceptance notifications. The contact gate is the
@@ -834,21 +833,22 @@ const OfferPageLegacy = () => {
               they're looking at is better than the algorithm's own
               ceiling — because that's when the dealer most needs the
               expectation set that the final price is inspection-dependent. */}
-          {(submission.offered_price != null &&
-            submission.estimated_offer_high != null &&
-            submission.offered_price > submission.estimated_offer_high) && (
-            <div className="mt-4 mx-auto max-w-lg bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-2 text-left">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-              <p className="text-xs text-amber-900 dark:text-amber-100 leading-relaxed">
-                <strong>Subject to physical inspection.</strong> This number
-                is based on the condition you described. The final price is
-                confirmed in person — if the vehicle matches what you told
-                us, the price is locked. If anything comes back different,
-                we'll walk you through the adjustment before anything is
-                signed.
-              </p>
-            </div>
-          )}
+          {/* Protective inspection conditions — always shown (not just on
+              bumped offers) so the customer sees, adjacent to the price, that
+              the number holds only if the vehicle matches what they described
+              (clean title, no undisclosed accident or issues). */}
+          <div className="mt-4 mx-auto max-w-lg bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-2 text-left">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            <p className="text-xs text-amber-900 dark:text-amber-100 leading-relaxed">
+              <strong>Subject to physical inspection.</strong> This number is
+              based on the condition you described and assumes a clean,
+              non-branded title with no undisclosed accident or material issues.
+              The final price is confirmed in person — if the vehicle matches
+              what you told us, the price is locked. If anything comes back
+              different, we'll walk you through the adjustment before anything
+              is signed.
+            </p>
+          </div>
         </motion.div>
       ) : (
         <motion.div

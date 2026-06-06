@@ -10,6 +10,7 @@ import MotoVehicleHero from "../MotoVehicleHero";
 import SaveOfferButton from "@/components/offer/SaveOfferButton";
 import type { MotoFlowState } from "../types";
 import { calculateAndPersistOffer } from "../motoSubmission";
+import { getOfferTerms, type OfferMode } from "@/lib/offerTerms";
 
 const usd = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -28,7 +29,13 @@ const MotoStepOffer = ({
   const [low, setLow] = useState<number | null>(state.offer.low);
   const [high, setHigh] = useState<number | null>(state.offer.high);
   const [firm, setFirm] = useState<number | null>(state.offer.firm);
+  const [mode, setMode] = useState<OfferMode>("estimate");
   const [view, setView] = useState<"offer" | "boost">("offer");
+
+  const offerTerms = getOfferTerms(mode, {
+    dealerName: (config.dealership_name || "").trim() || "the dealership",
+    guaranteeDays: Number(config.price_guarantee_days) || 8,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -45,6 +52,7 @@ const MotoStepOffer = ({
         setLow(result.estimate?.low ?? null);
         setHigh(result.estimate?.high ?? null);
         setFirm(result.firm);
+        setMode(result.mode);
         onNext({
           submissionId: result.submissionId,
           submissionToken: result.submissionToken,
@@ -105,7 +113,7 @@ const MotoStepOffer = ({
             </p>
           </div>
           <p className="mt-4 text-center text-xs text-zinc-500">
-            Current firm offer: <span className="font-semibold text-zinc-700">{usd(firm)}</span>
+            Current {offerTerms.badge.toLowerCase()}: <span className="font-semibold text-zinc-700">{usd(firm)}</span>
           </p>
         </MotoCard>
         <MotoStickyFooter>
@@ -152,16 +160,15 @@ const MotoStepOffer = ({
           </div>
         ) : firm ? (
           <>
-            <p className="text-center text-xs uppercase tracking-wide text-zinc-500">Your Firm Offer</p>
+            <p className="text-center text-xs uppercase tracking-wide text-zinc-500">{offerTerms.badge}</p>
             <p className="mt-1 text-center text-4xl font-bold text-zinc-900">{usd(firm)}</p>
             {low && high && (low !== firm || high !== firm) ? (
               <p className="mt-1 text-center text-xs text-zinc-500">
                 Range: {usd(low)} – {usd(high)}
               </p>
             ) : null}
-            <p className="mt-3 text-center text-xs text-zinc-500">
-              Valid for 7 days, subject to a quick verification at the dealership.
-            </p>
+            <p className="mt-3 text-center text-xs text-zinc-500">{offerTerms.subtext}</p>
+            <p className="mt-3 text-center text-[10px] leading-snug text-zinc-400">{offerTerms.disclosure}</p>
           </>
         ) : low && high ? (
           <>

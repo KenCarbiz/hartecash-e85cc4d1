@@ -97,13 +97,23 @@ Deno.serve(async (req) => {
       if (lead.progress_status && EXCLUDED_STATUSES.includes(lead.progress_status)) continue;
 
       // Opt-out check — respect the dealer's opt-out list before any
-      // outreach. Same pattern as run-acquisition-cadence.
-      const { data: optOut } = await supabase
+      // outreach. Check BOTH the legacy sms_opt_outs table and the canonical
+      // opt_outs table (channel sms/all), since handle-unsubscribe writes
+      // only opt_outs and the SMS STOP handler writes channel "all".
+      const { data: legacyOptOut } = await supabase
         .from("sms_opt_outs")
         .select("phone")
         .eq("phone", lead.phone)
         .maybeSingle();
-      if (optOut) continue;
+      if (legacyOptOut) continue;
+      const { data: canonOptOut } = await supabase
+        .from("opt_outs")
+        .select("id")
+        .eq("phone", lead.phone)
+        .in("channel", ["sms", "all"])
+        .limit(1)
+        .maybeSingle();
+      if (canonOptOut) continue;
 
       const ageMs = now - new Date(lead.created_at).getTime();
       const ageH = ageMs / (1000 * 60 * 60);

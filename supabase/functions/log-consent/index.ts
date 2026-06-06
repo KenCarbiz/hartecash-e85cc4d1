@@ -12,6 +12,7 @@
 // service role here only lets us also record the IP the caller can't supply.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, sha256Hex } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,6 +49,15 @@ Deno.serve(async (req) => {
       req.headers.get("x-real-ip") ||
       null;
     const ua = req.headers.get("user-agent") || body.user_agent || null;
+
+    // Per-IP rate limit so the consent proof artifact can't be flooded with
+    // forged rows. Generous ceiling — legit flows log a handful per session.
+    const okIp = await checkRateLimit(supabase, {
+      key: `log_consent_ip:${await sha256Hex(ip || "unknown")}`,
+      windowSeconds: 60 * 60,
+      maxHits: 60,
+    });
+    if (!okIp) return json({ error: "rate_limited" }, 429);
 
     const { error } = await supabase.from("consent_log").insert({
       customer_name: body.customer_name ?? null,

@@ -107,6 +107,7 @@ const OfferDisclosure = () => {
   // Offer-validity window — dealer-configured, defaults to 8 days. Keeps
   // this page in sync with the live widget instead of a hard-coded number.
   const guaranteeDays = Number((config as { price_guarantee_days?: number }).price_guarantee_days) || 8;
+  const governingState = ((config as { governing_law_state?: string }).governing_law_state || "").trim() || "Connecticut";
 
   return (
     <>
@@ -225,12 +226,19 @@ const OfferDisclosure = () => {
                 Offer validity, accuracy &amp; your disclosure obligations
               </h2>
               <p className="mb-3">
-                Your {dealerName} Offer is a genuine estimated offer generated from
-                the vehicle details you provide. It is valid for{" "}
+                Your {dealerName} Offer is generated from the vehicle details you
+                provide and is valid for{" "}
                 <strong className="text-foreground">{guaranteeDays} calendar days</strong>{" "}
-                from the date and time of issuance. This Offer is not a guaranteed
-                purchase price and is contingent upon our in-person verification of
-                your vehicle's actual condition, mileage, use, and history.
+                from the date and time of issuance. Unless a number is expressly
+                labeled a <strong className="text-foreground">firm offer</strong>, it is
+                an estimate and not a guaranteed purchase price. Where {dealerName}
+                presents a <strong className="text-foreground">firm offer</strong>,
+                {dealerName} commits to honoring that amount for the validity period
+                provided in-person inspection confirms the vehicle matches your
+                description (clean, non-branded title; no prior accident; no undisclosed
+                material issues). Either way, the Offer is contingent upon our in-person
+                verification of your vehicle's actual condition, mileage, use, and
+                history.
               </p>
               <p className="mb-4">
                 If the vehicle's actual condition, equipment, mileage, or history
@@ -600,7 +608,7 @@ const OfferDisclosure = () => {
                 and national inventory levels all influence what any given vehicle
                 is worth at any moment. {dealerName}'s proprietary valuation model
                 continuously monitors these conditions. If your Offer expires after
-                the 8-day validity window or you request a new appraisal, a fresh
+                the {guaranteeDays}-day validity window or you request a new appraisal, a fresh
                 Offer will be generated reflecting current market conditions —
                 which may be higher or lower than your original Offer. {dealerName}{" "}
                 is not responsible for market fluctuations that occur between the
@@ -630,10 +638,10 @@ const OfferDisclosure = () => {
                   out of or relating to the {dealerName} vehicle valuation program,
                   any Estimated Offer, or any related transaction shall be governed
                   by and construed in accordance with the laws of the State of
-                  Connecticut, without regard to its conflict of law provisions.
+                  {" "}{governingState}, without regard to its conflict of law provisions.
                   Any legal action or proceeding shall be brought exclusively in
                   the state or federal courts of competent jurisdiction located in
-                  the State of Connecticut, and each party irrevocably consents to
+                  the State of {governingState}, and each party irrevocably consents to
                   the personal jurisdiction of such courts.
                 </p>
               </div>

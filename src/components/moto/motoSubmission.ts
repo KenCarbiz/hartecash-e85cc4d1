@@ -3,6 +3,7 @@ import { calculateOffer, type OfferEstimate, type OfferSettings } from "@/lib/of
 import { buildSubmissionBBPayload } from "@/lib/submissionOffer";
 import { initialFormData, type FormData as SellFormData } from "@/components/sell-form/types";
 import { logConsent } from "@/lib/consent";
+import { resolveOfferMode, type OfferMode } from "@/lib/offerTerms";
 import type { MotoFlowState } from "./types";
 
 /**
@@ -36,6 +37,8 @@ export function motoStateToFormData(state: MotoFlowState): SellFormData {
 export interface MotoOfferResult {
   estimate: OfferEstimate | null;
   firm: number | null;
+  /** "firm" only when the dealer opted in AND a firm % is configured. */
+  mode: OfferMode;
   /** Token used to address the submission record from later steps. */
   submissionToken: string;
   submissionId: string | null;
@@ -79,6 +82,7 @@ export async function calculateAndPersistOffer(
 
   let settings: OfferSettings | null = null;
   let autoFirmPct: number | null = null;
+  let mode: OfferMode = "estimate";
   try {
     const { data } = await supabase
       .from("offer_settings")
@@ -88,6 +92,9 @@ export async function calculateAndPersistOffer(
     if (data) {
       settings = data as unknown as OfferSettings;
       autoFirmPct = (data as { auto_firm_offer_pct?: number | null }).auto_firm_offer_pct ?? null;
+      mode = resolveOfferMode(
+        data as { firm_offer_enabled?: boolean | null; auto_firm_offer_pct?: number | null },
+      );
     }
   } catch (e) {
     console.warn("offer_settings load failed (fallback to defaults):", e);
@@ -177,5 +184,5 @@ export async function calculateAndPersistOffer(
     });
   }
 
-  return { estimate, firm, submissionToken: token, submissionId };
+  return { estimate, firm, mode, submissionToken: token, submissionId };
 }

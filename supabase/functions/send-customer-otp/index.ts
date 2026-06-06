@@ -37,7 +37,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { phone, dealership_name } = await req.json().catch(() => ({}));
+    const { phone, dealership_name, purpose } = await req.json().catch(() => ({}));
+    // 'data_rights' for the export/delete flow; default 'sell_flow'. Bound
+    // into the code so a code issued for one flow can't authorize the other.
+    const otpPurpose = purpose === "data_rights" ? "data_rights" : "sell_flow";
     const e164 = normalizeE164(phone);
     if (!e164) {
       return new Response(
@@ -75,15 +78,27 @@ Deno.serve(async (req) => {
     const codeHash = await sha256Hex(code);
     const expiresAt = new Date(Date.now() + OTP_TTL_SECONDS * 1000).toISOString();
 
-    const { data: row, error: insErr } = await supabase
+    const baseInsert = {
+      phone_e164: e164,
+      code_hash: codeHash,
+      expires_at: expiresAt,
+    };
+    let row: { challenge_id: string } | null = null;
+    let insErr: { message?: string } | null = null;
+    ({ data: row, error: insErr } = await supabase
       .from("customer_otp_codes")
-      .insert({
-        phone_e164: e164,
-        code_hash: codeHash,
-        expires_at: expiresAt,
-      })
+      .insert({ ...baseInsert, purpose: otpPurpose })
       .select("challenge_id")
-      .single();
+      .single());
+    // Tolerate the purpose column not existing yet (migration applied out of
+    // band) — retry without it.
+    if (insErr && /purpose/i.test(insErr.message || "")) {
+      ({ data: row, error: insErr } = await supabase
+        .from("customer_otp_codes")
+        .insert(baseInsert)
+        .select("challenge_id")
+        .single());
+    }
 
     if (insErr || !row) {
       console.error("send-customer-otp insert failed:", insErr);

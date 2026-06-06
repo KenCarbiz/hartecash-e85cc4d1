@@ -12,7 +12,6 @@ import MotoStepPhotos from "@/components/moto/steps/MotoStepPhotos";
 import MotoStepSchedule from "@/components/moto/steps/MotoStepSchedule";
 import MotoStepQueued from "@/components/moto/steps/MotoStepQueued";
 import MotoTrackValueBlock from "@/components/moto/MotoTrackValueBlock";
-import MotoDetailedFlow from "@/components/moto-detailed/MotoDetailedFlow";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,11 +69,6 @@ const SellFlow = () => {
       | "moto"
       | "moto_detailed"
       | undefined) ?? "moto";
-  const detailedOfferMode =
-    ((config as any).moto_detailed_offer_display_mode as
-      | "before_contact_info"
-      | "after_contact_info"
-      | undefined) ?? "after_contact_info";
 
   // Load the dealer's contact placement preference once on mount.
   // Soft-fail to contact_first if offer_settings isn't yet populated
@@ -123,16 +117,18 @@ const SellFlow = () => {
     [revealMode],
   );
 
+  // NOTE: the "moto_detailed" guided journey is intentionally NOT routed to
+  // yet. Its StepContact collects full PII and StepAccepted tells the customer
+  // "offer secured / dealer notified", but the flow does not persist a
+  // submission or log TCPA consent (see MotoDetailedFlow). Shipping leads
+  // through it would create callable contacts with no consent record and an
+  // unsubstantiated "dealer notified" claim. Until persistence + logConsent
+  // are wired into the detailed flow, fall back to the standard moto flow so
+  // every lead still goes through calculateAndPersistOffer + logConsent.
   if (journeyTemplate === "moto_detailed") {
-    return (
-      <>
-        <SEO
-          title={`Get an Instant Vehicle Valuation | ${config.dealership_name}`}
-          description={`Get a guided, premium offer from ${config.dealership_name}. See your estimated value in seconds.`}
-          path="/sell"
-        />
-        <MotoDetailedFlow offerDisplayMode={detailedOfferMode} />
-      </>
+     
+    console.warn(
+      "[SellFlow] moto_detailed journey selected but not yet consent-wired; using standard moto flow.",
     );
   }
 

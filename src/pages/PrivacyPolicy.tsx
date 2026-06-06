@@ -371,7 +371,12 @@ const PrivacyPolicy = () => {
                 fulfill the purposes for which it was collected, including to satisfy legal,
                 accounting, or reporting requirements. Vehicle submission data and
                 associated communications are retained for up to 3 years after your last
-                interaction with us.
+                interaction with us. Operational data such as call recordings and
+                transcripts is deleted on shorter internal schedules (see our{" "}
+                <a href="/security" className="text-primary underline-offset-4 hover:underline">Security page</a>),
+                and if {dealerName}'s account is closed, your information is deleted within
+                30 days except where the law requires us to keep a minimal, de‑identified
+                record.
               </p>
             </section>
 
@@ -382,11 +387,24 @@ const PrivacyPolicy = () => {
                 <li>Access, correct, or delete your personal information.</li>
                 <li>Opt out of marketing communications at any time.</li>
                 <li>Request a copy of the data we hold about you.</li>
+                <li>Opt out of any "sale" or sharing of your information and of profiling.</li>
               </ul>
-              <p>
-                To exercise any of these rights, contact us at{" "}
+              <p className="mb-3">
+                The fastest way to exercise these rights is our self‑service{" "}
+                <a href="/my-data-rights" className="text-primary underline-offset-4 hover:underline">privacy choices page</a>,
+                where you can see, download, or delete your information after a quick text
+                verification. Connecticut residents also have appeal rights — see the
+                state‑specific section below. You may also contact us at{" "}
                 <strong className="text-foreground">{contactPhone}</strong> or email us at
                 the address listed below.
+              </p>
+              <p className="text-sm text-foreground/60">
+                <strong className="text-foreground">Automated processing.</strong> Your
+                estimated value is generated in part by an automated valuation model, and
+                our optional voice follow‑up may use AI. These tools do not make any final
+                or legally significant decision about you: every value is an estimate or a
+                firm offer that {dealerName} confirms after an in‑person inspection, you
+                are never bound, and you may opt out of profiling as described above.
               </p>
             </section>
 
