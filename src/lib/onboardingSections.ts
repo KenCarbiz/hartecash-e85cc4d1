@@ -27,11 +27,13 @@ export const ONBOARDING_SECTIONS: Section[] = [
     icon: "🏢",
     questions: [
       { id: "dealership_name", label: "Dealership Name", type: "text" },
+      { id: "legal_entity_name", label: "Legal Entity Name (DBA / corporate)", type: "text", hint: "The legal business name used on the Terms of Service contract, if different from the marketing name." },
       { id: "tagline", label: "Tagline / Slogan", type: "text" },
       { id: "phone", label: "Main Phone Number", type: "text" },
       { id: "email", label: "Main Email Address", type: "text" },
       { id: "address", label: "Physical Address", type: "text" },
       { id: "governing_law_state", label: "Governing-Law State (for Terms / contract)", type: "text", hint: "e.g. Connecticut. The U.S. state whose law governs your customer agreements. Defaults to Connecticut." },
+      { id: "dealer_license_number", label: "Dealer License # (DMV)", type: "text", hint: "Your state dealer license number, shown on legal / footer pages where required." },
       { id: "website", label: "Website URL", type: "text" },
       { id: "google_review", label: "Google Review Link", type: "text" },
       { id: "facebook", label: "Facebook URL", type: "text" },
@@ -45,8 +47,6 @@ export const ONBOARDING_SECTIONS: Section[] = [
     icon: "🏗️",
     questions: [
       { id: "architecture", label: "Store Architecture", type: "choice", choices: ["Single Store", "Multi-Location", "Dealer Group"] },
-      { id: "bdc_model", label: "BDC Model", type: "choice", choices: ["No BDC", "Single BDC", "Multi-Location BDC", "AI BDC"] },
-      { id: "num_locations", label: "Number of Locations", type: "text" },
       { id: "billing_start", label: "Billing Start Date", type: "text", adminOnly: true },
       { id: "billing_day", label: "Billing Day of Month (1–31)", type: "text", adminOnly: true },
       { id: "special_instructions", label: "Special Instructions / Notes", type: "multiline" },
@@ -59,9 +59,6 @@ export const ONBOARDING_SECTIONS: Section[] = [
       { id: "primary_color", label: "Primary Brand Color", type: "text", hint: "Hex code, e.g. #1e3a5f — or describe: 'navy blue'" },
       { id: "accent_color", label: "Accent / Secondary Color", type: "text", hint: "Hex code or color name" },
       { id: "success_color", label: "Success / CTA Color", type: "text", hint: "For buttons and highlights" },
-      { id: "logo_provided", label: "Logo file provided?", type: "check" },
-      { id: "white_logo_provided", label: "White logo file provided?", type: "check" },
-      { id: "favicon_provided", label: "Favicon provided?", type: "check" },
     ],
   },
   {
@@ -84,6 +81,8 @@ export const ONBOARDING_SECTIONS: Section[] = [
       { id: "step_vehicle_build", label: "Include Vehicle Build step?", type: "choice", choices: ["Yes", "No"] },
       { id: "step_condition", label: "Include Condition & History step?", type: "choice", choices: ["Yes", "No"] },
       { id: "guarantee_days", label: "Price Guarantee Days", type: "text", hint: "Default: 8" },
+      { id: "handoff_type", label: "Vehicle handoff", type: "choice", choices: ["Pickup", "Drop-off", "Both"], hint: "Pickup = you collect the car; Drop-off = customer brings it in; Both = customer chooses." },
+      { id: "tcpa_disclosure", label: "TCPA disclosure text (under lead forms)", type: "multiline", hint: "The consent line shown beneath your lead forms. Leave blank to use the platform default." },
     ],
   },
   {
@@ -109,7 +108,6 @@ export const ONBOARDING_SECTIONS: Section[] = [
       { id: "overlay_color", label: "GhostCar overlay color", type: "choice", choices: ["Green", "Red", "White"], hint: "The silhouette guide shown during customer photo uploads" },
       { id: "allow_color_change", label: "Allow customer to change overlay color?", type: "choice", choices: ["Yes", "No"] },
       { id: "image_angle", label: "Vehicle display image angle", type: "choice", choices: ["3/4 Front Angle", "Side Profile"], hint: "The hero image on offers and portal — not the upload guide" },
-      { id: "required_shots", label: "Required photo shots", type: "multiline", hint: "e.g. Front, Rear, Driver Side, Passenger Side, Dashboard, Odometer, VIN Plate, Engine Bay" },
     ],
   },
   {
@@ -117,8 +115,6 @@ export const ONBOARDING_SECTIONS: Section[] = [
     icon: "💵",
     questions: [
       { id: "acquisition_intent", label: "How aggressive should offers be?", type: "choice", choices: ["Conservative", "Market", "Competitive", "Aggressive", "Predator"], hint: "Conservative = own it cheap. Market = fair trade value. Competitive = win more deals. Aggressive = top-dollar sight-unseen. Predator = highest offer, adjust at inspection." },
-      { id: "pricing_model", label: "Starting Pricing Model", type: "choice", choices: ["Default"], hint: "Additional models can be created in Offer Logic after onboarding." },
-      { id: "pricing_notes", label: "Any special pricing instructions?", type: "multiline", hint: "e.g. 'Never go above $30k on trucks' or 'Match Carvana within $200'" },
     ],
   },
   {
@@ -208,10 +204,10 @@ export const ONBOARDING_SECTIONS: Section[] = [
     title: "17. Staff & Roles",
     icon: "👥",
     questions: [
-      { id: "admin_users", label: "Admin Users (email)", type: "multiline" },
-      { id: "gsm_users", label: "GSM/GM Users (email)", type: "multiline" },
-      { id: "ucm_users", label: "Used Car Managers (email)", type: "multiline" },
-      { id: "bdc_users", label: "Sales / BDC Users (email)", type: "multiline" },
+      { id: "admin_users", label: "Admin Users (email)", type: "multiline", adminOnly: true },
+      { id: "gsm_users", label: "GSM/GM Users (email)", type: "multiline", adminOnly: true },
+      { id: "ucm_users", label: "Used Car Managers (email)", type: "multiline", adminOnly: true },
+      { id: "bdc_users", label: "Sales / BDC Users (email)", type: "multiline", adminOnly: true },
     ],
   },
 ];

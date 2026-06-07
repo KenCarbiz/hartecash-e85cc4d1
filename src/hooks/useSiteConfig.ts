@@ -87,6 +87,11 @@ export interface SiteConfig {
    *  Offer Disclosure). Defaults to Connecticut; set per tenant in
    *  onboarding / Site Configuration so non-CT dealers get a valid forum. */
   governing_law_state: string;
+  /** Legal/DBA business name used on the Terms contract, if different from
+   *  the marketing dealership_name. Falls back to dealership_name when empty. */
+  legal_entity_name: string;
+  /** State DMV dealer license number, surfaced on legal/footer pages. */
+  dealer_license_number: string;
   website_url: string;
   logo_url: string;
   logo_white_url: string;
@@ -352,6 +357,8 @@ const DEFAULTS: SiteConfig = {
   email: "",
   address: "",
   governing_law_state: "Connecticut",
+  legal_entity_name: "",
+  dealer_license_number: "",
   website_url: "",
   logo_url: "",
   logo_white_url: "",

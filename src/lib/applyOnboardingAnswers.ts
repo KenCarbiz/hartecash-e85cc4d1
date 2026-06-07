@@ -60,6 +60,17 @@ export async function applyOnboardingAnswers(
     if (answers.email) siteUpdates.email = answers.email;
     if (answers.address) siteUpdates.address = answers.address;
     if (answers.governing_law_state) siteUpdates.governing_law_state = answers.governing_law_state;
+    if (answers.legal_entity_name) siteUpdates.legal_entity_name = answers.legal_entity_name;
+    if (answers.dealer_license_number) siteUpdates.dealer_license_number = answers.dealer_license_number;
+    if (answers.tcpa_disclosure) siteUpdates.tcpa_disclosure = answers.tcpa_disclosure;
+    if (answers.handoff_type) {
+      const handoffMap: Record<string, string> = { "Pickup": "pickup", "Drop-off": "dropoff", "Both": "both" };
+      const ht = handoffMap[answers.handoff_type];
+      if (ht) {
+        siteUpdates.handoff_type = ht;
+        siteUpdates.pickup_offered = ht !== "dropoff";
+      }
+    }
     if (answers.website) siteUpdates.website_url = answers.website;
     if (answers.google_review) siteUpdates.google_review_url = answers.google_review;
     if (answers.facebook) siteUpdates.facebook_url = answers.facebook;
@@ -270,20 +281,30 @@ export async function applyOnboardingAnswers(
         const state = cszMatch?.[2] || "CT";
         const zip = cszMatch?.[3] || "";
 
-        const { error } = await supabase
+        // Dedupe: re-applying onboarding must not create duplicate
+        // rooftops (they pollute the customer-facing location pickers).
+        // Update an existing same-named rooftop for this tenant, else insert.
+        const { data: existingLoc } = await supabase
           .from("dealership_locations")
-          .insert({
-            dealership_id: dealershipId,
-            name,
-            address,
-            city,
-            state: state.toUpperCase(),
-            oem_brands: brands,
-            all_brands: brands.length === 0,
-            center_zip: zip,
-            sort_order: i,
-            location_type: i === 0 ? "primary" : "sister",
-          });
+          .select("id")
+          .eq("dealership_id", dealershipId)
+          .eq("name", name)
+          .maybeSingle();
+        const locationPayload = {
+          dealership_id: dealershipId,
+          name,
+          address,
+          city,
+          state: state.toUpperCase(),
+          oem_brands: brands,
+          all_brands: brands.length === 0,
+          center_zip: zip,
+          sort_order: i,
+          location_type: i === 0 ? "primary" : "sister",
+        };
+        const { error } = existingLoc
+          ? await supabase.from("dealership_locations").update(locationPayload).eq("id", (existingLoc as { id: string }).id)
+          : await supabase.from("dealership_locations").insert(locationPayload);
         if (!error) locationsCreated++;
       }
       if (locationsCreated > 0) applied.push(`Locations (${locationsCreated} created)`);

@@ -29,7 +29,7 @@ function legalEntityName(raw: string | null | undefined): string {
 
 const TermsOfService = () => {
   const { config } = useSiteConfig();
-  const dealerName = legalEntityName(config.dealership_name);
+  const dealerName = legalEntityName(config.legal_entity_name || config.dealership_name);
   // Tenant-driven contact details — never hard-code one dealership's phone or
   // address into a contract that names a different dealership as counterparty.
   const contactPhone = (config.phone || "").trim();
