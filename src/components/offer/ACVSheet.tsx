@@ -69,6 +69,7 @@ interface ACVSheetProps {
   tradeinAvg: number;
   retailAvg: number;
   reconCost: number;
+  packWarranty?: number;
   dealerPack: number;
   projectedProfit: number;
   profitMargin: number;
@@ -98,13 +99,13 @@ const fmtSigned = (n: number) => `${n >= 0 ? "+" : ""}$${n.toLocaleString()}`;
 const ACVSheet = forwardRef<HTMLDivElement, ACVSheetProps>(({
   sub, bbVehicle, offerResult, finalValue,
   wholesaleAvg, tradeinAvg, retailAvg,
-  reconCost, dealerPack, projectedProfit, profitMargin, condition,
+  reconCost, packWarranty = 0, dealerPack, projectedProfit, profitMargin, condition,
   dealerName, retailMarketData, waterfallBlocks, deductionDetails,
 }, ref) => {
   const privatePartyAvg = Number(bbVehicle?.private_party?.avg || 0);
   const financeAdvAvg = Number(bbVehicle?.finance_advance?.avg || 0);
   const msrp = Number(bbVehicle?.msrp || 0);
-  const inventoryCost = finalValue + reconCost + dealerPack;
+  const inventoryCost = finalValue + reconCost + dealerPack + packWarranty;
   const hasTires = !!(sub.tire_lf && sub.tire_rf && sub.tire_lr && sub.tire_rr);
   const avgTireDepth = hasTires ? ((sub.tire_lf! + sub.tire_rf! + sub.tire_lr! + sub.tire_rr!) / 4).toFixed(1) : null;
   const hasBrakes = !!(sub.brake_lf || sub.brake_rf || sub.brake_lr || sub.brake_rr);
@@ -310,6 +311,7 @@ const ACVSheet = forwardRef<HTMLDivElement, ACVSheetProps>(({
             <div className="flex justify-between"><span className="text-gray-500">ACV (Purchase Price)</span><span className="font-bold">{fmt(finalValue)}</span></div>
             <div className="flex justify-between"><span className="text-gray-500">+ Estimated Recon</span><span className="font-bold">{fmt(reconCost)}</span></div>
             <div className="flex justify-between"><span className="text-gray-500">+ Dealer Pack</span><span className="font-bold">{fmt(dealerPack)}</span></div>
+            {packWarranty > 0 && <div className="flex justify-between"><span className="text-gray-500">+ Packed Warranty</span><span className="font-bold">{fmt(packWarranty)}</span></div>}
             <div className="flex justify-between border-t border-gray-300 pt-0.5 font-black"><span>Total Inventory Cost</span><span>{fmt(inventoryCost)}</span></div>
             <div className="flex justify-between mt-1"><span className="text-gray-500">Retail Benchmark</span><span className="font-bold">{fmt(retailAvg)}</span></div>
             <div className={`flex justify-between font-bold ${projectedProfit >= 0 ? "text-green-700" : "text-red-700"}`}>

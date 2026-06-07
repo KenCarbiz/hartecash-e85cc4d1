@@ -11,14 +11,12 @@
 //   * "Get Started" closes the modal and smooth-scrolls to the
 //     #sell-car-form anchor at the top of the landing
 //
-// Illustration: top image is the supplied PNG (silver crossover +
-// rising blue value line with $ / $$ callouts). Asset path:
+// Illustration: supplied PNG of our flagship vehicle riding a rising
+// value curve with "Current Value" → "Best Time To Sell" markers, at:
 //   public/brand/autocurb/value-tracker-illustration.png
 //     →  /brand/autocurb/value-tracker-illustration.png  at runtime.
-// Drop the supplied image at exactly that path. The folder currently
-// holds AutoCurb logo design proofs; the car-graph illustration is
-// a separate file that needs to be saved with the filename above
-// (or update ILLUSTRATION_SRC below to whatever filename you give it).
+// Save the supplied image at exactly that path (or update
+// ILLUSTRATION_SRC below to match the filename you give it).
 //
 // CTA matches the landing form's primary button language exactly:
 // `--cta-offer` / `--cta-offer-text` CSS vars from ThemeProvider so
@@ -28,16 +26,31 @@ import { X, TrendingUp } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 
+// Supplied illustration — our flagship vehicle riding a rising value
+// curve with "Current Value" → "Best Time To Sell" markers. Drop the
+// PNG at: public/brand/autocurb/value-tracker-illustration.png
 const ILLUSTRATION_SRC = "/brand/autocurb/value-tracker-illustration.png";
 const ILLUSTRATION_ALT =
-  "A silver crossover beneath a rising blue value line with $ and $$ callout bubbles, indicating vehicle value increasing over time.";
+  "A vehicle on a rising blue value line marked Current Value and Best Time To Sell, showing how a car's value changes over time.";
 
 interface ValueTrackingModalProps {
   open: boolean;
   onOpenChange: (next: boolean) => void;
+  /** "center" (default, landing page) or "top" — slides down from the top
+   *  of the viewport/panel, used inside the trade widget slide-out. */
+  placement?: "center" | "top";
 }
 
-const ValueTrackingModal = ({ open, onOpenChange }: ValueTrackingModalProps) => {
+const ValueTrackingModal = ({ open, onOpenChange, placement = "center" }: ValueTrackingModalProps) => {
+  // Warm the browser cache for the illustration the moment this component
+  // mounts (i.e. as soon as the slide-out/page loads) — so when the customer
+  // opens the popup the image is already cached and paints instantly instead
+  // of the half-second lazy-load flash.
+  React.useEffect(() => {
+    const img = new Image();
+    img.src = ILLUSTRATION_SRC;
+  }, []);
+
   const handleGetStarted = () => {
     onOpenChange(false);
     // Defer the scroll until after the close animation has started so
@@ -75,14 +88,17 @@ const ValueTrackingModal = ({ open, onOpenChange }: ValueTrackingModalProps) => 
           aria-labelledby="value-tracking-modal-title"
           aria-describedby="value-tracking-modal-desc"
           className={cn(
-            "fixed left-1/2 top-1/2 z-[150] -translate-x-1/2 -translate-y-1/2",
-            "w-[calc(100vw-32px)] max-w-[480px]",
-            "max-h-[calc(100vh-32px)] overflow-y-auto",
-            "rounded-[22px] bg-white p-6 sm:p-7 lg:p-8",
+            "fixed left-1/2 z-[150] -translate-x-1/2",
+            "w-[calc(100vw-32px)] max-w-[480px] overflow-y-auto",
+            "rounded-[16px] bg-white p-6 sm:p-7 lg:p-8",
             "shadow-[0_24px_60px_-20px_rgb(15_23_42_/_0.25)]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            placement === "top"
+              ? // Anchored to the top — slides down from above (slide-out menu vibe).
+                "top-3 max-h-[calc(100vh-24px)] data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top"
+              : // Centered (landing page) — zooms in.
+                "top-1/2 -translate-y-1/2 max-h-[calc(100vh-32px)] data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           )}
         >
           {/* Close X — top-right, subtle. */}
@@ -93,54 +109,54 @@ const ValueTrackingModal = ({ open, onOpenChange }: ValueTrackingModalProps) => 
             <X className="w-4 h-4" strokeWidth={2} />
           </DialogPrimitive.Close>
 
-          {/* Eyebrow — small icon tile + "Value Tracking" label.
-              Header row stays minimal: icon left, title left of
-              center, close X positioned absolutely top-right (above). */}
-          <div className="flex items-center gap-2 mb-5">
+          {/* Eyebrow — small icon tile + "Value Tracker" label, centered
+              like the product wordmark. Close X sits absolutely top-right. */}
+          <div className="flex items-center justify-center gap-2 mb-5">
             <div
               className="w-7 h-7 rounded-md flex items-center justify-center"
               style={{ background: "hsl(142 71% 95%)" }}
             >
               <TrendingUp className="w-4 h-4 text-emerald-600" strokeWidth={2} />
             </div>
-            <DialogPrimitive.Title className="text-base font-bold text-foreground tracking-tight">
-              Value Tracking
+            <DialogPrimitive.Title className="text-lg font-bold text-foreground tracking-tight">
+              Value Tracker
             </DialogPrimitive.Title>
           </div>
 
-          {/* Supplied illustration — silver crossover + rising blue
-              value line with $/$$ callouts. ~90% modal width, soft
-              breathing room below before the headline. No border. */}
+          {/* Supplied illustration — vehicle on a rising value curve with
+              Current Value → Best Time To Sell markers. ~92% modal width,
+              soft breathing room below before the headline. */}
           <div className="mb-6 flex justify-center">
             <img
               src={ILLUSTRATION_SRC}
               alt={ILLUSTRATION_ALT}
-              className="w-[90%] h-auto block"
-              loading="lazy"
+              className="block h-auto w-[92%]"
+              loading="eager"
               decoding="async"
             />
           </div>
 
-          {/* Headline */}
+          {/* Headline — our own copy (not lifted from the reference art). */}
           <h3
             id="value-tracking-modal-title"
             className="text-xl font-bold text-foreground text-center leading-tight tracking-tight mb-3"
           >
-            Track your car's value over time.
+            Always know what your car is worth.
           </h3>
 
-          {/* Body */}
+          {/* Body — our own copy. */}
           <DialogPrimitive.Description
             id="value-tracking-modal-desc"
             className="text-sm text-foreground/65 leading-relaxed text-center mb-4"
           >
-            Get regular updates when your vehicle's value changes, so you know
-            when it may be the right time to sell or trade.
+            We keep an eye on the market and refresh your vehicle's value as
+            prices move — then give you a heads-up the moment it changes, so
+            you can spot the right time to sell or trade.
           </DialogPrimitive.Description>
 
           {/* Reassurance */}
           <p className="text-sm text-foreground/55 text-center mb-7">
-            It's free to use, and there's no obligation.
+            Free to use, no obligation — just real numbers on your schedule.
           </p>
 
           {/* Primary CTA — full-width inside the modal, rounded-xl
@@ -150,7 +166,7 @@ const ValueTrackingModal = ({ open, onOpenChange }: ValueTrackingModalProps) => 
             type="button"
             onClick={handleGetStarted}
             className={cn(
-              "w-full rounded-xl py-3.5 text-base font-semibold tracking-wide transition",
+              "w-full rounded-[8px] py-3.5 text-base font-semibold tracking-wide transition",
               "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)]",
               "hover:opacity-95 active:opacity-90",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--cta-offer))]",

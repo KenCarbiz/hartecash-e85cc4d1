@@ -24,12 +24,14 @@ export type WidgetIntent = "trade" | "sell";
  * flow (TCPA wall, 8-question damage matrix, photo capture, scheduling)
  * are intentionally dropped.
  */
-export type WidgetStep = "vehicle" | "condition" | "color" | "intent" | "contact" | "value";
+// NOTE: color is NOT its own step — it's a sub-view folded into the
+// "condition" step (VehicleConditionStep swaps condition ⇄ color in place),
+// so it must not appear here or it inflates the progress count.
+export type WidgetStep = "vehicle" | "condition" | "intent" | "contact" | "value";
 
 export const WIDGET_STEP_ORDER: readonly WidgetStep[] = [
   "vehicle",
   "condition",
-  "color",
   "intent",
   "contact",
   "value",

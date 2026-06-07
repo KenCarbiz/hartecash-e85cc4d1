@@ -37,7 +37,7 @@ const MotoFormField = forwardRef<HTMLInputElement, Props>(
             onBlur?.(e);
           }}
           className={cn(
-            "peer w-full rounded-md border px-3 pt-4 pb-2 text-base outline-none transition",
+            "peer w-full rounded-[8px] border px-3.5 pt-[22px] pb-2.5 text-base outline-none transition",
             "border-zinc-300 bg-white",
             "focus:border-[hsl(var(--cta-offer))] focus:ring-2 focus:ring-[hsl(var(--cta-offer)/0.15)]",
             error && "border-red-500 focus:border-red-500 focus:ring-red-100",

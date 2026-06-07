@@ -2064,6 +2064,7 @@ export type Database = {
           step_condition_history: boolean
           step_vehicle_build: boolean
           updated_at: string
+          widget_customer_signin: boolean
         }
         Insert: {
           ai_photos_min_required?: number
@@ -2094,6 +2095,7 @@ export type Database = {
           step_condition_history?: boolean
           step_vehicle_build?: boolean
           updated_at?: string
+          widget_customer_signin?: boolean
         }
         Update: {
           ai_photos_min_required?: number
@@ -2124,6 +2126,7 @@ export type Database = {
           step_condition_history?: boolean
           step_vehicle_build?: boolean
           updated_at?: string
+          widget_customer_signin?: boolean
         }
         Relationships: []
       }
@@ -3118,6 +3121,7 @@ export type Database = {
           mileage_tiers: Json
           offer_ceiling: number | null
           offer_floor: number
+          pack_warranty: number
           payment_selection_timing: string
           pricing_reveal_mode: string
           range_high_mode: string
@@ -3166,6 +3170,7 @@ export type Database = {
           mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
+          pack_warranty?: number
           payment_selection_timing?: string
           pricing_reveal_mode?: string
           range_high_mode?: string
@@ -3214,6 +3219,7 @@ export type Database = {
           mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
+          pack_warranty?: number
           payment_selection_timing?: string
           pricing_reveal_mode?: string
           range_high_mode?: string
@@ -7583,6 +7589,10 @@ export type Database = {
       is_login_locked: { Args: { _email: string; _ip?: string }; Returns: Json }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_staff_of: {
+        Args: { _dealership_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_submission_token_valid: { Args: { _token: string }; Returns: boolean }
       is_tcpa_quiet_hour: {
         Args: { _state: string; _ts?: string }

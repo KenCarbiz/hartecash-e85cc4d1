@@ -728,7 +728,8 @@ export default function AppraisalTool() {
   const waterfallFinal = waterfallBlocks.find(b => b.id === "final")?.runningTotal ?? 0;
   const finalValue = acvOverride != null && acvOverride > 0 ? acvOverride : waterfallFinal;
   const reconCost = activeSettings?.recon_cost || 0;
-  const projectedProfit = retailAvg > 0 ? retailAvg - finalValue - effectivePack - reconCost : 0;
+  const packWarranty = activeSettings?.pack_warranty || 0;
+  const projectedProfit = retailAvg > 0 ? retailAvg - finalValue - effectivePack - reconCost - packWarranty : 0;
   const profitMargin = retailAvg > 0 ? (projectedProfit / retailAvg) * 100 : 0;
 
   const handleBlockValueChange = useCallback((editKey: string, value: number, editType: string) => {
@@ -1280,7 +1281,7 @@ export default function AppraisalTool() {
           </div>
           {/* Secondary metric tiles */}
           {(() => {
-            const inventoryCost = finalValue + reconCost + effectivePack;
+            const inventoryCost = finalValue + reconCost + effectivePack + packWarranty;
             const stratMode = activeSettings?.strategy_mode || offerResult?.strategyMode || "custom";
             const stratBadge = { conservative: "text-muted-foreground bg-card border-border/60", standard: "text-primary bg-primary/5 border-primary/25", aggressive: "text-amber-600 bg-amber-500/5 border-amber-500/25", predator: "text-destructive bg-destructive/5 border-destructive/25", custom: "text-muted-foreground bg-card border-border/60" }[stratMode] || "bg-card border-border/60";
             const secondaryMetrics = [
@@ -1648,6 +1649,7 @@ export default function AppraisalTool() {
               tradeinAvg={tradeinAvg}
               retailAvg={retailAvg}
               reconCost={reconCost}
+              packWarranty={packWarranty}
               effectivePack={effectivePack}
               projectedProfit={projectedProfit}
               profitMargin={profitMargin}
@@ -1931,6 +1933,7 @@ export default function AppraisalTool() {
             tradeinAvg={tradeinAvg}
             retailAvg={retailAvg}
             reconCost={reconCost}
+            packWarranty={packWarranty}
             dealerPack={effectivePack}
             projectedProfit={projectedProfit}
             profitMargin={profitMargin}

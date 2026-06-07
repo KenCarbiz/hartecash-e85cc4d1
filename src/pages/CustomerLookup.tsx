@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Search, Car, ChevronRight, ArrowRight, ShieldCheck,
+  Search, Car, ChevronRight, ArrowRight, ArrowLeft, ShieldCheck,
   FileText, Upload, DollarSign, Truck, HelpCircle, LifeBuoy, Mail,
   LockKeyhole, Sparkles, Phone as PhoneIcon,
 } from "lucide-react";
@@ -156,23 +156,11 @@ const CustomerLookup = () => {
             )}
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2 text-sm">
-            {phoneDigits && (
-              <a href={`tel:${phoneDigits}`} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
-                <LifeBuoy className="w-4 h-4" /> Support
-              </a>
-            )}
-            <a href="/#faq" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
-              <HelpCircle className="w-4 h-4" /> FAQ
-            </a>
-            {contactHref ? (
-              <a href={contactHref} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
-                <Mail className="w-4 h-4" /> Contact
-              </a>
-            ) : (
-              <Link to="/about" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
-                <Mail className="w-4 h-4" /> Contact
-              </Link>
-            )}
+            {/* Single way back to the valuation page — Support/FAQ/Contact
+                removed to keep this secure-login screen focused. */}
+            <Link to="/" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-foreground/5 transition-colors">
+              <ArrowLeft className="w-4 h-4" /> Get my value
+            </Link>
             <span className="hidden md:inline-flex items-center gap-1.5 ml-2 px-3 py-1.5 rounded-full bg-[#EEF0FF] text-[#6D28D9] text-xs font-semibold">
               <ShieldCheck className="w-3.5 h-3.5" /> Secure Login
             </span>

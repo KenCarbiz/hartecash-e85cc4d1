@@ -93,6 +93,9 @@ export default function TradeWidgetFlow({
   const [valueStage, setValueStage] = useState<ValueStage>("range");
   const [boosted, setBoosted] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+  // True while the firm offer is being finalized/persisted, so the firm card
+  // can show a spinner vs. a terminal "no online offer" state.
+  const [revealing, setRevealing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [bb, setBb] = useState<BBVehicle | null>(null);
@@ -105,6 +108,9 @@ export default function TradeWidgetFlow({
   // The submissions row is written exactly once (on firm-offer reveal),
   // so editing mileage / re-running the range never duplicates a lead.
   const persistedToken = useRef<string | null>(null);
+  // In-flight guard so a tap that triggers persist twice (e.g. accept fired
+  // before the firm-reveal insert resolves) can't create a duplicate lead.
+  const persistInFlight = useRef<Promise<void> | null>(null);
 
   const [data, setData] = useState<WidgetFlowData & { otp: string }>({
     entryMode: "vin",
@@ -152,6 +158,18 @@ export default function TradeWidgetFlow({
     };
   }, [ymmYear, ymmMake]);
 
+  // Header menu "Home / Vehicle Valuation / How it Works / FAQ" return the
+  // flow to its entry screen so those sections (which only render on home)
+  // are mounted for the menu's snap-scroll. Field data is preserved.
+  useEffect(() => {
+    const goHome = () => {
+      setStep("vehicle");
+      setVehicleStage("entry");
+    };
+    window.addEventListener("hartecash-widget-home", goHome);
+    return () => window.removeEventListener("hartecash-widget-home", goHome);
+  }, []);
+
   const vinClean = data.entryMode === "vin" ? data.vehicleId.trim().toUpperCase() : "";
   const plateClean = data.entryMode === "plate" ? data.vehicleId.trim().toUpperCase() : "";
   const vinReady = vinClean.length === 17;
@@ -163,16 +181,16 @@ export default function TradeWidgetFlow({
   // Decoded-vehicle image for the Step 2 card. Real photo first — Black
   // Book (EVOX) by the exact uvc → Wikipedia/internet → AI render — as a
   // clean side profile (no background; the card adds the under-vehicle
-  // shadow). studioOnly=false enables the BB/internet path.
+  // shadow). studioOnly=false enables the BB/internet path. Once the
+  // customer picks a factory color we pass it through so the edge function
+  // RE-PULLS a real image that matches the year/make/model in that color
+  // (Black Book by uvc → internet → AI render) — not a CSS tint of the
+  // original. The hook re-resolves whenever the chosen color changes.
   const heroUrl = useVehicleImage(
     bb?.year, bb?.make, bb?.model, bb?.vin, undefined, bb?.uvc, false, "side",
+    data.colorName || undefined,
   );
-  // Instant color match: instead of waiting on an AI re-render, we tint
-  // the existing stock photo with the customer's chosen swatch via a
-  // CSS multiply overlay. White-background studio shots tint cleanly
-  // (white × swatch = swatch) while wheels/windows stay dark. Zero wait.
   const intentHeroUrl = heroUrl;
-  const tintColor = data.colorHex || null;
 
   const goNext = () => {
     const i = WIDGET_STEP_ORDER.indexOf(step);
@@ -278,20 +296,29 @@ export default function TradeWidgetFlow({
   // Insert the submissions row exactly once (lead capture at firm-offer
   // reveal, matching the main flow). Best-effort: a failed write doesn't
   // block showing the number the customer was promised.
-  const persistOnce = async () => {
-    if (persistedToken.current) return;
-    try {
-      const result = await persistWidgetOffer(data, bb, dealershipId, dealershipName);
-      persistedToken.current = result.submissionToken;
-      if (result.firm != null) setFirm(result.firm);
-    } catch (e) {
-      console.warn("[widget] persist failed:", e);
-    }
+  const persistOnce = (): Promise<void> => {
+    if (persistedToken.current) return Promise.resolve();
+    // Coalesce concurrent callers onto a single insert.
+    if (persistInFlight.current) return persistInFlight.current;
+    persistInFlight.current = (async () => {
+      try {
+        const result = await persistWidgetOffer(data, bb, dealershipId, dealershipName);
+        persistedToken.current = result.submissionToken;
+        if (result.firm != null) setFirm(result.firm);
+      } catch (e) {
+        console.warn("[widget] persist failed:", e);
+      } finally {
+        persistInFlight.current = null;
+      }
+    })();
+    return persistInFlight.current;
   };
 
   const revealFirm = async () => {
     setValueStage("firm");
+    setRevealing(true);
     await persistOnce();
+    setRevealing(false);
   };
 
   const getFirm = async () => {
@@ -364,7 +391,15 @@ export default function TradeWidgetFlow({
   // flips to "view your accepted offer".
   const accept = async () => {
     setBusy(true);
+    setError(null);
     await persistOnce();
+    // If the lead row never wrote (network/db error), don't tell the dealer
+    // site a deal was accepted with no submission behind it — surface a retry.
+    if (!persistedToken.current) {
+      setBusy(false);
+      setError("We couldn't save your acceptance. Please try again.");
+      return;
+    }
     await markApplied(persistedToken.current, data.intent, vdp);
     try {
       window.parent.postMessage(
@@ -386,9 +421,8 @@ export default function TradeWidgetFlow({
   return (
     <>
     <div id="sell-car-form" className="mx-auto w-full max-w-[640px] px-7 py-6">
-      {/* First screen leads with a headline; the premium Step 2 renders its
-          own progress; the rest show the compact progress dots. */}
-      {step === "vehicle" && vehicleStage === "entry" ? (
+      {/* First screen leads with a headline; no step tracker on later steps. */}
+      {step === "vehicle" && vehicleStage === "entry" && (
         <div className="mb-5">
           <h1 className="text-[32px] font-bold leading-[1.12] tracking-tight text-zinc-900">
             Get an{" "}
@@ -398,8 +432,6 @@ export default function TradeWidgetFlow({
             Get an instant value — then add a few details to see your real offer.
           </p>
         </div>
-      ) : step === "condition" ? null : (
-        <StepProgress current={step} />
       )}
 
       {/* ── 1. VEHICLE: entry → confirm ───────────────────────────── */}
@@ -408,7 +440,7 @@ export default function TradeWidgetFlow({
         <MotoCard className="p-6">
           {/* Vehicle Search / License Plate tabs — same purple pill chip
               and zinc-100 track as the landing page (MotoStepVehicleSearch). */}
-          <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1 text-sm font-semibold">
+          <div className="mb-5 grid grid-cols-2 gap-2 rounded-[8px] bg-zinc-100 p-1 text-sm font-semibold">
             {([
               { id: "vin", label: "Vehicle Search" },
               { id: "plate", label: "License Plate" },
@@ -420,10 +452,10 @@ export default function TradeWidgetFlow({
                   type="button"
                   onClick={() => set({ entryMode: t.id, vehicleId: "" })}
                   className={cn(
-                    "rounded-md px-3 py-2.5 transition",
+                    "rounded-[6px] px-3 py-2.5 transition",
                     active ? "shadow-sm" : "text-zinc-700 hover:text-zinc-900",
                   )}
-                  style={active ? { background: "#6D28D9", color: "#fff" } : undefined}
+                  style={active ? { background: "hsl(var(--cta-offer))", color: "var(--cta-offer-text)" } : undefined}
                 >
                   {t.label}
                 </button>
@@ -514,7 +546,7 @@ export default function TradeWidgetFlow({
                 fills with the dealer's CTA color the moment they are. */}
             <MotoPrimaryButton
               className={cn(
-                "w-full rounded-full py-2.5 text-sm transition-colors",
+                "w-full rounded-[8px] py-2.5 text-sm transition-colors",
                 !canSubmitEntry && "bg-zinc-100 text-zinc-500 hover:bg-zinc-100",
               )}
               loading={busy}
@@ -527,7 +559,7 @@ export default function TradeWidgetFlow({
         </MotoCard>
         {/* Reassurance banner + hero vehicle image, stacked under the form
             (the main-page hero, rearranged for the narrow panel). */}
-        <div className="mt-4 rounded-lg bg-[hsl(var(--cta-offer))] px-4 py-3 text-center text-[15px] font-semibold text-[color:var(--cta-offer-text)]">
+        <div className="mt-4 rounded-lg bg-zinc-100 px-4 py-2.5 text-center text-[13px] font-medium text-[hsl(var(--cta-offer))]">
           Get a valuation in less than 30 seconds!
         </div>
         <img
@@ -608,78 +640,23 @@ export default function TradeWidgetFlow({
         </MotoCard>
       )}
 
-      {/* ── 2b. COLOR (factory choices from Black Book) ───────────────
-          Comes AFTER condition. Auto-skips to "intent" when Black Book
-          didn't return any factory color options (YMM fallback, older
-          vehicles, etc.). */}
-      {step === "color" && (
-        bb?.exterior_colors?.length ? (
-          <MotoCard title="Pick your vehicle's color">
-            <p className="mb-4 text-sm text-zinc-500">
-              Factory color options for your {bb.year} {bb.make} {bb.model}.
-            </p>
-            <div className="grid grid-cols-4 gap-x-3 gap-y-5">
-              {bb.exterior_colors.map((c) => {
-                const selected = data.colorCode === c.code;
-                const swatch = c.hex
-                  ? c.hex.startsWith("#") ? c.hex : `#${c.hex}`
-                  : c.rgb
-                  ? `rgb(${c.rgb})`
-                  : "#e4e4e7";
-                return (
-                  <button
-                    key={c.code || c.name}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => {
-                      set({ colorCode: c.code, colorName: c.name, colorHex: swatch });
-                      goNext();
-                    }}
-                    className="flex flex-col items-center gap-1.5 text-center transition"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        "h-12 w-12 rounded-full border shadow-sm transition",
-                        selected
-                          ? "border-[hsl(var(--cta-offer))] ring-2 ring-[hsl(var(--cta-offer)/0.25)] ring-offset-2"
-                          : "border-zinc-300 hover:border-zinc-400",
-                      )}
-                      style={{ background: swatch }}
-                    />
-                    <span className="line-clamp-2 text-[11px] leading-tight text-zinc-700">
-                      {c.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                set({ colorCode: "", colorName: "", colorHex: "" });
-                goNext();
-              }}
-              className="mt-6 block w-full text-center text-xs font-medium text-zinc-500 hover:underline"
-            >
-              Skip color selection
-            </button>
-          </MotoCard>
-        ) : (
-          <ColorAutoSkip onSkip={goNext} />
-        )
-      )}
-
-
-      {/* ── 2. CONDITION (4-point) ────────────────────────────────── */}
-      {/* ── 2. CONFIRM + CONDITION (premium Step 2) ───────────────── */}
+      {/* ── 2. CONFIRM + CONDITION + COLOR (premium Step 2) ───────────
+          One persistent hero: clicking a condition swaps the panel to the
+          Black Book color picker IN PLACE (image + assets stay fixed);
+          picking a color (or Skip) advances to intent. Color selection
+          re-pulls a real color-matched image via heroUrl. The separate
+          "color" step is folded in here — onDone jumps straight to intent. */}
       {step === "condition" && (
         <VehicleConditionStep
           vehicle={bb}
           imageUrl={heroUrl}
           condition={data.condition}
-          onSelect={(c) => set({ condition: c })}
-          onContinue={goNext}
+          colorCode={data.colorCode}
+          onSelectCondition={(c) => set({ condition: c })}
+          onSelectColor={({ code, name, hex }) =>
+            set({ colorCode: code, colorName: name, colorHex: hex })
+          }
+          onDone={() => setStep("intent")}
           onReenter={() => {
             setBb(null);
             setCandidates([]);
@@ -694,39 +671,18 @@ export default function TradeWidgetFlow({
         <MotoCard title="Trade it in or sell it?">
           {intentHeroUrl && (
             <div className="mb-4 flex flex-col items-center">
-              <div className="relative mx-auto h-[34vh] max-h-[300px] w-full max-w-[380px]">
+              <div className="relative mx-auto h-[24vh] max-h-[220px] w-full max-w-[340px]">
                 <span
                   aria-hidden
                   className="pointer-events-none absolute inset-x-0 bottom-[6%] z-0 mx-auto h-3.5 w-[66%] rounded-[50%] bg-zinc-900/20 blur-md"
                 />
-                {/* Stock photo. When the customer picked a factory color
-                    we paint the swatch on top in multiply mode so the
-                    body color updates instantly — no AI round-trip. */}
-                <div className="absolute inset-0 z-10 h-full w-full">
-                  <img
-                    src={intentHeroUrl}
-                    alt={detectedVehicle}
-                    className="absolute inset-0 h-full w-full object-contain"
-                  />
-                  {tintColor && (
-                    <div
-                      aria-hidden
-                      className="pointer-events-none absolute inset-0"
-                      style={{
-                        backgroundColor: tintColor,
-                        mixBlendMode: "multiply",
-                        WebkitMaskImage: `url(${intentHeroUrl})`,
-                        maskImage: `url(${intentHeroUrl})`,
-                        WebkitMaskRepeat: "no-repeat",
-                        maskRepeat: "no-repeat",
-                        WebkitMaskPosition: "center",
-                        maskPosition: "center",
-                        WebkitMaskSize: "contain",
-                        maskSize: "contain",
-                      }}
-                    />
-                  )}
-                </div>
+                {/* Real color-matched photo (re-pulled by useVehicleImage
+                    with the chosen color) — no CSS tint. */}
+                <img
+                  src={intentHeroUrl}
+                  alt={detectedVehicle}
+                  className="absolute inset-0 z-10 h-full w-full object-contain"
+                />
               </div>
               <p className="mt-2 text-xs text-zinc-500">
                 {detectedVehicle}
@@ -836,12 +792,12 @@ export default function TradeWidgetFlow({
               type="button"
               disabled={!contactComplete || busy}
               onClick={seeValue}
-              className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[hsl(var(--cta-offer))] px-6 text-sm font-semibold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 w-full items-center justify-center rounded-[8px] bg-[hsl(var(--cta-offer))] px-6 text-[13px] font-semibold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? "Loading…" : "See my value"}
             </button>
           </div>
-          <p className="mt-3 text-[10px] leading-snug text-zinc-400">
+          <p className="mt-3 text-[11px] leading-snug text-zinc-400">
             By continuing you consent to receive autodialed calls, texts (SMS/MMS), and emails from{" "}
             {(dealershipName || "the dealership").trim()} regarding your vehicle, offer, and
             appointment. Consent is not a condition of purchase. Msg &amp; data rates may apply; msg
@@ -862,27 +818,7 @@ export default function TradeWidgetFlow({
                   aria-hidden
                   className="pointer-events-none absolute inset-x-0 bottom-[6%] z-0 mx-auto h-3 w-[62%] rounded-[50%] bg-zinc-900/20 blur-md"
                 />
-                <div className="absolute inset-0 z-10 h-full w-full">
-                  <img src={heroUrl} alt={detectedVehicle} className="absolute inset-0 h-full w-full object-contain" />
-                  {tintColor && (
-                    <div
-                      aria-hidden
-                      className="pointer-events-none absolute inset-0"
-                      style={{
-                        backgroundColor: tintColor,
-                        mixBlendMode: "multiply",
-                        WebkitMaskImage: `url(${heroUrl})`,
-                        maskImage: `url(${heroUrl})`,
-                        WebkitMaskRepeat: "no-repeat",
-                        maskRepeat: "no-repeat",
-                        WebkitMaskPosition: "center",
-                        maskPosition: "center",
-                        WebkitMaskSize: "contain",
-                        maskSize: "contain",
-                      }}
-                    />
-                  )}
-                </div>
+                <img src={heroUrl} alt={detectedVehicle} className="absolute inset-0 z-10 h-full w-full object-contain" />
               </>
             ) : (
               <div className="absolute inset-0 m-auto h-[70%] w-[86%] animate-pulse rounded-2xl bg-gradient-to-br from-zinc-100 to-zinc-200" />
@@ -896,11 +832,15 @@ export default function TradeWidgetFlow({
       )}
       {step === "value" && valueStage === "range" && (
         <MotoCard title="Your estimated trade-in value">
-          <p className="text-4xl font-bold leading-none tabular-nums text-zinc-900">
-            {estimate?.low != null && estimate?.high != null
-              ? <>{usd(estimate.low)} <span className="font-semibold text-zinc-400">–</span> {usd(estimate.high)}</>
-              : "Estimate ready"}
-          </p>
+          {estimate?.low != null && estimate?.high != null ? (
+            <p className="text-4xl font-bold leading-none tabular-nums text-zinc-900">
+              {usd(estimate.low)} <span className="font-semibold text-zinc-400">–</span> {usd(estimate.high)}
+            </p>
+          ) : (
+            <p className="text-lg font-semibold leading-tight text-zinc-900">
+              Your offer is ready — tap below to view it.
+            </p>
+          )}
           <p className="mt-2 text-sm text-zinc-500">{detectedVehicle}</p>
           <button
             type="button"
@@ -967,21 +907,35 @@ export default function TradeWidgetFlow({
                   {applyLabel}
                 </MotoPrimaryButton>
               </div>
+              {/* Accept is the primary action. We don't promote the photo
+                  boost as a shortcut here (don't encourage skipping the
+                  accept) — it's offered on the "save for later" path below
+                  when the dealer has AI photos enabled. */}
               {aiPhotosEnabled && (
                 <button
                   type="button"
                   onClick={() => setValueStage("boost")}
-                  className="mt-3 w-full text-center text-sm font-medium text-[hsl(var(--cta-offer))] hover:underline"
+                  className="mt-3 w-full text-center text-sm font-medium text-zinc-500 hover:text-zinc-700 hover:underline"
                 >
-                  Add photos for a possible higher offer
+                  Not ready? Save my offer for later
                 </button>
               )}
-              <p className="mt-4 text-[10px] leading-snug text-zinc-400">{offerTerms.disclosure}</p>
+              <p className="mt-4 text-[11px] leading-snug text-zinc-400">{offerTerms.disclosure}</p>
             </>
-          ) : (
+          ) : revealing ? (
             <div className="flex items-center gap-2 text-sm text-zinc-500">
               <span className="h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--cta-offer))]" />
               Finalizing your number…
+            </div>
+          ) : (
+            // Resolved with no online number — the lead is already saved, so
+            // reassure rather than spin forever.
+            <div>
+              <p className="text-sm text-zinc-600">
+                We couldn't generate an instant online offer for your {detectedVehicle}. Your details
+                are saved and a specialist will reach out shortly with your offer.
+              </p>
+              {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
             </div>
           )}
         </MotoCard>
@@ -990,10 +944,10 @@ export default function TradeWidgetFlow({
       {/* AI photo boost (dealer-toggled) — mirrors the main flow's
           "upload photos → AI re-inspects → new value → accept/save". */}
       {step === "value" && valueStage === "boost" && (
-        <MotoCard title="Boost your offer with photos">
+        <MotoCard title="Save your offer">
           <p className="text-sm text-zinc-500">
-            Upload a few quick photos and our AI re-inspects your {detectedVehicle} — a better
-            condition read can raise your offer.
+            Your offer is saved — no rush. Want a shot at more? Add a few quick photos and our AI
+            re-inspects your {detectedVehicle}; a better condition read can raise it.
           </p>
           {/* TODO: real multi-slot capture (reuse MotoStepPhotos). */}
           <div className="mt-3 grid grid-cols-3 gap-2">
@@ -1009,14 +963,14 @@ export default function TradeWidgetFlow({
           {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
           <div className="mt-4 grid gap-2">
             <MotoPrimaryButton loading={busy} onClick={submitBoost}>
-              Re-evaluate with photos
+              Add photos to boost it
             </MotoPrimaryButton>
             <button
               type="button"
-              onClick={() => setValueStage("firm")}
+              onClick={() => setValueStage("done")}
               className="text-center text-sm font-medium text-zinc-500 hover:underline"
             >
-              Keep my current offer
+              Just save it for now
             </button>
           </div>
         </MotoCard>
@@ -1059,7 +1013,7 @@ export default function TradeWidgetFlow({
             specialist will reach out to finalize the details.
           </p>
           <p className="mt-2 text-[11px] text-zinc-400">
-            We sent a copy to {data.email || "your email"}.
+            We'll send a copy to {data.email || "your email"}.
           </p>
         </MotoCard>
       )}
@@ -1070,48 +1024,11 @@ export default function TradeWidgetFlow({
         main moto landing page. */}
     {step === "vehicle" && vehicleStage === "entry" && (
       <>
-        <HowItWorksLean />
-        <ValueTrackerCard />
-        <FAQLean />
+        <div id="widget-how-it-works"><HowItWorksLean /></div>
+        <div id="widget-value-monitor"><ValueTrackerCard /></div>
+        <div id="widget-faq"><FAQLean /></div>
       </>
     )}
     </>
-  );
-}
-
-/** Renders nothing; auto-advances past the color step when Black Book
- *  didn't return factory color options for the decoded vehicle. */
-function ColorAutoSkip({ onSkip }: { onSkip: () => void }) {
-  useEffect(() => {
-    onSkip();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return null;
-}
-
-/** Minimal dotted step indicator — no labels, keeps the panel compact. */
-function StepProgress({ current }: { current: WidgetStep }) {
-  const currentIndex = WIDGET_STEP_ORDER.indexOf(current);
-  return (
-    <div className="mb-4 flex items-center gap-1.5">
-      {WIDGET_STEP_ORDER.map((s, i) => {
-        const done = i < currentIndex;
-        const active = i === currentIndex;
-        return (
-          <span
-            key={s}
-            className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold transition ${
-              done
-                ? "bg-[hsl(var(--cta-offer))] text-[color:var(--cta-offer-text)]"
-                : active
-                ? "border-2 border-[hsl(var(--cta-offer))] text-[hsl(var(--cta-offer))]"
-                : "border border-zinc-300 text-zinc-400"
-            }`}
-          >
-            {done ? <Check className="h-3 w-3" /> : i + 1}
-          </span>
-        );
-      })}
-    </div>
   );
 }

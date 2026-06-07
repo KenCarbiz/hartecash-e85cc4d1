@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { paidApiGuard } from "../_shared/paidApiGuard.ts";
+import { isAllowedImageUrl } from "../_shared/imageUrlGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +26,12 @@ serve(async (req) => {
     if (!imageUrl || !submissionToken) {
       return new Response(
         JSON.stringify({ error: "imageUrl and submissionToken are required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (!isAllowedImageUrl(imageUrl)) {
+      return new Response(
+        JSON.stringify({ error: "invalid_image_url" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

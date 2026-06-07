@@ -24,8 +24,11 @@ export default function TradeInBanner({
   offer: FirmOffer | null;
   zip: string;
 }) {
-  const { state, rate: zipRate } = getTaxRateFromZip(zip);
-  const rate = state ? zipRate : 0.0635; // CT default until ZIP known
+  // Rate is driven by the customer's ZIP and the price of the vehicle being
+  // viewed (CT: 6.35% ≤ $50k, 7.75% > $50k). Fall back to CT rates with the
+  // same threshold when the ZIP isn't known yet (default dealer market).
+  const { state, rate: zipRate } = getTaxRateFromZip(zip, vdp.vehicleMsrp);
+  const rate = state ? zipRate : vdp.vehicleMsrp > 50000 ? 0.0775 : 0.0635;
 
   // No offer yet → soft prompt to get one; the flow below starts from
   // VIN entry and the value lands on this vehicle once computed.

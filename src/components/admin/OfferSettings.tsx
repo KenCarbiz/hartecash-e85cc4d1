@@ -164,6 +164,7 @@ interface OfferSettingsRow {
   retail_search_radius: number;
   retail_search_zip: string;
   dealer_pack: number;
+  pack_warranty?: number;
   hide_pack_from_appraisal: boolean;
   retail_profit_basis: string;
   low_mileage_bonus: { enabled: boolean; avg_miles_per_year: number; bonus_pct_per_step: number; step_size_pct: number; max_bonus_pct: number; min_miles_per_year: number };
@@ -328,6 +329,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         retail_search_radius: d.retail_search_radius ?? 50,
         retail_search_zip: d.retail_search_zip || "",
         dealer_pack: d.dealer_pack ?? 0,
+        pack_warranty: d.pack_warranty ?? 0,
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
         retail_profit_basis: d.retail_profit_basis || "retail_avg",
         low_mileage_bonus: d.low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
@@ -356,6 +358,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         retail_search_radius: d.retail_search_radius ?? 50,
         retail_search_zip: d.retail_search_zip || "",
         dealer_pack: d.dealer_pack ?? 0,
+        pack_warranty: d.pack_warranty ?? 0,
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
         retail_profit_basis: d.retail_profit_basis || "retail_avg",
         low_mileage_bonus: d.low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
@@ -397,6 +400,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       retail_search_radius: settings.retail_search_radius ?? 50,
       retail_search_zip: settings.retail_search_zip || null,
       dealer_pack: settings.dealer_pack ?? 0,
+      pack_warranty: settings.pack_warranty ?? 0,
       hide_pack_from_appraisal: settings.hide_pack_from_appraisal ?? false,
       retail_profit_basis: settings.retail_profit_basis || "retail_avg",
       target_gross_min: settings.target_gross_min || 0,
@@ -742,10 +746,10 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
               ⚠ These are profit analysis inputs. They do NOT reduce the customer offer.
             </p>
             <p className="text-micro text-muted-foreground mt-1">
-              Recon cost and dealer pack are internal references that appear in the waterfall's profit section and ACV sheet, but never change the offer the customer sees.
+              Recon, dealer pack, and packed warranty are internal references that appear in the Pricing Engine's Cost-to-Market and profit section and the ACV sheet, but never change the offer the customer sees.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label className="text-sm font-semibold">Recon Reserve</Label>
               <p className="text-micro text-muted-foreground mb-1.5">
@@ -772,6 +776,21 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
                   type="number" min={0} step={50}
                   value={settings.dealer_pack}
                   onChange={(e) => setSettings({ ...settings, dealer_pack: Number(e.target.value) || 0 })}
+                  className="pl-7"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-sm font-semibold">Packed Warranty</Label>
+              <p className="text-micro text-muted-foreground mb-1.5">
+                Warranty / service contract packed per unit.
+              </p>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <Input
+                  type="number" min={0} step={50}
+                  value={settings.pack_warranty ?? 0}
+                  onChange={(e) => setSettings({ ...settings, pack_warranty: Number(e.target.value) || 0 })}
                   className="pl-7"
                 />
               </div>

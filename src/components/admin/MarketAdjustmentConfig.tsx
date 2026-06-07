@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import type { MarketAdjustmentConfig as MAConfig, MarketDaysSupplyBracket } from "@/lib/offerCalculator";
 import { DEFAULT_MARKET_ADJUSTMENT } from "@/lib/offerCalculator";
@@ -21,12 +20,9 @@ const BRACKET_LABELS = [
 ];
 
 export default function MarketAdjustmentConfigPanel({ config, onChange }: Props) {
-  const cfg = { ...(config || DEFAULT_MARKET_ADJUSTMENT), enabled: true };
-
-  // Ensure parent state reflects always-on if it was previously off
-  if (config && !config.enabled) {
-    onChange({ ...config, enabled: true });
-  }
+  // Honor the saved flag (off by default) — controlled by this switch and
+  // the Pricing Engine's "Live Market" toggle, which share the same field.
+  const cfg = config || DEFAULT_MARKET_ADJUSTMENT;
 
   const updateBracket = (index: number, field: keyof MarketDaysSupplyBracket, value: number) => {
     const brackets = [...cfg.days_supply_brackets];
@@ -40,10 +36,10 @@ export default function MarketAdjustmentConfigPanel({ config, onChange }: Props)
         <div>
           <Label className="text-sm font-bold">Live Market Multiplier</Label>
           <p className="text-micro text-muted-foreground">
-            Always pulling Black Book Market Days Supply data to adjust offers in real time.
+            When on, pulls Black Book Market Days Supply to adjust offers for local supply/demand in real time.
           </p>
         </div>
-        <Badge variant="outline" className="text-[10px] font-bold text-success border-success/40">ALWAYS ON</Badge>
+        <Switch checked={cfg.enabled} onCheckedChange={(v) => onChange({ ...cfg, enabled: v })} />
       </div>
 
       {cfg.enabled && (

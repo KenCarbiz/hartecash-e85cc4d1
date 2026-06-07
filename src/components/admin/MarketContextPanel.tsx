@@ -1,7 +1,12 @@
-import { BarChart3, MapPin, AlertTriangle, Shield, DollarSign } from "lucide-react";
+import { useState } from "react";
+import { BarChart3, MapPin, AlertTriangle, Shield, DollarSign, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { BBVehicle } from "@/components/sell-form/types";
+
+// The three book values a desk reads first; the rest collapse behind
+// "Show all values" so the panel isn't an 11-row wall.
+const PRIMARY_LABELS = ["Retail – Average", "Trade-In – Average", "Wholesale – Average"];
 
 interface Props {
   bbVehicle: BBVehicle;
@@ -9,6 +14,7 @@ interface Props {
 }
 
 export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
+  const [showAllValues, setShowAllValues] = useState(false);
   const retail = bbVehicle.retail;
   const wholesale = bbVehicle.wholesale;
   const tradein = bbVehicle.tradein;
@@ -35,6 +41,11 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
     { label: "Wholesale – Average", value: wholesale?.avg, type: "wholesale" as const },
     { label: "Wholesale – Rough", value: wholesale?.rough, type: "wholesale" as const },
   ].filter(r => r.value && Number(r.value) > 0);
+
+  // Collapsed by default to the three "Average" rows; expander shows the rest.
+  const primaryRows = rows.filter(r => PRIMARY_LABELS.includes(r.label));
+  const visibleRows = showAllValues || primaryRows.length === 0 ? rows : primaryRows;
+  const hiddenCount = rows.length - visibleRows.length;
 
   const maxVal = Math.max(...rows.map(r => Number(r.value)), offerHigh);
 
@@ -72,7 +83,7 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
       )}
 
       <div className="space-y-1">
-        {rows.map((row) => {
+        {visibleRows.map((row) => {
           const val = Number(row.value);
           const barWidth = maxVal > 0 ? (val / maxVal) * 100 : 0;
           const diff = val - offerHigh;
@@ -107,6 +118,18 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
             </div>
           );
         })}
+
+        {/* Show all / show less — collapses the deep book ladder by default */}
+        {(hiddenCount > 0 || showAllValues) && rows.length > primaryRows.length && (
+          <button
+            type="button"
+            onClick={() => setShowAllValues(v => !v)}
+            className="mt-1 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-border py-1 text-micro font-medium text-muted-foreground hover:bg-muted/40 hover:text-card-foreground"
+          >
+            <ChevronDown className={`h-3 w-3 transition-transform ${showAllValues ? "rotate-180" : ""}`} />
+            {showAllValues ? "Show less" : `Show all values (+${hiddenCount})`}
+          </button>
+        )}
 
         {/* Your offer row */}
         {offerHigh > 0 && (

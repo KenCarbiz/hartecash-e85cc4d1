@@ -17,6 +17,7 @@ import {
   calcHighMileagePenaltyPct, calcColorAdjustmentPct,
   DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY,
   DEFAULT_SEASONAL_ADJUSTMENT, DEFAULT_DEDUCTION_MODES, DEFAULT_DEDUCTION_AMOUNTS,
+  DEFAULT_MARKET_ADJUSTMENT,
   type OfferSettings, type OfferRule, type OfferEstimate,
   type ConditionBasisMap, type ConditionEquipmentMap,
 } from "@/lib/offerCalculator";
@@ -307,6 +308,8 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const [showDetailPanel, setShowDetailPanel] = useState<string | null>(null);
   const [retailStats, setRetailStats] = useState<RetailStats | null>(null);
   const [retailListings, setRetailListings] = useState<RetailListing[]>([]);
+  // Condition inputs collapse — compact when there are no deductions.
+  const [conditionInputsOpen, setConditionInputsOpen] = useState(false);
 
   // Sync when parent settings change
   const prevSettingsRef = useRef(settings);
@@ -548,9 +551,54 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   // === Pricing Command Bar metrics (derived) ===
   const cmdRetailAvg = liveBbVehicle ? Number(liveBbVehicle.retail?.avg || 0) : 0;
   const cmdProfitSpread = (liveResult && liveBbVehicle)
-    ? cmdRetailAvg - liveResult.high - (activeSettings.recon_cost || 0) - ((activeSettings as { dealer_pack?: number }).dealer_pack || 0)
+    ? cmdRetailAvg - liveResult.high - (activeSettings.recon_cost || 0) - (activeSettings.dealer_pack || 0) - (activeSettings.pack_warranty || 0)
     : null;
   const cmdMarketOn = !!activeSettings.market_adjustment?.enabled;
+  // Toggle the real-time market adjustment on/off (off by default). Seeds
+  // the default bracket config the first time it's switched on.
+  const toggleLiveMarket = () => {
+    const cur = activeSettings.market_adjustment ?? DEFAULT_MARKET_ADJUSTMENT;
+    updateLocalSetting("market_adjustment", { ...cur, enabled: !cmdMarketOn });
+  };
+
+  // === Deal Cockpit metrics ===
+  // What it actually sells for in the radius: prefer recently-SOLD median
+  // (truth), fall back to active-listing median, then Black Book retail avg.
+  const ckSold = retailStats?.sold;
+  const ckActive = retailStats?.active;
+  const ckMarketSale =
+    (ckSold?.median_price || 0) ||
+    (ckActive?.median_price || 0) ||
+    cmdRetailAvg ||
+    0;
+  const ckMarketSource = ckSold?.median_price ? "sold median" : ckActive?.median_price ? "listing median" : "BB retail avg";
+  const ckCompCount = ckSold?.vehicle_count || ckActive?.vehicle_count || 0;
+  const ckDaysSupply = retailStats?.market_days_supply ?? null;
+  const ckDaysToSell = retailStats?.mean_days_to_turn ?? null;
+  const ckUnits = ckActive?.vehicle_count ?? null;
+  const ckRecon = activeSettings.recon_cost || 0;
+  const ckPack = activeSettings.dealer_pack || 0;
+  const ckWarranty = activeSettings.pack_warranty || 0;
+  // All dealer-entered costs that sit on top of what we pay.
+  const ckCosts = ckRecon + ckPack + ckWarranty;
+  // Target gross = the existing offer_settings field (single source of
+  // truth, also editable in the Offer Settings form). Drives the ceiling.
+  const targetGross = activeSettings.target_gross_min || 0;
+  const ckOffer = liveResult?.high ?? 0;
+  // Landed / cost-to-market = what we pay + recon + pack + warranty.
+  const ckLanded = ckOffer ? ckOffer + ckCosts : 0;
+  const ckCostToMarketPct = ckMarketSale && ckLanded ? ckLanded / ckMarketSale : null;
+  // Projected gross margin at the current offer = selling price − landed cost.
+  const ckMargin = ckMarketSale && ckLanded ? ckMarketSale - ckLanded : null;
+  const ckMarginPct = ckMargin != null && ckMarketSale ? ckMargin / ckMarketSale : null;
+  const marginTone = ckMargin == null
+    ? "" : ckMargin <= 0 ? "text-destructive" : ckMargin < targetGross ? "text-warning" : "text-success";
+  // Ceiling: the most we can pay and still net the target gross at market.
+  const ckMaxOffer = ckMarketSale ? Math.max(0, ckMarketSale - ckCosts - targetGross) : null;
+  const ckHeadroom = ckMaxOffer != null && ckOffer ? ckMaxOffer - ckOffer : null;
+  const supplyTone = ckDaysSupply == null ? "text-muted-foreground"
+    : ckDaysSupply < 30 ? "text-success" : ckDaysSupply < 60 ? "text-primary" : "text-destructive";
+  const usd0 = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
   return (
     <div className="space-y-3">
@@ -561,56 +609,124 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
           anchor while they edit pricing below.
           ═══════════════════════════════════════════════════════ */}
       <div className="sticky top-0 z-30 -mx-1 px-1 py-1.5 bg-slate-50/95 dark:bg-background/95 backdrop-blur-sm">
-        <div className="rounded-2xl border border-border/80 bg-card shadow-sm px-4 py-3 flex flex-wrap items-center gap-x-5 gap-y-2">
-          <div className="flex items-center gap-2 min-w-0 max-w-[260px]">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <div className="rounded-2xl border border-border/80 bg-card shadow-sm px-4 py-2.5">
+          {/* Row 1: identity + live status */}
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <Car className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Vehicle</div>
-              <div className="text-xs font-bold truncate">
+              <div className="text-xs font-bold truncate leading-tight">
                 {liveBbVehicle ? `${liveBbVehicle.year} ${liveBbVehicle.make} ${liveBbVehicle.model}` : "No VIN loaded"}
               </div>
+              <div className="text-[10px] text-muted-foreground leading-tight">
+                Condition: <span className="font-semibold text-primary">{CONDITION_LABELS[liveCondition]}</span>
+              </div>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleLiveMarket}
+                title={cmdMarketOn
+                  ? "Live Market ON — offers auto-adjust for local supply/demand. Click to turn off."
+                  : "Live Market OFF — offers ignore local supply/demand. Click to turn on."}
+                className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors ${
+                  cmdMarketOn
+                    ? "bg-success/10 text-success border border-success/30 hover:bg-success/20"
+                    : "bg-muted text-muted-foreground border border-border hover:bg-muted/70"
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${cmdMarketOn ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
+                Live Market {cmdMarketOn ? "ON" : "OFF"}
+              </button>
+              {liveResult?.isHotLead && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/30">
+                  🔥 Hot
+                </span>
+              )}
             </div>
           </div>
-          <div className="hidden md:block h-8 w-px bg-border" />
-          <div>
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Condition</div>
-            <div className="text-xs font-bold text-primary">{CONDITION_LABELS[liveCondition]}</div>
-          </div>
-          <div className="hidden md:block h-8 w-px bg-border" />
-          <div>
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Configured Offer</div>
-            <div className="text-base font-bold text-primary leading-tight">
-              {liveResult ? `$${liveResult.high.toLocaleString()}` : "—"}
+
+          {/* Row 2: the decision — what it sells for → what it costs us → how high we can go */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
+            {/* Market sale (anchor) */}
+            <CockpitTile
+              label="Market Sale"
+              value={ckMarketSale ? usd0(ckMarketSale) : "—"}
+              sub={ckMarketSale ? `${ckMarketSource} · ${ckCompCount} comps` : "look up a VIN"}
+              accent
+            />
+            {/* Velocity / scarcity */}
+            <CockpitTile
+              label="Velocity"
+              value={ckDaysSupply != null ? `${Math.round(ckDaysSupply)}d supply` : "—"}
+              valueClass={supplyTone}
+              sub={
+                ckDaysToSell != null || ckUnits != null
+                  ? `${ckDaysToSell != null ? `${Math.round(ckDaysToSell)}d to sell` : "—"} · ${ckUnits ?? "—"} in mkt`
+                  : "market velocity"
+              }
+            />
+            {/* Our costs — recon + pack + packed warranty */}
+            <CockpitTile
+              label="Dealer Costs"
+              value={ckCosts ? usd0(ckCosts) : "$0"}
+              sub={`recon ${usd0(ckRecon)} · pack ${usd0(ckPack)} · war ${usd0(ckWarranty)}`}
+            />
+            {/* Cost to market */}
+            <CockpitTile
+              label="Cost to Market"
+              value={ckLanded ? usd0(ckLanded) : "—"}
+              valueClass={
+                ckCostToMarketPct == null ? "" : ckCostToMarketPct <= 0.86 ? "text-success" : ckCostToMarketPct <= 0.93 ? "text-primary" : "text-destructive"
+              }
+              sub={ckCostToMarketPct != null ? `${Math.round(ckCostToMarketPct * 100)}% of market` : "landed cost"}
+            />
+            {/* Projected gross margin at this offer = selling price − landed */}
+            <CockpitTile
+              label="Projected Margin"
+              value={ckMargin != null ? usd0(ckMargin) : "—"}
+              valueClass={marginTone}
+              sub={
+                ckMargin != null
+                  ? `${Math.round((ckMarginPct ?? 0) * 100)}% · goal ${usd0(targetGross)}`
+                  : "sale − landed"
+              }
+            />
+            {/* Max offer (ceiling) with editable target gross */}
+            <div className="rounded-lg border border-success/30 bg-success/5 px-2.5 py-1.5">
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Max Offer</div>
+              <div className="text-base font-bold leading-tight text-success">
+                {ckMaxOffer != null ? usd0(ckMaxOffer) : "—"}
+              </div>
+              <div className="mt-0.5 flex items-center gap-1 text-[9px] text-muted-foreground">
+                <span>gross</span>
+                <span className="text-muted-foreground">$</span>
+                <input
+                  type="number"
+                  value={targetGross}
+                  onChange={(e) => updateLocalSetting("target_gross_min", Math.max(0, parseInt(e.target.value || "0", 10)))}
+                  step={250}
+                  className="w-12 bg-transparent border-b border-border/60 text-[10px] font-semibold text-card-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
             </div>
-          </div>
-          <div className="hidden md:block h-8 w-px bg-border" />
-          <div>
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Retail Avg</div>
-            <div className="text-xs font-bold">{cmdRetailAvg ? `$${cmdRetailAvg.toLocaleString()}` : "—"}</div>
-          </div>
-          <div className="hidden lg:block h-8 w-px bg-border" />
-          <div className="hidden lg:block">
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Profit Spread</div>
-            <div className={`text-xs font-bold ${cmdProfitSpread == null ? "text-muted-foreground" : cmdProfitSpread > 0 ? "text-success" : "text-destructive"}`}>
-              {cmdProfitSpread == null ? "—" : `${cmdProfitSpread >= 0 ? "+" : ""}$${cmdProfitSpread.toLocaleString()}`}
+            {/* Your offer + headroom */}
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-2.5 py-1.5">
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Your Offer</div>
+              <div className="text-base font-bold leading-tight text-primary">
+                {ckOffer ? usd0(ckOffer) : "—"}
+              </div>
+              <div className={`mt-0.5 text-[9px] font-semibold ${
+                ckHeadroom == null ? "text-muted-foreground" : ckHeadroom >= 0 ? "text-success" : "text-destructive"
+              }`}>
+                {ckHeadroom == null
+                  ? "headroom —"
+                  : ckHeadroom >= 0
+                  ? `${usd0(ckHeadroom)} under ceiling`
+                  : `${usd0(Math.abs(ckHeadroom))} over ceiling`}
+              </div>
             </div>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <span className={`hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full ${
-              cmdMarketOn
-                ? "bg-success/10 text-success border border-success/30"
-                : "bg-muted text-muted-foreground border border-border"
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${cmdMarketOn ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
-              Live Market {cmdMarketOn ? "ON" : "OFF"}
-            </span>
-            {liveResult?.isHotLead && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/30">
-                🔥 Hot
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -718,10 +834,142 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
             </div>
           </div>
 
-          {/* ══ TWO-COLUMN LAYOUT ══ */}
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-4 items-start">
+          {/* ══ STACKED DECISION LAYOUT: Market → Build the Offer ══ */}
+          <div className="space-y-4">
+
+          {/* ══ ZONE ① ══ */}
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Market &amp; Offer Summary</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+            {/* ── RIGHT: Final Offer + Live Market (elevated) + Profit — sticky on desktop ── */}
+            <div className="space-y-3">
+
+              {liveResult && (
+                <>
+                  {/* Final Offer Card */}
+                  <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
+                    <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground mb-1">Customer Offer</div>
+                    <div className="text-3xl font-bold text-primary">
+                      ${liveResult.high.toLocaleString()}
+                    </div>
+                    {compareMode && liveSavedResult && whatIfDelta !== 0 && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">vs. saved:</span>
+                        <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${whatIfDelta > 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                          {whatIfDelta > 0 ? "+" : ""}${whatIfDelta.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    {liveResult.matchedRuleIds.length > 0 && (
+                      <div className="flex items-center gap-1 mt-2">
+                        <Badge variant="secondary" className="text-micro">{liveResult.matchedRuleIds.length} rule(s) applied</Badge>
+                        {liveResult.isHotLead && <Badge variant="destructive" className="text-micro">🔥 Hot</Badge>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── LIVE MARKET INTELLIGENCE — elevated, green-accent ── */}
+                  <div className="rounded-2xl border-2 border-success/40 bg-gradient-to-br from-success/5 via-card to-card shadow-lg overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-success/10 border-b border-success/30">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                        </span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-success">Live Market Intelligence</span>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] border-success/40 text-success bg-success/5">REAL-TIME</Badge>
+                    </div>
+                    <div className="p-3">
+                      <RetailMarketPanel
+                        vin={liveVin}
+                        uvc={liveBbVehicle.uvc}
+                        zipcode={liveZip}
+                        dealerZip={liveZip}
+                        radiusMiles={Number(activeSettings.retail_search_radius) || 50}
+                        offerHigh={liveResult.high}
+                        vehicleMileage={liveMileage}
+                        currentAcv={liveResult.high}
+                        onStatsLoaded={setRetailStats}
+                        onListingsLoaded={setRetailListings}
+                        compact
+                      />
+                    </div>
+                  </div>
 
 
+
+                  {/* What-If Toggle */}
+                  {savedSettings && (
+                    <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-border bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <ArrowRight className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-xs font-semibold text-card-foreground">What-If Comparison</span>
+                      </div>
+                      <Switch checked={compareMode} onCheckedChange={setCompareMode} className="scale-90" />
+                    </div>
+                  )}
+
+                  {compareMode && liveSavedResult && (
+                     <div className="rounded-lg border border-border bg-muted/20 p-3">
+                      <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground mb-1">Saved Logic Offer</div>
+                      <div className="text-lg font-bold text-muted-foreground">
+                        ${liveSavedResult.high.toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Market Calibration Strip */}
+                  <MarketCalibrationStrip
+                    listings={retailListings}
+                    stats={retailStats}
+                    vehicleMileage={liveMileage}
+                    currentOffer={liveResult.high}
+                  />
+
+                  {/* Profit Gauge */}
+                  <div className="rounded-lg border border-border bg-muted/20 p-4">
+                    <ProfitSpreadGauge
+                      offerHigh={liveResult.high}
+                      wholesaleAvg={Number(liveBbVehicle.wholesale?.avg || 0)}
+                      tradeinAvg={Number(liveBbVehicle.tradein?.avg || 0)}
+                      retailAvg={(() => {
+                        const basis = (settings as SimulatorSettings).retail_profit_basis || "retail_avg";
+                        const tierMap: Record<string, number> = {
+                          retail_xclean: Number(liveBbVehicle.retail?.xclean || 0),
+                          retail_clean: Number(liveBbVehicle.retail?.clean || 0),
+                          retail_avg: Number(liveBbVehicle.retail?.avg || 0),
+                          retail_rough: Number(liveBbVehicle.retail?.rough || 0),
+                        };
+                        return tierMap[basis] || Number(liveBbVehicle.retail?.avg || 0);
+                      })()}
+                      msrp={Number(liveBbVehicle.msrp || 0)}
+                    />
+                  </div>
+
+                  {/* Market Context */}
+                  <div className="rounded-lg border border-border bg-muted/20 p-4">
+                    <MarketContextPanel bbVehicle={liveBbVehicle} offerHigh={liveResult.high} />
+                  </div>
+
+                  {/* (Live Retail Market moved up — see elevated panel below Final Offer) */}
+
+                </>
+              )}
+
+              {!liveResult && (
+                <div className="bg-muted/40 rounded-lg p-6 text-sm text-muted-foreground text-center">
+                  Set vehicle condition to see the offer calculation.
+                </div>
+              )}
+            </div>
+
+          {/* ══ ZONE ② ══ */}
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Build the Offer</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
             {/* ── LEFT: Active Tier Config + Waterfall ── */}
             <div className="space-y-4">
               {/* Active Tier Configuration */}
@@ -843,13 +1091,30 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                   </span>
                 );
 
+                const condDeductTotal = liveResult?.totalDeductions ?? 0;
+                const hasCondDeduct = condDeductTotal > 0;
                 return (
-                  <div className="rounded-lg border border-border p-3">
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <Car className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">② Customer Condition Inputs</span>
-                    </div>
-                    <div className="space-y-2">
+                  <Collapsible
+                    open={conditionInputsOpen || hasCondDeduct}
+                    onOpenChange={setConditionInputsOpen}
+                    className="rounded-lg border border-border"
+                  >
+                    <CollapsibleTrigger asChild>
+                      <button className="flex w-full items-center justify-between px-3 py-2.5 text-left rounded-lg hover:bg-muted/30 transition-colors">
+                        <span className="flex items-center gap-1.5">
+                          <Car className="w-3.5 h-3.5 text-primary" />
+                          <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">② Customer Condition Inputs</span>
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${hasCondDeduct ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+                            {CONDITION_LABELS[liveCondition]} · {hasCondDeduct ? `−$${condDeductTotal.toLocaleString()}` : "No adjustments"}
+                          </span>
+                          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${conditionInputsOpen || hasCondDeduct ? "rotate-180" : ""}`} />
+                        </span>
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                    <div className="space-y-2 px-3 pb-3 pt-1">
                       {/* Row: Condition Tier */}
                       <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
                         <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Condition</span>
@@ -1076,7 +1341,8 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </div>
                       )}
                     </div>
-                  </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 );
               })()}
 
@@ -1516,128 +1782,6 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                 </div>
               )}
             </div>
-
-            {/* ── RIGHT: Final Offer + Live Market (elevated) + Profit — sticky on desktop ── */}
-            <div className="space-y-3 lg:sticky lg:top-24 lg:self-start">
-
-              {liveResult && (
-                <>
-                  {/* Final Offer Card */}
-                  <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
-                    <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground mb-1">Customer Offer</div>
-                    <div className="text-3xl font-bold text-primary">
-                      ${liveResult.high.toLocaleString()}
-                    </div>
-                    {compareMode && liveSavedResult && whatIfDelta !== 0 && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">vs. saved:</span>
-                        <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${whatIfDelta > 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                          {whatIfDelta > 0 ? "+" : ""}${whatIfDelta.toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                    {liveResult.matchedRuleIds.length > 0 && (
-                      <div className="flex items-center gap-1 mt-2">
-                        <Badge variant="secondary" className="text-micro">{liveResult.matchedRuleIds.length} rule(s) applied</Badge>
-                        {liveResult.isHotLead && <Badge variant="destructive" className="text-micro">🔥 Hot</Badge>}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ── LIVE MARKET INTELLIGENCE — elevated, green-accent ── */}
-                  <div className="rounded-2xl border-2 border-success/40 bg-gradient-to-br from-success/5 via-card to-card shadow-lg overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-2.5 bg-success/10 border-b border-success/30">
-                      <div className="flex items-center gap-2">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
-                        </span>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-success">Live Market Intelligence</span>
-                      </div>
-                      <Badge variant="outline" className="text-[9px] border-success/40 text-success bg-success/5">REAL-TIME</Badge>
-                    </div>
-                    <div className="p-3">
-                      <RetailMarketPanel
-                        vin={liveVin}
-                        uvc={liveBbVehicle.uvc}
-                        zipcode={liveZip}
-                        dealerZip={liveZip}
-                        radiusMiles={Number(activeSettings.retail_search_radius) || 50}
-                        offerHigh={liveResult.high}
-                        vehicleMileage={liveMileage}
-                        currentAcv={liveResult.high}
-                        onStatsLoaded={setRetailStats}
-                        onListingsLoaded={setRetailListings}
-                      />
-                    </div>
-                  </div>
-
-
-
-                  {/* What-If Toggle */}
-                  {savedSettings && (
-                    <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-border bg-muted/30">
-                      <div className="flex items-center gap-2">
-                        <ArrowRight className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-xs font-semibold text-card-foreground">What-If Comparison</span>
-                      </div>
-                      <Switch checked={compareMode} onCheckedChange={setCompareMode} className="scale-90" />
-                    </div>
-                  )}
-
-                  {compareMode && liveSavedResult && (
-                     <div className="rounded-lg border border-border bg-muted/20 p-3">
-                      <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground mb-1">Saved Logic Offer</div>
-                      <div className="text-lg font-bold text-muted-foreground">
-                        ${liveSavedResult.high.toLocaleString()}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Market Calibration Strip */}
-                  <MarketCalibrationStrip
-                    listings={retailListings}
-                    stats={retailStats}
-                    vehicleMileage={liveMileage}
-                    currentOffer={liveResult.high}
-                  />
-
-                  {/* Profit Gauge */}
-                  <div className="rounded-lg border border-border bg-muted/20 p-4">
-                    <ProfitSpreadGauge
-                      offerHigh={liveResult.high}
-                      wholesaleAvg={Number(liveBbVehicle.wholesale?.avg || 0)}
-                      tradeinAvg={Number(liveBbVehicle.tradein?.avg || 0)}
-                      retailAvg={(() => {
-                        const basis = (settings as SimulatorSettings).retail_profit_basis || "retail_avg";
-                        const tierMap: Record<string, number> = {
-                          retail_xclean: Number(liveBbVehicle.retail?.xclean || 0),
-                          retail_clean: Number(liveBbVehicle.retail?.clean || 0),
-                          retail_avg: Number(liveBbVehicle.retail?.avg || 0),
-                          retail_rough: Number(liveBbVehicle.retail?.rough || 0),
-                        };
-                        return tierMap[basis] || Number(liveBbVehicle.retail?.avg || 0);
-                      })()}
-                      msrp={Number(liveBbVehicle.msrp || 0)}
-                    />
-                  </div>
-
-                  {/* Market Context */}
-                  <div className="rounded-lg border border-border bg-muted/20 p-4">
-                    <MarketContextPanel bbVehicle={liveBbVehicle} offerHigh={liveResult.high} />
-                  </div>
-
-                  {/* (Live Retail Market moved up — see elevated panel below Final Offer) */}
-
-                </>
-              )}
-
-              {!liveResult && (
-                <div className="bg-muted/40 rounded-lg p-6 text-sm text-muted-foreground text-center">
-                  Set vehicle condition to see the offer calculation.
-                </div>
-              )}
-            </div>
           </div>
         </>
       )}
@@ -1649,6 +1793,29 @@ function calcEquipmentTotal(bbVehicle: BBVehicle, selectedUocs: string[]): numbe
   return (bbVehicle.add_deduct_list || [])
     .filter(ad => selectedUocs.includes(ad.uoc))
     .reduce((sum, ad) => sum + (ad.avg || 0), 0);
+}
+
+/** Compact metric tile for the Deal Cockpit row. */
+function CockpitTile({
+  label,
+  value,
+  sub,
+  valueClass = "",
+  accent = false,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  valueClass?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className={`rounded-lg border px-2.5 py-1.5 ${accent ? "border-border bg-muted/40" : "border-border/70 bg-card"}`}>
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
+      <div className={`text-base font-bold leading-tight ${valueClass || "text-card-foreground"}`}>{value}</div>
+      {sub && <div className="mt-0.5 text-[9px] text-muted-foreground truncate">{sub}</div>}
+    </div>
+  );
 }
 
 export default OfferSimulator;

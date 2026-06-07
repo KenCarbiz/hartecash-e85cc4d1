@@ -7,12 +7,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  PanelRightOpen, Copy, Check, ExternalLink, RefreshCw, Car, Settings2,
+  PanelRightOpen, Copy, Check, ExternalLink, RefreshCw, Car, Settings2, LogIn,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useFormConfig } from "@/hooks/useFormConfig";
+import { useToast } from "@/hooks/use-toast";
 
 // A representative VDP vehicle so staff can preview the "apply your trade
 // toward this car" framing without standing on a real inventory page.
@@ -22,14 +24,74 @@ export default function TradeWidgetAdmin() {
   const { tenant } = useTenant();
   const { config } = useSiteConfig();
   const { formConfig } = useFormConfig();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const dealershipId = tenant.dealership_id;
   const origin = typeof window !== "undefined" ? window.location.origin : "";
+
+  // Dealer toggle: let returning customers sign in to re-open their offer.
+  // Persisted on form_config.widget_customer_signin; the slide-out shows a
+  // "Sign In" entry (routing to /my-submission) when this is on.
+  const [signinOn, setSigninOn] = useState(false);
+  const [savingSignin, setSavingSignin] = useState(false);
+  useEffect(() => {
+    setSigninOn(formConfig.widget_customer_signin === true);
+  }, [formConfig.widget_customer_signin]);
+
+  const toggleSignin = async () => {
+    const next = !signinOn;
+    setSigninOn(next); // optimistic
+    setSavingSignin(true);
+    const { data: existing } = await supabase
+      .from("form_config")
+      .select("id")
+      .eq("dealership_id", dealershipId)
+      .maybeSingle();
+    let error;
+    if (existing) {
+      ({ error } = await supabase
+        .from("form_config")
+        .update({ widget_customer_signin: next, updated_at: new Date().toISOString() })
+        .eq("id", (existing as { id: string }).id));
+    } else {
+      ({ error } = await supabase
+        .from("form_config")
+        .insert({ dealership_id: dealershipId, widget_customer_signin: next }));
+    }
+    setSavingSignin(false);
+    if (error) {
+      setSigninOn(!next); // revert
+      const msg = error.message || "";
+      const missingCol =
+        /schema cache/i.test(msg) ||
+        (/column/i.test(msg) && /does not exist/i.test(msg)) ||
+        /widget_customer_signin/.test(msg);
+      toast({
+        title: missingCol ? "Pending migration" : "Save failed",
+        description: missingCol
+          ? "Run the widget_customer_signin migration to enable this toggle."
+          : msg || "Could not update the sign-in setting.",
+        variant: "destructive",
+      });
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["form_config", dealershipId] });
+    setPreviewKey((k) => k + 1); // reload the preview so it reflects the change
+  };
 
   const [onVdp, setOnVdp] = useState(true);
   const [intent, setIntent] = useState<"trade" | "sell">("trade");
   const [previewKey, setPreviewKey] = useState(0); // bump to reload iframe
   const [copied, setCopied] = useState(false);
+  // Slide-out width preset — matches the real panel sizes a dealer can ship.
+  const SIZES = [
+    { id: "compact", label: "Compact", px: 400 },
+    { id: "standard", label: "Standard", px: 460 },
+    { id: "wide", label: "Wide", px: 560 },
+  ] as const;
+  const [sizeId, setSizeId] = useState<(typeof SIZES)[number]["id"]>("standard");
+  const size = SIZES.find((s) => s.id === sizeId) ?? SIZES[1];
 
   // Offer aggressiveness / reveal mode live in offer_settings, not config.
   const [offer, setOffer] = useState<{ autoFirmPct: number | null; revealMode: string | null }>({
@@ -69,7 +131,7 @@ export default function TradeWidgetAdmin() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any;
     const run = () =>
-      w.HarteCash?.valueMyTrade({ dealerId: dealershipId, host: origin });
+      w.HarteCash?.valueMyTrade({ dealerId: dealershipId, host: origin, width: size.px });
     if (w.HarteCash) return run();
     if (launchedRef.current) return;
     launchedRef.current = true;
@@ -88,7 +150,7 @@ export default function TradeWidgetAdmin() {
 
 <script>
   window.addEventListener('load', function () {
-    HarteCash.bindTrade({ dealerId: '${dealershipId}' });
+    HarteCash.bindTrade({ dealerId: '${dealershipId}', width: ${size.px} });
   });
 </script>`;
 
@@ -129,6 +191,16 @@ export default function TradeWidgetAdmin() {
               <ToggleChip active={intent === "sell"} onClick={() => { setIntent("sell"); setPreviewKey((k) => k + 1); }}>
                 Sell
               </ToggleChip>
+              <span className="mx-1 hidden h-4 w-px bg-border sm:inline-block" aria-hidden />
+              {SIZES.map((s) => (
+                <ToggleChip
+                  key={s.id}
+                  active={sizeId === s.id}
+                  onClick={() => { setSizeId(s.id); setPreviewKey((k) => k + 1); }}
+                >
+                  {s.label} <span className="text-[10px] text-muted-foreground">{s.px}px</span>
+                </ToggleChip>
+              ))}
               <button
                 type="button"
                 onClick={() => setPreviewKey((k) => k + 1)}
@@ -146,7 +218,8 @@ export default function TradeWidgetAdmin() {
               key={previewKey}
               title="Trade widget preview"
               src={previewUrl}
-              className="h-[700px] w-[580px] max-w-full rounded-xl border border-border bg-white shadow-sm"
+              style={{ width: size.px }}
+              className="h-[700px] max-w-full rounded-xl border border-border bg-white shadow-sm"
             />
           </div>
 
@@ -191,6 +264,40 @@ export default function TradeWidgetAdmin() {
             >
               {copied ? <><Check className="h-4 w-4 text-emerald-600" /> Copied</> : <><Copy className="h-4 w-4" /> Copy snippet</>}
             </button>
+          </section>
+
+          <section className="rounded-2xl border border-border bg-card p-4">
+            <h2 className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              <LogIn className="h-4 w-4" /> Customer access
+            </h2>
+            <label className="flex cursor-pointer items-start justify-between gap-3">
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-foreground">
+                  Let customers sign in to their offer
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Adds a <span className="font-medium text-foreground">Sign In</span> option to the
+                  slide-out so returning customers can re-open their saved offer (via your customer
+                  portal at <code className="rounded bg-muted px-1">/my-submission</code>).
+                </span>
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={signinOn}
+                disabled={savingSignin}
+                onClick={toggleSignin}
+                className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-60 ${
+                  signinOn ? "bg-primary" : "bg-muted-foreground/30"
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                    signinOn ? "translate-x-[22px]" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </label>
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-4">
