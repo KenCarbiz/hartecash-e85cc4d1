@@ -16,7 +16,12 @@
 --     tenant-scoped ones so two dealers can each hold their own opt-out
 --     for the same contact.
 --
--- Idempotent.
+-- RECONCILED with the version Lovable applied in prod: the tenant-scoped
+-- unique indexes use Lovable's names + partial predicate, and the cadence
+-- function is only UPDATED if it already exists. This file is therefore a
+-- clean no-op against the live schema (a future `supabase db push` will not
+-- create duplicate indexes or an orphan cadence_pause_on_optout function),
+-- while still bootstrapping a fresh database. Idempotent.
 
 ALTER TABLE public.opt_outs
   ADD COLUMN IF NOT EXISTS dealership_id text;
@@ -42,13 +47,12 @@ BEGIN
   END LOOP;
 END $$;
 
--- Tenant-scoped uniqueness (non-partial so supabase-js ON CONFLICT can use
--- them if needed; NULLs are distinct, so legacy NULL-tenant rows and
--- phone-only / email-only rows do not over-dedupe).
-CREATE UNIQUE INDEX IF NOT EXISTS opt_outs_tenant_phone_channel_uq
-  ON public.opt_outs (dealership_id, phone, channel);
-CREATE UNIQUE INDEX IF NOT EXISTS opt_outs_tenant_email_channel_uq
-  ON public.opt_outs (dealership_id, email, channel);
+-- Tenant-scoped uniqueness. Names + partial predicate match the live prod
+-- indexes so IF NOT EXISTS is a no-op there; on a fresh DB this bootstraps them.
+CREATE UNIQUE INDEX IF NOT EXISTS opt_outs_phone_channel_tenant_uniq
+  ON public.opt_outs (dealership_id, phone, channel) WHERE phone IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS opt_outs_email_channel_tenant_uniq
+  ON public.opt_outs (dealership_id, email, channel) WHERE email IS NOT NULL;
 
 -- ── can_touch: scope the opt-out check to the submission's tenant ──
 -- (NULL dealership_id = legacy global opt-out, still suppresses.)
@@ -184,20 +188,34 @@ $function$;
 GRANT EXECUTE ON FUNCTION public.can_touch(uuid, text) TO authenticated, service_role;
 
 -- ── cadence_pause_on_optout: pause only the opting-out tenant's submissions ──
--- (NULL dealership_id = legacy global opt-out, pauses across all tenants.)
-CREATE OR REPLACE FUNCTION public.cadence_pause_on_optout()
-RETURNS trigger
-LANGUAGE plpgsql
-SET search_path = public
-AS $$
+-- Only UPDATE the function if it already exists (i.e. the cadence engine is
+-- installed). On databases without the cadence trigger we do NOT create an
+-- orphan function. (NULL dealership_id = legacy global opt-out, pauses across
+-- all tenants.)
+DO $$
 BEGIN
-  UPDATE public.submissions
-     SET cadence_paused_until = now() + interval '10 years'
-   WHERE ((NEW.phone IS NOT NULL AND phone = NEW.phone)
-       OR (NEW.email IS NOT NULL AND email = NEW.email))
-     AND (NEW.dealership_id IS NULL OR dealership_id::text = NEW.dealership_id);
-  RETURN NEW;
-END;
-$$;
+  IF EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE proname = 'cadence_pause_on_optout'
+      AND pronamespace = 'public'::regnamespace
+  ) THEN
+    EXECUTE $f$
+      CREATE OR REPLACE FUNCTION public.cadence_pause_on_optout()
+      RETURNS trigger
+      LANGUAGE plpgsql
+      SET search_path = public
+      AS $body$
+      BEGIN
+        UPDATE public.submissions
+           SET cadence_paused_until = now() + interval '10 years'
+         WHERE ((NEW.phone IS NOT NULL AND phone = NEW.phone)
+             OR (NEW.email IS NOT NULL AND email = NEW.email))
+           AND (NEW.dealership_id IS NULL OR dealership_id::text = NEW.dealership_id);
+        RETURN NEW;
+      END;
+      $body$;
+    $f$;
+  END IF;
+END $$;
 
 NOTIFY pgrst, 'reload schema';
