@@ -7625,16 +7625,27 @@ export type Database = {
         Args: { _event_kind: string; _factor_type?: string; _metadata?: Json }
         Returns: undefined
       }
-      lookup_submission_by_contact: {
-        Args: { _email: string; _phone: string }
-        Returns: {
-          name: string
-          token: string
-          vehicle_make: string
-          vehicle_model: string
-          vehicle_year: string
-        }[]
-      }
+      lookup_submission_by_contact:
+        | {
+            Args: { _email: string; _phone: string }
+            Returns: {
+              name: string
+              token: string
+              vehicle_make: string
+              vehicle_model: string
+              vehicle_year: string
+            }[]
+          }
+        | {
+            Args: { _dealership_id: string; _email: string; _phone: string }
+            Returns: {
+              name: string
+              token: string
+              vehicle_make: string
+              vehicle_model: string
+              vehicle_year: string
+            }[]
+          }
       mark_call_golden: {
         Args: { _call_id: string; _pinned: boolean }
         Returns: Json
