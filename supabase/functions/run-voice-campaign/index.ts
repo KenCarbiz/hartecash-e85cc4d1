@@ -121,19 +121,27 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Tenant isolation: a non-platform-admin caller may only run their
+    // OWN tenant's campaigns. Previously the client-supplied dealership_id
+    // (or a bare request) let any premium user trigger another tenant's —
+    // or all tenants' — voice campaigns. Force the tenant scope from the
+    // verified gate; platform admins may still target a specific dealer
+    // (or all, when none is supplied) via the body.
+    const tenantScope = gate.isPlatformAdmin ? (dealership_id ?? null) : gate.dealershipId;
+
     // ── Fetch active campaigns ──
     let campaignQuery = supabase
       .from("voice_campaigns")
       .select("*")
       .eq("status", "active");
+    if (tenantScope) campaignQuery = campaignQuery.eq("dealership_id", tenantScope);
 
     if (campaign_id) {
       campaignQuery = supabase
         .from("voice_campaigns")
         .select("*")
         .eq("id", campaign_id);
-    } else if (dealership_id) {
-      campaignQuery = campaignQuery.eq("dealership_id", dealership_id);
+      if (tenantScope) campaignQuery = campaignQuery.eq("dealership_id", tenantScope);
     }
 
     const { data: campaigns, error: campErr } = await campaignQuery;

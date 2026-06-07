@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { resolveCaller, callerCanActOnTenant, forbidden } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,6 +21,18 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Tenant isolation: this runs with the service role (bypasses RLS),
+    // so we must verify the CALLER is allowed to read this dealership's
+    // outcomes. Without this, any authenticated tenant user could pass
+    // another dealer's id and read their competitive appraisal stats
+    // (acceptance rate, avg sale price, recon, price realization).
+    const caller = await resolveCaller(req, supabaseUrl, anonKey, serviceKey);
+    if (!callerCanActOnTenant(caller, dealership_id)) {
+      return forbidden(corsHeaders);
+    }
+
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // Check total finalized count for this dealership
