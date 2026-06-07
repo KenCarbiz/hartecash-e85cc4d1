@@ -92,6 +92,11 @@ serve(async (req) => {
     if (subErr || !submission) {
       return json({ error: "Submission not found" }, 404);
     }
+    // Tenant isolation: submission fetched by client-supplied id — a premium
+    // tenant must not drive an AI call to another tenant's customer.
+    if (!gate.isPlatformAdmin && submission.dealership_id !== gate.dealershipId) {
+      return json({ error: "Forbidden — submission belongs to another tenant" }, 403);
+    }
     const { data: dealer } = await supabase
       .from("dealer_accounts")
       .select(

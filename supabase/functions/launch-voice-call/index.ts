@@ -261,6 +261,17 @@ serve(async (req) => {
       );
     }
 
+    // Tenant isolation: requireProduct verified the caller is entitled, but
+    // the submission is fetched by client-supplied id. A premium tenant must
+    // not place an AI call to ANOTHER tenant's customer. Platform admins may
+    // act cross-tenant.
+    if (!gate.isPlatformAdmin && submission.dealership_id !== gate.dealershipId) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden — submission belongs to another tenant" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     if (!submission.phone) {
       return new Response(
         JSON.stringify({ error: "Submission has no phone number" }),

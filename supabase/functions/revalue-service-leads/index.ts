@@ -1,6 +1,7 @@
 // @jwt-required — admin/cron only; default verify_jwt=true is correct.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireInternalOrPlatformAdmin } from "../_shared/internal-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,6 +36,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Tenant isolation: runs with the service role and can revalue leads +
+  // fire customer SMS/email across tenants. Restrict to internal (cron /
+  // service-role) or platform-admin callers; the optional dealership_id
+  // body param only narrows scope for those already-trusted callers.
+  const authFail = await requireInternalOrPlatformAdmin(req, corsHeaders);
+  if (authFail) return authFail;
 
   const summary: Summary = {
     processed: 0,
