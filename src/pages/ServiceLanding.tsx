@@ -295,6 +295,7 @@ const ServiceLanding = () => {
         customerEmail: email,
         formSource: "service_landing",
         submissionToken: generatedToken,
+        dealershipId: tenant.dealership_id,
       });
 
       setStep(2);

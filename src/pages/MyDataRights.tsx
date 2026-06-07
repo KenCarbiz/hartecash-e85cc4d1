@@ -101,7 +101,11 @@ const MyDataRights = () => {
     setPhase("working");
     try {
       const { data, error: e } = await supabase.functions.invoke("self-service-data-action", {
-        body: { challenge_id: challengeId, code: otp, kind: type, dealership_id: tenant.dealership_id },
+        // The edge function maps only "export"/"delete"; the access/portability
+        // right is fulfilled by an export. Without this translation "access"
+        // hit the function as an unknown kind and 400'd, so self-service export
+        // never worked.
+        body: { challenge_id: challengeId, code: otp, kind: type === "access" ? "export" : type, dealership_id: tenant.dealership_id },
       });
       if (e || !data?.ok) {
         const reason = data?.error;

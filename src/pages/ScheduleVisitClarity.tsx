@@ -280,6 +280,7 @@ const ScheduleVisitClarity = () => {
         customerPhone: form.customer_phone,
         customerEmail: form.customer_email,
         formSource: "schedule_visit",
+        dealershipId: tenant.dealership_id,
       });
       track("appointment_booked", { location: form.store_location || undefined });
       setSubmitted(true);

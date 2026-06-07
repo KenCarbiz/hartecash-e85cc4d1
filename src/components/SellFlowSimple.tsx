@@ -671,6 +671,7 @@ const SellFlowSimple = ({
           submissionToken: generatedToken,
           formSource: "sell_flow_simple",
           dealershipName: tenant.dealership_id,
+          dealershipId: tenant.dealership_id,
         });
       } catch (e) {
         console.warn("logConsent failed (non-fatal):", e);

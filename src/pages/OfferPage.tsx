@@ -696,6 +696,7 @@ const OfferPageLegacy = () => {
           formSource: "offer_page",
           submissionToken: token || undefined,
           dealershipName: config.dealership_name,
+          dealershipId: tenant.dealership_id,
           loanStatus: s.loan_status || null,
         });
       }

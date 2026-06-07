@@ -184,6 +184,7 @@ export async function calculateAndPersistOffer(
       formSource: fd.nextStep === "trade" ? "moto_trade_flow" : "moto_sell_flow",
       submissionToken: token,
       dealershipName,
+      dealershipId,
       loanStatus: fd.loanStatus || null,
     });
   }

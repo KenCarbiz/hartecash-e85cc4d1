@@ -232,6 +232,7 @@ const DealAcceptedLegacy = () => {
           formSource: "deal_accepted_gate",
           submissionToken: token,
           dealershipName: config.dealership_name,
+          dealershipId: submission?.dealership_id ?? undefined,
         });
 
         // Fire notifications now that we have contact info

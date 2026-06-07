@@ -61,6 +61,10 @@ Deno.serve(async (req) => {
 
     const { error } = await supabase.from("consent_log").insert({
       customer_name: body.customer_name ?? null,
+      // Stamp the originating tenant when supplied; column defaults to
+      // 'default' if omitted (legacy rows). Tenant attribution is what lets
+      // the scoped data-rights export/purge find this consent record.
+      ...(body.dealership_id ? { dealership_id: body.dealership_id } : {}),
       customer_phone: body.customer_phone ?? null,
       customer_email: body.customer_email ?? null,
       consent_type: body.consent_type ?? "sms_calls_email",

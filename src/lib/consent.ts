@@ -83,6 +83,7 @@ export async function logConsent({
   formSource,
   submissionToken,
   dealershipName,
+  dealershipId,
   loanStatus,
   hasLoan,
 }: {
@@ -92,6 +93,10 @@ export async function logConsent({
   formSource: string;
   submissionToken?: string;
   dealershipName?: string;
+  /** The tenant the consent was obtained under. Without this the row
+   *  lands as the global 'default' tenant, mis-attributing the consent
+   *  and making tenant-scoped data-rights export/purge miss it. */
+  dealershipId?: string;
   // Either pass the raw loanStatus string (platform will normalize
   // it) or pass an explicit hasLoan boolean. If neither is provided
   // the consent defaults to "no loan" (v1) which is safe because
@@ -110,6 +115,7 @@ export async function logConsent({
       : "sms_calls_email";
     const payload = {
       customer_name: customerName || null,
+      ...(dealershipId ? { dealership_id: dealershipId } : {}),
       customer_phone: toE164(customerPhone),
       customer_email: customerEmail || null,
       consent_type: consentType,

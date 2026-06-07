@@ -733,6 +733,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
         formSource: "sell_form",
         submissionToken: generatedToken,
         dealershipName: config.dealership_name,
+        dealershipId: tenant.dealership_id,
         // Pass the self-reported loan status so the consent text
         // includes the payoff verification authorization ONLY when
         // the customer has indicated there's an outstanding loan.

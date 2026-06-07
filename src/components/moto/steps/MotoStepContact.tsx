@@ -210,6 +210,7 @@ const MotoStepContact = ({
       formSource: state.intent === "trade" ? "moto_trade_flow" : "moto_sell_flow",
       submissionToken: state.submissionToken,
       dealershipName: config.dealership_name,
+      dealershipId: tenant.dealership_id,
       loanStatus: state.ownership || null,
     });
   };
