@@ -6980,8 +6980,8 @@
     "semantic_hash": ""
   },
   "vercel.json": {
-    "mtime": 1780499306.3595827,
-    "ast_hash": "6411d2fbb5f0e00aaff0ca0ded84e0b6",
+    "mtime": 1780863209.6906843,
+    "ast_hash": "42d4bd7406a9b5205c7e17302238a4b6",
     "semantic_hash": ""
   },
   "vite.config.ts": {
@@ -7802,6 +7802,11 @@
   "src/assets/value-tracker-vehicle.png": {
     "mtime": 1779478956.3964283,
     "ast_hash": "f0fdffa1ad36bf32701dc13c806a17f5",
+    "semantic_hash": ""
+  },
+  "public/data.html": {
+    "mtime": 1780863201.1524167,
+    "ast_hash": "7086eed314fc61dc20ddad7996588a64",
     "semantic_hash": ""
   }
 }

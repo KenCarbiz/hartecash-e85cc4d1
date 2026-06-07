@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="light" />
+<meta name="theme-color" content="#F7F5F0" />
+<meta name="supported-color-schemes" content="light" />
+<title>HarteCash — Your Data. Your Customers. Your Dealership.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: light only;
+    --paper:       #F7F5F0;
+    --paper-2:     #EFE9DC;
+    --paper-3:     #FFFFFF;
+    --paper-warm:  #FAF7F0;
+    --ink:         #0A0F1A;
+    --ink-2:       #1A2235;
+    --text:        #374151;
+    --text-2:      #4B5563;
+    --muted:       #6B7280;
+    --muted-2:     #9CA3AF;
+    --gold:        #8B7440;
+    --gold-2:      #A68B47;
+    --gold-3:      #B89968;
+    --gold-light:  #D4B776;
+    --gold-pale:   #EFE3C2;
+    --gold-paler:  #F5EDD5;
+    --navy:        #0D1B2A;
+    --navy-2:      #142336;
+    --navy-3:      #1F3550;
+    --border:      #E5DDC9;
+    --border-2:    #D9CFB6;
+    --success:     #047857;
+    --shadow-sm:   0 2px 6px rgba(13, 27, 42, 0.06);
+    --shadow-md:   0 8px 24px rgba(13, 27, 42, 0.08);
+    --shadow-lg:   0 24px 48px -16px rgba(13, 27, 42, 0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; background: #F7F5F0; color-scheme: light; }
+  body {
+    font-family: 'Manrope', sans-serif;
+    background: #F7F5F0;
+    color: #374151;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-fill-color: #374151;
+    overflow-x: hidden;
+    forced-color-adjust: none;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    position: relative;
+    padding: 56px 0 96px;
+    background:
+      radial-gradient(ellipse at 80% 0%, rgba(139, 116, 64, 0.10), transparent 55%),
+      radial-gradient(ellipse at 0% 100%, rgba(139, 116, 64, 0.06), transparent 50%),
+      #F7F5F0;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(139, 116, 64, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 116, 64, 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+    pointer-events: none;
+    mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%);
+  }
+  .brandbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 0; position: relative; z-index: 2;
+  }
+  .logo {
+    font-family: 'Manrope'; font-weight: 800; font-size: 26px;
+    letter-spacing: -0.02em;
+    display: flex; align-items: center;
+  }
+  .logo .harte { color: var(--ink); -webkit-text-fill-color: var(--ink); }
+  .logo .cash  { color: var(--gold); -webkit-text-fill-color: var(--gold); }
+  .logo .dot   { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); margin: 0 8px 4px; align-self: flex-end; }
+  .badge {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold); -webkit-text-fill-color: var(--gold);
+    border: 1px solid var(--gold-light);
+    padding: 8px 14px; border-radius: 999px;
+    background: var(--paper-3);
+    font-weight: 700;
+  }
+  .hero-content { position: relative; z-index: 2; margin-top: 56px; max-width: 920px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--gold); -webkit-text-fill-color: var(--gold);
+    font-weight: 700; margin-bottom: 28px;
+  }
+  .eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 12px rgba(139, 116, 64, 0.4); }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(40px, 6vw, 76px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    color: var(--ink); -webkit-text-fill-color: var(--ink);
+    margin-bottom: 28px;
+  }
+  h1 em { font-style: italic; color: var(--gold); -webkit-text-fill-color: var(--gold); font-weight: 400; }
+  .lede {
+    font-size: 20px; line-height: 1.55; color: var(--text); -webkit-text-fill-color: var(--text);
+    max-width: 720px;
+    font-weight: 400;
+  }
+  .lede strong { color: var(--ink); -webkit-text-fill-color: var(--ink); font-weight: 700; }
+
+  /* ---------- ANCHOR NAV ---------- */
+  .anchors {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 40px;
+    position: relative; z-index: 2;
+  }
+  .anchors a {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
+    color: var(--text); -webkit-text-fill-color: var(--text);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    padding: 10px 16px; border-radius: 999px;
+    transition: all 0.2s ease;
+    background: var(--paper-3);
+  }
+  .anchors a:hover { color: var(--gold); -webkit-text-fill-color: var(--gold); border-color: var(--gold-light); background: var(--gold-paler); }
+
+  /* ---------- SECTIONS ---------- */
+  section { padding: 96px 0; border-bottom: 1px solid var(--border); position: relative; background: #F7F5F0; }
+  .section-eyebrow {
+    font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--gold); -webkit-text-fill-color: var(--gold);
+    font-weight: 700; margin-bottom: 18px;
+  }
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink); -webkit-text-fill-color: var(--ink);
+    margin-bottom: 24px;
+    max-width: 820px;
+  }
+  h2 em { font-style: italic; color: var(--gold); -webkit-text-fill-color: var(--gold); }
+  .section-lede {
+    font-size: 18px; color: var(--text); -webkit-text-fill-color: var(--text);
+    max-width: 720px; margin-bottom: 56px; line-height: 1.6;
+  }
+
+  /* ---------- THREE PILLARS ---------- */
+  .pillars {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .pillar {
+    background: var(--paper-3);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  .pillar:hover { transform: translateY(-4px); border-color: var(--gold-light); box-shadow: var(--shadow-md); }
+  .pillar-num {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 400;
+    font-size: 64px; color: var(--gold); -webkit-text-fill-color: var(--gold);
+    line-height: 1; margin-bottom: 12px;
+  }
+  .pillar h3 {
+    font-family: 'Manrope'; font-weight: 700; font-size: 22px;
+    color: var(--ink); -webkit-text-fill-color: var(--ink);
+    margin-bottom: 14px; letter-spacing: -0.01em;
+  }
+  .pillar p { color: var(--text); -webkit-text-fill-color: var(--text); font-size: 15px; line-height: 1.65; }
+
+  /* ---------- KEN SECTION ---------- */
+  .ken-quote {
+    background: var(--paper-3);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--gold);
+    border-radius: 18px;
+    padding: 56px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+  .ken-quote::before {
+    content: "\201C";
+    position: absolute;
+    font-family: 'Fraunces', serif;
+    font-size: 280px;
+    color: var(--gold);
+    opacity: 0.10;
+    top: -40px; left: 24px;
+    line-height: 1;
+  }
+  .ken-quote-text {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(22px, 2.4vw, 30px);
+    line-height: 1.45;
+    color: var(--ink); -webkit-text-fill-color: var(--ink);
+    position: relative;
+    margin-bottom: 32px;
+    max-width: 880px;
+  }
+  .ken-sig {
+    display: flex; align-items: center; gap: 16px; position: relative;
+  }
+  .ken-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; color: var(--ink); -webkit-text-fill-color: var(--ink);
+    font-size: 16px;
+    border: 2px solid var(--gold-light);
+  }
+  .ken-name { font-weight: 700; color: var(--ink); -webkit-text-fill-color: var(--ink); font-size: 15px; }
+  .ken-title { font-size: 13px; color: var(--muted); -webkit-text-fill-color: var(--muted); }
+
+  .ken-bullets { margin-top: 48px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .ken-bullet {
+    display: flex; gap: 18px; align-items: flex-start;
+    padding: 24px; background: var(--paper-3);
+    border: 1px solid var(--border); border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+  }
+  .ken-bullet .check {
+    flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--success); display: flex; align-items: center; justify-content: center;
+    color: #fff; -webkit-text-fill-color: #fff;
+    font-weight: 800; font-size: 16px;
+  }
+  .ken-bullet strong { color: var(--ink); -webkit-text-fill-color: var(--ink); font-weight: 700; display: block; margin-bottom: 4px; font-size: 15px; }
+  .ken-bullet span { color: var(--text); -webkit-text-fill-color: var(--text); font-size: 14px; line-height: 1.6; }
+
+  /* ---------- 23-DAY TIMELINE ---------- */
+  .process-section { background: var(--paper-2); }
+  .timeline-hero {
+    display: grid; grid-template-columns: 320px 1fr; gap: 56px; align-items: center;
+    margin-bottom: 72px;
+  }
+  .big-number {
+    font-family: 'Fraunces', serif;
+    font-size: 220px;
+    line-height: 0.85;
+    color: var(--gold); -webkit-text-fill-color: var(--gold);
+    font-weight: 400;
+    letter-spacing: -0.04em;
+  }
+  .big-number small {
+    display: block; font-size: 16px; color: var(--muted); -webkit-text-fill-color: var(--muted);
+    font-family: 'Manrope'; font-weight: 700; letter-spacing: 0.18em;
+    text-transform: uppercase; margin-top: 16px;
+  }
+  .timeline {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 16px;
+  }
+  .timeline::before {
+    content: ""; position: absolute; top: 28px; left: 28px; right: 28px; height: 2px;
+    background: linear-gradient(90deg, var(--gold-light), var(--gold));
+    z-index: 1;
+  }
+  .stage { position: relative; z-index: 2; padding-right: 16px; }
+  .stage .marker {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--paper-3); border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+    font-weight: 800; color: var(--gold); -webkit-text-fill-color: var(--gold);
+    font-size: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stage h4 { color: var(--ink); -webkit-text-fill-color: var(--ink); font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+  .stage .days { color: var(--gold); -webkit-text-fill-color: var(--gold); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px; }
+  .stage p { font-size: 13px; color: var(--text-2); -webkit-text-fill-color: var(--text-2); line-height: 1.6; }
+
+  /* ---------- LIFECYCLE ---------- */
+  .lifecycle {
+    background: var(--paper-3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    margin-top: 32px;
+    box-shadow: var(--shadow-sm);
+  }
+  .lifecycle h3 { color: var(--ink); -webkit-text-fill-color: var(--ink); font-size: 24px; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.01em; }
+  .lifecycle > p { color: var(--text); -webkit-text-fill-color: var(--text); }
+  .lifecycle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 28px; }
+  .lifecycle-card {
+    padding: 24px;
+    background: var(--paper-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .lifecycle-card .tag {
+    display: inline-block; padding: 4px 10px; border-radius: 6px;
+    background: var(--gold-pale); color: var(--gold); -webkit-text-fill-color: var(--gold);
+    font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .lifecycle-card h4 { color: var(--ink); -webkit-text-fill-color: var(--ink); font-weight: 700; font-size: 16px; margin-bottom: 10px; }
+  .lifecycle-card p { color: var(--text); -webkit-text-fill-color: var(--text); font-size: 14px; line-height: 1.6; }
+  .lifecycle-card .arrow { color: var(--success); -webkit-text-fill-color: var(--success); font-weight: 700; font-size: 13px; margin-top: 14px; display: block; }
+
+  .recommend {
+    margin-top: 36px;
+    padding: 24px 28px;
+    background: var(--gold-paler);
+    border: 1px solid var(--gold-light);
+    border-radius: 12px;
+  }
+  .recommend strong { color: var(--gold); -webkit-text-fill-color: var(--gold); display: block; margin-bottom: 8px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 800; }
+  .recommend p { color: var(--ink-2); -webkit-text-fill-color: var(--ink-2); font-size: 14.5px; line-height: 1.65; }
+
+  /* ---------- SECURITY (READABLE) ---------- */
+  .security-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  }
+  .sec-card {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    background: var(--paper-3);
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  .sec-card:hover { transform: translateY(-2px); border-color: var(--gold-light); box-shadow: var(--shadow-md); }
+  .sec-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+    font-size: 22px;
+  }
+  .sec-card h4 { color: var(--ink); -webkit-text-fill-color: var(--ink); font-weight: 700; font-size: 17px; margin-bottom: 10px; }
+  .sec-card p { color: var(--text); -webkit-text-fill-color: var(--text); font-size: 14.5px; line-height: 1.65; }
+
+  /* ---------- IT DEEP DIVE ---------- */
+  .it-section { background: var(--paper-2); }
+  .it-callout {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: var(--paper-3);
+    border: 1px solid var(--gold-light);
+    border-radius: 999px;
+    padding: 10px 18px;
+    color: var(--gold); -webkit-text-fill-color: var(--gold);
+    font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .it-toggle {
+    width: 100%;
+    background: var(--paper-3);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    color: var(--ink);
+    -webkit-text-fill-color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    font-family: 'Manrope'; font-weight: 700; font-size: 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  .it-toggle:hover { background: var(--paper-warm); border-color: var(--gold-light); }
+  .it-toggle .chev { color: var(--gold); -webkit-text-fill-color: var(--gold); font-size: 24px; transition: transform 0.3s ease; }
+  .it-toggle.open .chev { transform: rotate(180deg); }
+  .it-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.6s ease;
+  }
+  .it-body.open { max-height: 10000px; }
+  .it-inner {
+    padding: 40px;
+    background: var(--paper-3);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    margin-top: -1px;
+    box-shadow: var(--shadow-sm);
+  }
+  .it-grid { display: grid; grid-template-columns: 200px 1fr; gap: 32px; margin-bottom: 36px; padding-bottom: 36px; border-bottom: 1px solid var(--border); }
+  .it-grid:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .it-grid h4 { color: var(--gold); -webkit-text-fill-color: var(--gold); font-weight: 800; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; }
+  .it-grid p { color: var(--text); -webkit-text-fill-color: var(--text); font-size: 14.5px; line-height: 1.7; margin-bottom: 10px; }
+  .it-grid p strong { color: var(--ink); -webkit-text-fill-color: var(--ink); font-weight: 700; }
+  .it-grid code, .mono {
+    font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+    background: var(--paper-2); color: var(--gold); -webkit-text-fill-color: var(--gold);
+    padding: 2px 8px; border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .it-grid ul { list-style: none; padding-left: 0; }
+  .it-grid li { color: var(--text); -webkit-text-fill-color: var(--text); font-size: 14px; padding: 6px 0; padding-left: 22px; position: relative; line-height: 1.6; }
+  .it-grid li::before {
+    content: "▸"; position: absolute; left: 0; top: 6px; color: var(--gold); font-size: 12px;
+  }
+  .it-grid li strong { color: var(--ink); -webkit-text-fill-color: var(--ink); font-weight: 700; }
+  .stack-row {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px;
+  }
+  .stack-pill {
+    background: var(--paper-2); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--ink-2); -webkit-text-fill-color: var(--ink-2);
+  }
+  .stack-pill .label { color: var(--gold); -webkit-text-fill-color: var(--gold); margin-right: 6px; font-weight: 700; }
+
+  /* ---------- DISCLOSURE PAGES ---------- */
+  .docs-section { background: var(--paper); }
+  .docs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .doc-card {
+    display: block;
+    background: var(--paper-3);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 32px;
+    text-decoration: none;
+    color: var(--ink);
+    -webkit-text-fill-color: var(--ink);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    font-family: 'Manrope', sans-serif;
+    text-align: left;
+    width: 100%;
+  }
+  .doc-card::after {
+    content: "";
+    position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
+    background: linear-gradient(90deg, var(--gold-light), var(--gold));
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+  .doc-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--gold-light); }
+  .doc-card:hover::after { transform: scaleX(1); }
+  .doc-num {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 400;
+    font-size: 14px; color: var(--gold); -webkit-text-fill-color: var(--gold); margin-bottom: 14px;
+  }
+  .doc-card h3 {
+    font-family: 'Fraunces', serif; font-weight: 400; font-size: 26px;
+    color: var(--ink); -webkit-text-fill-color: var(--ink);
+    margin-bottom: 12px; letter-spacing: -0.01em;
+  }
+  .doc-card p { color: var(--text); -webkit-text-fill-color: var(--text); font-size: 14.5px; line-height: 1.6; margin-bottom: 24px; }
+  .doc-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--gold); -webkit-text-fill-color: var(--gold);
+    font-weight: 700; font-size: 13px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .doc-link .arr { transition: transform 0.2s ease; }
+  .doc-card:hover .doc-link .arr { transform: translateX(4px); }
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(10, 15, 26, 0.78);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: none;
+    align-items: flex-start; justify-content: center;
+    padding: 40px 20px;
+    overflow-y: auto;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-overlay.open { display: flex; }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  .modal {
+    background: var(--paper-3);
+    border-radius: 22px;
+    max-width: 720px;
+    width: 100%;
+    position: relative;
+    margin: auto;
+    box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .modal-header {
+    padding: 32px 40px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    background: var(--paper);
+  }
+  .modal-eyebrow {
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--gold); -webkit-text-fill-color: var(--gold);
+    font-weight: 700; margin-bottom: 10px;
+  }
+  .modal-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 400; font-style: italic;
+    font-size: 30px;
+    color: var(--ink); -webkit-text-fill-color: var(--ink);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+  .modal-close {
+    background: var(--paper-3);
+    border: 1px solid var(--border);
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    color: var(--ink); -webkit-text-fill-color: var(--ink);
+    font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-family: inherit;
+    transition: all 0.2s ease;
+  }
+  .modal-close:hover { background: var(--gold); color: #fff; -webkit-text-fill-color: #fff; border-color: var(--gold); }
+  .modal-body { padding: 32px 40px; }
+  .modal-section {
+    margin-bottom: 28px; padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .modal-section h4 {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold); -webkit-text-fill-color: var(--gold);
+    font-weight: 800; margin-bottom: 14px;
+  }
+  .modal-section p {
+    color: var(--text); -webkit-text-fill-color: var(--text);
+    font-size: 15px; line-height: 1.7; margin-bottom: 12px;
+  }
+  .modal-section p:last-child { margin-bottom: 0; }
+  .modal-section p strong { color: var(--ink); -webkit-text-fill-color: var(--ink); font-weight: 700; }
+  .modal-section ul { list-style: none; padding-left: 0; }
+  .modal-section li {
+    color: var(--text); -webkit-text-fill-color: var(--text);
+    font-size: 14.5px; padding: 7px 0 7px 22px;
+    position: relative; line-height: 1.55;
+  }
+  .modal-section li::before {
+    content: "▸"; position: absolute; left: 0; top: 7px;
+    color: var(--gold); font-size: 12px;
+  }
+  .modal-section li strong { color: var(--ink); -webkit-text-fill-color: var(--ink); font-weight: 700; }
+  .modal-footer {
+    padding: 24px 40px 32px;
+    background: var(--paper-2);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .modal-footer-note {
+    font-size: 12px; color: var(--muted); -webkit-text-fill-color: var(--muted);
+  }
+  .modal-footer a {
+    color: var(--gold); -webkit-text-fill-color: var(--gold);
+    font-weight: 700; font-size: 13px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .modal-footer a:hover { color: var(--gold-2); -webkit-text-fill-color: var(--gold-2); }
+  .modal-close-btn {
+    background: var(--gold);
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 999px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+  .modal-close-btn:hover { background: var(--gold-2); transform: translateY(-1px); }
+  .modal-footer-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .modal-print-btn {
+    background: transparent;
+    color: var(--gold);
+    -webkit-text-fill-color: var(--gold);
+    border: 1.5px solid var(--gold);
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .modal-print-btn:hover {
+    background: var(--gold-paler);
+    transform: translateY(-1px);
+  }
+  .modal-footer-note a {
+    color: var(--gold);
+    -webkit-text-fill-color: var(--gold);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .modal-footer-note a:hover { text-decoration: underline; }
+  body.modal-locked { overflow: hidden; }
+
+  /* ---------- BOTTOM LINE (dark band) ---------- */
+  .bottom-line { background: var(--navy); padding: 96px 0; border: none; }
+  .bottom-card {
+    background:
+      radial-gradient(circle at 20% 30%, rgba(212, 183, 118, 0.15), transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(212, 183, 118, 0.08), transparent 50%),
+      linear-gradient(135deg, var(--navy-2), var(--navy));
+    border: 1px solid rgba(212, 183, 118, 0.25);
+    border-radius: 24px;
+    padding: 72px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .bottom-card .top-mark {
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: 18px; color: var(--gold-light); -webkit-text-fill-color: var(--gold-light);
+    margin-bottom: 24px; letter-spacing: 0.02em;
+  }
+  .bottom-card h2 {
+    color: #fff; -webkit-text-fill-color: #fff;
+    font-family: 'Fraunces'; font-style: italic; font-weight: 400;
+    font-size: clamp(28px, 3.4vw, 42px);
+    max-width: 880px; margin: 0 auto 24px;
+    position: relative;
+    line-height: 1.2;
+  }
+  .bottom-card h2 em { color: var(--gold-light); -webkit-text-fill-color: var(--gold-light); font-style: italic; }
+  .bottom-card p {
+    color: rgba(255,255,255,0.85);
+    -webkit-text-fill-color: rgba(255,255,255,0.85);
+    font-size: 17px; max-width: 580px; margin: 0 auto;
+    position: relative; line-height: 1.65;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    background: var(--paper);
+    padding: 40px 0 24px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    -webkit-text-fill-color: var(--muted);
+    font-size: 13px;
+  }
+  .footer-row {
+    max-width: 1200px; margin: 0 auto; padding: 0 32px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .footer-row .copy strong { color: var(--ink); -webkit-text-fill-color: var(--ink); font-weight: 800; }
+  .footer-row .links { display: flex; gap: 24px; }
+  .footer-row .links a {
+    color: var(--muted); -webkit-text-fill-color: var(--muted);
+    text-decoration: none; cursor: pointer;
+    background: none; border: none; font-family: inherit; font-size: inherit; padding: 0;
+  }
+  .footer-row .links a:hover { color: var(--gold); -webkit-text-fill-color: var(--gold); }
+  .engine-credit {
+    text-align: center; padding: 18px 0 0;
+    font-size: 10.5px; color: var(--muted-2); -webkit-text-fill-color: var(--muted-2);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    border-top: 1px solid var(--border); margin-top: 24px;
+  }
+  .engine-credit span { color: var(--gold); -webkit-text-fill-color: var(--gold); font-weight: 700; }
+
+  /* ---------- PRINT ---------- */
+  @media print {
+    body { background: #fff !important; color: #000 !important; -webkit-text-fill-color: #000 !important; }
+    body > *:not(.modal-overlay) { display: none !important; }
+    .modal-overlay {
+      position: static !important;
+      background: #fff !important;
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+      padding: 0 !important;
+      overflow: visible !important;
+      animation: none !important;
+    }
+    .modal-overlay:not(.open) { display: none !important; }
+    .modal-overlay.open { display: block !important; }
+    .modal {
+      box-shadow: none !important;
+      border: none !important;
+      max-width: 100% !important;
+      width: auto !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      animation: none !important;
+    }
+    .modal-header {
+      background: #fff !important;
+      border-bottom: 2px solid var(--gold) !important;
+      padding: 16px 0 20px !important;
+    }
+    .modal-body { padding: 24px 0 !important; }
+    .modal-footer { padding: 16px 0 !important; background: #fff !important; border-top: 1px solid #ccc !important; }
+    .modal-close, .modal-footer-actions { display: none !important; }
+    .modal-title { color: #000 !important; -webkit-text-fill-color: #000 !important; }
+    .modal-section p, .modal-section li, .modal-section p strong, .modal-section li strong {
+      color: #000 !important; -webkit-text-fill-color: #000 !important;
+    }
+    .modal-footer-note { color: #000 !important; -webkit-text-fill-color: #000 !important; }
+    @page { margin: 0.6in; }
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 900px) {
+    .pillars, .ken-bullets, .lifecycle-grid, .security-grid, .docs-grid { grid-template-columns: 1fr; }
+    .timeline { grid-template-columns: 1fr 1fr; row-gap: 32px; }
+    .timeline::before { display: none; }
+    .timeline-hero { grid-template-columns: 1fr; gap: 24px; text-align: left; }
+    .big-number { font-size: 160px; }
+    .it-grid { grid-template-columns: 1fr; gap: 12px; }
+    .ken-quote { padding: 40px 28px; }
+    .bottom-card { padding: 48px 28px; }
+    section { padding: 64px 0; }
+    .wrap { padding: 0 20px; }
+    .anchors { gap: 6px; }
+    .anchors a { padding: 8px 12px; font-size: 12px; }
+    .modal-header, .modal-body, .modal-footer { padding-left: 24px; padding-right: 24px; }
+    .modal-title { font-size: 24px; }
+    .it-inner { padding: 28px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="wrap">
+    <div class="brandbar">
+      <div class="logo"><span class="harte">Harte</span><span class="dot"></span><span class="cash">Cash</span></div>
+      <div class="badge">Dealer Trust Brief · v1.0</div>
+    </div>
+
+    <div class="hero-content">
+      <div class="eyebrow"><span class="dot"></span> Prepared for Harte INFINITI Leadership</div>
+      <h1>Your data.<br/>Your customers.<br/><em>Your dealership.</em></h1>
+      <p class="lede">
+        Before HarteCash signs a single private-party seller in our name, leadership deserves a clear answer to the question every honest dealer asks: <strong>"What happens to our customers' information, and what's stopping the system from leaking it?"</strong> This brief answers that, in plain English — with a technical appendix for IT and compliance.
+      </p>
+
+      <div class="anchors">
+        <a href="#pillars">The three promises</a>
+        <a href="#trust">The honest question</a>
+        <a href="#process">The 23-day process</a>
+        <a href="#lifecycle">What happens to data</a>
+        <a href="#security">How it's protected</a>
+        <a href="#tech">Technical deep dive</a>
+        <a href="#docs">Disclosure pages</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ THREE PILLARS ============ -->
+<section id="pillars">
+  <div class="wrap">
+    <div class="section-eyebrow">The Three Promises</div>
+    <h2>What this brief actually <em>commits to.</em></h2>
+    <p class="section-lede">Read these three sentences. If HarteCash doesn't deliver every one of them, the platform fails its own contract.</p>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="pillar-num">01</div>
+        <h3>The dealership owns the customer.</h3>
+        <p>Every lead, every phone number, every VIN, every offer accepted or rejected belongs to the rooftop. HarteCash is the data processor. Harte INFINITI is the data controller. Full stop.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">02</div>
+        <h3>The data is locked to your rooftop.</h3>
+        <p>Multi-tenant architecture with row-level security means another dealership — even another Harte store running the same platform — cannot see your customers without explicit group-wide permission. Your IT team can verify this in five minutes.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">03</div>
+        <h3>The exit door is always open.</h3>
+        <p>Full data export to your CRM on demand, on schedule, or on termination. No hostage data, no API ransom, no "we'll get back to you in 90 days." That's written into the DPA.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HONEST QUESTION ============ -->
+<section id="trust">
+  <div class="wrap">
+    <div class="section-eyebrow">The Honest Question</div>
+    <h2>"Is the system going to <em>walk off with our customer list?"</em></h2>
+    <p class="section-lede">Asked plainly by every dealer when a new tool comes through the door. So let's answer it plainly.</p>
+
+    <div class="ken-quote">
+      <div class="ken-quote-text">
+        I have zero commercial interest in our customer list. I'm a car guy and your finance manager. The tool exists because the acquisition process at every dealership I've ever run — including this one — is broken. The customer record is the dealership's asset, not mine. My job is to help this rooftop acquire smarter and retail more. If anyone wanted a customer list, they'd buy one for $400 from a data broker. I built software instead — for us.
+      </div>
+      <div class="ken-sig">
+        <div class="ken-avatar">KC</div>
+        <div>
+          <div class="ken-name">Ken Criscione</div>
+          <div class="ken-title">Finance Manager · Harte INFINITI</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ken-bullets">
+      <div class="ken-bullet">
+        <div class="check">✓</div>
+        <div>
+          <strong>No reseller clause.</strong>
+          <span>The Terms &amp; Conditions and Data Processing Agreement both explicitly prohibit HarteCash and its operators from selling, licensing, or sharing customer PII with any third party. Ever.</span>
+        </div>
+      </div>
+      <div class="ken-bullet">
+        <div class="check">✓</div>
+        <div>
+          <strong>Cross-rooftop isolation.</strong>
+          <span>Even across the five Harte rooftops, each store's data sits in its own tenant. Row-level security at the database layer enforces this. It is not a setting that can be flipped without leadership approval.</span>
+        </div>
+      </div>
+      <div class="ken-bullet">
+        <div class="check">✓</div>
+        <div>
+          <strong>Administrators don't browse records.</strong>
+          <span>Platform admins have system-level access for support and uptime — not customer-record access on a rooftop's tenant unless explicitly granted for a defined support task.</span>
+        </div>
+      </div>
+      <div class="ken-bullet">
+        <div class="check">✓</div>
+        <div>
+          <strong>Audit log on demand.</strong>
+          <span>Every database read on a customer record is logged with timestamp, user, IP, and query. Leadership or IT can request the access log on demand, for any window.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 23-DAY PROCESS ============ -->
+<section id="process" class="process-section">
+  <div class="wrap">
+    <div class="section-eyebrow">Why Data Lives in the System First</div>
+    <h2>The industry average to acquire a private-party vehicle is <em>23 days.</em></h2>
+    <p class="section-lede">This is the single most important number in this brief. It explains why customer records sit inside HarteCash during an active deal instead of getting dumped into the CRM the moment a lead comes in.</p>
+
+    <div class="timeline-hero">
+      <div class="big-number">23<small>Days · Industry Avg.</small></div>
+      <div>
+        <p style="color: var(--text); -webkit-text-fill-color: var(--text); font-size:16px; line-height:1.75; max-width:520px;">
+          A private-party seller does not decide to sell their car to a dealership on day one. They get an offer, think about it, compare it to Carvana, talk to a spouse, drive a competing trade-in, get a better number, come back. Twenty-three days of <strong style="color: var(--ink); -webkit-text-fill-color: var(--ink);">touches, follow-ups, and re-pricing.</strong> If that lead gets dumped into the CRM on day one, it dies the same death every used-car lead dies.
+        </p>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="stage">
+        <div class="marker">01</div>
+        <h4>Inquiry</h4>
+        <div class="days">Day 0–1</div>
+        <p>Seller drops VIN, mileage, condition. COMPASS™ generates an offer in under 90 seconds.</p>
+      </div>
+      <div class="stage">
+        <div class="marker">02</div>
+        <h4>Nurture</h4>
+        <div class="days">Day 1–14</div>
+        <p>Automated SMS &amp; email touches via A2P 10DLC compliant channels. Re-price triggers on market shifts.</p>
+      </div>
+      <div class="stage">
+        <div class="marker">03</div>
+        <h4>Commit</h4>
+        <div class="days">Day 14–23</div>
+        <p>Seller accepts. Inspection scheduled. Title work begins. Deal moves into the 10-stage pipeline.</p>
+      </div>
+      <div class="stage">
+        <div class="marker">04</div>
+        <h4>Close or Archive</h4>
+        <div class="days">Day 23+</div>
+        <p>Transacted → archived to dealership CRM. Lost or aged out → archived to CRM with notes &amp; disposition.</p>
+      </div>
+    </div>
+
+    <div class="lifecycle" id="lifecycle">
+      <div class="section-eyebrow" style="margin-bottom: 10px;">Lifecycle &amp; Archival</div>
+      <h3>What happens to a customer record after the deal ends.</h3>
+      <p style="max-width:760px; margin-top:8px; font-size: 15px; line-height: 1.65;">Every record has a defined exit. Nothing sits indefinitely in a black box. The recommended flow keeps the record inside HarteCash during the active acquisition window, then hands it back to the dealership CRM with full notes attached.</p>
+
+      <div class="lifecycle-grid">
+        <div class="lifecycle-card">
+          <div class="tag">Outcome 1</div>
+          <h4>Deal Transacted</h4>
+          <p>Vehicle acquired. Full deal jacket — including all communications, offer history, and inspection — exports to the CRM and the record is archived in HarteCash.</p>
+          <span class="arrow">→ Archived to dealership CRM</span>
+        </div>
+        <div class="lifecycle-card">
+          <div class="tag">Outcome 2</div>
+          <h4>Customer Aged Out</h4>
+          <p>If a lead has no engagement for the configured aging window (default 90 days after last touch), the record is automatically archived to the CRM with status "aged out" and removed from active pipeline.</p>
+          <span class="arrow">→ Archived to dealership CRM</span>
+        </div>
+        <div class="lifecycle-card">
+          <div class="tag">Outcome 3</div>
+          <h4>Customer Opted Out</h4>
+          <p>Seller tells us they're no longer selling, or hits STOP on SMS. Record is flagged "do not contact," archived to the CRM with disposition notes, and removed from all outbound touches immediately.</p>
+          <span class="arrow">→ Archived to dealership CRM</span>
+        </div>
+      </div>
+
+      <div class="recommend">
+        <strong>⚠ Recommendation</strong>
+        <p>Do not export to the CRM on day one. Let HarteCash work the 23-day window. The system is purpose-built for private-party seller nurture; the CRM is not. Premature export buries the lead in the same UCT/internet lead pool where most acquisition leads go to die.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECURITY (READABLE) ============ -->
+<section id="security">
+  <div class="wrap">
+    <div class="section-eyebrow">How the Data is Protected</div>
+    <h2>Plain English version: <em>bank-grade, in transit and at rest.</em></h2>
+    <p class="section-lede">If you've ever used online banking, your money sits behind the same class of infrastructure your customers' data sits behind here. Below is the dealer-readable version. The IT-readable version is one section down.</p>
+
+    <div class="security-grid">
+      <div class="sec-card">
+        <div class="sec-icon">🔒</div>
+        <h4>Encrypted everywhere</h4>
+        <p>Customer PII is encrypted with AES-256 when stored on disk and TLS 1.2+ when in motion across the internet. A copy intercepted off the wire is unreadable garbage.</p>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">🏢</div>
+        <h4>Each rooftop in its own room</h4>
+        <p>Your data lives behind tenant isolation rules enforced at the database level. Another rooftop cannot query your records even with a valid login of their own.</p>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">📜</div>
+        <h4>SOC 2 backbone</h4>
+        <p>Underlying infrastructure (Supabase, Vercel, Twilio) maintains SOC 2 Type II compliance. We didn't build a security program in a garage — we stand on audited infrastructure.</p>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">📞</div>
+        <h4>A2P 10DLC compliant SMS</h4>
+        <p>Carrier-registered messaging campaigns for Harte INFINITI (CT local 860-936-9221). Every text sent through HarteCash is compliant with TCPA and the carrier consortium ruleset.</p>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">📋</div>
+        <h4>Every access is logged</h4>
+        <p>Reads, writes, exports, and admin actions are recorded with user, timestamp, IP, and operation. Audit log is exportable to IT or compliance on request.</p>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">🗝️</div>
+        <h4>Keys, secrets, credentials</h4>
+        <p>API keys and credentials live in encrypted environment vaults — not in code, not in spreadsheets. Database service-role keys are scoped and rotatable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ IT DEEP DIVE ============ -->
+<section id="tech" class="it-section">
+  <div class="wrap">
+    <div class="it-callout">⚙ For IT &amp; Compliance</div>
+    <h2>Technical appendix.</h2>
+    <p class="section-lede">Open this section and hand it to whoever runs the Harte network, the DMS integration, or compliance review. Expand below.</p>
+
+    <button class="it-toggle" id="itToggle" onclick="toggleIT()">
+      <span>Expand technical infrastructure brief</span>
+      <span class="chev">▾</span>
+    </button>
+
+    <div class="it-body" id="itBody">
+      <div class="it-inner">
+
+        <div class="it-grid">
+          <h4>Hosting &amp; runtime</h4>
+          <div>
+            <p>Application is served from <code>Vercel</code> (US edge network, SOC 2 Type II). Long-running services run on <code>Render</code> in the US-East region. Database is hosted on <code>Supabase</code> (managed Postgres 15, AWS US-East-1, SOC 2 Type II).</p>
+            <div class="stack-row">
+              <span class="stack-pill"><span class="label">frontend</span>Vercel · Next.js</span>
+              <span class="stack-pill"><span class="label">workers</span>Render · Node</span>
+              <span class="stack-pill"><span class="label">db</span>Supabase · Postgres 15</span>
+              <span class="stack-pill"><span class="label">region</span>AWS US-East-1</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="it-grid">
+          <h4>Tenant isolation</h4>
+          <div>
+            <p>Multi-tenant architecture with per-tenant <code>tenant_id</code> on every row of every customer-bearing table. Isolation is enforced via Postgres <code>Row Level Security</code> (RLS) policies, not by application code.</p>
+            <p>This means: even if an application bug attempted to query another tenant's data, Postgres itself would refuse the query at the database layer. RLS policies are version-controlled and reviewable.</p>
+            <ul>
+              <li>RLS enabled on all <code>customers</code>, <code>vehicles</code>, <code>offers</code>, <code>messages</code>, <code>deals</code> tables</li>
+              <li>JWT-scoped claims include <code>tenant_id</code>; policies match <code>auth.jwt() -&gt; tenant_id = row.tenant_id</code></li>
+              <li>Service-role keys (which bypass RLS) are never exposed to client; server-only</li>
+              <li>Each Harte rooftop = one tenant; cross-rooftop joins require explicit group-admin permission</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="it-grid">
+          <h4>Encryption</h4>
+          <div>
+            <p><strong>In transit:</strong> TLS 1.2+ enforced on all endpoints. HTTPS-only cookies, HSTS headers set. No mixed content.</p>
+            <p><strong>At rest:</strong> AES-256 disk encryption via Supabase/AWS RDS managed storage. Database backups encrypted with separate KMS keys.</p>
+            <p><strong>Secrets:</strong> Stored in Vercel environment variables and Render env vaults. No secrets committed to source control (verified via secret scanning + <code>.gitignore</code>).</p>
+          </div>
+        </div>
+
+        <div class="it-grid">
+          <h4>Authentication &amp; access</h4>
+          <div>
+            <p>Authentication via Supabase Auth with email + password and optional magic-link. <code>bcrypt</code> hashed credentials, never stored plain. Session tokens are short-lived JWTs (1 hour) with refresh-token rotation.</p>
+            <ul>
+              <li>Role-based access control (RBAC): <code>owner</code>, <code>manager</code>, <code>desk</code>, <code>buyer</code>, <code>viewer</code></li>
+              <li>2FA available; MFA enforcement configurable per tenant</li>
+              <li>Platform-admin access to a tenant requires explicit grant from a tenant owner</li>
+              <li>All admin actions logged to immutable <code>audit_log</code> table</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="it-grid">
+          <h4>Third-party integrations</h4>
+          <div>
+            <p>Each integration is scoped to least-privilege credentials and called server-side only.</p>
+            <div class="stack-row" style="margin-top: 0;">
+              <span class="stack-pill"><span class="label">sms</span>Twilio · A2P 10DLC</span>
+              <span class="stack-pill"><span class="label">valuation</span>Black Book API</span>
+              <span class="stack-pill"><span class="label">ai · text</span>Anthropic API</span>
+              <span class="stack-pill"><span class="label">ai · img</span>fal.ai · FLUX / BRIA</span>
+              <span class="stack-pill"><span class="label">inventory</span>vAuto API (pending)</span>
+            </div>
+            <p style="margin-top: 14px;">No customer PII is sent to AI providers in identifiable form. VIN-only and condition-only payloads to valuation APIs. SMS payloads go through Twilio under registered campaign <code>Harte INFINITI</code> (CT 860-936-9221).</p>
+          </div>
+        </div>
+
+        <div class="it-grid">
+          <h4>Data subject rights &amp; retention</h4>
+          <div>
+            <p>Dealership is the data controller; the platform is the processor. The DPA defines the following:</p>
+            <ul>
+              <li>Active records retained in HarteCash during the 23-day acquisition window plus a configurable aging buffer (default 90 days)</li>
+              <li>On transaction, opt-out, or aging: record archived to dealership CRM via API or scheduled CSV export</li>
+              <li>On dealership request: full export of all tenant data within 7 business days (CSV + JSON)</li>
+              <li>On contract termination: 30-day grace period for data export, then deletion within 60 days with deletion certificate</li>
+              <li>Customer opt-out (STOP on SMS, email unsubscribe, written request) honored within 24 hours system-wide</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="it-grid">
+          <h4>Logging, audit, incident response</h4>
+          <div>
+            <ul>
+              <li>Application logs: 30-day retention (configurable up to 1 year on request)</li>
+              <li>Database audit log: row-level reads and writes on PII-bearing tables, 1-year retention</li>
+              <li>Authentication events: 1-year retention</li>
+              <li>Incident response: any confirmed breach of dealership data disclosed within 72 hours per DPA</li>
+              <li>Penetration testing: annual third-party engagement (report available under NDA)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="it-grid">
+          <h4>Compliance posture</h4>
+          <div>
+            <ul>
+              <li><strong>GLBA Safeguards Rule:</strong> HarteCash processes nonpublic personal information under dealership-controlled flows; safeguards documented and reviewable</li>
+              <li><strong>TCPA / A2P 10DLC:</strong> Carrier-registered SMS campaigns with documented consent capture and STOP/HELP handling</li>
+              <li><strong>FTC Used Car Rule:</strong> HarteCash does not generate vehicle disclosures; that responsibility remains with the dealership</li>
+              <li><strong>State privacy laws:</strong> Honors deletion and access requests under CT, NY, NJ, MA, CA frameworks as applicable</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="it-grid">
+          <h4>Verification &amp; transparency</h4>
+          <div>
+            <p>The Harte IT team is welcome to:</p>
+            <ul>
+              <li>Review the live RLS policies via a read-only Supabase dashboard invite</li>
+              <li>Request a sample of the audit log for any 24-hour window</li>
+              <li>Run a penetration test against the tenant (with written notice)</li>
+              <li>Receive SOC 2 reports of all upstream providers under NDA</li>
+              <li>Read the executed DPA in full before any data flows</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DISCLOSURE PAGES ============ -->
+<section id="docs" class="docs-section">
+  <div class="wrap">
+    <div class="section-eyebrow">Public Disclosure Pages</div>
+    <h2>The four documents <em>linked at the bottom of every page.</em></h2>
+    <p class="section-lede">Customers see these. Dealers should read them. Tap any card to read the plain-English summary inline; full legal version lives on hartecash.com.</p>
+
+    <div class="docs-grid">
+      <button class="doc-card" onclick="openModal('privacy')">
+        <div class="doc-num">— 01 —</div>
+        <h3>Privacy Policy</h3>
+        <p>What customer information is collected, why, who can see it, how long it's kept, and how a customer can request deletion or correction.</p>
+        <span class="doc-link">Read summary <span class="arr">→</span></span>
+      </button>
+
+      <button class="doc-card" onclick="openModal('offer')">
+        <div class="doc-num">— 02 —</div>
+        <h3>How a Deal Offer Works</h3>
+        <p>The plain-English explanation of COMPASS™: how the offer number is generated, what data goes into it, what makes it move, and what to expect.</p>
+        <span class="doc-link">Read summary <span class="arr">→</span></span>
+      </button>
+
+      <button class="doc-card" onclick="openModal('terms')">
+        <div class="doc-num">— 03 —</div>
+        <h3>Terms &amp; Conditions</h3>
+        <p>The contract between the customer and the dealership through HarteCash: offer validity, inspection rights, title requirements, payoff handling, disputes.</p>
+        <span class="doc-link">Read summary <span class="arr">→</span></span>
+      </button>
+
+      <button class="doc-card" onclick="openModal('dpa')">
+        <div class="doc-num">— 04 —</div>
+        <h3>Data Processing Agreement</h3>
+        <p>The contract between HarteCash and the dealership. Defines processor vs. controller, no-resale clause, breach notification timelines, and export flow.</p>
+        <span class="doc-link">Read summary <span class="arr">→</span></span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BOTTOM LINE ============ -->
+<section class="bottom-line">
+  <div class="wrap">
+    <div class="bottom-card">
+      <div class="top-mark">— The Bottom Line —</div>
+      <h2>The dealership owns the customer. The system protects the customer. <em>The finance manager built the tool — for the rooftop.</em></h2>
+      <p>If any of those three sentences ever stops being true, the platform breaks its own contract. That's the whole brief.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="footer-row">
+    <div class="copy">
+      © 2026 <strong>HarteCash</strong> · Harte INFINITI · 150 Weston Street, Hartford, CT 06120
+    </div>
+    <div class="links">
+      <a onclick="openModal('privacy')">Privacy</a>
+      <a onclick="openModal('offer')">Deal Offer</a>
+      <a onclick="openModal('terms')">Terms</a>
+      <a onclick="openModal('dpa')">DPA</a>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="engine-credit">
+      HarteCash powered by the <span>AutoCurb</span> platform
+    </div>
+  </div>
+</footer>
+
+<!-- ============ MODALS ============ -->
+
+<!-- PRIVACY MODAL -->
+<div class="modal-overlay" id="modal-privacy" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-eyebrow">— 01 —</div>
+        <div class="modal-title">Privacy at a Glance</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h4>What we collect</h4>
+        <ul>
+          <li><strong>Vehicle information:</strong> VIN, mileage, current condition, photos</li>
+          <li><strong>Contact information:</strong> Name, phone, email, ZIP code</li>
+          <li><strong>Title details:</strong> Lender and payoff if there is an existing loan</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>Why we collect it</h4>
+        <ul>
+          <li>To generate an accurate offer for your vehicle</li>
+          <li>To communicate with you during the acquisition window</li>
+          <li>To complete the transaction if you accept our offer</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>Who can see it</h4>
+        <ul>
+          <li><strong>Harte INFINITI staff</strong> (the dealership) — yes</li>
+          <li><strong>Advertisers, data brokers, other dealerships</strong> — no, never</li>
+          <li><strong>Service providers under contract</strong> (Black Book for valuation, Twilio for SMS) — only the minimum data needed for their function</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>How long we keep it</h4>
+        <ul>
+          <li>Active during the 23-day acquisition window</li>
+          <li>Up to 90 days after last contact if you don't move forward</li>
+          <li>Then archived to the dealership's CRM (or deleted on your request)</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>Your rights</h4>
+        <ul>
+          <li><strong>Access</strong> — see what we have on you</li>
+          <li><strong>Correction</strong> — fix anything inaccurate</li>
+          <li><strong>Deletion</strong> — ask us to remove it</li>
+          <li><strong>Opt-out</strong> — reply STOP on SMS, unsubscribe on email, or contact us directly</li>
+        </ul>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-note">Questions? <a href="mailto:kenc@hartecars.com">kenc@hartecars.com</a> · <a href="tel:+12035095054">203-509-5054</a></div>
+      <div class="modal-footer-actions"><button class="modal-print-btn" onclick="window.print()">Print / Save PDF</button><button class="modal-close-btn" onclick="closeModal()">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- OFFER MODAL -->
+<div class="modal-overlay" id="modal-offer" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-eyebrow">— 02 —</div>
+        <div class="modal-title">How Your Offer is Calculated</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h4>What you provide</h4>
+        <ul>
+          <li>VIN, mileage, and your honest assessment of current condition</li>
+          <li>Photos of the vehicle — exterior, interior, dashboard, odometer</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>What our system does</h4>
+        <ul>
+          <li>Looks up your vehicle's Black Book wholesale value</li>
+          <li>Pulls recent comparable sales in our market</li>
+          <li>Applies condition adjustments based on your photos and report</li>
+          <li>Calculates what the dealership can pay and still profit on retail</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>What you get back</h4>
+        <ul>
+          <li>A firm offer good for <strong>7 days</strong></li>
+          <li>Subject to physical inspection at the dealership</li>
+          <li>Subject to clean title (or arranged payoff if there's an existing loan)</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>What could change the offer</h4>
+        <ul>
+          <li>Inspection reveals different condition than reported</li>
+          <li>Mechanical or accident issues not visible in photos</li>
+          <li>Title issues (liens, branded titles, etc.)</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>The bottom line</h4>
+        <p>The offer is calculated from real market data, not a lowball lead-in number designed to get you in the door. If the inspection matches the report, the offer holds.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-note">Questions? <a href="mailto:kenc@hartecars.com">kenc@hartecars.com</a> · <a href="tel:+12035095054">203-509-5054</a></div>
+      <div class="modal-footer-actions"><button class="modal-print-btn" onclick="window.print()">Print / Save PDF</button><button class="modal-close-btn" onclick="closeModal()">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- TERMS MODAL -->
+<div class="modal-overlay" id="modal-terms" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-eyebrow">— 03 —</div>
+        <div class="modal-title">Terms of Sale — Summary</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h4>The offer</h4>
+        <ul>
+          <li>A good-faith proposal based on the information you provided</li>
+          <li>Not binding until physical inspection completes</li>
+          <li>Valid for 7 days from issue date</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>What you bring to the appointment</h4>
+        <ul>
+          <li>Clean title in your name (or arranged payoff details)</li>
+          <li>Valid driver's license matching the name on title</li>
+          <li>Spare keys, owner's manual, service records if available</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>What the dealership does</h4>
+        <ul>
+          <li>Inspects the vehicle within 30 minutes of arrival</li>
+          <li>Confirms or adjusts the offer based on actual condition</li>
+          <li>Pays you on the spot (check, or wire on title transfer)</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>If we don't agree</h4>
+        <ul>
+          <li>You walk away — no obligation, no fees</li>
+          <li>No documentation costs are charged at any point</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>Disputes</h4>
+        <ul>
+          <li>Handled under Connecticut consumer protection law</li>
+          <li>First step: contact the General Manager at Harte INFINITI</li>
+          <li>Next step: Connecticut DMV Dealers &amp; Repairers Division</li>
+        </ul>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-note">Questions? <a href="mailto:kenc@hartecars.com">kenc@hartecars.com</a> · <a href="tel:+12035095054">203-509-5054</a></div>
+      <div class="modal-footer-actions"><button class="modal-print-btn" onclick="window.print()">Print / Save PDF</button><button class="modal-close-btn" onclick="closeModal()">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- DPA MODAL -->
+<div class="modal-overlay" id="modal-dpa" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-eyebrow">— 04 —</div>
+        <div class="modal-title">Data Processing — How It Works</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h4>Who's responsible for what</h4>
+        <ul>
+          <li><strong>Harte INFINITI</strong> — the data controller. Decides what to do with customer data.</li>
+          <li><strong>HarteCash</strong> — the data processor. Handles it strictly according to dealership instructions.</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>What HarteCash will never do</h4>
+        <ul>
+          <li>Sell, license, or share customer data with any third party</li>
+          <li>Use customer data to market products outside of the acquisition process</li>
+          <li>Allow other dealerships to see Harte's data</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>Subprocessors (who else touches the data)</h4>
+        <ul>
+          <li><strong>Supabase</strong> — database hosting (SOC 2 Type II)</li>
+          <li><strong>Vercel</strong> — web hosting (SOC 2 Type II)</li>
+          <li><strong>Twilio</strong> — SMS delivery (SOC 2 Type II)</li>
+          <li><strong>Black Book</strong> — vehicle valuation, no customer PII shared</li>
+          <li><strong>fal.ai</strong> — photo processing, vehicle photos only</li>
+          <li><strong>Anthropic</strong> — descriptive text generation, no customer PII</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>If something goes wrong</h4>
+        <ul>
+          <li>Confirmed breach disclosed to the dealership within 72 hours</li>
+          <li>Affected customers notified per state law</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h4>When it ends</h4>
+        <ul>
+          <li>Dealership can request a full data export at any time</li>
+          <li>30-day grace period for export on termination</li>
+          <li>Full deletion within 60 days; deletion certificate provided</li>
+        </ul>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-note">Questions? <a href="mailto:kenc@hartecars.com">kenc@hartecars.com</a> · <a href="tel:+12035095054">203-509-5054</a></div>
+      <div class="modal-footer-actions"><button class="modal-print-btn" onclick="window.print()">Print / Save PDF</button><button class="modal-close-btn" onclick="closeModal()">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleIT() {
+    const btn  = document.getElementById('itToggle');
+    const body = document.getElementById('itBody');
+    const open = body.classList.toggle('open');
+    btn.classList.toggle('open', open);
+    btn.querySelector('span:first-child').textContent =
+      open ? 'Collapse technical infrastructure brief' : 'Expand technical infrastructure brief';
+  }
+
+  function openModal(id) {
+    const el = document.getElementById('modal-' + id);
+    if (!el) return;
+    el.classList.add('open');
+    document.body.classList.add('modal-locked');
+  }
+  function closeModal() {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    document.body.classList.remove('modal-locked');
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Bulletproof anchor scrolling — works in every viewer, browser, and email preview
+  document.querySelectorAll('.anchors a').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href');
+      if (id && id.startsWith('#')) {
+        const target = document.querySelector(id);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
