@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import { track } from "@/lib/analytics";
 import {
   generateICalEvent,
@@ -122,6 +123,7 @@ const ScheduleVisitClarity = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const { toast } = useToast();
   const submissionToken = searchParams.get("token") || "";
 
@@ -147,9 +149,12 @@ const ScheduleVisitClarity = () => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Tenant-scoped: dealership_locations is world-readable at the DB,
+      // so this dealership_id filter is the isolation boundary.
       const { data } = await supabase
         .from("dealership_locations" as any)
         .select("id, name, city, state, address, show_in_scheduling, show_in_inspection, temporarily_offline")
+        .eq("dealership_id", tenant.dealership_id)
         .eq("is_active", true)
         .eq("temporarily_offline", false)
         .order("sort_order");
@@ -160,7 +165,7 @@ const ScheduleVisitClarity = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [tenant.dealership_id]);
 
   useEffect(() => {
     if (!submissionToken) return;

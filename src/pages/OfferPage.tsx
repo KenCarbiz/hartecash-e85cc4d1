@@ -21,6 +21,7 @@ import CalculatingOffer from "@/components/CalculatingOffer";
 import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import { InlineEdit } from "@/components/offer/InlineEdit";
 import OfferConditionBlock, { buildConditionItems } from "@/components/offer/OfferConditionBlock";
 import OfferPrintLayout from "@/components/offer/OfferPrintLayout";
@@ -197,6 +198,7 @@ const OfferPageLegacy = () => {
   const [contactErrors, setContactErrors] = useState<Record<string, string>>({});
 
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const { toast } = useToast();
 
   const explanationRef = useRef<HTMLDivElement>(null);
@@ -250,6 +252,7 @@ const OfferPageLegacy = () => {
           supabase
             .from("dealership_locations")
             .select("id, name, city, state, address")
+            .eq("dealership_id", tenant.dealership_id)
             .eq("is_active", true),
         ]);
         if (cancelled) return;

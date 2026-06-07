@@ -173,9 +173,14 @@ const UploadPhotosClarity = () => {
     let cancelled = false;
     (async () => {
       const sub = submission as SubmissionInfo & { store_location_id?: string | null };
+      // Tenant-scoped fallback: dealership_locations is world-readable
+      // at the DB, so without the dealership_id filter this default
+      // branch would return another tenant's location. Scope to the
+      // submission's own dealership (fail closed if it's unset).
       let query = supabase
         .from("dealership_locations" as never)
         .select("center_lat,center_lng,name")
+        .eq("dealership_id", sub.dealership_id)
         .eq("is_active", true)
         .limit(1);
       if (sub.store_location_id) {

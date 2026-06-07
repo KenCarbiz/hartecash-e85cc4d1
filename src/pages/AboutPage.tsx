@@ -10,6 +10,7 @@ import DOMPurify from "dompurify";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig, type AboutMilestone, type AboutValue } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import SEO from "@/components/SEO";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
@@ -123,6 +124,7 @@ const ImageCarousel = ({ images, alt }: { images: string[]; alt: string }) => {
 
 const AboutPage = () => {
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const name = config.dealership_name || "Our Dealership";
   const [locations, setLocations] = useState<DealerLocation[]>([]);
 
@@ -143,15 +145,18 @@ const AboutPage = () => {
 
   useEffect(() => {
     const fetchLocations = async () => {
+      // Tenant-scoped: dealership_locations is world-readable at the DB,
+      // so this dealership_id filter is the isolation boundary.
       const { data } = await supabase
         .from("dealership_locations" as any)
         .select("id, name, city, state, address")
+        .eq("dealership_id", tenant.dealership_id)
         .eq("is_active", true)
         .order("sort_order");
       if (data) setLocations(data as unknown as DealerLocation[]);
     };
     fetchLocations();
-  }, []);
+  }, [tenant.dealership_id]);
 
   return (
     <div className="min-h-screen bg-background">

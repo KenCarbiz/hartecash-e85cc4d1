@@ -13,6 +13,7 @@ import { CalendarDays, CheckCircle2, Loader2, ArrowLeft, MapPin, Car, CheckCircl
 import { useToast } from "@/hooks/use-toast";
 import logoFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import { track } from "@/lib/analytics";
 import SEO from "@/components/SEO";
 import { generateICalEvent, downloadCalendarInvite, generateGoogleCalendarUrl } from "@/lib/calendarInvite";
@@ -108,14 +109,18 @@ const ScheduleVisitLegacy = () => {
   const submissionToken = searchParams.get("token") || "";
   const { toast } = useToast();
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const [locations, setLocations] = useState<DealerLocation[]>([]);
   const [lockedStoreId, setLockedStoreId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLocations = async () => {
+      // Tenant-scoped: dealership_locations is world-readable at the DB,
+      // so this dealership_id filter is the isolation boundary.
       const { data } = await supabase
         .from("dealership_locations" as any)
         .select("id, name, city, state, address, show_in_scheduling, show_in_inspection, temporarily_offline")
+        .eq("dealership_id", tenant.dealership_id)
         .eq("is_active", true)
         .eq("temporarily_offline", false)
         .order("sort_order");
@@ -126,7 +131,7 @@ const ScheduleVisitLegacy = () => {
       }
     };
     fetchLocations();
-  }, []);
+  }, [tenant.dealership_id]);
 
   // If the submission has a store_location_id, lock scheduling to that store
   useEffect(() => {

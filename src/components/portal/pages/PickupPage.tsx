@@ -7,6 +7,7 @@ import {
   AlertCircle, Briefcase, Navigation, MessageSquare,
 } from "lucide-react";
 import { usePortalData } from "../PortalDataContext";
+import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { PortalPageShell, Card, SectionLabel, PrimaryButton, SecondaryButton, StatusPill } from "../PortalPageShell";
 import { SlideOver } from "../SlideOver";
@@ -90,17 +91,21 @@ interface LocationRow {
 }
 
 const useDealerships = (): Dealership[] => {
+  const { tenant } = useTenant();
   const [rows, setRows] = useState<LocationRow[] | null>(null);
   useEffect(() => {
     (async () => {
+      // Tenant-scoped: dealership_locations is world-readable at the DB,
+      // so this dealership_id filter is the isolation boundary.
       const { data } = await supabase
         .from("dealership_locations" as never)
         .select("id, name, address, city, state, hours, rating")
+        .eq("dealership_id", tenant.dealership_id)
         .eq("is_active", true)
         .order("sort_order");
       setRows((data as unknown as LocationRow[]) || []);
     })();
-  }, []);
+  }, [tenant.dealership_id]);
   if (!rows) return [];
   if (rows.length === 0) return DEMO_DEALERSHIPS;
   return rows.map((r) => ({
