@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import { tenantLogoSrc, AUTOCURB_LOGO } from "@/lib/tenantLogo";
 
 interface FoundSubmission {
@@ -65,6 +66,7 @@ const CustomerLookup = () => {
   const [lastSession, setLastSession] = useState<LastSession | null>(null);
   const navigate = useNavigate();
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
 
   useEffect(() => { setLastSession(readLastSession()); }, []);
 
@@ -98,11 +100,24 @@ const CustomerLookup = () => {
     e.preventDefault();
     if (!email.trim() || !phone.trim()) return;
     setLoading(true);
-    const { data } = await supabase.rpc("lookup_submission_by_contact", {
+    // Scope the lookup to the current dealership so a person who used
+    // multiple dealers doesn't see another dealer's portal token here. Fall
+    // back to the unscoped 2-arg form if the tenant-scoped overload isn't
+    // deployed yet (no deploy-order window).
+    const scoped = await supabase.rpc("lookup_submission_by_contact", {
       _email: email.trim(),
       _phone: phone.trim(),
-    });
-    setResults((data as FoundSubmission[]) || []);
+      _dealership_id: tenant.dealership_id,
+    } as never);
+    let rows = scoped.data;
+    if (scoped.error) {
+      const fallback = await supabase.rpc("lookup_submission_by_contact", {
+        _email: email.trim(),
+        _phone: phone.trim(),
+      });
+      rows = fallback.data;
+    }
+    setResults((rows as FoundSubmission[]) || []);
     setSearched(true);
     setLoading(false);
   };
