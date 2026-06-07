@@ -59,6 +59,7 @@ export async function applyOnboardingAnswers(
     if (answers.phone) siteUpdates.phone = answers.phone;
     if (answers.email) siteUpdates.email = answers.email;
     if (answers.address) siteUpdates.address = answers.address;
+    if (answers.governing_law_state) siteUpdates.governing_law_state = answers.governing_law_state;
     if (answers.website) siteUpdates.website_url = answers.website;
     if (answers.google_review) siteUpdates.google_review_url = answers.google_review;
     if (answers.facebook) siteUpdates.facebook_url = answers.facebook;

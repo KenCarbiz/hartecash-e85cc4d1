@@ -29,6 +29,7 @@ interface SiteConfig {
   phone: string;
   email: string;
   address: string;
+  governing_law_state: string;
   website_url: string;
   logo_url: string;
   logo_white_url: string;
@@ -107,6 +108,7 @@ const DEFAULT_CONFIG: SiteConfig = {
   phone: "",
   email: "",
   address: "",
+  governing_law_state: "Connecticut",
   website_url: "",
   logo_url: "",
   logo_white_url: "",
@@ -613,6 +615,10 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
           <div className="sm:col-span-2 space-y-1.5">
             <Label className="text-xs font-semibold">Address</Label>
             <Input value={config.address} onChange={e => update("address", e.target.value)} placeholder="123 Main St, Hartford, CT 06103" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Governing-Law State</Label>
+            <Input value={config.governing_law_state} onChange={e => update("governing_law_state", e.target.value)} placeholder="Connecticut" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Website URL</Label>

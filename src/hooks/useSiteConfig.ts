@@ -83,6 +83,10 @@ export interface SiteConfig {
   phone: string;
   email: string;
   address: string;
+  /** State whose law governs the customer agreements (Terms of Service /
+   *  Offer Disclosure). Defaults to Connecticut; set per tenant in
+   *  onboarding / Site Configuration so non-CT dealers get a valid forum. */
+  governing_law_state: string;
   website_url: string;
   logo_url: string;
   logo_white_url: string;
@@ -347,6 +351,7 @@ const DEFAULTS: SiteConfig = {
   phone: "",
   email: "",
   address: "",
+  governing_law_state: "Connecticut",
   website_url: "",
   logo_url: "",
   logo_white_url: "",

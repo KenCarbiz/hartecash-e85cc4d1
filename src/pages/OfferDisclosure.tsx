@@ -20,11 +20,9 @@
 //     "our dealership" in the section bodies is now {dealerName}
 //     via useSiteConfig, like Terms/Privacy.
 //
-// Governing law is still hard-coded as Connecticut. This is fine
-// for the current tenant set (Hartecash-only) but is wrong for any
-// non-CT dealer added in the future. The legal-IA agent flagged
-// this; the right fix is a config.governing_law_state field
-// (separate migration + admin UI), tracked outside this PR.
+// Governing law is tenant-driven via config.governing_law_state
+// (site_config column added 20260607000000, collected in onboarding),
+// falling back to Connecticut when unset.
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import SEO from "@/components/SEO";
@@ -107,7 +105,7 @@ const OfferDisclosure = () => {
   // Offer-validity window — dealer-configured, defaults to 8 days. Keeps
   // this page in sync with the live widget instead of a hard-coded number.
   const guaranteeDays = Number((config as { price_guarantee_days?: number }).price_guarantee_days) || 8;
-  const governingState = ((config as { governing_law_state?: string }).governing_law_state || "").trim() || "Connecticut";
+  const governingState = (config.governing_law_state || "").trim() || "Connecticut";
 
   return (
     <>

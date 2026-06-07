@@ -31,6 +31,7 @@ export const ONBOARDING_SECTIONS: Section[] = [
       { id: "phone", label: "Main Phone Number", type: "text" },
       { id: "email", label: "Main Email Address", type: "text" },
       { id: "address", label: "Physical Address", type: "text" },
+      { id: "governing_law_state", label: "Governing-Law State (for Terms / contract)", type: "text", hint: "e.g. Connecticut. The U.S. state whose law governs your customer agreements. Defaults to Connecticut." },
       { id: "website", label: "Website URL", type: "text" },
       { id: "google_review", label: "Google Review Link", type: "text" },
       { id: "facebook", label: "Facebook URL", type: "text" },

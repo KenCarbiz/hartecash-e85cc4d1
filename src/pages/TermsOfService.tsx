@@ -36,7 +36,7 @@ const TermsOfService = () => {
   const contactAddress = (config.address || "").trim();
   // Governing-law state is tenant-driven (a CT forum clause is unenforceable
   // against an out-of-state dealer's customer); default to Connecticut.
-  const governingState = ((config as { governing_law_state?: string }).governing_law_state || "").trim() || "Connecticut";
+  const governingState = (config.governing_law_state || "").trim() || "Connecticut";
 
   return (
     <>
