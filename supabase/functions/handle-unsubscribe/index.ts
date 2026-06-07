@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     // Look up submission by token
     const { data: sub, error: subErr } = await supabase
       .from("submissions")
-      .select("id, email, phone, name, vehicle_year, vehicle_make, vehicle_model")
+      .select("id, email, phone, name, vehicle_year, vehicle_make, vehicle_model, dealership_id")
       .eq("token", token)
       .single();
 
@@ -47,23 +47,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    const optOuts: { email?: string; phone?: string; channel: string; token: string; submission_id: string }[] = [];
+    // Per-dealership scope: an unsubscribe suppresses only the dealer whose
+    // submission produced the link.
+    const optOuts: { email?: string; phone?: string; channel: string; token: string; submission_id: string; dealership_id: string | null }[] = [];
 
     if (channel === "all" || channel === "email") {
       if (sub.email) {
-        optOuts.push({ email: sub.email, channel: "email", token, submission_id: sub.id });
+        optOuts.push({ email: sub.email, channel: "email", token, submission_id: sub.id, dealership_id: sub.dealership_id ?? null });
       }
     }
     if (channel === "all" || channel === "sms") {
       if (sub.phone) {
-        optOuts.push({ phone: sub.phone, channel: "sms", token, submission_id: sub.id });
+        optOuts.push({ phone: sub.phone, channel: "sms", token, submission_id: sub.id, dealership_id: sub.dealership_id ?? null });
       }
     }
 
+    // Insert-with-catch (not upsert): tenant-scoped uniqueness means a true
+    // duplicate is harmless and a swallowed dup avoids a hard dependency on a
+    // specific ON CONFLICT target.
     for (const optOut of optOuts) {
-      await supabase.from("opt_outs").upsert(optOut, {
-        onConflict: optOut.email ? "email,channel" : "phone,channel",
-      });
+      await supabase.from("opt_outs").insert(optOut)
+        .catch((e: unknown) => console.warn("opt_outs insert failed (likely dup):", e));
     }
 
     return new Response(

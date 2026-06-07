@@ -222,6 +222,9 @@ Deno.serve(async (req) => {
         channel: "all",
         token: crypto.randomUUID(),
         submission_id: sub?.id ?? null,
+        // Per-dealership scope: a STOP suppresses only this dealer. NULL
+        // (unmapped To-number) falls back to a global opt-out.
+        dealership_id: sub?.dealership_id ?? null,
       } as any).catch((e: unknown) => console.warn("opt_outs insert failed (likely dup):", e));
       if (sub) {
         await supabase.from("conversation_events").insert({
