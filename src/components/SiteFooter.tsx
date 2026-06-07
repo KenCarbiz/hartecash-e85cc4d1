@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import { tenantLogoSrc } from "@/lib/tenantLogo";
 import { Facebook, Instagram, Youtube, MapPin, ExternalLink, Phone, Mail } from "lucide-react";
 
@@ -16,6 +17,7 @@ interface DealerLocation {
 
 const SiteFooter = () => {
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const footerLogo = tenantLogoSrc(config);
   const dealerName = config.dealership_name || "Our Dealership";
   const [locations, setLocations] = useState<DealerLocation[]>([]);
@@ -40,15 +42,20 @@ const SiteFooter = () => {
 
   useEffect(() => {
     const fetchLocations = async () => {
+      // Tenant-scoped: dealership_locations is world-readable at the DB
+      // (public SELECT policy is is_active-only), so the dealership_id
+      // filter here is the isolation boundary — without it the footer
+      // would list every tenant's rooftops.
       const { data } = await supabase
         .from("dealership_locations" as any)
         .select("id, name, city, state, address, show_in_footer")
+        .eq("dealership_id", tenant.dealership_id)
         .eq("is_active", true)
         .order("sort_order");
       if (data) setLocations(data as unknown as DealerLocation[]);
     };
     fetchLocations();
-  }, []);
+  }, [tenant.dealership_id]);
 
   const footerLocations = locations.filter(l => l.show_in_footer);
 

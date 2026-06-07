@@ -8,6 +8,7 @@ import type { FormData, BBVehicle, VehicleInfo } from "./types";
 import type { FormConfig } from "@/hooks/useFormConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface DealerLocation {
   id: string;
@@ -36,6 +37,7 @@ interface Props {
 
 const StepHistory = ({ formData, update, formConfig, bbVehicle, vehicleInfo, leadSource, aiCovered }: Props) => {
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const isTrade = leadSource === "trade";
   const showLocationPicker = isTrade || (config as any).assign_customer_picks === true;
   const showLoanSection = !formConfig || formConfig.q_loan_details;
@@ -48,14 +50,19 @@ const StepHistory = ({ formData, update, formConfig, bbVehicle, vehicleInfo, lea
   // side at submit; this just gives the customer visible feedback so
   // they don't wonder where their appointment is going.
   useEffect(() => {
+    // Tenant-scoped: dealership_locations is world-readable at the DB
+    // (public SELECT is is_active-only), so the dealership_id filter
+    // here is the isolation boundary — without it the picker would list
+    // every tenant's rooftops.
     supabase
       .from("dealership_locations")
       .select("id, name, city, state")
+      .eq("dealership_id", tenant.dealership_id)
       .eq("is_active", true)
       .eq("show_in_scheduling", true)
       .order("sort_order")
       .then(({ data }) => { if (data) setLocations(data); });
-  }, []);
+  }, [tenant.dealership_id]);
 
   return (
     <>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, Loader2, CheckCircle2, ShieldCheck, MessageSquareQuote } from "lucide-react";
+import { Star, Loader2, CheckCircle2, MessageSquareQuote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -306,14 +306,8 @@ const ReviewPage = () => {
           </p>
         </div>
 
-        {/* Trust line */}
-        <div className="mt-6 flex items-center justify-center gap-2 text-[#8893A8] text-xs">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A]" />
-          Moderated by our team before going live
-        </div>
-
         {/* Supporting text */}
-        <p className="mt-4 text-center text-[11px] text-[#8893A8] px-4 leading-relaxed">
+        <p className="mt-6 text-center text-[11px] text-[#8893A8] px-4 leading-relaxed">
           Your feedback helps us improve and may be featured on our website.
         </p>
       </div>
