@@ -33,7 +33,9 @@ export default function OnboardingScript({ targetDealershipId, onNavigate }: Onb
   const [dirty, setDirty] = useState(false);
   const [scrapeUrl, setScrapeUrl] = useState("");
   const [scraping, setScraping] = useState(false);
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+  // Default every section open so the page presents as a fillable form with
+  // an obvious starting point, rather than 17 collapsed bars.
+  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(ONBOARDING_SECTIONS.map((s) => s.title)));
 
   const sections = ONBOARDING_SECTIONS;
 
@@ -179,7 +181,7 @@ export default function OnboardingScript({ targetDealershipId, onNavigate }: Onb
     setScraping(false);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (opts?: { silent?: boolean }) => {
     setSaving(true);
     const activeDealershipId = targetDealershipId || "default";
     const { error } = await supabase
@@ -197,7 +199,7 @@ export default function OnboardingScript({ targetDealershipId, onNavigate }: Onb
     } else {
       setSavedAt(new Date().toLocaleString());
       setDirty(false);
-      toast.success("Onboarding questionnaire saved");
+      if (!opts?.silent) toast.success("Onboarding questionnaire saved");
     }
     setSaving(false);
   };
@@ -221,6 +223,23 @@ export default function OnboardingScript({ targetDealershipId, onNavigate }: Onb
     }
     setApplying(false);
   };
+
+  // Debounced autosave — a first-time dealer shouldn't be able to lose ~80
+  // answers on a tab close. The manual Save button remains a "save now".
+  useEffect(() => {
+    if (!dirty || loading) return;
+    const t = setTimeout(() => { void handleSave({ silent: true }); }, 2000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answers, dealerSig, staffSig, dirty, loading]);
+
+  // Warn before navigating away with unsaved edits.
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
 
   const handlePrint = () => window.print();
 
@@ -381,7 +400,7 @@ export default function OnboardingScript({ targetDealershipId, onNavigate }: Onb
             <Printer className="w-4 h-4" />
             Print
           </Button>
-          <Button onClick={handleSave} size="sm" disabled={saving} className="gap-2">
+          <Button onClick={() => handleSave()} size="sm" disabled={saving} className="gap-2">
             <Save className="w-4 h-4" />
             {saving ? "Saving…" : "Save All"}
           </Button>
@@ -473,11 +492,10 @@ export default function OnboardingScript({ targetDealershipId, onNavigate }: Onb
             }}
           />
         </div>
-        {savedAt && (
+        {(savedAt || dirty) && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-            Last saved: {savedAt}
-            {dirty && <span className="text-destructive ml-2 font-medium">• Unsaved changes</span>}
+            {savedAt && <><CheckCircle2 className="w-3.5 h-3.5 text-primary" />Last saved: {savedAt}</>}
+            {dirty && <span className="text-destructive ml-2 font-medium">{saving ? "• Saving…" : "• Unsaved changes"}</span>}
           </div>
         )}
       </div>
@@ -590,7 +608,7 @@ export default function OnboardingScript({ targetDealershipId, onNavigate }: Onb
           </div>
 
           <div className="mt-6 print:hidden flex gap-3">
-            <Button onClick={handleSave} disabled={saving} className="gap-2 h-11 flex-1">
+            <Button onClick={() => handleSave()} disabled={saving} className="gap-2 h-11 flex-1">
               <Save className="w-4 h-4" />
               {saving ? "Saving…" : "Save All"}
             </Button>
