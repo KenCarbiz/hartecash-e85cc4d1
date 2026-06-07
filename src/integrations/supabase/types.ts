@@ -3291,6 +3291,7 @@ export type Database = {
         Row: {
           channel: string
           created_at: string
+          dealership_id: string | null
           email: string | null
           id: string
           phone: string | null
@@ -3300,6 +3301,7 @@ export type Database = {
         Insert: {
           channel?: string
           created_at?: string
+          dealership_id?: string | null
           email?: string | null
           id?: string
           phone?: string | null
@@ -3309,6 +3311,7 @@ export type Database = {
         Update: {
           channel?: string
           created_at?: string
+          dealership_id?: string | null
           email?: string | null
           id?: string
           phone?: string | null
@@ -4560,6 +4563,7 @@ export type Database = {
           customer_file_accent: string | null
           customer_file_accent_2: string | null
           customer_journey_template: string
+          dealer_license_number: string | null
           dealership_id: string
           dealership_name: string
           demo_mode: boolean
@@ -4580,6 +4584,7 @@ export type Database = {
           ghost_screen: string
           ghost_subhead: string | null
           google_review_url: string | null
+          governing_law_state: string
           handoff_type: string
           hero_bg_color: string | null
           hero_headline: string
@@ -4595,6 +4600,7 @@ export type Database = {
           landing_form_variant: string
           landing_lookup_default: string
           landing_template: string
+          legal_entity_name: string | null
           logo_url: string | null
           logo_white_url: string | null
           moto_detailed_custom_config: Json | null
@@ -4695,6 +4701,7 @@ export type Database = {
           customer_file_accent?: string | null
           customer_file_accent_2?: string | null
           customer_journey_template?: string
+          dealer_license_number?: string | null
           dealership_id?: string
           dealership_name?: string
           demo_mode?: boolean
@@ -4715,6 +4722,7 @@ export type Database = {
           ghost_screen?: string
           ghost_subhead?: string | null
           google_review_url?: string | null
+          governing_law_state?: string
           handoff_type?: string
           hero_bg_color?: string | null
           hero_headline?: string
@@ -4730,6 +4738,7 @@ export type Database = {
           landing_form_variant?: string
           landing_lookup_default?: string
           landing_template?: string
+          legal_entity_name?: string | null
           logo_url?: string | null
           logo_white_url?: string | null
           moto_detailed_custom_config?: Json | null
@@ -4830,6 +4839,7 @@ export type Database = {
           customer_file_accent?: string | null
           customer_file_accent_2?: string | null
           customer_journey_template?: string
+          dealer_license_number?: string | null
           dealership_id?: string
           dealership_name?: string
           demo_mode?: boolean
@@ -4850,6 +4860,7 @@ export type Database = {
           ghost_screen?: string
           ghost_subhead?: string | null
           google_review_url?: string | null
+          governing_law_state?: string
           handoff_type?: string
           hero_bg_color?: string | null
           hero_headline?: string
@@ -4865,6 +4876,7 @@ export type Database = {
           landing_form_variant?: string
           landing_lookup_default?: string
           landing_template?: string
+          legal_entity_name?: string | null
           logo_url?: string | null
           logo_white_url?: string | null
           moto_detailed_custom_config?: Json | null
