@@ -68,7 +68,7 @@ const ValueProps = () => {
     {
       icon: "shield-check",
       title: "Trusted Dealership",
-      body: "Family-owned since 1952. Thousands of happy customers.",
+      body: "A trusted local dealership with thousands of happy customers.",
     },
     {
       icon: "banknote",

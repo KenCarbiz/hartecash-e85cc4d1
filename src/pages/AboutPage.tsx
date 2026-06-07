@@ -161,8 +161,8 @@ const AboutPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={`About ${name} — CT's Trusted Car Buyer Since 1951`}
-        description={`Four generations of the ${name} family have purchased ${config.stats_cars_purchased || "14,700+"} vehicles across Connecticut. ${config.stats_rating || "4.9"}-star rating, ${config.stats_reviews_count || "2,400+"} reviews. Learn our story.`}
+        title={`About ${name} — Our Story`}
+        description={`Learn about ${name}: how we buy cars, what we stand for${config.stats_rating ? `, and why customers rate us ${config.stats_rating} stars` : ""}.`}
         path="/about"
       />
       <LocalBusinessJsonLd />

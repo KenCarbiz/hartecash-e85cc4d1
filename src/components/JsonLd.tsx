@@ -90,13 +90,13 @@ export const LocalBusinessJsonLd = () => {
           : {}),
         ...((cfg.founding_date || cfg.founding_year)
           ? { foundingDate: cfg.founding_date || String(cfg.founding_year) }
-          : { foundingDate: "1952" }),
+          : {}),
         ...((cfg.social_links && Array.isArray(cfg.social_links) && cfg.social_links.length)
           ? { sameAs: cfg.social_links }
           : {}),
         ...(cfg.area_served
           ? { areaServed: cfg.area_served }
-          : { areaServed: "Connecticut, USA" }),
+          : {}),
         priceRange: "$$",
         paymentAccepted: ["Cash", "Check", "Bank Transfer"],
         currenciesAccepted: "USD",

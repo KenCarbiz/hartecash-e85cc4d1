@@ -5,11 +5,11 @@ import { useNavigate } from "react-router-dom";
 import PrimaryCTA from "../PrimaryCTA";
 import type { StepContext } from "../types";
 import { trackCtaClicked, trackEnhancedOfferAccepted } from "../analytics";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
-const DEALER_NAME = "Harte Auto Group";
 const REQUIRED_PHOTO_IDS = ["front", "rear", "driver", "passenger", "interior", "odometer"];
 
 /**
@@ -19,6 +19,8 @@ const REQUIRED_PHOTO_IDS = ["front", "rear", "driver", "passenger", "interior", 
  */
 const StepBoostResult = ({ state, update }: StepContext) => {
   const navigate = useNavigate();
+  const { config } = useSiteConfig();
+  const dealerName = (config.dealership_name || "").trim() || "Our Dealership";
   const original = state.valuation?.firm ?? 0;
   const requiredPhotoReviewComplete =
     state.boost.analyzed && REQUIRED_PHOTO_IDS.every((id) => state.boost.uploadedCategories.includes(id));
@@ -91,7 +93,7 @@ const StepBoostResult = ({ state, update }: StepContext) => {
               </p>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <Row label="Vehicle" value={vehicleLabel} />
-                <Row label="Dealer" value={DEALER_NAME} />
+                <Row label="Dealer" value={dealerName} />
                 <Row label="Status" value="Ready to Move Forward" status />
                 <Row label="Photos reviewed" value={`${photoCount} photo${photoCount === 1 ? "" : "s"}`} />
               </div>

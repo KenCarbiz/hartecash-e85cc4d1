@@ -753,7 +753,7 @@ const ServiceLanding = () => {
                 <p className="text-sm text-[hsl(215,20%,75%)] italic leading-relaxed mb-4">
                   "I came in for an oil change and left with a brand-new car and a lower payment. They showed me the numbers and it just made sense. Easiest car deal I've ever done."
                 </p>
-                <p className="text-xs font-semibold text-[hsl(215,20%,55%)]">— Sarah M., Hartford CT</p>
+                <p className="text-xs font-semibold text-[hsl(215,20%,55%)]">— Verified customer</p>
               </div>
             </motion.div>
 

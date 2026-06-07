@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface SEOProps {
   title: string;
@@ -30,9 +31,14 @@ const SEO = ({
   ogImageAlt,
   type = "website",
   noindex = false,
-  siteName = "Harte Auto Group",
+  siteName,
   locale = "en_US",
 }: SEOProps) => {
+  const { config } = useSiteConfig();
+  // Tenant-driven default — never bake one dealership's name into every
+  // tenant's og:site_name. Caller override wins; otherwise use the tenant's
+  // own dealership_name; omit the tag entirely if neither is set.
+  const effectiveSiteName = siteName || config.dealership_name || "";
   const url = `${BASE_URL}${path}`;
   const fullOgImage = ogImage.startsWith("http") ? ogImage : `${BASE_URL}${ogImage}`;
   const imageAlt = ogImageAlt || description || title;
@@ -52,7 +58,7 @@ const SEO = ({
         />
       )}
 
-      <meta property="og:site_name" content={siteName} />
+      {effectiveSiteName ? <meta property="og:site_name" content={effectiveSiteName} /> : null}
       <meta property="og:locale" content={locale} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />

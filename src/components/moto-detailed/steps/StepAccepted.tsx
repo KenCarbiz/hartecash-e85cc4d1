@@ -25,11 +25,11 @@ import { useNavigate } from "react-router-dom";
 import type { StepContext, JourneyAppointment } from "../types";
 import VehicleImageCard from "../VehicleImageCard";
 import { trackCtaClicked } from "../analytics";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
-const DEALER_NAME = "Harte Auto Group";
 const REQUIRED_PHOTO_IDS = ["front", "rear", "driver", "passenger", "interior", "odometer"];
 
 type TodoMeta = {
@@ -100,6 +100,8 @@ const PURPLE = "hsl(263_70%_50%)";
  */
 const StepAccepted = ({ state, update }: StepContext) => {
   const navigate = useNavigate();
+  const { config } = useSiteConfig();
+  const dealerName = (config.dealership_name || "").trim() || "Our Dealership";
   const requiredPhotoReviewComplete =
     state.boost.analyzed && REQUIRED_PHOTO_IDS.every((id) => state.boost.uploadedCategories.includes(id));
   const firm = requiredPhotoReviewComplete && state.boost.boostedFirm
@@ -227,7 +229,7 @@ const StepAccepted = ({ state, update }: StepContext) => {
             Your offer is locked in.
           </h2>
           <p className="mt-2 text-base leading-relaxed text-zinc-600">
-            <span className="font-semibold text-zinc-900">{fmt(firm)} secured</span> with {DEALER_NAME}. We'll guide you through the final steps so your visit or pickup is fast and simple.
+            <span className="font-semibold text-zinc-900">{fmt(firm)} secured</span> with {dealerName}. We'll guide you through the final steps so your visit or pickup is fast and simple.
           </p>
 
           {state.vehicle && (
