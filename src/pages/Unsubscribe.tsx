@@ -23,6 +23,9 @@ const UnsubscribeLegacy = () => {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [result, setResult] = useState<{ name?: string; vehicle?: string }>({});
   const [selectedChannel, setSelectedChannel] = useState(channelParam);
+  const { config } = useSiteConfig();
+  const phone = (config.phone || "").trim();
+  const phoneDigits = phone.replace(/\D/g, "");
 
   const handleUnsubscribe = async (channel: string) => {
     if (!token) return;
@@ -63,10 +66,12 @@ const UnsubscribeLegacy = () => {
             {selectedChannel === "email" ? "email" : selectedChannel === "sms" ? "SMS" : "email or SMS"}{" "}
             follow-ups{result.vehicle ? ` about your ${result.vehicle}` : ""}.
           </p>
-          <p className="text-sm text-muted-foreground mt-4">
-            If you change your mind, contact us at{" "}
-            <a href="tel:8668517390" className="text-primary underline">(866) 851-7390</a>.
-          </p>
+          {phone ? (
+            <p className="text-sm text-muted-foreground mt-4">
+              If you change your mind, contact us at{" "}
+              <a href={`tel:${phoneDigits}`} className="text-primary underline">{phone}</a>.
+            </p>
+          ) : null}
           <Link to="/">
             <Button variant="outline" className="mt-6">Back to Home</Button>
           </Link>
@@ -133,7 +138,7 @@ const UnsubscribeLegacy = () => {
 
         {status === "error" && (
           <div className="mt-6 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-center">
-            <p className="text-sm text-destructive">Something went wrong. Please try again or call (866) 851-7390.</p>
+            <p className="text-sm text-destructive">Something went wrong. Please try again{phone ? <> or call {phone}</> : ""}.</p>
           </div>
         )}
 

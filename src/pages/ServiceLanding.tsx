@@ -686,7 +686,7 @@ const ServiceLanding = () => {
                       </div>
                       <div>
                         <p className="text-xs font-bold text-[hsl(210,40%,98%)]">Our Service Team</p>
-                        <p className="text-[10px] text-[hsl(215,20%,50%)]">+1 (866) 851-7390</p>
+                        <p className="text-[10px] text-[hsl(215,20%,50%)]">{siteConfig.phone}</p>
                       </div>
                     </div>
                     {/* Messages */}
@@ -814,7 +814,11 @@ const ServiceLanding = () => {
       <footer className="border-t border-[hsl(217,33%,17%)] py-8 px-5 text-center">
         <img src={siteConfig.logo_white_url || siteConfig.logo_url || serviceLogoFallback} alt={siteConfig.dealership_name || "Our Dealership"} className="h-20 mx-auto mb-3 opacity-60" />
         <p className="text-xs text-[hsl(215,20%,45%)]">
-          Family-owned since 1952 • 150 Weston Street, Hartford, CT 06120 • (866) 851-7390
+          {[
+            siteConfig.established_year ? `Family-owned since ${siteConfig.established_year}` : null,
+            siteConfig.address || null,
+            siteConfig.phone || null,
+          ].filter(Boolean).join(" • ")}
         </p>
         <div className="flex justify-center gap-4 mt-3">
           <a href="/privacy" className="text-xs text-[hsl(215,20%,45%)] hover:text-[hsl(215,20%,65%)] underline transition-colors">Privacy Policy</a>
