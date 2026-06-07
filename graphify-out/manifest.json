@@ -1,6 +1,6 @@
 {
   ".claude/settings.json": {
-    "mtime": 1780858696.3357232,
+    "mtime": 1780863804.279185,
     "ast_hash": "bfee062c3962c14264fd704e975a6b38",
     "semantic_hash": ""
   },
@@ -280,8 +280,8 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1780703462.740248,
-    "ast_hash": "5d267690d46af870fe595afe25f3751b",
+    "mtime": 1780864441.651223,
+    "ast_hash": "d659b78d7af095b13e21865f7bd365c2",
     "semantic_hash": ""
   },
   "src/components/AboutBlurb.tsx": {
@@ -6980,7 +6980,7 @@
     "semantic_hash": ""
   },
   "vercel.json": {
-    "mtime": 1780863209.6906843,
+    "mtime": 1780863804.295185,
     "ast_hash": "42d4bd7406a9b5205c7e17302238a4b6",
     "semantic_hash": ""
   },
@@ -7010,7 +7010,7 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1780858696.3353448,
+    "mtime": 1780863804.279185,
     "ast_hash": "91075f4c3c4c0d171390868d3e375fb4",
     "semantic_hash": ""
   },
@@ -7805,13 +7805,18 @@
     "semantic_hash": ""
   },
   "public/data.html": {
-    "mtime": 1780863201.1524167,
+    "mtime": 1780863804.295185,
     "ast_hash": "7086eed314fc61dc20ddad7996588a64",
     "semantic_hash": ""
   },
   "supabase/migrations/20260607164612_6a1129dc-0cdc-49d8-98fa-78570e3236d1.sql": {
     "mtime": 1780863747.7831817,
     "ast_hash": "f340022fab74afa6fbdf9573c67b1875",
+    "semantic_hash": ""
+  },
+  "src/pages/DataTrust.tsx": {
+    "mtime": 1780864434.0232224,
+    "ast_hash": "c460cc4b65c153860eb473186135060e",
     "semantic_hash": ""
   }
 }

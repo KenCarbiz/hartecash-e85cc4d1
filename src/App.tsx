@@ -90,6 +90,7 @@ const SlaPage = lazy(() => import("./pages/SlaPage"));
 const DocsLanding = lazy(() => import("./pages/DocsLanding"));
 const GroupLandingPage = lazy(() => import("./pages/GroupLandingPage"));
 const Reviews = lazy(() => import("./pages/Reviews"));
+const DataTrust = lazy(() => import("./pages/DataTrust"));
 // CustomerLayout is imported eagerly (not lazy) — it's the shell
 // every customer-facing route renders into, so lazy-loading it
 // would mean the first navigation suspends on the layout chunk
@@ -340,6 +341,10 @@ const AnimatedRoutes = () => {
             skip this via TenantContext direct resolution. */}
         <Route path="/group" element={<GroupLandingPage />} />
         {/* /billing removed — see comment near the import. */}
+        {/* /data — standalone data-trust one-pager for dealership staff,
+            served from the static public/data.html (see DataTrust.tsx).
+            Lovable ignores vercel.json, so the clean URL is a real route. */}
+        <Route path="/data" element={<DataTrust />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
