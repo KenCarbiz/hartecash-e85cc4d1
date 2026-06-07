@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     // Check if user is staff
     const { data: roleData } = await supabaseClient
       .from("user_roles")
-      .select("role")
+      .select("role, dealership_id, is_platform_admin")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -58,6 +58,17 @@ Deno.serve(async (req) => {
     if (!appointment || typeof appointment !== "object") {
       return new Response(JSON.stringify({ error: "Missing appointment data" }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Tenant binding: staff may only send confirmations for their own
+    // dealership's appointments (platform admins may act cross-tenant).
+    const callerDealership = (roleData as { dealership_id?: string }).dealership_id;
+    const isPlatformAdmin = (roleData as { is_platform_admin?: boolean }).is_platform_admin === true;
+    if (!isPlatformAdmin && appointment.dealership_id && appointment.dealership_id !== callerDealership) {
+      return new Response(JSON.stringify({ error: "Forbidden — appointment belongs to another tenant" }), {
+        status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

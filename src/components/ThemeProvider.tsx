@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect } from "react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 
 /**
  * Convert any color string (hex `#RRGGBB`, `#RGB`, or already-HSL like
@@ -57,9 +58,9 @@ interface CachedTheme {
   heroText?: string | null;
 }
 
-function readCachedTheme(): CachedTheme | null {
+function readCachedTheme(key: string): CachedTheme | null {
   try {
-    const raw = typeof window !== "undefined" ? localStorage.getItem(LS_THEME_KEY) : null;
+    const raw = typeof window !== "undefined" ? localStorage.getItem(key) : null;
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === "object") return parsed as CachedTheme;
@@ -93,19 +94,22 @@ function applyTheme(root: HTMLElement, t: CachedTheme) {
  */
 const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const { config, loading } = useSiteConfig();
+  const { tenant } = useTenant();
+  // Namespace the cached theme by tenant so one dealership's brand colors
+  // can't flash for a different dealership in the same browser.
+  const lsKey = `${LS_THEME_KEY}:${tenant.dealership_id}`;
 
   // ── Synchronous cached-theme paint (before first browser paint) ──
   // useLayoutEffect runs after DOM mutations but BEFORE the browser
   // composites — perfect for setting CSS vars that the just-rendered
   // tree references via var(--primary) etc.
   useLayoutEffect(() => {
-    const cached = readCachedTheme();
+    const cached = readCachedTheme(lsKey);
     if (cached) applyTheme(document.documentElement, cached);
-    // Empty deps: this runs exactly once on mount, BEFORE the live
-    // config arrives. The live-config useEffect below takes over once
-    // the query resolves.
-     
-  }, []);
+    // Re-applies if the tenant changes (view-as switch); otherwise runs once
+    // on mount, BEFORE the live config arrives. The live-config useEffect
+    // below takes over once the query resolves.
+  }, [lsKey]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -176,7 +180,7 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
           heroBg: heroBg || null,
           heroText: heroText || null,
         };
-        localStorage.setItem(LS_THEME_KEY, JSON.stringify(next));
+        localStorage.setItem(lsKey, JSON.stringify(next));
       } catch (e) {
         console.debug("ThemeProvider: theme cache write failed:", e);
       }
@@ -242,7 +246,7 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       }
       tag.textContent = rules.join("\n");
     }
-  }, [config, loading]);
+  }, [config, loading, lsKey]);
 
   return <>{children}</>;
 };
