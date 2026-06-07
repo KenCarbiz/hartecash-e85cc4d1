@@ -19,7 +19,7 @@ const PrivacyPolicy = () => {
   // address/phone/email into every tenant's policy.
   const contactPhone = (config.phone || "").trim() || "your dealership";
   const contactEmail = (config.email || "").trim();
-  const contactAddress = ((config as { dealership_address?: string }).dealership_address || "").trim();
+  const contactAddress = (config.address || "").trim();
 
   return (
     <>

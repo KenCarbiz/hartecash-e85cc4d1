@@ -33,7 +33,7 @@ const TermsOfService = () => {
   // Tenant-driven contact details — never hard-code one dealership's phone or
   // address into a contract that names a different dealership as counterparty.
   const contactPhone = (config.phone || "").trim();
-  const contactAddress = ((config as { dealership_address?: string }).dealership_address || "").trim();
+  const contactAddress = (config.address || "").trim();
   // Governing-law state is tenant-driven (a CT forum clause is unenforceable
   // against an out-of-state dealer's customer); default to Connecticut.
   const governingState = ((config as { governing_law_state?: string }).governing_law_state || "").trim() || "Connecticut";
