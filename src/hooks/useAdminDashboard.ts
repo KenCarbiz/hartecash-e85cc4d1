@@ -304,11 +304,11 @@ export function useAdminDashboard() {
 
       const warnings: string[] = [];
       if (sub.vin) {
-        const { data } = await supabase.from("submissions").select("id").eq("vin", sub.vin).neq("id", sub.id).limit(3);
+        const { data } = await supabase.from("submissions").select("id").eq("dealership_id", tenant.dealership_id).eq("vin", sub.vin).neq("id", sub.id).limit(3);
         if (data?.length) warnings.push(`VIN match: ${data.length} other submission(s)`);
       }
       if (sub.phone) {
-        const { data } = await supabase.from("submissions").select("id").eq("phone", sub.phone).neq("id", sub.id).limit(3);
+        const { data } = await supabase.from("submissions").select("id").eq("dealership_id", tenant.dealership_id).eq("phone", sub.phone).neq("id", sub.id).limit(3);
         if (data?.length) warnings.push(`Phone match: ${data.length} other submission(s)`);
       }
       setDuplicateWarnings((prev) => ({ ...prev, [sub.id]: warnings }));

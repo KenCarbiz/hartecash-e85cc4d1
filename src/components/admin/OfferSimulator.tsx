@@ -35,6 +35,7 @@ import MarketContextPanel from "./MarketContextPanel";
 import RetailMarketPanel, { type RetailStats, type RetailListing } from "./RetailMarketPanel";
 import MarketCalibrationStrip from "./MarketCalibrationStrip";
 import { useToast } from "@/hooks/use-toast";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface Props {
   settings: OfferSettings;
@@ -259,6 +260,7 @@ const InteractiveWaterfallBlock = ({
 
 const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true, onSettingsChange }: Props) => {
   const { toast } = useToast();
+  const { tenant } = useTenant();
 
   // Local settings copy for inline adjustments
   const [localSettings, setLocalSettings] = useState<OfferSettings>(settings);
@@ -280,7 +282,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   // Default ZIP to dealership's first location zip
   useEffect(() => {
     if (liveZip) return;
-    supabase.from("dealership_locations").select("zip_codes").eq("is_active", true).order("sort_order").limit(1)
+    supabase.from("dealership_locations").select("zip_codes").eq("dealership_id", tenant.dealership_id).eq("is_active", true).order("sort_order").limit(1)
       .then(({ data }) => {
         const zips = data?.[0]?.zip_codes;
         if (Array.isArray(zips) && zips.length > 0) setLiveZip(zips[0]);

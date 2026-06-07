@@ -476,9 +476,15 @@ const PrivacyPolicy = () => {
               <p className="mb-2">
                 <strong className="text-foreground">Right to appeal.</strong> If we decline to act on your request,
                 you may appeal by contacting us at {contactPhone}. We respond to appeals in writing within 60 days.
-                If we deny your appeal, you may submit a complaint to the Connecticut Attorney General at{" "}
-                <a href="https://portal.ct.gov/ag/sections/privacy/the-connecticut-data-privacy-act" target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-4 hover:underline">the Connecticut Attorney General's Office</a>{" "}
-                (165 Capitol Avenue, Hartford, CT 06106).
+                {(config.governing_law_state || "Connecticut").trim().toLowerCase() === "connecticut" ? (
+                  <>
+                    If we deny your appeal, you may submit a complaint to the Connecticut Attorney General at{" "}
+                    <a href="https://portal.ct.gov/ag/sections/privacy/the-connecticut-data-privacy-act" target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-4 hover:underline">the Connecticut Attorney General's Office</a>{" "}
+                    (165 Capitol Avenue, Hartford, CT 06106).
+                  </>
+                ) : (
+                  <>If we deny your appeal, you may submit a complaint to your state's Attorney General's office.</>
+                )}
               </p>
               <p className="text-sm text-foreground/60">
                 Residents of other states with comprehensive privacy laws (e.g., Virginia, Colorado, Utah, Texas)

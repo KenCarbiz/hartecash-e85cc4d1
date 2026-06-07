@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSiteConfig, type LandingTemplate } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 
 // ── Legacy Hartecash (the pre-audit maximalist long-scroll) ──
 const LegacyTemplate   = lazy(() => import("./templates/LegacyTemplate"));
@@ -99,9 +100,9 @@ interface Props {
 // configured branding on the first paint.
 const LS_KEY = "autocurb:last_landing_template";
 
-const readCachedTemplate = (): LandingTemplate | null => {
+const readCachedTemplate = (key: string): LandingTemplate | null => {
   try {
-    const v = typeof window !== "undefined" ? localStorage.getItem(LS_KEY) : null;
+    const v = typeof window !== "undefined" ? localStorage.getItem(key) : null;
     if (v && VALID_TEMPLATES.has(v as LandingTemplate)) return v as LandingTemplate;
   } catch (e) {
     // Private mode / disabled storage — fall through to spinner fallback.
@@ -112,7 +113,11 @@ const readCachedTemplate = (): LandingTemplate | null => {
 
 const LandingTemplateRouter = ({ override }: Props) => {
   const { config, loading } = useSiteConfig();
+  const { tenant } = useTenant();
   const [searchParams] = useSearchParams();
+  // Namespace the template cache by tenant so a prior dealership's template
+  // can't flash for a different dealership in the same browser.
+  const lsKey = `${LS_KEY}:${tenant.dealership_id}`;
 
   // Resolution order:
   //   1. prop override (admin preview)
@@ -126,7 +131,7 @@ const LandingTemplateRouter = ({ override }: Props) => {
   const fromConfig = !loading && config.landing_template
     ? (config.landing_template as LandingTemplate)
     : null;
-  const fromCache = readCachedTemplate();
+  const fromCache = readCachedTemplate(lsKey);
 
   const chosen: LandingTemplate | null =
     override || fromUrl || fromConfig || fromCache;
@@ -139,12 +144,12 @@ const LandingTemplateRouter = ({ override }: Props) => {
   useEffect(() => {
     if (!fromConfig) return;
     try {
-      const prev = localStorage.getItem(LS_KEY);
-      if (prev !== fromConfig) localStorage.setItem(LS_KEY, fromConfig);
+      const prev = localStorage.getItem(lsKey);
+      if (prev !== fromConfig) localStorage.setItem(lsKey, fromConfig);
     } catch (e) {
       console.debug("LandingTemplateRouter: localStorage write blocked:", e);
     }
-  }, [fromConfig]);
+  }, [fromConfig, lsKey]);
 
   // No resolved choice yet (first-ever visit, no URL hint, config still
   // loading) → show the spinner instead of guessing wrong. Same skeleton

@@ -16,6 +16,9 @@ export type TunerConfig = {
 };
 
 const LS_KEY = "moto-tuner-config-v1";
+// Namespace the cache by tenant so one dealership's tuner config can't flash
+// into another's hero/vehicle layout in the same browser.
+const lsKeyFor = (dealershipId?: string | null) => (dealershipId ? `${LS_KEY}:${dealershipId}` : LS_KEY);
 const LOCAL_EVENT = "moto-tuner-config:change";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -24,7 +27,7 @@ export type RealtimeStatus = "connecting" | "live" | "closed" | "error";
 export function useTunerConfig(dealershipId: string | undefined | null) {
   const [config, setConfig] = useState<TunerConfig>(() => {
     try {
-      const raw = localStorage.getItem(LS_KEY);
+      const raw = localStorage.getItem(lsKeyFor(dealershipId));
       return raw ? (JSON.parse(raw) as TunerConfig) : {};
     } catch {
       return {};
@@ -62,7 +65,7 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
       const remote = (data?.hero_tuner_config ?? {}) as TunerConfig;
       setConfig(remote);
       try {
-        localStorage.setItem(LS_KEY, JSON.stringify(remote));
+        localStorage.setItem(lsKeyFor(dealershipId), JSON.stringify(remote));
       } catch { /* localStorage unavailable */ }
       setLoaded(true);
     })();
@@ -85,7 +88,7 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
             setConfig(next);
             setLastUpdatedAt(Date.now());
             try {
-              localStorage.setItem(LS_KEY, JSON.stringify(next));
+              localStorage.setItem(lsKeyFor(dealershipId), JSON.stringify(next));
             } catch { /* localStorage unavailable */ }
           }
         },
@@ -106,7 +109,7 @@ export function useTunerConfig(dealershipId: string | undefined | null) {
   const persist = useCallback(
     (next: TunerConfig) => {
       try {
-        localStorage.setItem(LS_KEY, JSON.stringify(next));
+        localStorage.setItem(lsKeyFor(dealershipId), JSON.stringify(next));
       } catch { /* localStorage unavailable */ }
       if (!dealershipId) return;
       setStatus("saving");
