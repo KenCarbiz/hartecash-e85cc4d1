@@ -78,13 +78,24 @@ serve(async (req) => {
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
   try {
-    const { year, make, model, style, color, uvc, vin, angle, studio_only } = await req.json();
+    const body = await req.json();
+    const { year, make, model, style, color, uvc, vin, angle, studio_only, token } = body;
 
     if (!year || !make || !model) {
       return new Response(JSON.stringify({ error: "year, make, and model are required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
+
+    // Guard paid APIs (Black Book photo + Lovable AI image gen) from
+    // anonymous credit-burn abuse. Staff JWTs and valid submission
+    // tokens pass through unmetered; everyone else is per-IP capped.
+    const blocked = await paidApiGuard(req, corsHeaders, {
+      submissionToken: token ?? null,
+      anonMaxPerHour: 20,
+      scope: "generate-vehicle-image",
+    });
+    if (blocked) return blocked;
 
     const colorSlug = (color || "white").toLowerCase().replace(/[^a-z0-9]/g, "_");
     const angleSlug = angle === "side" ? "side" : "3q";
