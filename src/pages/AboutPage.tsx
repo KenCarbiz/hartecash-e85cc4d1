@@ -348,10 +348,16 @@ const AboutPage = () => {
               Ready to See What Your Car Is Worth?
             </h2>
             <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-              Get a no-obligation cash offer in under 2 minutes — or give us a call at{" "}
-              <a href={`tel:${config.phone || "(860) 506-3092"}`} className="text-primary font-semibold hover:underline">
-                {config.phone || "(860) 506-3092"}
-              </a>. We'd love to hear from you.
+              Get a no-obligation cash offer in under 2 minutes
+              {(config.phone || "").trim() ? (
+                <>
+                  {" "}— or give us a call at{" "}
+                  <a href={`tel:${config.phone.replace(/\D/g, "")}`} className="text-primary font-semibold hover:underline">
+                    {config.phone}
+                  </a>
+                </>
+              ) : null}
+              . We'd love to hear from you.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button asChild size="lg" className="gap-2">
