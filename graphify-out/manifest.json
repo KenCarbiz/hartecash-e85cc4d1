@@ -2790,8 +2790,8 @@
     "semantic_hash": ""
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1780848079.9323,
-    "ast_hash": "87afa59b7a47b8b759a51be2df815042",
+    "mtime": 1780863747.7831817,
+    "ast_hash": "e974265dc4caec20066fe15c49e12611",
     "semantic_hash": ""
   },
   "src/layouts/CustomerLayout.tsx": {
@@ -7807,6 +7807,11 @@
   "public/data.html": {
     "mtime": 1780863201.1524167,
     "ast_hash": "7086eed314fc61dc20ddad7996588a64",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260607164612_6a1129dc-0cdc-49d8-98fa-78570e3236d1.sql": {
+    "mtime": 1780863747.7831817,
+    "ast_hash": "f340022fab74afa6fbdf9573c67b1875",
     "semantic_hash": ""
   }
 }
