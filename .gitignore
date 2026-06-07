@@ -38,3 +38,6 @@ screenshots/
 # Competitive recon — see scripts/recon-motoacquire.ts
 .env.recon
 recon/
+
+# Graphify knowledge graph — commit graph.json/report, ignore local cache
+graphify-out/cache/
