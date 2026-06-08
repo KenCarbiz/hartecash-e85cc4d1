@@ -1,16 +1,16 @@
-# Graph Report - hartecash-e85cc4d1  (2026-06-07)
+# Graph Report - hartecash-e85cc4d1  (2026-06-08)
 
 ## Corpus Check
-- 1440 files · ~3,226,212 words
+- 1441 files · ~3,226,537 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 6151 nodes · 12593 edges · 368 communities (317 shown, 51 thin omitted)
+- 6151 nodes · 12596 edges · 360 communities (313 shown, 47 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 25 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `75365194`
+- Built from commit: `287f2428`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -279,15 +279,12 @@
 - [[_COMMUNITY_Community 264|Community 264]]
 - [[_COMMUNITY_Community 265|Community 265]]
 - [[_COMMUNITY_Community 266|Community 266]]
-- [[_COMMUNITY_Community 267|Community 267]]
 - [[_COMMUNITY_Community 268|Community 268]]
 - [[_COMMUNITY_Community 269|Community 269]]
 - [[_COMMUNITY_Community 270|Community 270]]
 - [[_COMMUNITY_Community 271|Community 271]]
 - [[_COMMUNITY_Community 272|Community 272]]
-- [[_COMMUNITY_Community 273|Community 273]]
 - [[_COMMUNITY_Community 274|Community 274]]
-- [[_COMMUNITY_Community 275|Community 275]]
 - [[_COMMUNITY_Community 276|Community 276]]
 - [[_COMMUNITY_Community 277|Community 277]]
 - [[_COMMUNITY_Community 278|Community 278]]
@@ -328,8 +325,6 @@
 - [[_COMMUNITY_Community 313|Community 313]]
 - [[_COMMUNITY_Community 314|Community 314]]
 - [[_COMMUNITY_Community 315|Community 315]]
-- [[_COMMUNITY_Community 316|Community 316]]
-- [[_COMMUNITY_Community 317|Community 317]]
 - [[_COMMUNITY_Community 318|Community 318]]
 - [[_COMMUNITY_Community 319|Community 319]]
 - [[_COMMUNITY_Community 320|Community 320]]
@@ -341,7 +336,6 @@
 - [[_COMMUNITY_Community 327|Community 327]]
 - [[_COMMUNITY_Community 328|Community 328]]
 - [[_COMMUNITY_Community 329|Community 329]]
-- [[_COMMUNITY_Community 330|Community 330]]
 - [[_COMMUNITY_Community 332|Community 332]]
 - [[_COMMUNITY_Community 333|Community 333]]
 - [[_COMMUNITY_Community 338|Community 338]]
@@ -351,14 +345,12 @@
 - [[_COMMUNITY_Community 342|Community 342]]
 - [[_COMMUNITY_Community 343|Community 343]]
 - [[_COMMUNITY_Community 348|Community 348]]
-- [[_COMMUNITY_Community 365|Community 365]]
-- [[_COMMUNITY_Community 366|Community 366]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `useSiteConfig()` - 290 edges
 2. `useToast()` - 269 edges
 3. `supabase` - 265 edges
-4. `useTenant()` - 229 edges
+4. `useTenant()` - 231 edges
 5. `Button` - 178 edges
 6. `cn()` - 137 edges
 7. `Chat` - 129 edges
@@ -371,8 +363,8 @@
   project/src/components/admin/AdminHeader.tsx → src/contexts/PlatformContext.tsx
 - `AdminHeader()` --calls--> `useSiteConfig()`  [INFERRED]
   project/src/components/admin/AdminHeader.tsx → src/hooks/useSiteConfig.ts
-- `AdminSidebar()` --calls--> `isManagerRole()`  [INFERRED]
-  project/src/components/admin/AdminSidebar.tsx → src/lib/adminConstants.ts
+- `AdminSidebar()` --calls--> `useSidebar()`  [INFERRED]
+  project/src/components/admin/AdminSidebar.tsx → src/components/ui/sidebar.tsx
 - `SubmissionDetailSheet()` --calls--> `useTenant()`  [INFERRED]
   project/src/components/admin/SubmissionDetailSheet.tsx → src/contexts/TenantContext.tsx
 - `SubmissionDetailSheet()` --calls--> `useToast()`  [INFERRED]
@@ -381,11 +373,11 @@
 ## Import Cycles
 - None detected.
 
-## Communities (368 total, 51 thin omitted)
+## Communities (360 total, 47 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.07
-Nodes (35): downloadCalendarInvite(), escapeICalText(), formatGoogleDate(), formatICalDate(), formatOutlookDate(), generateGoogleCalendarUrl(), generateICalEvent(), generateOutlookCalendarUrl() (+27 more)
+Cohesion: 0.09
+Nodes (30): downloadCalendarInvite(), escapeICalText(), formatGoogleDate(), formatICalDate(), formatOutlookDate(), generateGoogleCalendarUrl(), generateICalEvent(), generateOutlookCalendarUrl() (+22 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.02
@@ -404,16 +396,16 @@ Cohesion: 0.03
 Nodes (69): ComparisonConfig(), ComparisonFeature, VALUE_OPTIONS, DepthPolicyManager(), DealershipRow, delta(), DeltaBadge(), GroupKPISummary() (+61 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.06
-Nodes (59): OfferFlowState, APPROVAL_BADGE, BB_VALUE_OPTIONS, DEFAULT_MODEL_SETTINGS, JsonbCol, PricingModel, PricingModelInsert, PricingModelRow (+51 more)
+Cohesion: 0.08
+Nodes (44): OfferFlowState, APPROVAL_BADGE, BB_VALUE_OPTIONS, DEFAULT_MODEL_SETTINGS, JsonbCol, PricingModel, PricingModelInsert, PricingModelRow (+36 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.09
 Nodes (21): ApiAccessPanel(), InDevelopmentBadge(), DealerVautoConfig, maskKey(), PushLogRow, VautoIntegration(), DEFAULTS, WhiteLabelSettings() (+13 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.05
-Nodes (43): Props, LandingFormProps, QuickOfferForm(), QuickOfferFormProps, STATE_LIST, SellCarFormProps, stepCtaLabels, stepTimeEstimates (+35 more)
+Cohesion: 0.06
+Nodes (36): PRIMARY_LABELS, Props, Props, LandingFormProps, clearFormConfigCache(), DEFAULTS, FormConfig, Props (+28 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.03
@@ -449,31 +441,31 @@ Nodes (54): AboutPageConfig(), CorporateAboutFieldsProps, ICON_OPTIONS, Location
 
 ### Community 16 - "Community 16"
 Cohesion: 0.06
-Nodes (36): DocumentsPage(), HELPER_TEXT, REJECT_TIP, STATUS_TONE, AchConn, BankConnectionDrawer(), BANKS, Method (+28 more)
+Nodes (35): HELPER_TEXT, REJECT_TIP, STATUS_TONE, ATTACH_SHORTCUTS, INITIAL_THREADS, MessagesPage(), Msg, MsgKind (+27 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.06
-Nodes (34): AppRole, useAdminDashboard(), useEffectivePermissions(), APPROVAL_ROLES, APPT_TIME_SLOTS_FRISSAT, APPT_TIME_SLOTS_WEEKDAY, canEditPricing(), canViewPricing() (+26 more)
+Nodes (38): ActivityLogEntry, AppRole, PendingRequest, useAdminDashboard(), useEffectivePermissions(), ACCEPTED_NO_APPOINTMENT_STATUSES, ACCEPTED_WITH_APPOINTMENT_STATUSES, APPROVAL_ROLES (+30 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.04
-Nodes (45): AdminEmptyStateProps, AdminSectionRendererInner(), AppointmentManager, AppraiserQueue, BdcQueueHub, BrandingHub, CaptureInspectionHub, ChangelogManagement (+37 more)
+Nodes (45): AdminEmptyStateProps, AdminErrorBoundary, AdminSectionRendererInner(), AppointmentManager, AppraiserQueue, BdcQueueHub, BrandingHub, CaptureInspectionHub (+37 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.14
-Nodes (16): daysLeft(), ResumeCard(), usd(), TradeInBanner(), usd(), LegalView, TradeWidget(), useFirmOffer() (+8 more)
+Cohesion: 0.08
+Nodes (30): daysLeft(), ResumeCard(), usd(), TradeInBanner(), usd(), LegalView, TradeWidget(), TradeWidgetFlow() (+22 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.09
-Nodes (21): useVehicleTuner(), MotoTrackValueBlock(), MotoVehicleHero(), Condition, emptyMotoFlowState, MotoFlowState, MotoStepId, Ownership (+13 more)
+Cohesion: 0.07
+Nodes (36): getOfferTerms(), OfferMode, OfferTermsCopy, OfferTermsParams, resolveOfferMode(), buildSubmissionBBPayload(), MotoCard(), calculateAndPersistOffer() (+28 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.10
 Nodes (8): formatMoney(), KpiProps, KpiStrip(), MOCK, NAV_ITEMS, NextStepCard(), QuickActionRow, VehicleOverviewCard()
 
 ### Community 22 - "Community 22"
-Cohesion: 0.09
-Nodes (17): DOC_TYPE_LABELS, getProgressStages(), getStageIndex(), calculateEquity(), EquityResult, calculateLeadScore(), getScoreColor(), ScoringFactor (+9 more)
+Cohesion: 0.07
+Nodes (32): DOC_TYPE_LABELS, getProgressStages(), getStageIndex(), calculateEquity(), EquityResult, calculateLeadScore(), getScoreColor(), ScoringFactor (+24 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.05
@@ -481,15 +473,15 @@ Nodes (16): SEO(), SEOProps, DocCard, DOCS, Group, Rooftop, fmtPhone(), MyDataRi
 
 ### Community 24 - "Community 24"
 Cohesion: 0.07
-Nodes (36): PortalTokenContext, PortalTokenValue, ProviderProps, usePortalToken(), DataStatus, Props, PORTAL_MOCK, ActivityEvent (+28 more)
+Nodes (35): PortalTokenContext, PortalTokenValue, ProviderProps, usePortalToken(), DataStatus, Props, ActivityEvent, formatRelative() (+27 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.08
-Nodes (12): ACCEPTED_PORTAL_STATUSES, ConditionData, CustomerPortal(), CustomerPortalLegacy(), PortalSubmission, STAGE_MAPPING, CompletionChecklistProps, mapStatusToStepIndex() (+4 more)
+Cohesion: 0.05
+Nodes (20): fetchMileageAdjustedBBVehicle(), ACCEPTED_PORTAL_STATUSES, ConditionData, CustomerPortal(), CustomerPortalLegacy(), PortalSubmission, STAGE_MAPPING, CompletionChecklistProps (+12 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.10
-Nodes (24): cn(), MotoStickyFooter(), ValueTrackingModal(), ValueTrackingModalProps, ButtonProps, buttonVariants, Calendar(), CalendarProps (+16 more)
+Cohesion: 0.05
+Nodes (40): InDevelopmentBadgeProps, InDevelopmentOverlay(), InDevelopmentOverlayProps, SIZE_MAP, CATEGORY_ICON, Integration, IntegrationCard(), IntegrationCategory (+32 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.07
@@ -500,24 +492,24 @@ Cohesion: 0.12
 Nodes (16): buildVehicleFromInput(), defaultBlackBookAdapter(), ValuationAdapter, ValuationLookupInput, Props, defaultTodos, emptyBoost, emptyJourneyState (+8 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.10
-Nodes (18): Panel, SettingsPage(), SMS_IMPACTS, ADDRESS_ICONS, ADDRESS_LABELS, AddressType, MailingAddress, PickupLocation (+10 more)
+Cohesion: 0.07
+Nodes (31): Panel, SettingsPage(), SMS_IMPACTS, ADDRESS_ICONS, ADDRESS_LABELS, AddressType, MailingAddress, PickupLocation (+23 more)
 
 ### Community 30 - "Community 30"
 Cohesion: 0.13
 Nodes (26): Body, Body, CatalogEntry, Body, Body, Body, Body, admin() (+18 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.10
-Nodes (17): DEFAULTS, FONT_OPTIONS, HeroTuner(), HeroTunerValues, LiveStatus, merge(), mergeVehicle(), useHeroTuner() (+9 more)
+Cohesion: 0.06
+Nodes (35): DEFAULTS, FONT_OPTIONS, HeroTuner(), HeroTunerValues, LiveStatus, merge(), mergeVehicle(), useHeroTuner() (+27 more)
 
 ### Community 32 - "Community 32"
 Cohesion: 0.05
 Nodes (40): Conversational Pathways, Credentials to give Bland.ai — checklist, Data Extraction — Citation Schema, Final note on the leaked API key, Full intro (once they confirm it's them), Global Prompt — paste this entire block into the big text area, Harte Auto Group — Bland.ai Persona Paste Sheet, Identity section (+32 more)
 
 ### Community 33 - "Community 33"
-Cohesion: 0.06
-Nodes (26): DashboardPage(), Props, SLIDES, Tint, TINTS, ATTACH_SHORTCUTS, INITIAL_THREADS, MessagesPage() (+18 more)
+Cohesion: 0.09
+Nodes (18): DashboardPage(), Props, SLIDES, Tint, TINTS, DocumentsPage(), usePortalData(), CONDITION (+10 more)
 
 ### Community 34 - "Community 34"
 Cohesion: 0.10
@@ -549,11 +541,11 @@ Nodes (35): buildEmbedUrl(), buildIframeUrl(), cleanLabel(), closeDrawer(), clos
 
 ### Community 42 - "Community 42"
 Cohesion: 0.05
-Nodes (29): NavLink, NavLinkCompatProps, MotoCard(), MotoFormField, Props, MotoPrimaryButton, Props, FALLBACK_COLORS (+21 more)
+Nodes (31): NavLink, NavLinkCompatProps, AccordionContent, AccordionItem, AccordionTrigger, Alert, AlertDescription, AlertTitle (+23 more)
 
 ### Community 43 - "Community 43"
-Cohesion: 0.07
-Nodes (31): StaffFileUpload(), DocumentConditionalOn, DocumentConfig, DocumentRole, useDocumentConfig(), DOC_ICON, DocFile, SubmissionInfo (+23 more)
+Cohesion: 0.14
+Nodes (17): buildActivity(), buildDocsList(), buildPortalShape(), deriveStage(), DocFiles, fmtExpiry(), fmtMiles(), fmtRelative() (+9 more)
 
 ### Community 44 - "Community 44"
 Cohesion: 0.06
@@ -572,28 +564,28 @@ Cohesion: 0.08
 Nodes (22): corsHeaders, getTimezoneFromZip(), resolveCustomerTz(), stateToTimezone(), TWO_PARTY_CONSENT_STATES, ZIP_TO_TIMEZONE, corsHeaders, RequestBody (+14 more)
 
 ### Community 48 - "Community 48"
-Cohesion: 0.10
-Nodes (29): calcTradeInValue(), getStateFromZip(), getStateTaxRate(), getStateTaxRateForPrice(), getTaxRateFromZip(), STATE_NAMES, STATE_TAX_RATES, ZIP_TO_STATE (+21 more)
+Cohesion: 0.11
+Nodes (27): calcTradeInValue(), getStateFromZip(), getStateTaxRate(), getStateTaxRateForPrice(), getTaxRateFromZip(), STATE_NAMES, STATE_TAX_RATES, ZIP_TO_STATE (+19 more)
 
 ### Community 49 - "Community 49"
 Cohesion: 0.06
 Nodes (30): benefitItem, benefitsBox, benefitsTitle, button, container, content, ctaSection, footer (+22 more)
 
 ### Community 50 - "Community 50"
-Cohesion: 0.08
-Nodes (35): ROLE_LABELS, AdminHeader(), AdminHeaderProps, AdminSidebar(), AdminSidebarProps, SidebarItem, AdminSidebar(), AdminSidebarProps (+27 more)
+Cohesion: 0.12
+Nodes (16): Separator, SidebarContext, SidebarGroupAction, SidebarHeader, SidebarInput, SidebarInset, SidebarMenuAction, SidebarMenuBadge (+8 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.06
-Nodes (22): AppraisalPhotosCard(), ActivityKind, AI_TONES, CHANNEL_ICON, ContextRail(), ConvCall, ConvChannel, ConvMessage (+14 more)
+Cohesion: 0.05
+Nodes (28): AppraisalPhotosCard(), AppraisalPhotosCardProps, PhotoEntry, ActivityKind, AI_TONES, CHANNEL_ICON, ContextRail(), ConvCall (+20 more)
 
 ### Community 52 - "Community 52"
 Cohesion: 0.08
-Nodes (18): CAROUSEL_DOC_TYPES, ClassicErrorBoundary, fmtDate(), fmtMoney(), fmtNumber(), intentFromSource(), intentMeta, isInspectionCompleted() (+10 more)
+Nodes (21): CAROUSEL_DOC_TYPES, ClassicErrorBoundary, fmtDate(), fmtMoney(), fmtNumber(), intentFromSource(), intentMeta, isInspectionCompleted() (+13 more)
 
 ### Community 53 - "Community 53"
-Cohesion: 0.06
-Nodes (30): CalculatingOffer(), Props, GhostSyncIndicator(), PortalSkeleton(), PortalSkeletonProps, KBB_CONDITION_OPTIONS, KBB_FULL_DEFINITIONS, Props (+22 more)
+Cohesion: 0.10
+Nodes (18): CalculatingOffer(), Props, GhostSyncIndicator(), PortalSkeleton(), PortalSkeletonProps, SellCarForm(), SellCarFormProps, stepCtaLabels (+10 more)
 
 ### Community 54 - "Community 54"
 Cohesion: 0.20
@@ -668,8 +660,8 @@ Cohesion: 0.09
 Nodes (23): arrowCol, arrowText, button, comparisonCol, comparisonContainer, comparisonLabel, container, content (+15 more)
 
 ### Community 72 - "Community 72"
-Cohesion: 0.11
-Nodes (20): CallEvent, Channel, ClassicCommsCard(), ClassicCommsCardProps, ConvEvent, fmtTime(), Channel, ClassicCommsFullView() (+12 more)
+Cohesion: 0.09
+Nodes (27): CallEvent, Channel, ClassicCommsCard(), ClassicCommsCardProps, ConvEvent, fmtTime(), Channel, ClassicCommsFullView() (+19 more)
 
 ### Community 73 - "Community 73"
 Cohesion: 0.11
@@ -680,8 +672,8 @@ Cohesion: 0.09
 Nodes (22): 1. One continuous workflow from click to check, 2. True multi-tenant white-label (not just re-theming), 3. Dealer-website integration the others can't match, 4. Role-based CRM with real-world dealer hierarchy, 5. Compliance built-in, not bolted-on, 6. An intelligence layer no competitor has, 7. The sales-rep layer nobody else builds, 8. Automations that replace a full-time BDC headcount (+14 more)
 
 ### Community 75 - "Community 75"
-Cohesion: 0.25
-Nodes (9): CameraBlock, CameraBlockReason, classifyCameraError(), detectInAppWebview(), preflightCamera(), requestCameraStream(), DocDimensions, DocumentCameraCaptureProps (+1 more)
+Cohesion: 0.15
+Nodes (15): CameraBlock, CameraBlockReason, classifyCameraError(), detectInAppWebview(), preflightCamera(), requestCameraStream(), DocDimensions, ARCHETYPE_SHAPES (+7 more)
 
 ### Community 76 - "Community 76"
 Cohesion: 0.10
@@ -724,8 +716,8 @@ Cohesion: 0.18
 Nodes (8): OfferEstimate, ACVSheet, ACVSheetProps, CONDITION_LABELS, DeductionDetails, WaterfallEntry, Props, SubmissionSuccess()
 
 ### Community 86 - "Community 86"
-Cohesion: 0.29
-Nodes (7): TokenErrorScreenProps, checkTokenStatus(), isExpiredTokenError(), TokenStatus, DOC_TYPES, SubmissionInfo, UploadDocs()
+Cohesion: 0.15
+Nodes (15): TokenErrorScreenProps, DL_DIMENSIONS, getDocDimensions(), getTitleDimensions(), REGISTRATION_DIMENSIONS, STATE_TITLE_SIZE, TITLE_SIZES, TitleSizeKey (+7 more)
 
 ### Community 87 - "Community 87"
 Cohesion: 0.10
@@ -752,12 +744,12 @@ Cohesion: 0.15
 Nodes (17): attachNetworkListeners(), clickByText(), dumpVisibleFields(), env, fieldSnapshots, main(), NetEntry, network (+9 more)
 
 ### Community 93 - "Community 93"
-Cohesion: 0.17
-Nodes (16): ActionButton, actionForLead(), AllLeadsPageProps, ChipKey, dotCls, formatAge(), needsAction(), pillCls (+8 more)
+Cohesion: 0.10
+Nodes (23): ActionButton, actionForLead(), ChipKey, dotCls, formatAge(), needsAction(), pillCls, scoreFor() (+15 more)
 
 ### Community 94 - "Community 94"
-Cohesion: 0.14
-Nodes (15): ACCEPTED_OR_FINAL_STATUSES, AIReappraisalSuggestion, AppraiserQueue(), AppraiserQueueProps, classifyRow(), formatAge(), formatCurrency(), isStaleOffer() (+7 more)
+Cohesion: 0.16
+Nodes (13): ACCEPTED_OR_FINAL_STATUSES, AIReappraisalSuggestion, AppraiserQueue(), AppraiserQueueProps, classifyRow(), formatAge(), formatCurrency(), isStaleOffer() (+5 more)
 
 ### Community 95 - "Community 95"
 Cohesion: 0.15
@@ -788,8 +780,8 @@ Cohesion: 0.14
 Nodes (17): ADMIN_TOUR, AUTOCURB_LANDING, BASE_URL, captureAutocurbLanding(), DESKTOP, env, loginAdmin(), main() (+9 more)
 
 ### Community 102 - "Community 102"
-Cohesion: 0.08
-Nodes (29): BaseProps, InputProps, labelClasses(), MotoOutlinedInput, MotoOutlinedSelect, SelectProps, wrapperClasses(), LookupMode (+21 more)
+Cohesion: 0.10
+Nodes (19): StaffFileUpload(), DocumentConditionalOn, DocumentConfig, DocumentRole, useDocumentConfig(), captureException(), initErrorReporting(), Window (+11 more)
 
 ### Community 103 - "Community 103"
 Cohesion: 0.16
@@ -852,8 +844,8 @@ Cohesion: 0.17
 Nodes (12): AdminCommandPaletteProps, SECTION_MAP, Command, CommandDialog(), CommandDialogProps, CommandEmpty, CommandGroup, CommandInput (+4 more)
 
 ### Community 118 - "Community 118"
-Cohesion: 0.13
-Nodes (20): AdminSectionRendererProps, AppointmentManagerProps, CustomerFileV2Props, FrontDeskProps, rowToCSVArray(), ClassicProps, shortStatusLabel(), statusToneClasses (+12 more)
+Cohesion: 0.16
+Nodes (18): AdminSectionRendererProps, AllLeadsPageProps, AppointmentManagerProps, CustomerFileV2Props, FrontDeskProps, ClassicProps, fmt(), TodayActionSummary() (+10 more)
 
 ### Community 119 - "Community 119"
 Cohesion: 0.12
@@ -864,20 +856,20 @@ Cohesion: 0.12
 Nodes (16): DataEgressPanel(), EgressLogRow, EXPORTABLE_TABLES, CUSTOMER_TRIGGERS, DEFAULTS, NotificationConfig, NotificationSettings(), STAFF_TRIGGERS (+8 more)
 
 ### Community 121 - "Community 121"
-Cohesion: 0.05
-Nodes (33): AppraisalPhotosCardProps, PhotoEntry, BoostRole, PhotoShot, PreAppointmentRole, usePhotoConfig(), haversineMiles(), parsePhotoExif() (+25 more)
+Cohesion: 0.17
+Nodes (11): haversineMiles(), parsePhotoExif(), PhotoExifResult, savePhotoMetadata(), SUSPICIOUS_SOFTWARE, formatMoney(), PROGRESS_STEPS, ShotState (+3 more)
 
 ### Community 122 - "Community 122"
-Cohesion: 0.24
-Nodes (15): arrVal(), basePrintCSS, esc(), makeDocSection(), makePhotoGridSection(), makeRow(), makeSection(), makeTextDocSection() (+7 more)
+Cohesion: 0.13
+Nodes (15): BoostRole, PhotoShot, PreAppointmentRole, usePhotoConfig(), identify(), track(), Window, classToArchetype() (+7 more)
 
 ### Community 123 - "Community 123"
 Cohesion: 0.12
 Nodes (10): PhotoQuality, PhotoQualityResult, ALL, Category, chromeFor, OPTIONAL, RED_REASONS, REQUIRED (+2 more)
 
 ### Community 124 - "Community 124"
-Cohesion: 0.06
-Nodes (33): SlideToAcceptProps, buildOfferFormData(), buildStoredBBVehicle(), fetchMileageAdjustedBBVehicle(), JsonLike, normalizeArray(), parseStoredJson(), StoredBBValueTiers (+25 more)
+Cohesion: 0.10
+Nodes (21): SlideToAcceptProps, buildOfferFormData(), buildStoredBBVehicle(), JsonLike, normalizeArray(), parseStoredJson(), StoredBBValueTiers, StoredOfferInputs (+13 more)
 
 ### Community 125 - "Community 125"
 Cohesion: 0.12
@@ -888,16 +880,16 @@ Cohesion: 0.14
 Nodes (12): ARCHITECTURE_MAP, DealerWebsiteAutofillCard(), DealerWebsiteAutofillCardProps, isFilledText(), MissingItem, normalizeBrandColor(), OnboardingAnswers, PreviewCategory (+4 more)
 
 ### Community 127 - "Community 127"
-Cohesion: 0.10
-Nodes (14): PRIMARY_LABELS, Props, AMOUNT_SHORT, BB_CATEGORIES, BB_VALUE_OPTIONS, calcEquipmentTotal(), CONDITION_LABELS, CONDITIONS (+6 more)
+Cohesion: 0.12
+Nodes (12): AMOUNT_SHORT, BB_CATEGORIES, BB_VALUE_OPTIONS, calcEquipmentTotal(), CONDITION_LABELS, CONDITIONS, DEDUCTION_LABELS, OfferSimulator() (+4 more)
 
 ### Community 128 - "Community 128"
 Cohesion: 0.15
 Nodes (9): COMPLETED, DEAD, ExecutiveKPIHub(), ExecutiveKPIHubProps, Location, SOURCE_COLORS, SOURCE_LABELS, STORE_COLORS (+1 more)
 
 ### Community 129 - "Community 129"
-Cohesion: 0.21
-Nodes (17): getOfferTerms(), OfferMode, OfferTermsCopy, OfferTermsParams, resolveOfferMode(), buildSubmissionBBPayload(), calculateAndPersistOffer(), MotoOfferResult (+9 more)
+Cohesion: 0.14
+Nodes (16): ConditionBasisMap, ConditionMultipliers, DEFAULT_COLOR_DESIRABILITY, DEFAULT_DEDUCTION_MODES, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_LOW_MILEAGE_BONUS, DEFAULT_SEASONAL_ADJUSTMENT, BBValueTiers (+8 more)
 
 ### Community 130 - "Community 130"
 Cohesion: 0.16
@@ -924,8 +916,8 @@ Cohesion: 0.13
 Nodes (13): container, content, cta, detailRow, detailsBox, footer, h1, header (+5 more)
 
 ### Community 136 - "Community 136"
-Cohesion: 0.21
-Nodes (8): dollars(), DoNextRow(), initialsOf(), minutesAgo(), relTime(), TodayHome(), valueGuess(), ymm()
+Cohesion: 0.12
+Nodes (13): MotoFormField, Props, MotoPrimaryButton, Props, loadPricingRevealMode(), isEmail(), MotoStepContact(), Phase (+5 more)
 
 ### Community 137 - "Community 137"
 Cohesion: 0.18
@@ -988,8 +980,8 @@ Cohesion: 0.23
 Nodes (10): AdminBreadcrumbProps, SECTION_GROUPS, SECTION_LABELS, Breadcrumb, BreadcrumbEllipsis(), BreadcrumbItem, BreadcrumbLink, BreadcrumbList (+2 more)
 
 ### Community 152 - "Community 152"
-Cohesion: 0.14
-Nodes (14): InDevelopmentBadgeProps, InDevelopmentOverlay(), InDevelopmentOverlayProps, SIZE_MAP, getMarketSignal(), MarketSignal, MarketSignalBadge(), Props (+6 more)
+Cohesion: 0.21
+Nodes (10): getMarketSignal(), MarketSignal, MarketSignalBadge(), Props, SIGNAL_CONFIG, DamageRow, InspectionConfidence(), labelFor() (+2 more)
 
 ### Community 153 - "Community 153"
 Cohesion: 0.15
@@ -1068,8 +1060,8 @@ Cohesion: 0.29
 Nodes (5): ChangelogEntry, ICON_MAP, TAG_LABELS, TAG_STYLES, Skeleton()
 
 ### Community 172 - "Community 172"
-Cohesion: 0.18
-Nodes (7): FUNNEL_STAGES, FunnelMetrics, PERIOD_OPTIONS, PeriodKey, SOURCE_CONFIG, STAGE_LABELS, SubmissionRow
+Cohesion: 0.08
+Nodes (20): FUNNEL_STAGES, FunnelMetrics, PERIOD_OPTIONS, PeriodKey, SOURCE_CONFIG, STAGE_LABELS, SubmissionRow, labelFor() (+12 more)
 
 ### Community 173 - "Community 173"
 Cohesion: 0.20
@@ -1120,20 +1112,20 @@ Cohesion: 0.20
 Nodes (5): admin, EntitlementItem, parseIncludesApps(), serializeItem(), stripe
 
 ### Community 185 - "Community 185"
-Cohesion: 0.18
-Nodes (7): ChartConfig, ChartContainer, ChartContext, ChartContextProps, ChartLegendContent, ChartTooltipContent, THEMES
+Cohesion: 0.17
+Nodes (16): PricingModelManager(), isManagerRole(), AdminSidebar(), AdminSidebarProps, SidebarItem, AdminSidebarProps, SidebarItem, Sidebar (+8 more)
 
 ### Community 186 - "Community 186"
 Cohesion: 0.18
 Nodes (11): 10. Charts & Data (LOW), 1. Accessibility (CRITICAL), 2. Touch & Interaction (CRITICAL), 3. Performance (HIGH), 4. Style Selection (HIGH), 5. Layout & Responsive (HIGH), 6. Typography & Color (MEDIUM), 7. Animation (MEDIUM) (+3 more)
 
 ### Community 187 - "Community 187"
-Cohesion: 0.18
-Nodes (14): AVATAR_ICONS, AvatarIcon, AvatarPicker(), COLOR_THEMES, ColorTheme, CustomerAvatar(), getCustomerAvatar(), iconById() (+6 more)
+Cohesion: 0.14
+Nodes (8): useIsMobile(), BOOST_COPY, BoostShot, FALLBACK_BOOST_BONUS, FALLBACK_BOOST_REQUIRED, ShotState, SubmissionInfo, MobileQRBannerProps
 
 ### Community 188 - "Community 188"
-Cohesion: 0.20
-Nodes (8): CATEGORY_ICON, Integration, IntegrationCard(), IntegrationCategory, INTEGRATIONS, IntegrationStatus, STATUS_META, StatusPill()
+Cohesion: 0.12
+Nodes (14): ACCIDENT_OPTIONS, CONDITION_OPTIONS, ConditionData, ConditionItem, ENGINE_OPTIONS, EXTERIOR_DAMAGE_OPTIONS, INTERIOR_DAMAGE_OPTIONS, KEY_OPTIONS (+6 more)
 
 ### Community 189 - "Community 189"
 Cohesion: 0.13
@@ -1156,8 +1148,8 @@ Cohesion: 0.22
 Nodes (6): JourneyAppointment, fmt(), REQUIRED_PHOTO_IDS, StepAccepted(), TODO_META, TodoMeta
 
 ### Community 195 - "Community 195"
-Cohesion: 0.20
-Nodes (9): CompositeTypes, Constants, DatabaseWithoutInternals, DefaultSchema, Enums, Json, Tables, TablesInsert (+1 more)
+Cohesion: 0.12
+Nodes (14): DEFAULT_SLOTS, PhotoSlot, Props, StepPhotos(), UploadState, CompositeTypes, Constants, DatabaseWithoutInternals (+6 more)
 
 ### Community 196 - "Community 196"
 Cohesion: 0.20
@@ -1188,8 +1180,8 @@ Cohesion: 0.31
 Nodes (7): CaptureAttempt, corsHeaders, ERROR_TITLE_PATTERNS, json(), preflightCheck(), titleIsJustHost(), tryCapture()
 
 ### Community 203 - "Community 203"
-Cohesion: 0.39
-Nodes (7): UseChannelStateResult, ALL_ENABLED, CHANNEL_KEYS, CHANNEL_META, ChannelKey, ChannelMeta, ChannelStateMap
+Cohesion: 0.13
+Nodes (7): KBB_CONDITION_OPTIONS, KBB_FULL_DEFINITIONS, Props, RadioProps, Screen, SellFlowSimple(), Props
 
 ### Community 204 - "Community 204"
 Cohesion: 0.31
@@ -1204,8 +1196,8 @@ Cohesion: 0.13
 Nodes (8): AnalyticsPage(), COMPS, DEALER_REASONS, DrawerKind, MARKET_TIMING, SERIES, SeriesPoint, VALUE_FACTORS
 
 ### Community 207 - "Community 207"
-Cohesion: 0.14
-Nodes (10): ActivityItem, ActivityPage(), Filter, FILTERS, MILESTONES, MilestoneState, milestoneTone, NavTarget (+2 more)
+Cohesion: 0.13
+Nodes (12): ActivityItem, ActivityPage(), Filter, FILTERS, MILESTONES, MilestoneState, milestoneTone, NavTarget (+4 more)
 
 ### Community 208 - "Community 208"
 Cohesion: 0.28
@@ -1232,12 +1224,12 @@ Cohesion: 0.25
 Nodes (6): CaptureInspectionHubProps, DepthPolicyManager, DocumentConfiguration, FormConfiguration, InspectionConfiguration, PhotoConfiguration
 
 ### Community 214 - "Community 214"
-Cohesion: 0.11
-Nodes (15): ConditionCardStyle, DEFAULTS, FORM_VARIANTS, FormDensity, FormVariant, GHOST_OPTIONS, LandingFlowConfig(), State (+7 more)
+Cohesion: 0.22
+Nodes (6): ConditionCardStyle, DEFAULTS, FORM_VARIANTS, FormDensity, FormVariant, GHOST_OPTIONS
 
 ### Community 215 - "Community 215"
-Cohesion: 0.36
-Nodes (7): labelFor(), MdsPill(), Props, tone(), TONE_DARK, TONE_LIGHT, tooltipFor()
+Cohesion: 0.15
+Nodes (9): AIChecks, ASPECT_RATIO, DOC_META, DocKind, DocMeta, DocumentUploadDrawer(), fallbackMeta(), Props (+1 more)
 
 ### Community 216 - "Community 216"
 Cohesion: 0.32
@@ -1256,8 +1248,8 @@ Cohesion: 0.25
 Nodes (7): #1 — ExecutiveDashboard rebuild, #4 — Wholesale Marketplace, #5 — Revaluation Job admin panel, #8 — Mobile inspection offline mode, #9 — Dark mode audit, Part 1 — Parked Items Scope & Plan, Prioritization recommendation
 
 ### Community 221 - "Community 221"
-Cohesion: 0.21
-Nodes (12): buildConsentText(), hasLoanFromStatus(), logConsent(), PAYOFF_AUTHORIZATION(), PAYOFF_AUTHORIZED_VERSIONS, TCPA_BASE(), toE164(), loadPricingRevealMode() (+4 more)
+Cohesion: 0.43
+Nodes (7): buildConsentText(), hasLoanFromStatus(), logConsent(), PAYOFF_AUTHORIZATION(), PAYOFF_AUTHORIZED_VERSIONS, TCPA_BASE(), toE164()
 
 ### Community 222 - "Community 222"
 Cohesion: 0.22
@@ -1276,8 +1268,8 @@ Cohesion: 0.25
 Nodes (6): AIDamageReportProps, CATEGORY_LABELS, DamageItem, DamageReport, SEVERITY_COLORS, TYPE_LABELS
 
 ### Community 227 - "Community 227"
-Cohesion: 0.23
-Nodes (9): Props, Props, WaterfallStep, Props, OfferRule, OfferSettings, fmt(), LiveOfferPreview() (+1 more)
+Cohesion: 0.17
+Nodes (12): Props, Props, WaterfallStep, QuickOfferForm(), QuickOfferFormProps, STATE_LIST, OfferRule, OfferSettings (+4 more)
 
 ### Community 228 - "Community 228"
 Cohesion: 0.25
@@ -1288,8 +1280,8 @@ Cohesion: 0.25
 Nodes (7): NavigationMenu, NavigationMenuContent, NavigationMenuIndicator, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle, NavigationMenuViewport
 
 ### Community 230 - "Community 230"
-Cohesion: 0.33
-Nodes (5): fetchSubmissionNotes(), isMissingTableError(), NotesModalProps, SubmissionNote, SubmissionNotesModal()
+Cohesion: 0.29
+Nodes (4): ShotSilhouetteProps, SilhouetteState, STROKE_BY_STATE, CaptureWithOverlayProps
 
 ### Community 231 - "Community 231"
 Cohesion: 0.33
@@ -1329,7 +1321,7 @@ Nodes (15): PrimaryCTA(), Props, JourneyCondition, StepContext, fmt(), REQUIRED_
 
 ### Community 240 - "Community 240"
 Cohesion: 0.33
-Nodes (5): ToggleGroup, ToggleGroupContext, ToggleGroupItem, Toggle, toggleVariants
+Nodes (4): LandingFlowConfig(), SAMPLE_VEHICLE, TradeWidgetAdmin(), useFormConfig()
 
 ### Community 242 - "Community 242"
 Cohesion: 0.40
@@ -1372,8 +1364,8 @@ Cohesion: 0.53
 Nodes (5): Answers, applyOnboardingAnswers(), channelsFromAnswer(), hexToHsl(), yn()
 
 ### Community 254 - "Community 254"
-Cohesion: 0.33
-Nodes (4): LeadAction, LeadActionIcon, LeadActionKey, LeadActionVariant
+Cohesion: 0.40
+Nodes (4): State, LandingTemplate, Props, Props
 
 ### Community 255 - "Community 255"
 Cohesion: 0.20
@@ -1388,8 +1380,8 @@ Cohesion: 0.33
 Nodes (6): _detect_page_type(), format_page_override_md(), _generate_intelligent_overrides(), Detect page type from context and search results., Format a page-specific override file with intelligent AI-generated content., Generate intelligent overrides based on page type using layered search.
 
 ### Community 262 - "Community 262"
-Cohesion: 0.33
-Nodes (5): DEFAULT_SLOTS, PhotoSlot, Props, StepPhotos(), UploadState
+Cohesion: 0.40
+Nodes (5): ROLE_LABELS, AdminHeader(), AdminHeaderProps, AdminSidebar(), useSidebar()
 
 ### Community 263 - "Community 263"
 Cohesion: 0.33
@@ -1407,10 +1399,6 @@ Nodes (6): How to Use This Skill, Step 1: Analyze User Requirements, Step 2: Gen
 Cohesion: 0.33
 Nodes (3): ALL_SHOTS, ARCHETYPE_SHAPES, OVERLAY_COLORS
 
-### Community 267 - "Community 267"
-Cohesion: 0.25
-Nodes (8): DL_DIMENSIONS, getDocDimensions(), getTitleDimensions(), REGISTRATION_DIMENSIONS, STATE_TITLE_SIZE, TITLE_SIZES, TitleSizeKey, UploadDocsLegacy()
-
 ### Community 268 - "Community 268"
 Cohesion: 0.50
 Nodes (4): labelFor(), Props, TONE, VelocityCard()
@@ -1426,14 +1414,6 @@ Nodes (4): Files I'm attaching, Ground rules, Message to paste into Claude Code 
 ### Community 272 - "Community 272"
 Cohesion: 0.40
 Nodes (3): InventoryScope, TradeUpIncentive, TriggerMoment
-
-### Community 273 - "Community 273"
-Cohesion: 0.50
-Nodes (4): BrakePadPicker(), BrakePadPickerProps, getColor(), TICKS
-
-### Community 275 - "Community 275"
-Cohesion: 0.31
-Nodes (6): ARCHETYPE_SHAPES, ArchetypeShape, CLASS_MAP, VehicleArchetype, GhostCarSilhouetteProps, VehicleCameraCaptureProps
 
 ### Community 276 - "Community 276"
 Cohesion: 0.25
@@ -1527,29 +1507,25 @@ Nodes (3): Option A — Personal Access Token, Option B — Let Claude Code just
 Cohesion: 0.67
 Nodes (3): Path A — Flag-only safety (simplest, recommended), Path B — You create the branch on GitHub first (safer but more moving parts), Two paths — pick one
 
-### Community 316 - "Community 316"
-Cohesion: 0.40
-Nodes (3): ProgressStepsProps, STEPS_POST_ACCEPTANCE, STEPS_PRE_ACCEPTANCE
-
 ## Knowledge Gaps
 - **2793 isolated node(s):** `PreToolUse`, `allow`, `husky.sh script`, `intentMeta`, `$schema` (+2788 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **51 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **47 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `supabase` connect `Community 3` to `Community 0`, `Community 2`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 13`, `Community 15`, `Community 17`, `Community 18`, `Community 19`, `Community 20`, `Community 22`, `Community 23`, `Community 24`, `Community 25`, `Community 31`, `Community 36`, `Community 37`, `Community 42`, `Community 43`, `Community 44`, `Community 46`, `Community 48`, `Community 51`, `Community 52`, `Community 53`, `Community 56`, `Community 57`, `Community 60`, `Community 61`, `Community 62`, `Community 64`, `Community 66`, `Community 67`, `Community 72`, `Community 73`, `Community 76`, `Community 79`, `Community 86`, `Community 87`, `Community 89`, `Community 91`, `Community 94`, `Community 95`, `Community 97`, `Community 100`, `Community 102`, `Community 103`, `Community 108`, `Community 114`, `Community 119`, `Community 120`, `Community 121`, `Community 124`, `Community 126`, `Community 127`, `Community 128`, `Community 129`, `Community 130`, `Community 137`, `Community 152`, `Community 157`, `Community 158`, `Community 171`, `Community 172`, `Community 173`, `Community 179`, `Community 180`, `Community 193`, `Community 200`, `Community 203`, `Community 212`, `Community 214`, `Community 216`, `Community 221`, `Community 224`, `Community 225`, `Community 230`, `Community 237`, `Community 241`, `Community 252`, `Community 253`, `Community 262`, `Community 272`, `Community 330`, `Community 366`?**
+- **Why does `supabase` connect `Community 3` to `Community 0`, `Community 2`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 13`, `Community 15`, `Community 17`, `Community 18`, `Community 19`, `Community 20`, `Community 22`, `Community 23`, `Community 24`, `Community 25`, `Community 31`, `Community 36`, `Community 37`, `Community 43`, `Community 44`, `Community 46`, `Community 48`, `Community 51`, `Community 52`, `Community 53`, `Community 56`, `Community 57`, `Community 60`, `Community 61`, `Community 62`, `Community 64`, `Community 66`, `Community 67`, `Community 72`, `Community 73`, `Community 76`, `Community 79`, `Community 86`, `Community 87`, `Community 89`, `Community 91`, `Community 94`, `Community 95`, `Community 97`, `Community 100`, `Community 102`, `Community 103`, `Community 108`, `Community 114`, `Community 119`, `Community 120`, `Community 121`, `Community 122`, `Community 124`, `Community 126`, `Community 127`, `Community 128`, `Community 129`, `Community 130`, `Community 136`, `Community 137`, `Community 152`, `Community 157`, `Community 158`, `Community 171`, `Community 172`, `Community 173`, `Community 179`, `Community 180`, `Community 187`, `Community 193`, `Community 195`, `Community 200`, `Community 203`, `Community 212`, `Community 214`, `Community 216`, `Community 221`, `Community 224`, `Community 225`, `Community 227`, `Community 230`, `Community 237`, `Community 240`, `Community 241`, `Community 252`, `Community 253`, `Community 272`?**
   _High betweenness centrality (0.077) - this node is a cross-community bridge._
-- **Why does `useSiteConfig()` connect `Community 10` to `Community 0`, `Community 129`, `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 7`, `Community 9`, `Community 267`, `Community 12`, `Community 15`, `Community 16`, `Community 145`, `Community 17`, `Community 19`, `Community 276`, `Community 20`, `Community 23`, `Community 25`, `Community 27`, `Community 284`, `Community 34`, `Community 35`, `Community 36`, `Community 43`, `Community 48`, `Community 50`, `Community 51`, `Community 52`, `Community 53`, `Community 180`, `Community 56`, `Community 57`, `Community 60`, `Community 66`, `Community 194`, `Community 76`, `Community 85`, `Community 214`, `Community 87`, `Community 86`, `Community 88`, `Community 221`, `Community 222`, `Community 94`, `Community 95`, `Community 97`, `Community 224`, `Community 102`, `Community 237`, `Community 239`, `Community 119`, `Community 121`, `Community 124`?**
+- **Why does `useSiteConfig()` connect `Community 10` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 262`, `Community 7`, `Community 9`, `Community 136`, `Community 12`, `Community 15`, `Community 16`, `Community 145`, `Community 17`, `Community 19`, `Community 276`, `Community 20`, `Community 23`, `Community 25`, `Community 27`, `Community 284`, `Community 31`, `Community 34`, `Community 35`, `Community 36`, `Community 43`, `Community 48`, `Community 51`, `Community 52`, `Community 53`, `Community 180`, `Community 56`, `Community 57`, `Community 185`, `Community 187`, `Community 60`, `Community 66`, `Community 194`, `Community 203`, `Community 76`, `Community 85`, `Community 86`, `Community 87`, `Community 88`, `Community 222`, `Community 94`, `Community 95`, `Community 97`, `Community 224`, `Community 227`, `Community 102`, `Community 237`, `Community 239`, `Community 240`, `Community 119`, `Community 121`, `Community 122`, `Community 124`?**
   _High betweenness centrality (0.045) - this node is a cross-community bridge._
-- **Why does `cn()` connect `Community 26` to `Community 2`, `Community 3`, `Community 130`, `Community 6`, `Community 9`, `Community 13`, `Community 15`, `Community 273`, `Community 20`, `Community 150`, `Community 279`, `Community 152`, `Community 151`, `Community 22`, `Community 164`, `Community 37`, `Community 167`, `Community 168`, `Community 169`, `Community 42`, `Community 171`, `Community 50`, `Community 55`, `Community 185`, `Community 59`, `Community 188`, `Community 61`, `Community 196`, `Community 198`, `Community 211`, `Community 88`, `Community 90`, `Community 93`, `Community 95`, `Community 229`, `Community 102`, `Community 106`, `Community 108`, `Community 239`, `Community 240`, `Community 117`, `Community 120`, `Community 121`?**
+- **Why does `cn()` connect `Community 26` to `Community 2`, `Community 3`, `Community 130`, `Community 6`, `Community 136`, `Community 9`, `Community 13`, `Community 15`, `Community 19`, `Community 20`, `Community 150`, `Community 279`, `Community 151`, `Community 22`, `Community 152`, `Community 31`, `Community 164`, `Community 37`, `Community 167`, `Community 168`, `Community 169`, `Community 42`, `Community 171`, `Community 50`, `Community 51`, `Community 55`, `Community 59`, `Community 61`, `Community 196`, `Community 198`, `Community 211`, `Community 88`, `Community 90`, `Community 93`, `Community 95`, `Community 229`, `Community 106`, `Community 108`, `Community 239`, `Community 117`, `Community 120`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **Are the 5 inferred relationships involving `useSiteConfig()` (e.g. with `AdminHeader()` and `AdminDashboard()`) actually correct?**
   _`useSiteConfig()` has 5 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `PreToolUse`, `allow`, `Generate full 16-token color row from 4 base colors.` to the rest of the system?**
   _2824 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.07215686274509804 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08902439024390243 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.016666666666666666 - nodes in this community are weakly interconnected._

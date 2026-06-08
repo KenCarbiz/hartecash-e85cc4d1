@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LogIn, Search, Car, ChevronRight, ArrowUp } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 
 // Progressive (xxx) xxx-xxxx mask. We store digits; the lookup RPC
 // strips non-digits on both sides, so formatting is display-only and
@@ -42,6 +43,7 @@ const FindOfferLean = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
 
   const dealerName = (config.dealership_name || "").trim();
   const shortName =
@@ -51,10 +53,29 @@ const FindOfferLean = () => {
     e.preventDefault();
     if (!email.trim() || !phone.trim()) return;
     setLoading(true);
-    const { data } = await supabase.rpc("lookup_submission_by_contact", {
-      _email: email.trim(),
-      _phone: phone.trim(),
-    });
+    // Scope the lookup to the current dealership so someone who sold to
+    // several dealers doesn't surface another dealer's portal token from
+    // this landing (mirrors CustomerLookup). On the default/marketing
+    // context — no real tenant resolved — there's nothing to scope to, so
+    // we stay on the unscoped 2-arg form. We also fall back to it if the
+    // 3-arg overload errors (deploy-order safety). An empty *scoped* result
+    // is left as-is — we never widen a real tenant's search.
+    const scoped =
+      tenant.dealership_id && tenant.dealership_id !== "default"
+        ? await supabase.rpc("lookup_submission_by_contact", {
+            _email: email.trim(),
+            _phone: phone.trim(),
+            _dealership_id: tenant.dealership_id,
+          } as never)
+        : null;
+    let data = scoped && !scoped.error ? scoped.data : null;
+    if (!scoped || scoped.error) {
+      const fallback = await supabase.rpc("lookup_submission_by_contact", {
+        _email: email.trim(),
+        _phone: phone.trim(),
+      });
+      data = fallback.data;
+    }
     const found = (data as FoundSubmission[]) || [];
     setResults(found);
     setSearched(true);
