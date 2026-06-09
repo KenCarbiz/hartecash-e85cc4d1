@@ -10,10 +10,10 @@
 import {
   Home, Inbox, RotateCcw, CalendarDays, PhoneCall, LogIn, Wrench,
   TrendingUp, Mic, LineChart, BarChart3, Palette, Phone, FileText,
-  MapPin, Settings, Link2, Clock, Gift, Megaphone, Globe, Code2,
+  MapPin, Settings, Clock, Megaphone, Globe, Code2,
   PanelRightOpen, Activity, Users, CreditCard, Rocket, SlidersHorizontal,
   Image as ImageIcon, Send, Network, ScrollText, Target, Tag, Receipt,
-  LayoutDashboard,
+  LayoutDashboard, Briefcase,
 } from "lucide-react";
 
 export type NavItem = {
@@ -74,11 +74,14 @@ export function buildNavGroups(flags: NavFlags): NavGroup[] {
 
   const work = f([{ key: "today", label: "Today", icon: Home }]);
 
-  const myDay = f([
-    { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
-    { key: "my-availability", label: "Availability Center", icon: Clock },
-    { key: "my-referrals", label: "Referral Center", icon: Gift },
-  ]);
+  // "My Business" consolidates the former My Lead Link + Referral Center
+  // into one hub. It's a V2-only surface rendered by the page (not the
+  // shared section renderer), so it's shown unconditionally — every staff
+  // member gets a personal business page regardless of section grants.
+  const myDay: NavItem[] = [
+    { key: "my-business", label: "My Business", icon: Briefcase },
+    ...f([{ key: "my-availability", label: "Availability Center", icon: Clock }]),
+  ];
 
   const salesFloor = f([
     { key: "submissions", label: "All Leads", icon: Inbox, badge: submissionCount },
