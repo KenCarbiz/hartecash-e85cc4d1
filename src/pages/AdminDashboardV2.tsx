@@ -142,6 +142,8 @@ const AdminDashboardV2 = () => {
                   <MyBusiness staffName={db.userName} userEmail={db.userEmail} />
                 ) : onLaneDashboard ? (
                   <LaneDashboard db={db} onNavigate={db.setActiveSection} />
+                ) : onReleaseCenter ? (
+                  <ReleaseCenter isPlatformAdmin={isPlatformAdmin} />
                 ) : (
                   <CommandCenter db={db} onNavigate={db.setActiveSection} />
                 )
