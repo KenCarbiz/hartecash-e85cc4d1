@@ -35,6 +35,7 @@ import {
   PageShell, Card, SectionLabel, StatCard, Pill, PrimaryButton, SecondaryButton,
 } from "./theme";
 import { useDashboardLayout, type WidgetId } from "./useDashboardLayout";
+import { useAdminKpis } from "./useAdminKpis";
 
 type Db = ReturnType<typeof useAdminDashboard>;
 
@@ -117,7 +118,13 @@ const CommandCenter = ({
   const layout = useDashboardLayout(db.userId);
   const [editMode, setEditMode] = useState(false);
 
-  const stats = useMemo(() => {
+  // Exact, full-book aggregates when the get_admin_kpis RPC is deployed;
+  // otherwise undefined and we fall back to the loaded-page snapshot.
+  const { data: kpis } = useAdminKpis(db.tenant.dealership_id, db.userRole, db.userEmail);
+  const exact = !!kpis;
+
+  // Loaded-page snapshot — used until exact KPIs are available.
+  const snapshot = useMemo(() => {
     const isActive = (s: Submission) =>
       !CLOSED.has(s.progress_status) &&
       s.progress_status !== "dead_lead" &&
@@ -131,19 +138,31 @@ const CommandCenter = ({
     return { activeCount: active.length, pipeline, conversion };
   }, [subs]);
 
-  // 14-day lead intake trend from loaded leads.
+  const stats = {
+    activeCount: kpis?.active_deals ?? snapshot.activeCount,
+    pipeline: kpis?.pipeline_value ?? snapshot.pipeline,
+    conversion: kpis?.conversion_pct ?? snapshot.conversion,
+  };
+  const totalLeads = kpis?.total_leads ?? db.total;
+
+  // Format a YYYY-MM-DD key into a short "Mon D" axis label.
+  const dayLabel = (key: string) => {
+    const d = new Date(`${key}T00:00:00Z`);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+  };
+
+  // 14-day lead intake trend — exact from RPC, else from loaded leads.
   const trend = useMemo(() => {
+    if (kpis) {
+      return kpis.trend.map((t) => ({ label: dayLabel(t.date), leads: t.leads }));
+    }
     const days: { label: string; key: string; leads: number }[] = [];
     const today = new Date();
     for (let i = 13; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(today.getDate() - i);
       const key = d.toISOString().slice(0, 10);
-      days.push({
-        key,
-        label: d.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-        leads: 0,
-      });
+      days.push({ key, label: dayLabel(key), leads: 0 });
     }
     const idx = new Map(days.map((d, i) => [d.key, i]));
     for (const s of subs) {
@@ -152,20 +171,23 @@ const CommandCenter = ({
       if (i !== undefined) days[i].leads += 1;
     }
     return days;
-  }, [subs]);
+  }, [kpis, subs]);
 
-  // Status distribution (top buckets) from loaded leads.
+  // Status distribution (top buckets) — exact from RPC, else loaded leads.
   const distribution = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const s of subs) {
-      counts.set(s.progress_status, (counts.get(s.progress_status) || 0) + 1);
-    }
-    const total = subs.length || 1;
-    return [...counts.entries()]
+    const entries: [string, number][] = kpis
+      ? kpis.by_status.map((b) => [b.status, b.n])
+      : (() => {
+          const counts = new Map<string, number>();
+          for (const s of subs) counts.set(s.progress_status, (counts.get(s.progress_status) || 0) + 1);
+          return [...counts.entries()];
+        })();
+    const total = (kpis ? kpis.total_leads : subs.length) || 1;
+    return entries
       .map(([status, n]) => ({ status, label: getStatusLabel(status), n, pct: Math.round((n / total) * 100) }))
       .sort((a, b) => b.n - a.n)
       .slice(0, 6);
-  }, [subs]);
+  }, [kpis, subs]);
 
   const recent = useMemo(
     () =>
@@ -181,7 +203,7 @@ const CommandCenter = ({
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Total Leads"
-          value={db.total.toLocaleString()}
+          value={totalLeads.toLocaleString()}
           hint="All-time submissions"
           icon={<Inbox className="h-5 w-5" />}
           tone="purple"
@@ -261,7 +283,7 @@ const CommandCenter = ({
               <SectionLabel>Lead intake</SectionLabel>
               <div className="mt-1 text-[15px] font-semibold text-[#06194A]">Last 14 days</div>
             </div>
-            <Pill tone="purple">Recent snapshot</Pill>
+            <Pill tone={exact ? "teal" : "purple"}>{exact ? "Live totals" : "Recent snapshot"}</Pill>
           </div>
           <div className="mt-4 h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
