@@ -39,6 +39,9 @@ const ScheduleVisit = lazy(() => import("./pages/ScheduleVisit"));
 const WatchMyCar = lazy(() => import("./pages/WatchMyCar"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+// V2 admin (sleek/minimal redesign) — beta, opt-in at /admin/v2. Reuses
+// the same data + section renderer as V1 so functionality is at parity.
+const AdminDashboardV2 = lazy(() => import("./pages/AdminDashboardV2"));
 const RescheduleAppointment = lazy(() => import("./pages/RescheduleAppointment"));
 const CallFeedback = lazy(() => import("./pages/CallFeedback"));
 const MfaSetup = lazy(() => import("./pages/MfaSetup"));
@@ -271,6 +274,7 @@ const AnimatedRoutes = () => {
         <Route path="/admin/mfa-setup" element={<ProtectedRoute><MfaSetup /></ProtectedRoute>} />
         <Route path="/admin/mfa-challenge" element={<ProtectedRoute><MfaChallenge /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/v2" element={<ProtectedRoute><AdminDashboardV2 /></ProtectedRoute>} />
         <Route path="/service" element={<ServiceLanding />} />
         <Route path="/pitch" element={<PitchDeck />} />
         <Route path="/platform" element={<PlatformPitch />} />
