@@ -12,7 +12,7 @@
  * `command-center` section; every other section falls through to the
  * shared AdminSectionRenderer exactly as in V1.
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
@@ -26,6 +26,8 @@ import AdminHeaderV2 from "@/components/admin/v2/AdminHeaderV2";
 import AdminOverlays from "@/components/admin/v2/AdminOverlays";
 import CommandCenter from "@/components/admin/v2/CommandCenter";
 import AnalyticsView from "@/components/admin/v2/AnalyticsView";
+import AvailabilityCenter from "@/components/admin/v2/AvailabilityCenter";
+import ReferralCenter from "@/components/admin/v2/ReferralCenter";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -48,9 +50,28 @@ const AdminDashboardV2 = () => {
     ? db.activeSection.split(":")[0]
     : db.activeSection;
 
+  // Snap the page to the top whenever the section changes — instantly,
+  // no smooth/lazy scroll. The content area is its own scroll container,
+  // so reset both it and the window for every left-nav click.
+  const snapToTop = useCallback(() => {
+    contentRef.current?.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
+
   useEffect(() => {
-    contentRef.current?.scrollTo({ top: 0, behavior: "instant" });
-  }, [db.activeSection]);
+    snapToTop();
+  }, [db.activeSection, snapToTop]);
+
+  // Drive every left-nav selection through here so the snap is immediate
+  // on click (not just after the section-change effect settles).
+  const goToSection = useCallback(
+    (key: string) => {
+      db.setActiveSection(key);
+      snapToTop();
+      requestAnimationFrame(snapToTop);
+    },
+    [db, snapToTop],
+  );
 
   // Re-open the customer file slide-out when returning from the
   // inspection/appraisal pages (mirrors V1).
@@ -67,7 +88,10 @@ const AdminDashboardV2 = () => {
 
   const onCommandCenter = baseSectionId === COMMAND_CENTER_KEY;
   const onAnalytics = baseSectionId === ANALYTICS_KEY;
-  const onV2Landing = onCommandCenter || onAnalytics;
+  // V2-only redesigned surfaces that bypass the shared section renderer.
+  const onAvailability = baseSectionId === "my-availability";
+  const onReferrals = baseSectionId === "my-referrals";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onReferrals;
 
   return (
     <PlatformProvider>
@@ -75,7 +99,7 @@ const AdminDashboardV2 = () => {
       <div className="flex min-h-screen w-full bg-[#F4F6FA] text-[#06194A]">
         <AdminSidebarV2
           activeKey={baseSectionId}
-          onSelect={db.setActiveSection}
+          onSelect={goToSection}
           brandName={db.tenant.display_name}
           mobileOpen={mobileNavOpen}
           onMobileClose={() => setMobileNavOpen(false)}
@@ -105,9 +129,13 @@ const AdminDashboardV2 = () => {
 
           <main ref={contentRef} className="flex-1 overflow-auto px-4 py-6 md:px-8">
             <div className="mx-auto max-w-[1320px]">
-              {onV2Landing ? (
+              {onV2Custom ? (
                 onAnalytics ? (
                   <AnalyticsView db={db} onNavigate={db.setActiveSection} />
+                ) : onAvailability ? (
+                  <AvailabilityCenter userEmail={db.userEmail} />
+                ) : onReferrals ? (
+                  <ReferralCenter staffName={db.userName} userEmail={db.userEmail} />
                 ) : (
                   <CommandCenter db={db} onNavigate={db.setActiveSection} />
                 )
