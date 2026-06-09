@@ -94,7 +94,8 @@ const AdminDashboardV2 = () => {
   const onAvailability = baseSectionId === "my-availability";
   const onMyBusiness = baseSectionId === "my-business";
   const onLaneDashboard = baseSectionId === "lane-dashboard";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard;
+  const onReleaseCenter = baseSectionId === "changelog";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter;
 
   return (
     <PlatformProvider>
