@@ -12,7 +12,7 @@
  * `command-center` section; every other section falls through to the
  * shared AdminSectionRenderer exactly as in V1.
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
@@ -50,9 +50,28 @@ const AdminDashboardV2 = () => {
     ? db.activeSection.split(":")[0]
     : db.activeSection;
 
+  // Snap the page to the top whenever the section changes — instantly,
+  // no smooth/lazy scroll. The content area is its own scroll container,
+  // so reset both it and the window for every left-nav click.
+  const snapToTop = useCallback(() => {
+    contentRef.current?.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
+
   useEffect(() => {
-    contentRef.current?.scrollTo({ top: 0, behavior: "instant" });
-  }, [db.activeSection]);
+    snapToTop();
+  }, [db.activeSection, snapToTop]);
+
+  // Drive every left-nav selection through here so the snap is immediate
+  // on click (not just after the section-change effect settles).
+  const goToSection = useCallback(
+    (key: string) => {
+      db.setActiveSection(key);
+      snapToTop();
+      requestAnimationFrame(snapToTop);
+    },
+    [db, snapToTop],
+  );
 
   // Re-open the customer file slide-out when returning from the
   // inspection/appraisal pages (mirrors V1).
@@ -80,7 +99,7 @@ const AdminDashboardV2 = () => {
       <div className="flex min-h-screen w-full bg-[#F4F6FA] text-[#06194A]">
         <AdminSidebarV2
           activeKey={baseSectionId}
-          onSelect={db.setActiveSection}
+          onSelect={goToSection}
           brandName={db.tenant.display_name}
           mobileOpen={mobileNavOpen}
           onMobileClose={() => setMobileNavOpen(false)}
