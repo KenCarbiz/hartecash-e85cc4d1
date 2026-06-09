@@ -43,14 +43,24 @@ export type NavFlags = {
   pricingAccessRequestCount: number;
 };
 
-/** The Command Center landing — a V2-only pseudo-section. */
+/** V2-only pseudo-sections (rendered by the page, not AdminSectionRenderer). */
 export const COMMAND_CENTER_KEY = "command-center";
+export const ANALYTICS_KEY = "analytics-v2";
 
 export const commandCenterItem: NavItem = {
   key: COMMAND_CENTER_KEY,
   label: "Command Center",
   icon: LayoutDashboard,
 };
+
+export const analyticsItem: NavItem = {
+  key: ANALYTICS_KEY,
+  label: "Analytics",
+  icon: BarChart3,
+};
+
+/** Pinned items shown above the grouped nav. */
+export const pinnedItems: NavItem[] = [commandCenterItem, analyticsItem];
 
 export function buildNavGroups(flags: NavFlags): NavGroup[] {
   const {

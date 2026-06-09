@@ -25,7 +25,8 @@ import AdminSidebarV2 from "@/components/admin/v2/AdminSidebarV2";
 import AdminHeaderV2 from "@/components/admin/v2/AdminHeaderV2";
 import AdminOverlays from "@/components/admin/v2/AdminOverlays";
 import CommandCenter from "@/components/admin/v2/CommandCenter";
-import { COMMAND_CENTER_KEY } from "@/components/admin/v2/adminNavV2";
+import AnalyticsView from "@/components/admin/v2/AnalyticsView";
+import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
   const db = useAdminDashboard();
@@ -65,6 +66,8 @@ const AdminDashboardV2 = () => {
   }, [db.submissions, db.selected, db.handleView, db]);
 
   const onCommandCenter = baseSectionId === COMMAND_CENTER_KEY;
+  const onAnalytics = baseSectionId === ANALYTICS_KEY;
+  const onV2Landing = onCommandCenter || onAnalytics;
 
   return (
     <PlatformProvider>
@@ -102,8 +105,12 @@ const AdminDashboardV2 = () => {
 
           <main ref={contentRef} className="flex-1 overflow-auto px-4 py-6 md:px-8">
             <div className="mx-auto max-w-[1320px]">
-              {onCommandCenter ? (
-                <CommandCenter db={db} onNavigate={db.setActiveSection} />
+              {onV2Landing ? (
+                onAnalytics ? (
+                  <AnalyticsView db={db} onNavigate={db.setActiveSection} />
+                ) : (
+                  <CommandCenter db={db} onNavigate={db.setActiveSection} />
+                )
               ) : (
                 <>
                   <div className="mb-4">

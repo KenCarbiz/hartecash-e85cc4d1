@@ -12,8 +12,10 @@ import { useState } from "react";
 import { ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { tenantLogoSrc } from "@/lib/tenantLogo";
 import {
-  buildNavGroups, commandCenterItem, COMMAND_CENTER_KEY,
+  buildNavGroups, pinnedItems,
   type NavFlags, type NavItem,
 } from "./adminNavV2";
 
@@ -70,8 +72,14 @@ const Row = ({
 const AdminSidebarV2 = (props: Props) => {
   const { activeKey, onSelect, brandName, mobileOpen, onMobileClose } = props;
   const navigate = useNavigate();
+  const { config } = useSiteConfig();
   const groups = buildNavGroups(props);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  // Resolve the brand logo the same way the customer surfaces do: the
+  // autoCURB wordmark for the AutoCurb tenant, a white-label dealer's own
+  // uploaded logo otherwise, or "" to fall back to the name treatment.
+  const logoSrc = tenantLogoSrc(config, brandName);
 
   const handle = (item: NavItem) => {
     if (item.href) navigate(item.href);
@@ -83,17 +91,25 @@ const AdminSidebarV2 = (props: Props) => {
     <div className="flex h-full flex-col bg-white">
       {/* Brand */}
       <div className="flex items-center justify-between px-4 py-4">
-        <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-[13px] font-bold text-white">
-            {(brandName || "A").charAt(0).toUpperCase()}
-          </span>
-          <div className="leading-tight">
-            <div className="max-w-[150px] truncate text-[13px] font-semibold text-[#06194A]">
-              {brandName || "Autocurb"}
+        <div className="flex min-w-0 flex-col gap-1">
+          {logoSrc ? (
+            <img
+              src={logoSrc}
+              alt={brandName || "Autocurb"}
+              className="h-7 w-auto max-w-[160px] object-contain object-left"
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-[13px] font-bold text-white">
+                {(brandName || "A").charAt(0).toUpperCase()}
+              </span>
+              <span className="max-w-[150px] truncate text-[13px] font-semibold text-[#06194A]">
+                {brandName || "Autocurb"}
+              </span>
             </div>
-            <div className="text-[10px] font-medium uppercase tracking-wider text-[#7A879C]">
-              Admin · V2
-            </div>
+          )}
+          <div className="pl-0.5 text-[10px] font-medium uppercase tracking-wider text-[#7A879C]">
+            Admin · V2
           </div>
         </div>
         <button
@@ -106,13 +122,16 @@ const AdminSidebarV2 = (props: Props) => {
         </button>
       </div>
 
-      {/* Command Center pinned at top */}
-      <div className="px-3 pb-2">
-        <Row
-          item={commandCenterItem}
-          active={activeKey === COMMAND_CENTER_KEY}
-          onClick={() => handle(commandCenterItem)}
-        />
+      {/* Pinned landing surfaces (Command Center, Analytics) */}
+      <div className="space-y-0.5 px-3 pb-2">
+        {pinnedItems.map((item) => (
+          <Row
+            key={item.key}
+            item={item}
+            active={activeKey === item.key}
+            onClick={() => handle(item)}
+          />
+        ))}
       </div>
 
       {/* Groups */}
