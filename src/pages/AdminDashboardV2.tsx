@@ -31,6 +31,7 @@ import MyBusiness from "@/components/admin/v2/MyBusiness";
 import LaneDashboard from "@/components/admin/v2/LaneDashboard";
 import ReleaseCenter from "@/components/admin/v2/ReleaseCenter";
 import DealerNetwork from "@/components/admin/v2/DealerNetwork";
+import ServiceDrive from "@/components/admin/v2/ServiceDrive";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -97,7 +98,8 @@ const AdminDashboardV2 = () => {
   const onLaneDashboard = baseSectionId === "lane-dashboard";
   const onReleaseCenter = baseSectionId === "changelog";
   const onDealerNetwork = baseSectionId === "tenants" && isPlatformAdmin;
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork;
+  const onServiceDrive = baseSectionId === "service-quick-entry";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive;
 
   return (
     <PlatformProvider>
@@ -146,6 +148,8 @@ const AdminDashboardV2 = () => {
                   <LaneDashboard db={db} onNavigate={db.setActiveSection} />
                 ) : onReleaseCenter ? (
                   <ReleaseCenter canManage={isPlatformAdmin} />
+                ) : onServiceDrive ? (
+                  <ServiceDrive db={db} onNavigate={db.setActiveSection} />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
                     onNavigate={db.setActiveSection}
