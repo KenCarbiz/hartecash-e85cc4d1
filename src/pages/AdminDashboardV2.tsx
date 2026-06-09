@@ -33,6 +33,7 @@ import ReleaseCenter from "@/components/admin/v2/ReleaseCenter";
 import DealerNetwork from "@/components/admin/v2/DealerNetwork";
 import ServiceDrive from "@/components/admin/v2/ServiceDrive";
 import WebsiteWidget from "@/components/admin/v2/WebsiteWidget";
+import VehicleCheckIn from "@/components/admin/v2/VehicleCheckIn";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -101,7 +102,8 @@ const AdminDashboardV2 = () => {
   const onDealerNetwork = baseSectionId === "tenants" && isPlatformAdmin;
   const onServiceDrive = baseSectionId === "service-quick-entry";
   const onWebsiteWidget = baseSectionId === "trade-widget";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget;
+  const onVehicleCheckIn = baseSectionId === "inspection-checkin";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn;
 
   return (
     <PlatformProvider>
@@ -154,6 +156,8 @@ const AdminDashboardV2 = () => {
                   <ServiceDrive db={db} onNavigate={db.setActiveSection} />
                 ) : onWebsiteWidget ? (
                   <WebsiteWidget db={db} onNavigate={db.setActiveSection} />
+                ) : onVehicleCheckIn ? (
+                  <VehicleCheckIn db={db} onNavigate={db.setActiveSection} />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
                     onNavigate={db.setActiveSection}
