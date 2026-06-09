@@ -31,7 +31,8 @@ src/components/admin/v2/
   adminNavV2.ts        Navigation model — mirrors every V1 section key
   AdminSidebarV2.tsx   Sleek, minimal left rail (retains all links)
   AdminHeaderV2.tsx    Minimal top bar + "Classic admin" escape hatch
-  CommandCenter.tsx    Unified KPI + quick-actions landing page
+  CommandCenter.tsx    Unified KPI + quick-actions landing page (configurable widgets)
+  useDashboardLayout.ts  Per-user widget order + visibility (localStorage)
   AdminOverlays.tsx    Shared customer-file slide-out + delete dialogs + ⌘K palette
 src/pages/AdminDashboardV2.tsx   Page shell wiring the above to useAdminDashboard
 ```
@@ -42,7 +43,7 @@ src/pages/AdminDashboardV2.tsx   Page shell wiring the above to useAdminDashboar
 - [x] Unified Command Center landing (KPIs, quick actions, trend chart, recent leads)
 - [x] All classic sections reachable + functional via the shared renderer
 - [x] Beta route `/admin/v2`, V1 untouched
-- [ ] Configurable / drag-and-drop dashboard widgets (planned — see implementation plan)
+- [x] Configurable Command Center — drag-to-reorder + show/hide widgets, persisted per user (`useDashboardLayout`)
 - [ ] Module sub-tab consolidation (planned)
 - [ ] Advanced analytics (funnels, cohorts, ROI, multi-store) (planned)
 - [ ] Add-on marketplace surface (planned)

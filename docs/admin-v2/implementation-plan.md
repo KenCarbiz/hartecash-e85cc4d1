@@ -52,6 +52,7 @@ The single most important decision: **V2 does not fork the data layer.**
 | `AdminSidebarV2` | Sleek rail, all links, badges, mobile drawer | ✅ done |
 | `AdminHeaderV2` | Minimal top bar, ⌘K, user menu, classic-admin link | ✅ done |
 | `CommandCenter` | KPI grid, quick actions, trend + distribution, recent leads | ✅ done |
+| `useDashboardLayout` | Per-user widget order + visibility (localStorage) | ✅ done |
 | `AdminOverlays` | Customer-file sheet, delete dialogs, ⌘K palette | ✅ done |
 | `AdminDashboardV2` | Page shell wiring all of the above to `db` | ✅ done |
 
@@ -72,9 +73,13 @@ The single most important decision: **V2 does not fork the data layer.**
    (Communications, Integrations, Performance). Surface those as in-page
    sub-tabs in V2 so the sidebar can collapse further without losing
    links.
-2. **Configurable dashboard.** Make Command Center widgets
-   reorderable/toggle-able (drag-and-drop via `@dnd-kit`), persisting
-   layout per user. Widgets become a registry so new ones drop in.
+2. **Configurable dashboard.** ✅ Shipped — Command Center widgets are
+   reorderable (drag) and toggle-able via "Customize", persisted per user
+   in `useDashboardLayout` (localStorage). Built on framer-motion
+   `Reorder` (no new dependency). Widgets are a registry keyed by
+   `WidgetId`, so new widgets drop in and saved layouts reconcile
+   automatically. Next: graduate persistence to a `user_preferences`
+   table for multi-device sync, and add finer-grained (per-tile) widgets.
 3. **Enhanced analytics.** A dedicated Analytics surface: funnel
    (status → status conversion), cohort retention by intake week,
    marketing ROI by `source`, and multi-store comparison. Build on

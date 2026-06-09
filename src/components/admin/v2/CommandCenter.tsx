@@ -6,16 +6,22 @@
  * single airy view. Reads from the same useAdminDashboard data the rest
  * of admin uses — no new data sources — so it stays in lockstep with V1.
  *
+ * The layout is configurable: "Customize" enters an edit mode where the
+ * dealer can drag widgets to reorder them and toggle their visibility.
+ * Preferences persist per-user via useDashboardLayout (localStorage).
+ *
  * Note on scope: counts that span the whole book of business (Total
  * Leads, Appointments, Appraiser Queue) come from server-side totals.
  * The deal/pipeline/conversion tiles and the charts are derived from the
  * currently-loaded leads page and are labelled as a recent snapshot so
  * they never over-claim.
  */
-import { useMemo } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import { Reorder, useDragControls } from "framer-motion";
 import {
   Inbox, CalendarDays, RotateCcw, TrendingUp, DollarSign, Target,
   Plus, CalendarPlus, ClipboardCheck, ArrowRight,
+  GripVertical, Eye, EyeOff, Settings2, Check,
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -28,6 +34,7 @@ import {
 import {
   PageShell, Card, SectionLabel, StatCard, Pill, PrimaryButton, SecondaryButton,
 } from "./theme";
+import { useDashboardLayout, type WidgetId } from "./useDashboardLayout";
 
 type Db = ReturnType<typeof useAdminDashboard>;
 
@@ -40,6 +47,65 @@ const CLOSED = new Set<string>(["purchase_complete", "check_request_submitted"])
 const currency = (n: number) =>
   n >= 1000 ? `$${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : `$${n}`;
 
+const WIDGET_LABELS: Record<WidgetId, string> = {
+  kpis: "Key metrics",
+  operations: "Operations & quick actions",
+  analytics: "Lead trend & pipeline",
+  recent: "Recent activity",
+};
+
+/** Edit-mode wrapper: drag handle + visibility toggle around a widget. */
+const EditableWidget = ({
+  id,
+  hidden,
+  onToggle,
+  children,
+}: {
+  id: WidgetId;
+  hidden: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) => {
+  const controls = useDragControls();
+  return (
+    <Reorder.Item
+      value={id}
+      dragListener={false}
+      dragControls={controls}
+      className="rounded-2xl border border-dashed border-[#C9B8F0] bg-[#FAF8FF] p-2"
+    >
+      <div className="mb-2 flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onPointerDown={(e) => controls.start(e)}
+            className="cursor-grab touch-none rounded-md p-1 text-[#9AA6BC] hover:bg-white hover:text-[#6D28D9] active:cursor-grabbing"
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+          <span className="text-[12px] font-semibold text-[#6D28D9]">{WIDGET_LABELS[id]}</span>
+        </div>
+        <button
+          type="button"
+          onClick={onToggle}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[#E6EAF0] bg-white px-2 py-1 text-[11px] font-semibold text-[#53627A] transition hover:text-[#6D28D9]"
+        >
+          {hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          {hidden ? "Hidden" : "Visible"}
+        </button>
+      </div>
+      {hidden ? (
+        <div className="rounded-xl bg-white/60 px-3 py-6 text-center text-[12px] text-[#9AA6BC]">
+          Hidden — toggle to show on your dashboard
+        </div>
+      ) : (
+        children
+      )}
+    </Reorder.Item>
+  );
+};
+
 const CommandCenter = ({
   db,
   onNavigate,
@@ -48,6 +114,8 @@ const CommandCenter = ({
   onNavigate: (key: string) => void;
 }) => {
   const subs = db.submissions;
+  const layout = useDashboardLayout(db.userId);
+  const [editMode, setEditMode] = useState(false);
 
   const stats = useMemo(() => {
     const isActive = (s: Submission) =>
@@ -107,22 +175,9 @@ const CommandCenter = ({
     [subs],
   );
 
-  return (
-    <PageShell
-      title="Command Center"
-      subtitle="Your dealership at a glance — leads, deals and today's schedule in one view."
-      actions={
-        <>
-          <SecondaryButton onClick={() => onNavigate("accepted-appts")}>
-            <CalendarPlus className="h-4 w-4" /> Schedule
-          </SecondaryButton>
-          <PrimaryButton onClick={() => onNavigate("submissions")}>
-            <Plus className="h-4 w-4" /> View Leads
-          </PrimaryButton>
-        </>
-      }
-    >
-      {/* KPI grid */}
+  // ── Widget bodies ──
+  const widgets: Record<WidgetId, ReactNode> = {
+    kpis: (
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Total Leads"
@@ -155,9 +210,9 @@ const CommandCenter = ({
           tone="amber"
         />
       </div>
-
-      {/* Operational row */}
-      <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+    ),
+    operations: (
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Appointments"
           value={db.appointments.length.toLocaleString()}
@@ -197,9 +252,9 @@ const CommandCenter = ({
           </Card>
         </div>
       </div>
-
-      {/* Charts row */}
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+    ),
+    analytics: (
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="p-5 lg:col-span-2">
           <div className="flex items-center justify-between">
             <div>
@@ -275,9 +330,9 @@ const CommandCenter = ({
           </div>
         </Card>
       </div>
-
-      {/* Recent leads */}
-      <Card className="mt-4 overflow-hidden">
+    ),
+    recent: (
+      <Card className="overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4">
           <div>
             <SectionLabel>Recent activity</SectionLabel>
@@ -332,6 +387,65 @@ const CommandCenter = ({
           })}
         </div>
       </Card>
+    ),
+  };
+
+  return (
+    <PageShell
+      title="Command Center"
+      subtitle="Your dealership at a glance — leads, deals and today's schedule in one view."
+      actions={
+        editMode ? (
+          <>
+            <SecondaryButton onClick={layout.reset}>
+              <RotateCcw className="h-4 w-4" /> Reset layout
+            </SecondaryButton>
+            <PrimaryButton onClick={() => setEditMode(false)}>
+              <Check className="h-4 w-4" /> Done
+            </PrimaryButton>
+          </>
+        ) : (
+          <>
+            <SecondaryButton onClick={() => setEditMode(true)}>
+              <Settings2 className="h-4 w-4" /> Customize
+            </SecondaryButton>
+            <SecondaryButton onClick={() => onNavigate("accepted-appts")}>
+              <CalendarPlus className="h-4 w-4" /> Schedule
+            </SecondaryButton>
+            <PrimaryButton onClick={() => onNavigate("submissions")}>
+              <Plus className="h-4 w-4" /> View Leads
+            </PrimaryButton>
+          </>
+        )
+      }
+    >
+      {editMode ? (
+        <Reorder.Group
+          axis="y"
+          values={layout.order}
+          onReorder={layout.reorder}
+          className="space-y-4"
+        >
+          {layout.order.map((id) => (
+            <EditableWidget
+              key={id}
+              id={id}
+              hidden={layout.isHidden(id)}
+              onToggle={() => layout.toggle(id)}
+            >
+              {widgets[id]}
+            </EditableWidget>
+          ))}
+        </Reorder.Group>
+      ) : (
+        <div className="space-y-4">
+          {layout.order
+            .filter((id) => !layout.isHidden(id))
+            .map((id) => (
+              <div key={id}>{widgets[id]}</div>
+            ))}
+        </div>
+      )}
     </PageShell>
   );
 };
