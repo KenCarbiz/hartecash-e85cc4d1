@@ -28,6 +28,7 @@ import CommandCenter from "@/components/admin/v2/CommandCenter";
 import AnalyticsView from "@/components/admin/v2/AnalyticsView";
 import AvailabilityCenter from "@/components/admin/v2/AvailabilityCenter";
 import MyBusiness from "@/components/admin/v2/MyBusiness";
+import LaneDashboard from "@/components/admin/v2/LaneDashboard";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -91,7 +92,8 @@ const AdminDashboardV2 = () => {
   // V2-only redesigned surfaces that bypass the shared section renderer.
   const onAvailability = baseSectionId === "my-availability";
   const onMyBusiness = baseSectionId === "my-business";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness;
+  const onLaneDashboard = baseSectionId === "lane-dashboard";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard;
 
   return (
     <PlatformProvider>
@@ -136,6 +138,8 @@ const AdminDashboardV2 = () => {
                   <AvailabilityCenter userEmail={db.userEmail} />
                 ) : onMyBusiness ? (
                   <MyBusiness staffName={db.userName} userEmail={db.userEmail} />
+                ) : onLaneDashboard ? (
+                  <LaneDashboard db={db} onNavigate={db.setActiveSection} />
                 ) : (
                   <CommandCenter db={db} onNavigate={db.setActiveSection} />
                 )
