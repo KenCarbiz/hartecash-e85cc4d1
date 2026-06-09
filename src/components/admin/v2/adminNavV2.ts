@@ -150,7 +150,7 @@ export function buildNavGroups(flags: NavFlags): NavGroup[] {
         { key: "prospect-demo", label: "Prospect Demo", icon: Target },
         { key: "pricing-model", label: "SaaS Pricing", icon: Tag },
         { key: "platform-billing", label: "Platform & Billing", icon: Receipt },
-        { key: "changelog", label: "Platform Updates", icon: ScrollText },
+        { key: "changelog", label: "Release Center", icon: Rocket },
       ])
     : [];
 
