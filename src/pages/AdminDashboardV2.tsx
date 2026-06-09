@@ -29,6 +29,7 @@ import AnalyticsView from "@/components/admin/v2/AnalyticsView";
 import AvailabilityCenter from "@/components/admin/v2/AvailabilityCenter";
 import MyBusiness from "@/components/admin/v2/MyBusiness";
 import LaneDashboard from "@/components/admin/v2/LaneDashboard";
+import ReleaseCenter from "@/components/admin/v2/ReleaseCenter";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
