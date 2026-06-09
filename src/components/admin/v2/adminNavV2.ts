@@ -123,7 +123,7 @@ export function buildNavGroups(flags: NavFlags): NavGroup[] {
     { key: "marketing", label: "Marketing", icon: Megaphone },
     ...(locationCount > 1 ? [{ key: "rooftop-websites", label: "Rooftop Websites", icon: Globe } as NavItem] : []),
     { key: "embed-toolkit", label: "Website Embed", icon: Code2 },
-    { key: "trade-widget", label: "Trade Widget", icon: PanelRightOpen },
+    { key: "trade-widget", label: "Website Widget", icon: PanelRightOpen },
   ]);
 
   const integrations = f(
