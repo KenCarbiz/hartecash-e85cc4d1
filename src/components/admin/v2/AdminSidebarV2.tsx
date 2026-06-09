@@ -13,7 +13,7 @@ import { ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import {
-  buildNavGroups, commandCenterItem, COMMAND_CENTER_KEY,
+  buildNavGroups, pinnedItems,
   type NavFlags, type NavItem,
 } from "./adminNavV2";
 
@@ -106,13 +106,16 @@ const AdminSidebarV2 = (props: Props) => {
         </button>
       </div>
 
-      {/* Command Center pinned at top */}
-      <div className="px-3 pb-2">
-        <Row
-          item={commandCenterItem}
-          active={activeKey === COMMAND_CENTER_KEY}
-          onClick={() => handle(commandCenterItem)}
-        />
+      {/* Pinned landing surfaces (Command Center, Analytics) */}
+      <div className="space-y-0.5 px-3 pb-2">
+        {pinnedItems.map((item) => (
+          <Row
+            key={item.key}
+            item={item}
+            active={activeKey === item.key}
+            onClick={() => handle(item)}
+          />
+        ))}
       </div>
 
       {/* Groups */}

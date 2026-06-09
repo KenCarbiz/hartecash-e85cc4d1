@@ -44,6 +44,7 @@ src/pages/AdminDashboardV2.tsx   Page shell wiring the above to useAdminDashboar
 - [x] All classic sections reachable + functional via the shared renderer
 - [x] Beta route `/admin/v2`, V1 untouched
 - [x] Configurable Command Center — drag-to-reorder + show/hide widgets, persisted per user (`useDashboardLayout`)
+- [x] Exact full-book KPIs via `get_admin_kpis` RPC (snapshot fallback pre-migration)
+- [x] Analytics surface — funnel, source performance, cohort retention, store comparison, with drill-down (`AnalyticsView`)
 - [ ] Module sub-tab consolidation (planned)
-- [ ] Advanced analytics (funnels, cohorts, ROI, multi-store) (planned)
 - [ ] Add-on marketplace surface (planned)
