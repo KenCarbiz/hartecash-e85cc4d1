@@ -78,6 +78,29 @@ export default function ResumeCard({
     );
   }
 
+  // In-progress: the customer has a saved appraisal but no firm number yet.
+  // Recognize them and offer to pick it back up rather than dumping them into
+  // a blank fresh start (honors the embed's "resume your trade-in" promise).
+  if (offer.amount <= 0) {
+    return (
+      <div className="mx-auto w-full max-w-[500px] px-6 py-6">
+        <MotoCard>
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Welcome back</p>
+          <p className="mt-1 text-lg font-semibold leading-tight text-zinc-900">
+            Let's finish valuing {vehicle}
+          </p>
+          <p className="mt-1 text-sm text-zinc-500">
+            You started an appraisal{vdp ? ` for the ${vdp.vehicleLabel}` : ""} — pick up where you
+            left off.
+          </p>
+          <div className="mt-4">
+            <MotoPrimaryButton onClick={onStartNew}>Continue my appraisal</MotoPrimaryButton>
+          </div>
+        </MotoCard>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-[500px] px-6 py-6">
       <MotoCard>

@@ -50,9 +50,11 @@ export default function TradeWidget({
   const themeReady = !siteLoading && !formLoading;
 
   // Returning customers see a resume card first; "Start a new appraisal"
-  // drops them into the fresh flow.
+  // drops them into the fresh flow. Includes in-progress submissions (a saved
+  // appraisal with a known vehicle but no firm number yet) so they're
+  // recognized and can pick up where they left off instead of a blank start.
   const [startFresh, setStartFresh] = useState(false);
-  const returning = !startFresh && !!offer && offer.amount > 0;
+  const returning = !startFresh && !!offer && (offer.amount > 0 || !!offer.vehicleLabel);
 
   // Privacy / Terms render in-panel (not a new tab).
   const [legal, setLegal] = useState<LegalView>(null);
@@ -112,9 +114,8 @@ export default function TradeWidget({
   // AI photo boost are all dealer toggles, not widget-specific behavior.
   const requireVerify = formConfig.require_phone_verification !== false;
   const aiPhotosEnabled = formConfig.step_ai_photos !== false;
-  // NOTE: formConfig.offer_before_details (collect contact before/after the
-  // offer) is a recognized dealer toggle — honoring it needs a
-  // compute-before-persist split; tracked as the next refinement.
+  // Dealer toggle: show the estimate range BEFORE collecting contact details.
+  const offerFirst = formConfig.offer_before_details === true;
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -204,6 +205,7 @@ export default function TradeWidget({
                 vdp={vdp}
                 requireVerify={requireVerify}
                 aiPhotosEnabled={aiPhotosEnabled}
+                offerFirst={offerFirst}
                 defaultZip={zip}
               />
             )}

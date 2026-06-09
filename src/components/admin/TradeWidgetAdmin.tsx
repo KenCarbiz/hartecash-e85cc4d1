@@ -80,6 +80,48 @@ export default function TradeWidgetAdmin() {
     setPreviewKey((k) => k + 1); // reload the preview so it reflects the change
   };
 
+  // Dealer toggle: show the estimate range BEFORE collecting contact details
+  // (form_config.offer_before_details).
+  const [offerFirstOn, setOfferFirstOn] = useState(false);
+  const [savingOfferFirst, setSavingOfferFirst] = useState(false);
+  useEffect(() => {
+    setOfferFirstOn(formConfig.offer_before_details === true);
+  }, [formConfig.offer_before_details]);
+
+  const toggleOfferFirst = async () => {
+    const next = !offerFirstOn;
+    setOfferFirstOn(next); // optimistic
+    setSavingOfferFirst(true);
+    const { data: existing } = await supabase
+      .from("form_config")
+      .select("id")
+      .eq("dealership_id", dealershipId)
+      .maybeSingle();
+    let error;
+    if (existing) {
+      ({ error } = await supabase
+        .from("form_config")
+        .update({ offer_before_details: next, updated_at: new Date().toISOString() })
+        .eq("id", (existing as { id: string }).id));
+    } else {
+      ({ error } = await supabase
+        .from("form_config")
+        .insert({ dealership_id: dealershipId, offer_before_details: next }));
+    }
+    setSavingOfferFirst(false);
+    if (error) {
+      setOfferFirstOn(!next); // revert
+      toast({
+        title: "Save failed",
+        description: error.message || "Could not update the offer-flow setting.",
+        variant: "destructive",
+      });
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["form_config", dealershipId] });
+    setPreviewKey((k) => k + 1);
+  };
+
   const [onVdp, setOnVdp] = useState(true);
   const [intent, setIntent] = useState<"trade" | "sell">("trade");
   const [previewKey, setPreviewKey] = useState(0); // bump to reload iframe
@@ -294,6 +336,34 @@ export default function TradeWidgetAdmin() {
                 <span
                   className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
                     signinOn ? "translate-x-[22px]" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </label>
+
+            <label className="mt-4 flex cursor-pointer items-start justify-between gap-3 border-t border-border pt-4">
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-foreground">
+                  Show the estimate before contact details
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Offer-first flow: after condition, the customer enters mileage and sees their
+                  estimated range, then adds name/email/phone to unlock the firm offer.
+                </span>
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={offerFirstOn}
+                disabled={savingOfferFirst}
+                onClick={toggleOfferFirst}
+                className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-60 ${
+                  offerFirstOn ? "bg-primary" : "bg-muted-foreground/30"
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                    offerFirstOn ? "translate-x-[22px]" : "translate-x-0.5"
                   }`}
                 />
               </button>
