@@ -29,6 +29,7 @@ import AnalyticsView from "@/components/admin/v2/AnalyticsView";
 import AvailabilityCenter from "@/components/admin/v2/AvailabilityCenter";
 import MyBusiness from "@/components/admin/v2/MyBusiness";
 import LaneDashboard from "@/components/admin/v2/LaneDashboard";
+import ReleaseCenter from "@/components/admin/v2/ReleaseCenter";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -93,7 +94,8 @@ const AdminDashboardV2 = () => {
   const onAvailability = baseSectionId === "my-availability";
   const onMyBusiness = baseSectionId === "my-business";
   const onLaneDashboard = baseSectionId === "lane-dashboard";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard;
+  const onReleaseCenter = baseSectionId === "changelog";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter;
 
   return (
     <PlatformProvider>
@@ -140,6 +142,8 @@ const AdminDashboardV2 = () => {
                   <MyBusiness staffName={db.userName} userEmail={db.userEmail} />
                 ) : onLaneDashboard ? (
                   <LaneDashboard db={db} onNavigate={db.setActiveSection} />
+                ) : onReleaseCenter ? (
+                  <ReleaseCenter isPlatformAdmin={isPlatformAdmin} />
                 ) : (
                   <CommandCenter db={db} onNavigate={db.setActiveSection} />
                 )
