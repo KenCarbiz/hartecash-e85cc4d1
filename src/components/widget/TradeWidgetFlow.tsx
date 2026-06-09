@@ -65,7 +65,9 @@ type VehicleStage = "entry" | "confirm";
 // range → (verify) → firm → (boost → reeval) → done. verify is skipped
 // when require_phone_verification is off; boost/reeval only when the
 // dealer enables AI photos; done is the accept confirmation.
-type ValueStage = "range" | "verify" | "firm" | "boost" | "reeval" | "done";
+// "miles" is the offer-first lead-in: collect mileage (+ZIP) so we can show
+// the estimate range BEFORE asking for contact details.
+type ValueStage = "miles" | "range" | "verify" | "firm" | "boost" | "reeval" | "done";
 
 export default function TradeWidgetFlow({
   initialIntent,
@@ -74,6 +76,7 @@ export default function TradeWidgetFlow({
   vdp,
   requireVerify,
   aiPhotosEnabled,
+  offerFirst = false,
   defaultZip = "",
 }: {
   initialIntent: WidgetIntent;
@@ -85,6 +88,9 @@ export default function TradeWidgetFlow({
   requireVerify: boolean;
   /** Dealer toggle: offer the AI photo boost / re-evaluation. */
   aiPhotosEnabled: boolean;
+  /** Dealer toggle (offer_before_details): show the estimate range first,
+   *  then collect contact for the firm offer. */
+  offerFirst?: boolean;
   /** Customer ZIP from the embed context — prefilled into the form. */
   defaultZip?: string;
 }) {
@@ -218,6 +224,16 @@ export default function TradeWidgetFlow({
     data.phone.replace(/\D/g, "").length === 10 &&
     !!data.miles.trim() &&
     data.zip.length === 5;
+
+  // Offer-first: just mileage + ZIP are needed to compute the estimate range
+  // before any contact details.
+  const milesZipReady = !!data.miles.trim() && data.zip.length === 5;
+  // Offer-first contact fields (name/email/phone) — miles/zip already given.
+  const contactInfoReady =
+    !!data.firstName.trim() &&
+    !!data.lastName.trim() &&
+    /.+@.+\..+/.test(data.email) &&
+    data.phone.replace(/\D/g, "").length === 10;
 
   // Accept-CTA copy — names the VDP vehicle when trading toward it.
   const applyLabel =
@@ -705,7 +721,15 @@ export default function TradeWidgetFlow({
                 aria-pressed={data.intent === value}
                 onClick={() => {
                   set({ intent: value });
-                  window.setTimeout(goNext, 160);
+                  window.setTimeout(() => {
+                    if (offerFirst) {
+                      // Show the range before contact: collect miles next.
+                      setStep("value");
+                      setValueStage("miles");
+                    } else {
+                      goNext();
+                    }
+                  }, 160);
                 }}
                 className={`rounded-2xl border px-4 py-4 text-left transition ${
                   data.intent === value
@@ -750,21 +774,25 @@ export default function TradeWidgetFlow({
               value={data.phone}
               onChange={(e) => set({ phone: formatPhone(e.target.value) })}
             />
-            <div className="grid grid-cols-2 gap-3">
-              <MotoFormField
-                label="Estimated miles"
-                inputMode="numeric"
-                value={data.miles}
-                onChange={(e) => set({ miles: e.target.value.replace(/\D/g, "") })}
-              />
-              <MotoFormField
-                label="ZIP code"
-                inputMode="numeric"
-                maxLength={5}
-                value={data.zip}
-                onChange={(e) => set({ zip: e.target.value.replace(/\D/g, "").slice(0, 5) })}
-              />
-            </div>
+            {/* In offer-first mode miles + ZIP were already collected to
+                produce the range, so they're not re-asked here. */}
+            {!offerFirst && (
+              <div className="grid grid-cols-2 gap-3">
+                <MotoFormField
+                  label="Estimated miles"
+                  inputMode="numeric"
+                  value={data.miles}
+                  onChange={(e) => set({ miles: e.target.value.replace(/\D/g, "") })}
+                />
+                <MotoFormField
+                  label="ZIP code"
+                  inputMode="numeric"
+                  maxLength={5}
+                  value={data.zip}
+                  onChange={(e) => set({ zip: e.target.value.replace(/\D/g, "").slice(0, 5) })}
+                />
+              </div>
+            )}
           </div>
 
           <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 px-3.5 py-2.5 text-sm text-zinc-700">
@@ -790,11 +818,11 @@ export default function TradeWidgetFlow({
           <div className="mt-4">
             <button
               type="button"
-              disabled={!contactComplete || busy}
-              onClick={seeValue}
+              disabled={(offerFirst ? !contactInfoReady : !contactComplete) || busy}
+              onClick={offerFirst ? async () => { setStep("value"); await getFirm(); } : seeValue}
               className="inline-flex h-9 w-full items-center justify-center rounded-[8px] bg-[hsl(var(--cta-offer))] px-6 text-[13px] font-semibold text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {busy ? "Loading…" : "See my value"}
+              {busy ? "Loading…" : offerFirst ? "See my offer" : "See my value"}
             </button>
           </div>
           <p className="mt-3 text-[11px] leading-snug text-zinc-400">
@@ -830,6 +858,37 @@ export default function TradeWidgetFlow({
           </p>
         </div>
       )}
+      {/* Offer-first lead-in: mileage (+ZIP) so we can show the range
+          before asking for contact details. */}
+      {step === "value" && valueStage === "miles" && (
+        <MotoCard title="A couple quick details for your estimate">
+          <div className="grid grid-cols-2 gap-3">
+            <MotoFormField
+              label="Estimated miles"
+              inputMode="numeric"
+              value={data.miles}
+              onChange={(e) => set({ miles: e.target.value.replace(/\D/g, "") })}
+            />
+            <MotoFormField
+              label="ZIP code"
+              inputMode="numeric"
+              maxLength={5}
+              value={data.zip}
+              onChange={(e) => set({ zip: e.target.value.replace(/\D/g, "").slice(0, 5) })}
+            />
+          </div>
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          <div className="mt-4">
+            <MotoPrimaryButton loading={busy} disabled={!milesZipReady} onClick={seeValue}>
+              See my estimate
+            </MotoPrimaryButton>
+          </div>
+          <p className="mt-3 text-[11px] leading-snug text-zinc-400">
+            We'll show your estimated range — add your details after to lock in the firm offer.
+          </p>
+        </MotoCard>
+      )}
+
       {step === "value" && valueStage === "range" && (
         <MotoCard title="Your estimated trade-in value">
           {estimate?.low != null && estimate?.high != null ? (
@@ -844,7 +903,7 @@ export default function TradeWidgetFlow({
           <p className="mt-2 text-sm text-zinc-500">{detectedVehicle}</p>
           <button
             type="button"
-            onClick={() => setStep("contact")}
+            onClick={() => (offerFirst ? setValueStage("miles") : setStep("contact"))}
             className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[hsl(var(--cta-offer))] hover:underline"
           >
             <Pencil className="h-3 w-3" /> Edit mileage
@@ -855,9 +914,15 @@ export default function TradeWidgetFlow({
           </p>
           {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
           <div className="mt-4">
-            <MotoPrimaryButton loading={busy} onClick={getFirm}>
-              {offerMode === "firm" ? "Get Firm Offer" : "Get My Offer"}
-            </MotoPrimaryButton>
+            {offerFirst && !contactComplete ? (
+              <MotoPrimaryButton onClick={() => setStep("contact")}>
+                Continue to your offer
+              </MotoPrimaryButton>
+            ) : (
+              <MotoPrimaryButton loading={busy} onClick={getFirm}>
+                {offerMode === "firm" ? "Get Firm Offer" : "Get My Offer"}
+              </MotoPrimaryButton>
+            )}
           </div>
         </MotoCard>
       )}

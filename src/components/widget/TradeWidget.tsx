@@ -114,9 +114,8 @@ export default function TradeWidget({
   // AI photo boost are all dealer toggles, not widget-specific behavior.
   const requireVerify = formConfig.require_phone_verification !== false;
   const aiPhotosEnabled = formConfig.step_ai_photos !== false;
-  // NOTE: formConfig.offer_before_details (collect contact before/after the
-  // offer) is a recognized dealer toggle — honoring it needs a
-  // compute-before-persist split; tracked as the next refinement.
+  // Dealer toggle: show the estimate range BEFORE collecting contact details.
+  const offerFirst = formConfig.offer_before_details === true;
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -206,6 +205,7 @@ export default function TradeWidget({
                 vdp={vdp}
                 requireVerify={requireVerify}
                 aiPhotosEnabled={aiPhotosEnabled}
+                offerFirst={offerFirst}
                 defaultZip={zip}
               />
             )}
