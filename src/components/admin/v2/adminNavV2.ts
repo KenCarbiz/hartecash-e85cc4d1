@@ -13,7 +13,7 @@ import {
   MapPin, Settings, Clock, Megaphone, Globe, Code2,
   PanelRightOpen, Activity, Users, CreditCard, Rocket, SlidersHorizontal,
   Image as ImageIcon, Send, Network, ScrollText, Target, Tag, Receipt,
-  LayoutDashboard, Briefcase,
+  LayoutDashboard, Briefcase, Gauge,
 } from "lucide-react";
 
 export type NavItem = {
@@ -90,10 +90,16 @@ export function buildNavGroups(flags: NavFlags): NavGroup[] {
     { key: "bdc-hub", label: "BDC Queue", icon: PhoneCall },
   ]);
 
-  const onTheLot = f([
-    { key: "inspection-checkin", label: "Inspection Check-In", icon: LogIn },
-    { key: "service-quick-entry", label: "Service Quick Entry", icon: Wrench },
-  ]);
+  // Lane Tools — a "Lane Dashboard" workspace landing plus the two
+  // separate acquisition workflows. The dashboard is a V2-only surface
+  // (rendered by the page), shown unconditionally like the other hubs.
+  const onTheLot: NavItem[] = [
+    { key: "lane-dashboard", label: "Lane Dashboard", icon: Gauge },
+    ...f([
+      { key: "inspection-checkin", label: "Vehicle Check-In", icon: LogIn },
+      { key: "service-quick-entry", label: "Service Drive Capture", icon: Wrench },
+    ]),
+  ];
 
   const outreach = f([
     { key: "equity-mining", label: "Equity Mining", icon: TrendingUp },
@@ -154,13 +160,13 @@ export function buildNavGroups(flags: NavFlags): NavGroup[] {
         { label: "Daily Work", items: work },
         { label: "My Day", items: myDay },
         { label: "Sales Floor", items: salesFloor.filter((i) => i.key === "accepted-appts") },
-        { label: "On the Lot", items: onTheLot.filter((i) => i.key === "inspection-checkin") },
+        { label: "Lane Tools", items: onTheLot.filter((i) => i.key === "inspection-checkin" || i.key === "lane-dashboard") },
       ]
     : [
         { label: "Daily Work", items: work },
         { label: "My Day", items: myDay },
         { label: "Sales Floor", items: salesFloor },
-        { label: "On the Lot", items: onTheLot },
+        { label: "Lane Tools", items: onTheLot },
         { label: "Customer Outreach", items: outreach },
         { label: "Performance", items: performance },
         { label: "Store Settings", items: storeSettings },
