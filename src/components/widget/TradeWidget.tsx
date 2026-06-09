@@ -50,9 +50,11 @@ export default function TradeWidget({
   const themeReady = !siteLoading && !formLoading;
 
   // Returning customers see a resume card first; "Start a new appraisal"
-  // drops them into the fresh flow.
+  // drops them into the fresh flow. Includes in-progress submissions (a saved
+  // appraisal with a known vehicle but no firm number yet) so they're
+  // recognized and can pick up where they left off instead of a blank start.
   const [startFresh, setStartFresh] = useState(false);
-  const returning = !startFresh && !!offer && offer.amount > 0;
+  const returning = !startFresh && !!offer && (offer.amount > 0 || !!offer.vehicleLabel);
 
   // Privacy / Terms render in-panel (not a new tab).
   const [legal, setLegal] = useState<LegalView>(null);
