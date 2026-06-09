@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { cn } from "@/lib/utils";
 import { PageShell, Card, SectionLabel, Pill, StatCard, SecondaryButton } from "./theme";
+import InstallPanel from "./InstallPanel";
 
 const TradeWidgetAdmin = lazy(() => import("@/components/admin/TradeWidgetAdmin"));
 
@@ -102,7 +103,7 @@ const WebsiteWidget = ({ db }: { db: Db; onNavigate: (key: string) => void }) =>
         <div className="flex items-center gap-2">
           <Pill tone="green"><CircleCheck className="h-3 w-3" /> Live</Pill>
           <SecondaryButton onClick={() => setManage((v) => !v)}>
-            <Settings2 className="h-4 w-4" /> {manage ? "Hide settings" : "Settings & install"}
+            <Settings2 className="h-4 w-4" /> {manage ? "Hide advanced" : "Advanced settings"}
           </SecondaryButton>
         </div>
       }
@@ -214,10 +215,13 @@ const WebsiteWidget = ({ db }: { db: Db; onNavigate: (key: string) => void }) =>
           </div>
         </Card>
 
-        {/* Settings & install (preserves the real admin) */}
+        {/* Install (per-provider chooser + real snippet) */}
+        <InstallPanel dealershipId={dealershipId} />
+
+        {/* Advanced settings (preserves the real admin) */}
         {manage && (
           <Card className="p-5">
-            <SectionLabel>Settings &amp; install code</SectionLabel>
+            <SectionLabel>Advanced settings &amp; embed variants</SectionLabel>
             <div className="mt-3">
               <Suspense fallback={<div className="py-8 text-center text-sm text-[#7A879C]">Loading widget settings…</div>}>
                 <TradeWidgetAdmin />
