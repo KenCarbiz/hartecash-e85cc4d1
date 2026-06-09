@@ -7431,6 +7431,10 @@ export type Database = {
       export_customer_data: { Args: { _token: string }; Returns: Json }
       finalize_voice_grade_run: { Args: { _run_id: string }; Returns: Json }
       generate_mfa_backup_codes: { Args: never; Returns: Json }
+      get_admin_kpis: {
+        Args: { p_assigned_rep_email?: string; p_dealership_id: string }
+        Returns: Json
+      }
       get_all_staff: {
         Args: { _dealership_id?: string }
         Returns: {
