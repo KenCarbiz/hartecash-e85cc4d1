@@ -26,6 +26,8 @@ import AdminHeaderV2 from "@/components/admin/v2/AdminHeaderV2";
 import AdminOverlays from "@/components/admin/v2/AdminOverlays";
 import CommandCenter from "@/components/admin/v2/CommandCenter";
 import AnalyticsView from "@/components/admin/v2/AnalyticsView";
+import AvailabilityCenter from "@/components/admin/v2/AvailabilityCenter";
+import ReferralCenter from "@/components/admin/v2/ReferralCenter";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -67,7 +69,10 @@ const AdminDashboardV2 = () => {
 
   const onCommandCenter = baseSectionId === COMMAND_CENTER_KEY;
   const onAnalytics = baseSectionId === ANALYTICS_KEY;
-  const onV2Landing = onCommandCenter || onAnalytics;
+  // V2-only redesigned surfaces that bypass the shared section renderer.
+  const onAvailability = baseSectionId === "my-availability";
+  const onReferrals = baseSectionId === "my-referrals";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onReferrals;
 
   return (
     <PlatformProvider>
@@ -105,9 +110,13 @@ const AdminDashboardV2 = () => {
 
           <main ref={contentRef} className="flex-1 overflow-auto px-4 py-6 md:px-8">
             <div className="mx-auto max-w-[1320px]">
-              {onV2Landing ? (
+              {onV2Custom ? (
                 onAnalytics ? (
                   <AnalyticsView db={db} onNavigate={db.setActiveSection} />
+                ) : onAvailability ? (
+                  <AvailabilityCenter userEmail={db.userEmail} />
+                ) : onReferrals ? (
+                  <ReferralCenter staffName={db.userName} userEmail={db.userEmail} />
                 ) : (
                   <CommandCenter db={db} onNavigate={db.setActiveSection} />
                 )

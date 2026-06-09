@@ -76,8 +76,8 @@ export function buildNavGroups(flags: NavFlags): NavGroup[] {
 
   const myDay = f([
     { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
-    { key: "my-availability", label: "My Availability", icon: Clock },
-    { key: "my-referrals", label: "My Referrals", icon: Gift },
+    { key: "my-availability", label: "Availability Center", icon: Clock },
+    { key: "my-referrals", label: "Referral Center", icon: Gift },
   ]);
 
   const salesFloor = f([
