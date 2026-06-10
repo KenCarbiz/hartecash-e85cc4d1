@@ -29,7 +29,7 @@ interface CachedImage {
   signed_url?: string;
 }
 
-const VehicleImageInventory = () => {
+const VehicleImageInventory = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [images, setImages] = useState<CachedImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -287,11 +287,15 @@ const VehicleImageInventory = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        {embedded ? (
+          <span className="text-sm text-muted-foreground">{images.length} cached</span>
+        ) : (
         <div className="flex items-center gap-2">
           <Car className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold text-card-foreground">Vehicle Image Inventory</h2>
           <span className="text-sm text-muted-foreground">({images.length} cached)</span>
         </div>
+        )}
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
