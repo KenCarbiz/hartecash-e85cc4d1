@@ -43,7 +43,7 @@ const VDP_CTA_PRESETS = [
   "Upgrade Your Ride — See Your Trade Value",
 ];
 
-const EmbedToolkit = () => {
+const EmbedToolkit = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { config } = useSiteConfig();
   // Escalation controls — local state mirrors site_config so toggles
   // feel responsive while the write is in flight. We persist on
@@ -453,12 +453,14 @@ window.addEventListener("message", function(e) {
 
   return (
     <div className="space-y-6">
+      {!embedded && (
       <div>
         <h2 className="text-lg font-semibold text-card-foreground">Website Integration Toolkit</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Embed Autocurb.io into the dealership website to convert existing traffic into trade-in leads. Customers never leave the dealer site.
         </p>
       </div>
+      )}
 
       {/* Strategy Card */}
       <Card className="border-primary/20 bg-primary/5">
