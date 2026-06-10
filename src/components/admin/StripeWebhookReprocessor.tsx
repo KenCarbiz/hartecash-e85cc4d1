@@ -28,7 +28,7 @@ type StripeEvent = {
  * Visibility: super-admin only — wired into Platform sidebar group
  * via AdminSidebar + AdminSectionRenderer.
  */
-const StripeWebhookReprocessor = () => {
+const StripeWebhookReprocessor = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { toast } = useToast();
   const [events, setEvents] = useState<StripeEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,12 +90,14 @@ const StripeWebhookReprocessor = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
+        {!embedded && (
         <div>
           <h2 className="text-lg font-semibold text-card-foreground">Stripe Webhook Events</h2>
           <p className="text-sm text-muted-foreground">
             Recent webhook deliveries. Replay any row whose handler didn't finish.
           </p>
         </div>
+        )}
         <div className="flex items-center gap-2">
           <div className="inline-flex rounded-md border border-border overflow-hidden text-xs">
             <button

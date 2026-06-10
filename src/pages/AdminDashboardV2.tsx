@@ -48,6 +48,7 @@ import GroupManagementV2 from "@/components/admin/v2/GroupManagementV2";
 import ExportDataV2 from "@/components/admin/v2/ExportDataV2";
 import StaffV2 from "@/components/admin/v2/StaffV2";
 import ProspectDemoV2 from "@/components/admin/v2/ProspectDemoV2";
+import StripeWebhooksV2 from "@/components/admin/v2/StripeWebhooksV2";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -131,7 +132,8 @@ const AdminDashboardV2 = () => {
   const onExport = baseSectionId === "data-egress";
   const onStaff = baseSectionId === "staff";
   const onProspectDemo = baseSectionId === "prospect-demo";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports || onMarketing || onIntegrations || onGroups || onExport || onStaff || onProspectDemo;
+  const onStripeWebhooks = baseSectionId === "stripe-webhooks";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports || onMarketing || onIntegrations || onGroups || onExport || onStaff || onProspectDemo || onStripeWebhooks;
 
   return (
     <PlatformProvider>
@@ -220,6 +222,8 @@ const AdminDashboardV2 = () => {
                   <StaffV2 />
                 ) : onProspectDemo ? (
                   <ProspectDemoV2 />
+                ) : onStripeWebhooks ? (
+                  <StripeWebhooksV2 />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
                     onNavigate={db.setActiveSection}
