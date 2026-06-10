@@ -111,13 +111,14 @@ export function buildNavGroups(flags: NavFlags): NavGroup[] {
     { key: "reports", label: "Reports", icon: BarChart3 },
   ]);
 
-  const storeSettings = f([
-    { key: "branding", label: "Branding", icon: Palette },
-    { key: "communications", label: "Communications", icon: Phone },
-    { key: "capture-inspection", label: "Capture & Inspection", icon: FileText },
-    ...(locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin } as NavItem] : []),
-    { key: "offer-settings", label: "Pricing Rules", icon: Settings, badge: pricingAccessRequestCount, badgeTone: "red" },
-  ]);
+  // Store Settings — Branding / Communications / Capture & Inspection /
+  // Pricing Rules consolidated into one hub (rendered by the page).
+  // Shown unconditionally; the hub's editors enforce their own access.
+  // Locations stays a separate item (multi-rooftop).
+  const storeSettings: NavItem[] = [
+    { key: "store-settings-hub", label: "Store Settings", icon: Settings, badge: pricingAccessRequestCount, badgeTone: "red" },
+    ...(locationCount > 1 ? f([{ key: "locations", label: "Locations", icon: MapPin }]) : []),
+  ];
 
   const marketingSetup = f([
     { key: "marketing", label: "Marketing", icon: Megaphone },
