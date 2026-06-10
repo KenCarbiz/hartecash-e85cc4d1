@@ -47,7 +47,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 const STATUS_COLORS: Record<string, string> = {
   active: "bg-success/15 text-success border-success/30",
   trial: "bg-warning/15 text-warning border-warning/30",
-  suspended: "bg-destructive/100/15 text-destructive border-destructive/30",
+  suspended: "bg-destructive/15 text-destructive border-destructive/30",
   cancelled: "bg-muted text-muted-foreground border-border",
 };
 
@@ -311,7 +311,7 @@ const PlatformSubscriptions = () => {
       <Card
         className={`shadow-lg overflow-hidden relative transition-[box-shadow,background] ${
           dirty
-            ? "border-warning/60 ring-1 ring-warning/50 bg-warning/10/40 dark:bg-warning/5"
+            ? "border-warning/60 ring-1 ring-warning/50 bg-warning/10 dark:bg-warning/5"
             : "border-border/50"
         }`}
       >

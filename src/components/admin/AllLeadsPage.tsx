@@ -170,8 +170,8 @@ const pillCls: Record<StatusTone, string> = {
 };
 
 const dotCls: Record<StatusTone, string> = {
-  red: "bg-destructive/100",
-  orange: "bg-warning/100",
+  red: "bg-destructive",
+  orange: "bg-warning",
   green: "bg-success",
   blue: "bg-info",
   purple: "bg-primary",
@@ -398,7 +398,7 @@ const AllLeadsPage = ({
             )}
           >
             <div className="flex items-center gap-3 min-w-0">
-              <span className={cn("w-2 h-2 rounded-full shrink-0 animate-pulse", isArrived ? "bg-destructive/100" : "bg-warning/100")} />
+              <span className={cn("w-2 h-2 rounded-full shrink-0 animate-pulse", isArrived ? "bg-destructive" : "bg-warning")} />
               <div className="min-w-0">
                 <div className="text-sm font-bold text-foreground truncate">
                   {banner.name || "A customer"} {isArrived ? "just arrived on the lot" : "is on the way"}
@@ -523,7 +523,7 @@ const AllLeadsPage = ({
                       className={cn(
                         "border-b border-border/50 last:border-b-0 transition-colors",
                         isArrived
-                          ? "bg-destructive/10 hover:bg-destructive/10/70 border-l-4 border-l-destructive"
+                          ? "bg-destructive/10 hover:bg-destructive/10 border-l-4 border-l-destructive"
                           : "hover:bg-muted/40",
                       )}
                     >

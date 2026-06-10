@@ -504,7 +504,7 @@ const ReportsExport = () => {
                           COMPLETED_STATUSES.includes(row.progress_status)
                             ? "bg-success/15 text-success"
                             : DEAD_STATUSES.includes(row.progress_status)
-                            ? "bg-destructive/100/15 text-destructive"
+                            ? "bg-destructive/15 text-destructive"
                             : ""
                         }`}
                       >
@@ -561,7 +561,7 @@ const ReportsExport = () => {
             {/* Copy to Clipboard */}
             <div className="rounded-xl border border-border bg-muted/20 p-4 flex flex-col gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-info/100/15 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-info/15 flex items-center justify-center shrink-0">
                   <ClipboardCopy className="w-4.5 h-4.5 text-info" />
                 </div>
                 <div>
