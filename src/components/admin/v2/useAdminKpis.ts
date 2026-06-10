@@ -41,7 +41,11 @@ export function useAdminKpis(dealershipId: string | undefined, userRole: string,
     retry: false, // a missing RPC (pre-migration) shouldn't retry-spam
     staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)("get_admin_kpis", {
+      const rpc = supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>;
+      const { data, error } = await rpc("get_admin_kpis", {
         p_dealership_id: dealershipId,
         p_assigned_rep_email: repCode,
       });

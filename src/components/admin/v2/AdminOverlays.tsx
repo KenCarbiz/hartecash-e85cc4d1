@@ -6,10 +6,11 @@
  * V1 continues to use its own inline copy; this is additive.
  */
 import {
-  lazy, Suspense, useState, Component, type ReactNode, type ErrorInfo,
+  lazy, Suspense, useState, Component, type ReactNode, type ErrorInfo, type ComponentProps,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { useAdminDashboard } from "@/hooks/useAdminDashboard";
+import type { Submission } from "@/lib/adminConstants";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import AdminCommandPalette from "@/components/admin/AdminCommandPalette";
 import RequestAccessDialog from "@/components/admin/RequestAccessDialog";
@@ -90,7 +91,7 @@ const AdminOverlays = ({ db }: { db: Db }) => {
     auditLabel: db.auditLabel,
     userName: db.userName,
     viewerRole: db.userRole,
-    onUpdate: (updated: any) =>
+    onUpdate: (updated: Submission) =>
       db.setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s))),
     onDelete: db.handleDelete,
     onRefresh: db.handleView,
@@ -135,9 +136,9 @@ const AdminOverlays = ({ db }: { db: Db }) => {
           }
         >
           {siteConfig.file_layout === "conversation" ? (
-            <CustomerFileV2 {...(sheetProps as any)} />
+            <CustomerFileV2 {...(sheetProps as ComponentProps<typeof CustomerFileV2>)} />
           ) : (
-            <SubmissionDetailSheet {...(sheetProps as any)} />
+            <SubmissionDetailSheet {...(sheetProps as ComponentProps<typeof SubmissionDetailSheet>)} />
           )}
         </Suspense>
       </CustomerFileChunkBoundary>

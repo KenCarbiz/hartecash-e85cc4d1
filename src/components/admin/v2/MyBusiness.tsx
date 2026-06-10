@@ -119,6 +119,8 @@ const MyBusiness = ({ staffName, userEmail }: { staffName: string; userEmail?: s
     setReferrals(((data as unknown) as Ref[]) || []);
   };
 
+  // fetchReferrals is recreated each render by design; re-run only on tenant/email.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (staffEmail) fetchReferrals(); }, [tenant.dealership_id, staffEmail]);
 
   useEffect(() => {
@@ -146,6 +148,8 @@ const MyBusiness = ({ staffName, userEmail }: { staffName: string; userEmail?: s
         } as never);
       }
     })();
+    // staffCode/staffName derive from staffEmail; re-run only on identity change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [staffEmail, tenant.dealership_id]);
 
   useEffect(() => {
