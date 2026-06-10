@@ -46,6 +46,8 @@ import MarketingV2 from "@/components/admin/v2/MarketingV2";
 import IntegrationsV2 from "@/components/admin/v2/IntegrationsV2";
 import GroupManagementV2 from "@/components/admin/v2/GroupManagementV2";
 import ExportDataV2 from "@/components/admin/v2/ExportDataV2";
+import StaffV2 from "@/components/admin/v2/StaffV2";
+import ProspectDemoV2 from "@/components/admin/v2/ProspectDemoV2";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -127,7 +129,9 @@ const AdminDashboardV2 = () => {
   const onIntegrations = ["integrations", "integrations-status", "api-access", "vauto-integration", "white-label"].includes(baseSectionId);
   const onGroups = baseSectionId === "groups";
   const onExport = baseSectionId === "data-egress";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports || onMarketing || onIntegrations || onGroups || onExport;
+  const onStaff = baseSectionId === "staff";
+  const onProspectDemo = baseSectionId === "prospect-demo";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports || onMarketing || onIntegrations || onGroups || onExport || onStaff || onProspectDemo;
 
   return (
     <PlatformProvider>
@@ -212,6 +216,10 @@ const AdminDashboardV2 = () => {
                   <GroupManagementV2 />
                 ) : onExport ? (
                   <ExportDataV2 />
+                ) : onStaff ? (
+                  <StaffV2 />
+                ) : onProspectDemo ? (
+                  <ProspectDemoV2 />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
                     onNavigate={db.setActiveSection}
