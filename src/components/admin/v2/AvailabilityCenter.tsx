@@ -382,13 +382,15 @@ const AvailabilityCenter = ({ userEmail }: { userEmail?: string }) => {
             <SectionLabel>Notification preferences</SectionLabel>
             <SoonChip />
           </div>
-          <div className="mt-3 overflow-hidden rounded-xl border border-[#F0F2F7]">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-[#F0F2F7]">
+            <div className="min-w-[380px]">
             <div className="grid grid-cols-[1.6fr_repeat(3,1fr)] gap-2 bg-[#FAFBFD] px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-[#9AA6BC]">
               <span>Event</span><span className="text-center">SMS</span><span className="text-center">Email</span><span className="text-center">Push</span>
             </div>
             {["New Lead", "Appointment Scheduled", "High Equity Opportunity", "AI Voice Escalation"].map((ev) => (
               <NotifRow key={ev} label={ev} />
             ))}
+            </div>
           </div>
         </Card>
 

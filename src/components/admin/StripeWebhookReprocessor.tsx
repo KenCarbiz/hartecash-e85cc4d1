@@ -120,7 +120,7 @@ const StripeWebhookReprocessor = ({ embedded = false }: { embedded?: boolean } =
         </div>
       </div>
 
-      <div className="border border-border rounded-xl bg-card overflow-hidden">
+      <div className="border border-border rounded-xl bg-card overflow-x-auto">
         {loading && (
           <div className="px-5 py-12 flex items-center justify-center">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -134,7 +134,7 @@ const StripeWebhookReprocessor = ({ embedded = false }: { embedded?: boolean } =
           </div>
         )}
         {!loading && events.length > 0 && (
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="text-left px-5 py-2.5 font-medium">Event</th>

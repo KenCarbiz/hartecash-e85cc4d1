@@ -866,7 +866,7 @@ const LocationManagement = ({ embedded = false }: { embedded?: boolean } = {}) =
                       {/* Colors */}
                       <div className="space-y-3 border-t border-border/30 pt-4">
                         <Label className="text-xs font-semibold">Brand Colors (HSL)</Label>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                           <div>
                             <Label className="text-micro text-muted-foreground mb-1 block">Primary</Label>
                             <Input value={loc.primary_color || ""} onChange={e => updateLocation(loc.id, "primary_color", e.target.value || null)} placeholder="Inherit" className="font-mono text-xs" />

@@ -49,7 +49,7 @@ const PerformanceV2 = ({ db, initialTab = "kpi" }: { db: Db; initialTab?: Tab })
   return (
     <PageShell title="Performance" subtitle="Headline KPIs, live GM HUD, BDC activity, and manager dispatch.">
       {tabs.length > 1 && (
-        <div className="mb-5 inline-flex flex-wrap gap-1 rounded-xl border border-[#E6EAF0] bg-white p-1">
+        <div className="mb-5 flex flex-wrap gap-1 rounded-xl border border-[#E6EAF0] bg-white p-1 md:inline-flex">
           {tabs.map((t) => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className={cn("inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-semibold transition", tab === t.key ? "bg-[#6D28D9] text-white" : "text-[#53627A] hover:bg-[#F4F6FA]")}>
