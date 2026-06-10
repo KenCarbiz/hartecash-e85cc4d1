@@ -6,7 +6,7 @@
  * content area carries the visual weight. Includes a "Classic admin"
  * escape hatch back to V1 during the beta.
  */
-import { Menu, Search, LogOut, ArrowLeftRight, ChevronDown } from "lucide-react";
+import { Menu, Search, LogOut, ArrowLeftRight, ChevronDown, UserCog } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ROLE_LABELS } from "@/lib/adminConstants";
 import {
@@ -20,9 +20,11 @@ interface Props {
   dealerName?: string;
   onLogout: () => void;
   onOpenMobileNav: () => void;
+  /** Navigate to a V2 section by key (e.g. "my-availability"). */
+  onNavigateSection?: (key: string) => void;
 }
 
-const AdminHeaderV2 = ({ userName, userRole, dealerName, onLogout, onOpenMobileNav }: Props) => {
+const AdminHeaderV2 = ({ userName, userRole, dealerName, onLogout, onOpenMobileNav, onNavigateSection }: Props) => {
   const navigate = useNavigate();
   const firstName = userName?.split(" ")[0] || "there";
   const initials = (userName || "?")
@@ -96,6 +98,12 @@ const AdminHeaderV2 = ({ userName, userRole, dealerName, onLogout, onOpenMobileN
             )}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          {onNavigateSection && (
+            <DropdownMenuItem onClick={() => onNavigateSection("my-availability")}>
+              <UserCog className="mr-2 h-4 w-4" />
+              My profile &amp; availability
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => navigate("/admin")}>
             <ArrowLeftRight className="mr-2 h-4 w-4" />
             Classic admin
