@@ -5,13 +5,13 @@
  * are preserved). V2-only.
  */
 import { lazy, Suspense } from "react";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const VehicleImageInventory = lazy(() => import("@/components/admin/VehicleImageInventory"));
 
 const ImageCacheV2 = () => (
   <PageShell title="Image Cache" subtitle="Vehicle images cached for faster portal loads — search, refresh, or clear the cache.">
-    <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+    <Suspense fallback={<Loading />}>
       <VehicleImageInventory embedded />
     </Suspense>
   </PageShell>

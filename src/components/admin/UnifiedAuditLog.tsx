@@ -290,7 +290,7 @@ const UnifiedAuditLog = ({ embedded = false }: { embedded?: boolean } = {}) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
+      <div className={`flex items-start gap-3 flex-wrap ${embedded ? "justify-end" : "justify-between"}`}>
         {!embedded && (
         <div>
           <h2 className="text-lg font-semibold text-card-foreground">Audit Log</h2>

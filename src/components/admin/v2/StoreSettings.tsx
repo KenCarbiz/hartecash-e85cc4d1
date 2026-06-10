@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { cn } from "@/lib/utils";
-import { PageShell, Card, SectionLabel, Pill } from "./theme";
+import { PageShell, Card, SectionLabel, Pill, Loading } from "./theme";
 
 const BrandingHub = lazy(() => import("@/components/admin/BrandingHub"));
 const CommunicationsHub = lazy(() => import("@/components/admin/CommunicationsHub"));
@@ -123,7 +123,7 @@ const StoreSettings = ({ db }: { db: Db }) => {
               <Pill tone="green">Live</Pill>
             </div>
           )}
-          <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+          <Suspense fallback={<Loading />}>
             {tab && editor(tab)}
           </Suspense>
         </div>

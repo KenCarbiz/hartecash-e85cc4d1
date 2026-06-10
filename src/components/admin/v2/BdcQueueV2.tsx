@@ -10,7 +10,7 @@
 import { lazy, Suspense, useState } from "react";
 import { PhoneCall, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const BDCPriorityQueue = lazy(() => import("@/components/admin/BDCPriorityQueue"));
 const BDCCallsToday = lazy(() => import("@/components/admin/BDCCallsToday"));
@@ -46,7 +46,7 @@ const BdcQueueV2 = ({
         ))}
       </div>
 
-      <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+      <Suspense fallback={<Loading />}>
         {tab === "priority" ? <BDCPriorityQueue onOpenSubmission={onOpenSubmission} /> : <BDCCallsToday />}
       </Suspense>
     </PageShell>

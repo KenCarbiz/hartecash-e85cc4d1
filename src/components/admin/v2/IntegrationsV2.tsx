@@ -4,13 +4,13 @@
  * Status / API / vAuto / White Label tabs preserved. V2-only.
  */
 import { lazy, Suspense } from "react";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const IntegrationsHub = lazy(() => import("@/components/admin/IntegrationsHub"));
 
 const IntegrationsV2 = ({ initialTab = "status" }: { initialTab?: "status" | "api" | "vauto" | "white-label" }) => (
   <PageShell title="Integrations" subtitle="Status, keys, and per-integration configuration in one place.">
-    <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+    <Suspense fallback={<Loading />}>
       <IntegrationsHub initialTab={initialTab} embedded />
     </Suspense>
   </PageShell>

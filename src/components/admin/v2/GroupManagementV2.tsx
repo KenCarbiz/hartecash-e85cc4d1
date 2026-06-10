@@ -4,13 +4,13 @@
  * Refresh + all controls preserved). V2-only.
  */
 import { lazy, Suspense } from "react";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const GroupManagement = lazy(() => import("@/components/admin/GroupManagement"));
 
 const GroupManagementV2 = () => (
   <PageShell title="Group Management" subtitle="Dealer groups, master MSAs, per-rooftop activations and pilot windows.">
-    <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+    <Suspense fallback={<Loading />}>
       <GroupManagement embedded />
     </Suspense>
   </PageShell>
