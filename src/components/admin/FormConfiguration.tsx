@@ -305,21 +305,24 @@ export default function FormConfiguration() {
   );
 
   return (
-    <div className="space-y-4 max-w-3xl">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 max-w-4xl">
+      <div className="sticky top-0 z-10 -mx-1 flex items-center justify-between gap-3 rounded-xl bg-[#F4F6FA]/85 px-1 py-2 backdrop-blur">
         <div>
-          <h2 className="text-xl font-semibold">Form Configuration</h2>
-          <p className="text-sm text-muted-foreground">Toggle which steps and questions customers see</p>
+          <h2 className="text-[20px] font-bold text-[#06194A]">Form Configuration</h2>
+          <p className="text-sm text-[#7A879C]">Toggle which steps and questions customers see</p>
         </div>
-        <Button onClick={handleSave} disabled={saving} size="sm">
+        <Button onClick={handleSave} disabled={saving} size="sm" className="bg-[#6D28D9] hover:bg-[#6D28D9]/90 text-white shrink-0">
           {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
           Save
         </Button>
       </div>
 
+      {/* ── FORM STRUCTURE ──────────────────────────────────────────── */}
+      <div className="pt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A879C]">Form structure</div>
+
       {/* Step toggles */}
       <Collapsible open={openSections.steps} onOpenChange={() => toggle("steps")}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-white border border-[#E6EAF0] rounded-xl hover:bg-[#F4F6FA] transition-colors">
           <div className="flex items-center gap-2 font-medium">
             <Flag className="w-4 h-4" />
             Form Steps
@@ -328,7 +331,7 @@ export default function FormConfiguration() {
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-3 space-y-2 px-1">
           {/* Always-on steps */}
-          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-muted/20">
+          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-[#F4F6FA]">
             <div className="flex items-center gap-3">
               <Lock className="w-4 h-4 text-muted-foreground" />
               <div>
@@ -339,7 +342,7 @@ export default function FormConfiguration() {
             <Badge variant="outline" className="text-xs">Required</Badge>
           </div>
 
-          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-background border">
+          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-white border border-[#E6EAF0]">
             <div className="flex items-center gap-3">
               <Switch
                 checked={config.step_vehicle_build}
@@ -355,7 +358,7 @@ export default function FormConfiguration() {
             </Badge>
           </div>
 
-          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-background border">
+          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-white border border-[#E6EAF0]">
             <div className="flex items-center gap-3">
               <Switch
                 checked={config.step_condition_history}
@@ -373,7 +376,7 @@ export default function FormConfiguration() {
 
           {/* AI Condition Scoring — adds an opt-in photo step that may
               raise the offer when actual condition beats self-report. */}
-          <div className="py-2.5 px-3 rounded-lg bg-success/5 border border-success/20 space-y-2">
+          <div className="py-2.5 px-3 rounded-lg bg-[#E6FAF7] border border-[#0D9488]/20 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Switch
@@ -383,7 +386,7 @@ export default function FormConfiguration() {
                 <div>
                   <p className="text-sm font-medium flex items-center gap-1.5">
                     Step 3.5 — AI Condition Scoring
-                    <span className="text-micro font-bold uppercase tracking-wider text-success bg-success/15 px-1.5 py-0.5 rounded">New</span>
+                    <span className="text-micro font-bold uppercase tracking-wider text-[#0F766E] bg-white border border-[#0D9488]/20 px-1.5 py-0.5 rounded">New</span>
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Optional photo upload after Condition. Customer can skip — when they upload, the AI verifies actual condition and may bump the offer up.
@@ -438,7 +441,7 @@ export default function FormConfiguration() {
               form_config is now derived automatically from the reveal
               mode on save. */}
 
-          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-muted/20">
+          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-[#F4F6FA]">
             <div className="flex items-center gap-3">
               <Lock className="w-4 h-4 text-muted-foreground" />
               <div>
@@ -451,7 +454,7 @@ export default function FormConfiguration() {
             <Badge variant="outline" className="text-xs">Required</Badge>
           </div>
 
-          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-muted/20">
+          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-[#F4F6FA]">
             <div className="flex items-center gap-3">
               <Lock className="w-4 h-4 text-muted-foreground" />
               <div>
@@ -463,33 +466,14 @@ export default function FormConfiguration() {
             </div>
             <Badge variant="outline" className="text-xs">Required</Badge>
           </div>
-
-          {/* Phone verification gate — when on, customer must enter an
-              SMS code before the firm offer is revealed. When off, the
-              firm offer appears immediately after they submit contact info. */}
-          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-background border">
-            <div className="flex items-center gap-3">
-              <Switch
-                checked={config.require_phone_verification}
-                onCheckedChange={v => set("require_phone_verification", v)}
-              />
-              <div>
-                <p className="text-sm font-medium">Require SMS phone verification</p>
-                <p className="text-xs text-muted-foreground">
-                  Customer must enter a one-time code before the firm offer is revealed. Turn off to skip OTP and show the offer immediately.
-                </p>
-              </div>
-            </div>
-            <Badge variant={config.require_phone_verification ? "default" : "secondary"} className="text-xs shrink-0">
-              {config.require_phone_verification ? "Required" : "Skipped"}
-            </Badge>
-          </div>
+          {/* Phone-verification gate lives once, in the Offer & Pricing
+              flow below (next to the reveal mode it gates) — not here. */}
         </CollapsibleContent>
       </Collapsible>
 
       {/* Vehicle Build questions */}
       <Collapsible open={openSections.build} onOpenChange={() => toggle("build")}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-white border border-[#E6EAF0] rounded-xl hover:bg-[#F4F6FA] transition-colors">
           <div className="flex items-center gap-2 font-medium">
             <Car className="w-4 h-4" />
             Vehicle Build Questions
@@ -511,7 +495,7 @@ export default function FormConfiguration() {
 
       {/* Condition & History questions */}
       <Collapsible open={openSections.condition} onOpenChange={() => toggle("condition")}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-white border border-[#E6EAF0] rounded-xl hover:bg-[#F4F6FA] transition-colors">
           <div className="flex items-center gap-2 font-medium">
             <ClipboardList className="w-4 h-4" />
             Condition & History Questions
@@ -533,7 +517,7 @@ export default function FormConfiguration() {
 
       {/* Your Details questions */}
       <Collapsible open={openSections.details} onOpenChange={() => toggle("details")}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-white border border-[#E6EAF0] rounded-xl hover:bg-[#F4F6FA] transition-colors">
           <div className="flex items-center gap-2 font-medium">
             <User className="w-4 h-4" />
             Your Details Questions
@@ -550,7 +534,7 @@ export default function FormConfiguration() {
 
       {/* Offer questions */}
       <Collapsible open={openSections.offer} onOpenChange={() => toggle("offer")}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-white border border-[#E6EAF0] rounded-xl hover:bg-[#F4F6FA] transition-colors">
           <div className="flex items-center gap-2 font-medium">
             <Flag className="w-4 h-4" />
             Get Your Offer Questions
@@ -572,11 +556,14 @@ export default function FormConfiguration() {
           treatment preserved from the original.
           ───────────────────────────────────────────────────────────── */}
 
+      {/* ── OFFER & PRICING FLOW ────────────────────────────────────── */}
+      <div className="pt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A879C]">Offer &amp; pricing flow</div>
+
       {/* ── Pricing reveal ── */}
-      <section className="bg-card rounded-xl border border-border p-6">
+      <section className="bg-white rounded-2xl border border-[#E6EAF0] p-6">
         <div className="flex items-center gap-2 mb-4">
-          <DollarSign className="w-4 h-4 text-primary" />
-          <h3 className="font-bold">Pricing Reveal</h3>
+          <DollarSign className="w-4 h-4 text-[#6D28D9]" />
+          <h3 className="font-bold text-[#06194A]">Pricing Reveal</h3>
         </div>
         <p className="text-xs text-muted-foreground mb-4">
           Controls whether the customer sees a number before providing their contact info.
@@ -607,13 +594,13 @@ export default function FormConfiguration() {
                 type="button"
                 onClick={() => updateFlow("pricing_reveal_mode", o.v)}
                 className={`w-full text-left rounded-lg border-2 p-4 transition-all ${
-                  active ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                  active ? "border-[#6D28D9] bg-[#EEF0FF]" : "border-[#E6EAF0] hover:border-[#6D28D9]/40"
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div
                     className={`mt-0.5 w-4 h-4 rounded-full border-2 flex-shrink-0 ${
-                      active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                      active ? "border-[#6D28D9] bg-[#6D28D9]" : "border-[#9AA6BC]"
                     }`}
                   />
                   <div>
@@ -634,7 +621,7 @@ export default function FormConfiguration() {
         {offerFlow.pricing_reveal_mode !== "range_then_price" &&
           config.step_condition_history &&
           enabledCount(CONDITION_QUESTIONS) >= 3 && (
-          <div className="flex items-start gap-3 mt-4 p-3 rounded-lg bg-muted/40 border border-border">
+          <div className="flex items-start gap-3 mt-4 p-3 rounded-lg bg-[#F4F6FA] border border-[#E6EAF0]">
             <Switch
               checked={offerFlow.show_range_before_final}
               onCheckedChange={(v) => updateFlow("show_range_before_final", v)}
@@ -654,7 +641,7 @@ export default function FormConfiguration() {
             decide right alongside the pricing reveal whether the
             customer must enter an SMS code immediately before the
             firm offer is shown. Mirrors the toggle in Step Builder. */}
-        <div className="flex items-start gap-3 mt-3 p-3 rounded-lg bg-muted/40 border border-border">
+        <div className="flex items-start gap-3 mt-3 p-3 rounded-lg bg-[#F4F6FA] border border-[#E6EAF0]">
           <Switch
             checked={config.require_phone_verification}
             onCheckedChange={(v) => set("require_phone_verification", v)}
@@ -672,8 +659,8 @@ export default function FormConfiguration() {
 
       {/* ── Range config ── */}
       {(offerFlow.pricing_reveal_mode === "range_then_price" || offerFlow.show_range_before_final) && (
-        <section className="bg-card rounded-xl border border-border p-6">
-          <h3 className="font-bold mb-1">Range Configuration</h3>
+        <section className="bg-white rounded-2xl border border-[#E6EAF0] p-6">
+          <h3 className="font-bold mb-1 text-[#06194A]">Range Configuration</h3>
           <p className="text-xs text-muted-foreground mb-5">
             Pick which Black Book tiers anchor the low and high ends of the range.
             <span className="block mt-1 opacity-80">
@@ -751,10 +738,10 @@ export default function FormConfiguration() {
       )}
 
       {/* ── Payment timing ── */}
-      <section className="bg-card rounded-xl border border-border p-6">
+      <section className="bg-white rounded-2xl border border-[#E6EAF0] p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Banknote className="w-4 h-4 text-primary" />
-          <h3 className="font-bold">Payment Selection Timing</h3>
+          <Banknote className="w-4 h-4 text-[#6D28D9]" />
+          <h3 className="font-bold text-[#06194A]">Payment Selection Timing</h3>
         </div>
         <p className="text-xs text-muted-foreground mb-4">
           When the customer picks how you pay them (ACH, check, wire, etc.).
@@ -784,13 +771,13 @@ export default function FormConfiguration() {
                 type="button"
                 onClick={() => updateFlow("payment_selection_timing", o.v)}
                 className={`w-full text-left rounded-lg border-2 p-4 transition-all ${
-                  active ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                  active ? "border-[#6D28D9] bg-[#EEF0FF]" : "border-[#E6EAF0] hover:border-[#6D28D9]/40"
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div
                     className={`mt-0.5 w-4 h-4 rounded-full border-2 flex-shrink-0 ${
-                      active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                      active ? "border-[#6D28D9] bg-[#6D28D9]" : "border-[#9AA6BC]"
                     }`}
                   />
                   <div>
