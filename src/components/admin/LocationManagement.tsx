@@ -90,7 +90,7 @@ interface Location {
   price_guarantee_days: number | null;
 }
 
-const LocationManagement = () => {
+const LocationManagement = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
@@ -376,7 +376,8 @@ const LocationManagement = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className={`flex items-center ${embedded ? "justify-end" : "justify-between"}`}>
+        {!embedded && (
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
@@ -384,6 +385,7 @@ const LocationManagement = () => {
           </h2>
           <p className="text-sm text-muted-foreground mt-1">Configure store locations, coverage areas, and branding.</p>
         </div>
+        )}
         <Button onClick={saveAll} disabled={saving} className="gap-2">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Save All
