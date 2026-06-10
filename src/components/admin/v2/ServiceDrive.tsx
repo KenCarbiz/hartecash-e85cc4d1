@@ -151,8 +151,8 @@ const ServiceDrive = ({ db, onNavigate }: { db: Db; onNavigate: (key: string) =>
                       {f.n}{i > 0 && <span className="ml-2 font-normal text-[#9AA6BC]">{pct(f.n, funnel[i - 1].n)}%</span>}
                     </span>
                   </div>
-                  <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-[#F0F2F7]">
-                    <div className="h-full rounded-full bg-gradient-to-r from-[#6D28D9] to-[#0D9488]" style={{ width: `${Math.max(pct(f.n, maxN), 2)}%` }} />
+                  <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-[#E6EAF0]">
+                    <div className="h-full rounded-full bg-[#6D28D9]" style={{ width: `${Math.max(pct(f.n, maxN), 2)}%` }} />
                   </div>
                 </div>
               ))}
@@ -169,7 +169,7 @@ const ServiceDrive = ({ db, onNavigate }: { db: Db; onNavigate: (key: string) =>
               <SectionLabel>Recent service opportunities</SectionLabel>
               <button onClick={drillToLeads} className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#6D28D9] hover:underline">View all <ArrowRight className="h-3.5 w-3.5" /></button>
             </div>
-            <div className="divide-y divide-[#F0F2F7] border-t border-[#F0F2F7]">
+            <div className="divide-y divide-[#E6EAF0] border-t border-[#E6EAF0]">
               {loading && <Loading className="px-5" />}
               {!loading && rows.length === 0 && <div className="px-5 py-8 text-center text-sm text-[#7A879C]">No service-drive opportunities yet. Start one above.</div>}
               {rows.slice(0, 6).map((r) => {

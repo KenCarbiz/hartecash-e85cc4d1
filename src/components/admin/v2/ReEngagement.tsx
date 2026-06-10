@@ -192,9 +192,9 @@ const ReEngagement = ({ db }: { db: Db }) => {
     >
       <div className="space-y-4">
         {/* Insight banner */}
-        <Card className="flex items-start gap-3 border-0 bg-gradient-to-br from-[#6D28D9] to-[#0D9488] p-5 text-white">
-          <Sparkles className="mt-0.5 h-5 w-5 shrink-0" />
-          <div className="text-[13px] leading-relaxed">
+        <Card className="flex items-start gap-3 p-5">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEF0FF] text-[#6D28D9]"><Sparkles className="h-4 w-4" /></span>
+          <div className="text-[13px] leading-relaxed text-[#3B4763]">
             <strong>~89% of cash-offer deals close after the 7-day expiry</strong> (64% around week three).
             An expired offer isn't a dead lead — it's your warmest re-acquisition target. Work the
             <em> Expiring soon</em> and <em>Recently expired</em> lists below.
@@ -220,7 +220,7 @@ const ReEngagement = ({ db }: { db: Db }) => {
               <Pill tone="gray">Preview · sends nothing</Pill>
             </div>
             {due.length > 0 && (
-              <div className="mt-3 divide-y divide-[#F0F2F7] rounded-xl border border-[#F0F2F7]">
+              <div className="mt-3 divide-y divide-[#E6EAF0] rounded-xl border border-[#E6EAF0]">
                 {due.slice(0, 8).map((t) => (
                   <div key={t.submission_id} className="flex items-center gap-3 px-3 py-2 text-[13px]">
                     <span className="min-w-0 flex-1 truncate font-medium text-[#06194A]">{t.name || "Customer"}<span className="text-[#7A879C]"> · {t.vehicle || "Vehicle"}</span></span>
@@ -248,7 +248,7 @@ const ReEngagement = ({ db }: { db: Db }) => {
                     <div className="mt-0.5 text-[12px] text-[#7A879C]">{sec.sub}</div>
                   </div>
                 </div>
-                <div className="divide-y divide-[#F0F2F7] border-t border-[#F0F2F7]">
+                <div className="divide-y divide-[#E6EAF0] border-t border-[#E6EAF0]">
                   {items.slice(0, 25).map((r) => {
                     const vehicle = [r.vehicle_year, r.vehicle_make, r.vehicle_model].filter(Boolean).join(" ");
                     const d = daysLeftOf(r);

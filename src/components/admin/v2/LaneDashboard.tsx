@@ -107,7 +107,7 @@ const LaneDashboard = ({ db, onNavigate }: { db: Db; onNavigate: (key: string) =
               View all leads <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
-          <div className="divide-y divide-[#F0F2F7] border-t border-[#F0F2F7]">
+          <div className="divide-y divide-[#E6EAF0] border-t border-[#E6EAF0]">
             {recent.length === 0 && (
               <div className="px-5 py-8 text-center text-sm text-[#7A879C]">{db.loading ? "Loading lane activity…" : "No activity yet today."}</div>
             )}
@@ -147,7 +147,7 @@ const ActionCard = ({
   icon: React.ReactNode; title: string; body: string; cta: string; onClick: () => void; stats: string[];
 }) => (
   <Card className="flex flex-col p-6">
-    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-white">{icon}</span>
+    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEF0FF] text-[#6D28D9]">{icon}</span>
     <div className="mt-3 text-[17px] font-bold text-[#06194A]">{title}</div>
     <p className="mt-1 flex-1 text-[13px] leading-relaxed text-[#53627A]">{body}</p>
     <div className="mt-4 flex flex-wrap gap-2">

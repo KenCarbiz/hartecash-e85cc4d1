@@ -80,7 +80,7 @@ const AdminHeaderV2 = ({ userName, userRole, dealerName, onLogout, onOpenMobileN
             type="button"
             className="flex min-h-10 shrink-0 items-center gap-2 rounded-xl py-1 pl-1 pr-2 transition hover:bg-[#F4F6FA]"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-[12px] font-bold text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#6D28D9] text-[12px] font-bold text-white">
               {initials}
             </span>
             <ChevronDown className="h-4 w-4 text-[#9AA6BC]" />

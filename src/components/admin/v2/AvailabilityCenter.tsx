@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
-import { PageShell, Card, SectionLabel, Pill, PrimaryButton } from "./theme";
+import { PageShell, Card, SectionLabel, Pill, PrimaryButton, PreviewBadge as SoonChip } from "./theme";
 
 const TIMEZONES = [
   { value: "America/New_York", label: "Eastern (New York)" },
@@ -44,7 +44,6 @@ const TIMEZONES = [
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-const SoonChip = () => <Pill tone="gray">Soon</Pill>;
 
 const trimTime = (t?: string | null) => (t ? t.slice(0, 5) : "");
 const formatPhoneInput = (raw: string): string => {
@@ -291,7 +290,7 @@ const AvailabilityCenter = ({ userEmail }: { userEmail?: string }) => {
               <SectionLabel>Weekly schedule</SectionLabel>
               <SoonChip />
             </div>
-            <div className="mt-3 divide-y divide-[#F0F2F7] rounded-xl border border-[#F0F2F7]">
+            <div className="mt-3 divide-y divide-[#E6EAF0] rounded-xl border border-[#E6EAF0]">
               {DAYS.map((d) => (
                 <div key={d} className="flex items-center justify-between px-3 py-2 text-[13px]">
                   <span className="font-medium text-[#3B4763]">{d}</span>
@@ -382,7 +381,7 @@ const AvailabilityCenter = ({ userEmail }: { userEmail?: string }) => {
             <SectionLabel>Notification preferences</SectionLabel>
             <SoonChip />
           </div>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-[#F0F2F7]">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-[#E6EAF0]">
             <div className="min-w-[380px]">
             <div className="grid grid-cols-[1.6fr_repeat(3,1fr)] gap-2 bg-[#FAFBFD] px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-[#9AA6BC]">
               <span>Event</span><span className="text-center">SMS</span><span className="text-center">Email</span><span className="text-center">Push</span>
@@ -508,7 +507,7 @@ const ToggleRow = ({
 const NotifRow = ({ label }: { label: string }) => {
   const [s, setS] = useState({ sms: true, email: true, push: false });
   return (
-    <div className="grid grid-cols-[1.6fr_repeat(3,1fr)] items-center gap-2 border-t border-[#F0F2F7] px-4 py-2.5">
+    <div className="grid grid-cols-[1.6fr_repeat(3,1fr)] items-center gap-2 border-t border-[#E6EAF0] px-4 py-2.5">
       <span className="text-[13px] font-medium text-[#3B4763]">{label}</span>
       {(["sms", "email", "push"] as const).map((c) => (
         <div key={c} className="flex justify-center">

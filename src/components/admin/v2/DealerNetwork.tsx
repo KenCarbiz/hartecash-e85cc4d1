@@ -89,7 +89,7 @@ const HealthRing = ({ value, size = 44 }: { value: number; size?: number }) => {
   const color = healthColor(value);
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#F0F2F7" strokeWidth={4} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E6EAF0" strokeWidth={4} />
       <circle
         cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={4}
         strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - value / 100)}
@@ -255,7 +255,7 @@ const DealerNetwork = ({
             </div>
 
             <Card className="overflow-hidden">
-              <div className="hidden grid-cols-[2fr_1fr_1.1fr_1.1fr_0.9fr] gap-3 border-b border-[#F0F2F7] bg-[#FAFBFD] px-5 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#9AA6BC] lg:grid">
+              <div className="hidden grid-cols-[2fr_1fr_1.1fr_1.1fr_0.9fr] gap-3 border-b border-[#E6EAF0] bg-[#FAFBFD] px-5 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#9AA6BC] lg:grid">
                 <span>Dealer</span><span>Status</span><span>Health</span><span>Key metrics</span><span className="text-right">Activity</span>
               </div>
               {loading ? (
@@ -263,13 +263,13 @@ const DealerNetwork = ({
               ) : filtered.length === 0 ? (
                 <div className="px-5 py-10 text-center text-sm text-[#7A879C]">No dealers match this view.</div>
               ) : (
-                <div className="divide-y divide-[#F0F2F7]">
+                <div className="divide-y divide-[#E6EAF0]">
                   {filtered.map(({ t, m, health, status }) => {
                     const sm = STATUS_META[status];
                     return (
                       <button key={t.id} onClick={() => setSelected(t)} className="grid w-full grid-cols-1 gap-3 px-5 py-4 text-left transition hover:bg-[#F8FAFC] lg:grid-cols-[2fr_1fr_1.1fr_1.1fr_0.9fr] lg:items-center">
                         <div className="flex items-center gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-[13px] font-bold text-white">{initials(t.display_name)}</span>
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#6D28D9] text-[13px] font-bold text-white">{initials(t.display_name)}</span>
                           <div className="min-w-0">
                             <div className="truncate text-[14px] font-semibold text-[#06194A]">{t.display_name}</div>
                             <div className="truncate text-[12px] text-[#7A879C]">{tenantDomain(t) || t.dealership_id}</div>
@@ -292,9 +292,9 @@ const DealerNetwork = ({
             <Card className="p-5">
               <SectionLabel>Needs attention</SectionLabel>
               <div className="mt-3 space-y-2">
-                {needsAttention.length === 0 && <p className="text-[13px] text-[#9AA6BC]">All dealers healthy. 🎉</p>}
+                {needsAttention.length === 0 && <p className="text-[13px] text-[#9AA6BC]">All dealers healthy.</p>}
                 {needsAttention.map(({ t, health, status }) => (
-                  <button key={t.id} onClick={() => setSelected(t)} className="flex w-full items-center gap-2.5 rounded-xl border border-[#F0F2F7] px-3 py-2.5 text-left transition hover:border-[#6D28D9]/30">
+                  <button key={t.id} onClick={() => setSelected(t)} className="flex w-full items-center gap-2.5 rounded-xl border border-[#E6EAF0] px-3 py-2.5 text-left transition hover:border-[#6D28D9]/30">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: `${healthColor(health)}1a`, color: healthColor(health) }}>
                       {status === "inactive" ? <Clock className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
                     </span>
@@ -351,7 +351,7 @@ const DealerDrawer = ({
       <div className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col overflow-auto bg-[#F4F6FA] shadow-2xl">
         <div className="flex items-center justify-between border-b border-[#E6EAF0] bg-white px-5 py-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-[13px] font-bold text-white">{initials(tenant.display_name)}</span>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#6D28D9] text-[13px] font-bold text-white">{initials(tenant.display_name)}</span>
             <div><div className="text-[15px] font-bold text-[#06194A]">{tenant.display_name}</div><div className="text-[12px] text-[#7A879C]">{tenant.dealership_id}</div></div>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-[#7A879C] hover:bg-[#F4F6FA]"><X className="h-5 w-5" /></button>
@@ -386,7 +386,7 @@ const DealerDrawer = ({
             <div className="flex items-center justify-between"><SectionLabel>Integrations</SectionLabel><Pill tone="gray">Soon</Pill></div>
             <div className="mt-3 grid grid-cols-2 gap-2">
               {["Twilio", "Email", "Black Book", "Google Reviews", "AI Voice"].map((i) => (
-                <div key={i} className="flex items-center justify-between rounded-lg border border-[#F0F2F7] px-3 py-2 text-[12px] text-[#53627A]"><span>{i}</span><span className="h-2 w-2 rounded-full bg-[#D7DCE5]" /></div>
+                <div key={i} className="flex items-center justify-between rounded-lg border border-[#E6EAF0] px-3 py-2 text-[12px] text-[#53627A]"><span>{i}</span><span className="h-2 w-2 rounded-full bg-[#D7DCE5]" /></div>
               ))}
             </div>
           </Card>

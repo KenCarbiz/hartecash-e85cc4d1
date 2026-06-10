@@ -130,7 +130,7 @@ const AllLeadsV2 = ({ db }: { db: Db }) => {
 
         {/* Table */}
         <Card className="overflow-hidden">
-          <div className="hidden grid-cols-[2fr_1fr_1fr_0.8fr_0.6fr] gap-3 border-b border-[#F0F2F7] bg-[#FAFBFD] px-5 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#9AA6BC] lg:grid">
+          <div className="hidden grid-cols-[2fr_1fr_1fr_0.8fr_0.6fr] gap-3 border-b border-[#E6EAF0] bg-[#FAFBFD] px-5 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#9AA6BC] lg:grid">
             <span>Customer &amp; vehicle</span><span>Status</span><span>Source</span><span className="text-right">Offer</span><span className="text-right">Age</span>
           </div>
           {db.loading ? (
@@ -138,7 +138,7 @@ const AllLeadsV2 = ({ db }: { db: Db }) => {
           ) : rows.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-[#7A879C]">No leads match this view.</div>
           ) : (
-            <div className="divide-y divide-[#F0F2F7]">
+            <div className="divide-y divide-[#E6EAF0]">
               {rows.map((s) => {
                 const vehicle = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ");
                 const offer = s.offered_price || s.estimated_offer_high;
@@ -147,7 +147,7 @@ const AllLeadsV2 = ({ db }: { db: Db }) => {
                 return (
                   <button key={s.id} onClick={() => db.handleView(s)} className="grid w-full grid-cols-1 gap-3 px-5 py-3 text-left transition hover:bg-[#F8FAFC] lg:grid-cols-[2fr_1fr_1fr_0.8fr_0.6fr] lg:items-center">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-[12px] font-bold text-white">{initials(s.name)}</span>
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#6D28D9] text-[12px] font-bold text-white">{initials(s.name)}</span>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 truncate text-[13px] font-semibold text-[#06194A]">{s.name || "Unknown"}{s.is_hot_lead && <Flame className="h-3.5 w-3.5 text-[#B45309]" />}</div>
                         <div className="flex items-center gap-1 truncate text-[12px] text-[#7A879C]"><Car className="h-3 w-3" />{vehicle || "Vehicle pending"}</div>
@@ -164,7 +164,7 @@ const AllLeadsV2 = ({ db }: { db: Db }) => {
           )}
 
           {/* Pagination */}
-          <div className="flex flex-col gap-2 border-t border-[#F0F2F7] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 border-t border-[#E6EAF0] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-[12px] text-[#7A879C]">{rows.length} shown · page {page} of {totalPages} · {db.total.toLocaleString()} total</span>
             <div className="flex items-center gap-2">
               <button onClick={() => db.setPage(Math.max(0, db.page - 1))} disabled={db.page === 0} className="inline-flex items-center gap-1 rounded-lg border border-[#E6EAF0] px-2.5 py-1.5 text-[12px] font-semibold text-[#53627A] disabled:opacity-40 hover:text-[#6D28D9]"><ChevronLeft className="h-3.5 w-3.5" /> Prev</button>

@@ -155,7 +155,7 @@ const ReleaseCenter = ({ canManage }: { canManage: boolean }) => {
                           <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl", iconBg(meta.tone))}>
                             <Icon className="h-5 w-5" />
                           </span>
-                          <span className="mt-2 w-px flex-1 bg-[#F0F2F7]" />
+                          <span className="mt-2 w-px flex-1 bg-[#E6EAF0]" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="text-[11px] font-medium uppercase tracking-wider text-[#9AA6BC]">{fmtDate(e.entry_date)}</div>
@@ -169,7 +169,7 @@ const ReleaseCenter = ({ canManage }: { canManage: boolean }) => {
                             <ul className="mt-2 space-y-1">
                               {(open ? e.items : e.items.slice(0, 3)).map((it, i) => (
                                 <li key={i} className="flex items-start gap-2 text-[13px] text-[#3B4763]">
-                                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r from-[#6D28D9] to-[#0D9488]" />
+                                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#6D28D9]" />
                                   {it}
                                 </li>
                               ))}

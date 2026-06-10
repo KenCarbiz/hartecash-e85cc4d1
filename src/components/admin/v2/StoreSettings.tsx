@@ -95,7 +95,7 @@ const StoreSettings = ({ db }: { db: Db }) => {
                 onClick={() => setTab(c.key)}
                 className="flex items-start gap-4 rounded-2xl border border-[#E6EAF0] bg-white p-5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-[#6D28D9]/30 hover:shadow-[0_10px_30px_-12px_rgba(15,23,42,0.18)]"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-white"><c.icon className="h-5 w-5" /></span>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EEF0FF] text-[#6D28D9]"><c.icon className="h-5 w-5" /></span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 text-[15px] font-bold text-[#06194A]">{c.label}<ArrowRight className="h-3.5 w-3.5 text-[#C9B8F0]" /></div>
                   <p className="mt-1 text-[13px] text-[#53627A]">{c.desc}</p>

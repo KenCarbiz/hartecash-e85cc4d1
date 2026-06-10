@@ -32,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
-  PageShell, Card, SectionLabel, Pill, StatCard, PrimaryButton, SecondaryButton,
+  PageShell, Card, SectionLabel, Pill, StatCard, PrimaryButton, SecondaryButton, PreviewBadge as SoonChip,
 } from "./theme";
 import { useMyRewards, type RewardRule } from "./useMyRewards";
 
@@ -57,7 +57,6 @@ const TABS: { key: TabKey; label: string; icon: typeof LayoutGrid }[] = [
   { key: "settings", label: "Settings", icon: SettingsIcon },
 ];
 
-const SoonChip = () => <Pill tone="gray">Soon</Pill>;
 
 const DEFAULT_RULES: RewardRule[] = [
   { event_type: "vehicle_acquired", reward_type: "flat", amount: 250, config: {} },
@@ -271,7 +270,7 @@ const MyBusiness = ({ staffName, userEmail }: { staffName: string; userEmail?: s
           <Card className="p-6">
             <SectionLabel>My personal brand</SectionLabel>
             <div className="mt-3 flex flex-wrap items-center gap-4">
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-[18px] font-bold text-white">{initials}</span>
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#6D28D9] text-[18px] font-bold text-white">{initials}</span>
               <div className="flex-1 min-w-[200px]">
                 <div className="text-[18px] font-bold text-[#06194A]">{staffName || repCode || "Your name"}</div>
                 <div className="text-[13px] text-[#53627A]">Vehicle Acquisition Specialist · {tenant.display_name}</div>
@@ -370,7 +369,7 @@ const MyBusiness = ({ staffName, userEmail }: { staffName: string; userEmail?: s
               ].map((st) => {
                 const cards = people.filter((r) => (r.status === "converted" || r.status === "rewarded" ? "sold" : "visitor") === st.key);
                 return (
-                  <div key={st.key} className="rounded-xl border border-[#F0F2F7] bg-[#FAFBFD] p-2">
+                  <div key={st.key} className="rounded-xl border border-[#E6EAF0] bg-[#FAFBFD] p-2">
                     <div className="mb-2 flex items-center justify-between px-1"><span className="text-[11px] font-bold uppercase tracking-wider text-[#9AA6BC]">{st.label}</span><span className="text-[11px] font-semibold text-[#7A879C]">{cards.length}</span></div>
                     <div className="space-y-1.5">
                       {!st.real && cards.length === 0 && <div className="rounded-lg border border-dashed border-[#E6EAF0] px-2 py-3 text-center text-[10px] text-[#C2CAD8]">Soon</div>}
@@ -398,7 +397,7 @@ const MyBusiness = ({ staffName, userEmail }: { staffName: string; userEmail?: s
             {people.map((r) => {
               const sold = r.status === "converted" || r.status === "rewarded";
               return (
-                <div key={r.id} className="flex items-center gap-3 border-b border-[#F0F2F7] pb-3 last:border-0">
+                <div key={r.id} className="flex items-center gap-3 border-b border-[#E6EAF0] pb-3 last:border-0">
                   <span className={cn("flex h-8 w-8 items-center justify-center rounded-full", sold ? "bg-[#E8F8EE] text-[#0F7A3E]" : "bg-[#F3F0FF] text-[#6D28D9]")}>{sold ? <CheckCircle2 className="h-4 w-4" /> : <Clock className="h-4 w-4" />}</span>
                   <div className="flex-1"><span className="text-[13px] text-[#06194A]"><span className="font-semibold">{r.referrer_name || r.referred_name || "A referral"}</span> {sold ? "purchased a vehicle" : "is in progress"}</span><div className="text-[11px] text-[#9AA6BC]">{relTime(r.created_at)}</div></div>
                 </div>
@@ -412,7 +411,7 @@ const MyBusiness = ({ staffName, userEmail }: { staffName: string; userEmail?: s
       {tab === "performance" && (
         <Card className="overflow-hidden">
           <div className="px-5 py-4"><SectionLabel>Source analytics</SectionLabel><div className="mt-1 text-[15px] font-semibold text-[#06194A]">Opportunity generation by channel</div></div>
-          <div className="overflow-x-auto border-t border-[#F0F2F7]">
+          <div className="overflow-x-auto border-t border-[#E6EAF0]">
             <div className="min-w-[440px]">
             <div className="grid grid-cols-[1.4fr_repeat(3,1fr)] gap-2 bg-[#FAFBFD] px-5 py-2 text-[10px] font-bold uppercase tracking-wider text-[#9AA6BC]"><span>Source</span><span className="text-right">Volume</span><span className="text-right">Acquired</span><span className="text-right">Conv.</span></div>
             <SourceRow name="Referral" volume={people.length} acquired={k.sold} />
@@ -445,13 +444,13 @@ const MyBusiness = ({ staffName, userEmail }: { staffName: string; userEmail?: s
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FCEFC7] text-[#B45309]"><Target className="h-5 w-5" /></span>
                 <div><div className="text-[13px] font-semibold text-[#06194A]">{acquisitions} acquisition{acquisitions === 1 ? "" : "s"}</div><div className="text-[11px] text-[#7A879C]">{rewards?.next_tier ? `${rewards.to_next_tier} more to ${rewards.next_tier}` : "Keep acquiring to climb tiers"}</div></div>
               </div>
-              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#F0F2F7]"><div className="h-full rounded-full bg-gradient-to-r from-[#6D28D9] to-[#0D9488]" style={{ width: `${Math.min(100, (acquisitions / 11) * 100)}%` }} /></div>
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#E6EAF0]"><div className="h-full rounded-full bg-[#6D28D9]" style={{ width: `${Math.min(100, (acquisitions / 11) * 100)}%` }} /></div>
               <div className="mt-2 flex justify-between text-[10px] text-[#9AA6BC]"><span>Bronze</span><span>Silver · 3</span><span>Gold · 6</span><span>Platinum · 11</span></div>
             </Card>
 
             <Card className="p-5">
               <div className="flex items-center justify-between"><SectionLabel>Reward rules</SectionLabel>{!rewardsReal && <SoonChip />}</div>
-              <div className="mt-3 divide-y divide-[#F0F2F7]">
+              <div className="mt-3 divide-y divide-[#E6EAF0]">
                 {rules.map((r) => (
                   <div key={r.event_type} className="flex items-center justify-between py-2.5 text-[13px]"><span className="text-[#3B4763]">{eventLabel(r.event_type)}</span><span className="font-semibold text-[#0F7A3E]">{money(r.amount)}{r.reward_type !== "flat" ? ` · ${r.reward_type}` : ""}</span></div>
                 ))}
@@ -467,7 +466,7 @@ const MyBusiness = ({ staffName, userEmail }: { staffName: string; userEmail?: s
                 const me = l.email === staffEmail;
                 return (
                   <div key={l.email} className={cn("flex items-center gap-3 rounded-xl px-3 py-2", me && "bg-[#F3F0FF]")}>
-                    <span className={cn("flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold", i === 0 ? "bg-[#FCEFC7] text-[#B45309]" : "bg-[#F0F2F7] text-[#7A879C]")}>{i + 1}</span>
+                    <span className={cn("flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold", i === 0 ? "bg-[#FCEFC7] text-[#B45309]" : "bg-[#E6EAF0] text-[#7A879C]")}>{i + 1}</span>
                     <span className="flex-1 truncate text-[13px] font-medium text-[#06194A]">{l.email.split("@")[0]}{me && " (you)"}</span>
                     <span className="text-[13px] font-semibold text-[#6D28D9]">{l.sold} sold</span>
                   </div>
@@ -517,7 +516,7 @@ const Template = ({ icon, title, body, action }: { icon: React.ReactNode; title:
 );
 
 const SourceRow = ({ name, volume, acquired, soon }: { name: string; volume: number | null; acquired: number | null; soon?: boolean }) => (
-  <div className="grid grid-cols-[1.4fr_repeat(3,1fr)] items-center gap-2 border-t border-[#F0F2F7] px-5 py-3 text-[13px]">
+  <div className="grid grid-cols-[1.4fr_repeat(3,1fr)] items-center gap-2 border-t border-[#E6EAF0] px-5 py-3 text-[13px]">
     <span className="flex items-center gap-1.5 font-semibold text-[#06194A]">{name}{soon && <SoonChip />}</span>
     <span className="text-right text-[#3B4763]">{volume ?? "—"}</span>
     <span className="text-right text-[#3B4763]">{acquired ?? "—"}</span>
