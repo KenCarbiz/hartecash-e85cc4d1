@@ -90,7 +90,7 @@ const DEFAULT_MODEL: PricingModelRow = {
   bundle_overrides: {},
 };
 
-const PlatformPricingManager = () => {
+const PlatformPricingManager = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { products, bundles, tiers } = usePlatform();
   const { toast } = useToast();
 
@@ -481,6 +481,8 @@ const PlatformPricingManager = () => {
     <div className="space-y-8 pb-28">
       {/* Header */}
       <div>
+        {!embedded && (
+        <>
         <h2 className="text-lg font-semibold text-card-foreground tracking-tight">
           Pricing Model
         </h2>
@@ -490,6 +492,8 @@ const PlatformPricingManager = () => {
           percentage off. The annual-equivalent monthly price and multiplier
           recompute live.
         </p>
+        </>
+        )}
         <div className="mt-3 flex items-start gap-2 rounded-xl border border-success/30 bg-success/5 px-3 py-2 text-xs text-success dark:text-success max-w-2xl">
           <span className="w-2 h-2 rounded-full bg-success mt-1 shrink-0 animate-pulse" />
           <p className="leading-snug">
