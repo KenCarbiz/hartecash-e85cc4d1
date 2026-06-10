@@ -178,6 +178,7 @@ const AdminDashboardV2 = () => {
             userName={db.userName}
             userRole={db.userRole}
             dealerName={db.tenant.display_name}
+            onNavigateSection={goToSection}
             onOpenMobileNav={() => setMobileNavOpen(true)}
             onLogout={async () => {
               await supabase.auth.signOut();
