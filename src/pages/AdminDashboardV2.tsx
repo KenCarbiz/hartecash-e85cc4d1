@@ -49,6 +49,7 @@ import ExportDataV2 from "@/components/admin/v2/ExportDataV2";
 import StaffV2 from "@/components/admin/v2/StaffV2";
 import ProspectDemoV2 from "@/components/admin/v2/ProspectDemoV2";
 import StripeWebhooksV2 from "@/components/admin/v2/StripeWebhooksV2";
+import SystemSettingsV2 from "@/components/admin/v2/SystemSettingsV2";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -133,7 +134,8 @@ const AdminDashboardV2 = () => {
   const onStaff = baseSectionId === "staff";
   const onProspectDemo = baseSectionId === "prospect-demo";
   const onStripeWebhooks = baseSectionId === "stripe-webhooks";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports || onMarketing || onIntegrations || onGroups || onExport || onStaff || onProspectDemo || onStripeWebhooks;
+  const onSystemSettings = baseSectionId === "system-settings";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports || onMarketing || onIntegrations || onGroups || onExport || onStaff || onProspectDemo || onStripeWebhooks || onSystemSettings;
 
   return (
     <PlatformProvider>
@@ -224,6 +226,8 @@ const AdminDashboardV2 = () => {
                   <ProspectDemoV2 />
                 ) : onStripeWebhooks ? (
                   <StripeWebhooksV2 />
+                ) : onSystemSettings ? (
+                  <SystemSettingsV2 />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
                     onNavigate={db.setActiveSection}

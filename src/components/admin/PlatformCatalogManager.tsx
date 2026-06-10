@@ -22,7 +22,7 @@ import { Boxes, Package, Sparkles } from "lucide-react";
  * right. Matches the app's SiteConfiguration aesthetic (light card,
  * subtle border, tracking-tight titles).
  */
-const PlatformCatalogManager = () => {
+const PlatformCatalogManager = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { products, bundles, refreshCatalog } = usePlatform();
   const { toast } = useToast();
   const [busy, setBusy] = useState<string | null>(null);
@@ -64,6 +64,7 @@ const PlatformCatalogManager = () => {
 
   return (
     <div className="space-y-6">
+      {!embedded && (
       <div>
         <h2 className="text-lg font-semibold text-card-foreground tracking-tight">
           Platform Catalog
@@ -74,6 +75,7 @@ const PlatformCatalogManager = () => {
           existing subscribers keep their access.
         </p>
       </div>
+      )}
 
       {/* Apps */}
       <Card>
