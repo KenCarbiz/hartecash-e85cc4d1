@@ -4345,6 +4345,81 @@ export type Database = {
           },
         ]
       }
+      reward_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          dealership_id: string
+          event_type: string
+          id: string
+          paid_at: string | null
+          reference_id: string | null
+          source: string | null
+          staff_email: string
+          status: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          dealership_id?: string
+          event_type: string
+          id?: string
+          paid_at?: string | null
+          reference_id?: string | null
+          source?: string | null
+          staff_email: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          dealership_id?: string
+          event_type?: string
+          id?: string
+          paid_at?: string | null
+          reference_id?: string | null
+          source?: string | null
+          staff_email?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      reward_rules: {
+        Row: {
+          active: boolean
+          amount: number
+          config: Json
+          created_at: string
+          dealership_id: string
+          event_type: string
+          id: string
+          reward_type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount?: number
+          config?: Json
+          created_at?: string
+          dealership_id?: string
+          event_type: string
+          id?: string
+          reward_type?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          config?: Json
+          created_at?: string
+          dealership_id?: string
+          event_type?: string
+          id?: string
+          reward_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rooftop_activations: {
         Row: {
           activated_at: string
@@ -7503,6 +7578,7 @@ export type Database = {
           vin: string
         }[]
       }
+      get_my_rewards: { Args: { p_dealership_id: string }; Returns: Json }
       get_objection_playbook_for_voice: {
         Args: { _dealership_id?: string }
         Returns: string
