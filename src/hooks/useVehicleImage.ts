@@ -30,6 +30,70 @@ export interface VehicleImageState {
   source: string | null;
 }
 
+// ── Request coalescing + throttling ──────────────────────────────────
+// Vehicle images are rendered in grids/lists where many cards mount at
+// once. Without coordination each card fires its own edge-function
+// invocation, bursting past the platform's per-function rate limit and
+// returning 429 ("Too many requests"). To prevent that:
+//   • successCache  — resolved URLs are reused forever (per session);
+//   • inflight      — concurrent callers for the same key share ONE call;
+//   • failUntil     — a key that just failed (429/error) is suppressed
+//                     for FAIL_TTL so re-renders don't re-hammer it;
+//   • a small concurrency gate caps simultaneous invocations.
+// All of this only reduces calls — results are identical to before.
+type Settled = { url: string | null; source: string | null };
+const successCache = new Map<string, Settled>();
+const inflight = new Map<string, Promise<Settled>>();
+const failUntil = new Map<string, number>();
+const FAIL_TTL = 60_000;
+const MAX_CONCURRENT = 4;
+let active = 0;
+const waiting: (() => void)[] = [];
+function runGated<T>(fn: () => Promise<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const exec = () => {
+      active++;
+      fn().then(resolve, reject).finally(() => {
+        active--;
+        const next = waiting.shift();
+        if (next) next();
+      });
+    };
+    if (active < MAX_CONCURRENT) exec();
+    else waiting.push(exec);
+  });
+}
+
+async function resolveVehicleImage(key: string, body: Record<string, unknown>): Promise<Settled> {
+  const cached = successCache.get(key);
+  if (cached) return cached;
+  const existing = inflight.get(key);
+  if (existing) return existing;
+  const failedAt = failUntil.get(key);
+  if (failedAt && Date.now() < failedAt) return { url: null, source: null };
+
+  const p = runGated(async (): Promise<Settled> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-vehicle-image", { body });
+      if (error || !data?.image_url) {
+        failUntil.set(key, Date.now() + FAIL_TTL);
+        return { url: null, source: null };
+      }
+      const result: Settled = { url: data.image_url as string, source: (data.source as string) ?? null };
+      successCache.set(key, result);
+      failUntil.delete(key);
+      return result;
+    } catch {
+      failUntil.set(key, Date.now() + FAIL_TTL);
+      return { url: null, source: null };
+    } finally {
+      inflight.delete(key);
+    }
+  });
+  inflight.set(key, p);
+  return p;
+}
+
 /**
  * Loading-aware variant of {@link useVehicleImage}. Distinguishes the
  * "still resolving" state from "resolved but empty / failed" so callers
@@ -53,52 +117,50 @@ export function useVehicleImageState(
   color?: string | null,
 ): VehicleImageState {
   const hasInputs = !!(year && make && model);
-  const [state, setState] = useState<VehicleImageState>(() => ({
-    url: null,
-    loading: hasInputs,
-    source: null,
-  }));
 
   // Stable key so we don't re-fetch on every render. Strings normalize
   // away nullish + whitespace so equivalent inputs hit the same key.
   const key = [year, make, model, vin, uvc, studioOnly, angle, color].map((v) => String(v ?? "").trim().toLowerCase()).join("|");
+
+  // Hydrate synchronously from the session cache so a re-render or a
+  // sibling card that already resolved this vehicle paints instantly
+  // (and never re-invokes the function).
+  const [state, setState] = useState<VehicleImageState>(() => {
+    if (hasInputs) {
+      const cached = successCache.get(key);
+      if (cached) return { url: cached.url, loading: false, source: cached.source };
+    }
+    return { url: null, loading: hasInputs, source: null };
+  });
 
   useEffect(() => {
     if (!year || !make || !model) {
       setState({ url: null, loading: false, source: null });
       return;
     }
+    const cached = successCache.get(key);
+    if (cached) {
+      setState({ url: cached.url, loading: false, source: cached.source });
+      return;
+    }
     let cancelled = false;
     setState({ url: null, loading: true, source: null });
-    (async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("generate-vehicle-image", {
-          body: {
-            year: String(year),
-            make,
-            model,
-            angle,
-            // Prefer the real photo of the customer's exact vehicle when
-            // studioOnly is false (Black Book by VIN → Wikipedia → AI);
-            // otherwise force a clean white-background studio render.
-            studio_only: studioOnly,
-            vin: vin || undefined,
-            uvc: uvc || undefined,
-            color: color || undefined,
-            submission_token: submissionToken || undefined,
-          },
-        });
-        if (cancelled) return;
-        if (error || !data?.image_url) {
-          setState({ url: null, loading: false, source: null });
-          return;
-        }
-        setState({ url: data.image_url as string, loading: false, source: (data.source as string) ?? null });
-      } catch {
-        if (cancelled) return;
-        setState({ url: null, loading: false, source: null });
-      }
-    })();
+    resolveVehicleImage(key, {
+      year: String(year),
+      make,
+      model,
+      angle,
+      // Prefer the real photo of the customer's exact vehicle when
+      // studioOnly is false (Black Book by VIN → Wikipedia → AI);
+      // otherwise force a clean white-background studio render.
+      studio_only: studioOnly,
+      vin: vin || undefined,
+      uvc: uvc || undefined,
+      color: color || undefined,
+      submission_token: submissionToken || undefined,
+    }).then((res) => {
+      if (!cancelled) setState({ url: res.url, loading: false, source: res.source });
+    });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
