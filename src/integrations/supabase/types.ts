@@ -7590,6 +7590,29 @@ export type Database = {
         Args: { _dealership_id?: string }
         Returns: string
       }
+      get_reengagement_targets: {
+        Args: {
+          p_dealership_id: string
+          p_expiring_threshold_days?: number
+          p_limit?: number
+          p_reengage_window_days?: number
+        }
+        Returns: {
+          bucket: string
+          created_at: string
+          days_left: number
+          id: string
+          name: string
+          offer_expires_at: string
+          offered_price: number
+          progress_status: string
+          status_updated_at: string
+          token: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_year: string
+        }[]
+      }
       get_submission_activity: {
         Args: { _token: string }
         Returns: {
