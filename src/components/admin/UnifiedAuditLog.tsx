@@ -82,7 +82,7 @@ function rowsToCSV(rows: AuditRow[]): string {
  * One-click CSV export of the visible rows for handing to legal,
  * an OEM auditor, or a board pack.
  */
-const UnifiedAuditLog = () => {
+const UnifiedAuditLog = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { toast } = useToast();
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -291,12 +291,14 @@ const UnifiedAuditLog = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
+        {!embedded && (
         <div>
           <h2 className="text-lg font-semibold text-card-foreground">Audit Log</h2>
           <p className="text-sm text-muted-foreground">
             Last 30 days across view-as sessions, rooftop ops, data exports, and Stripe events.
           </p>
         </div>
+        )}
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={exportCSV} disabled={filtered.length === 0}>
             <Download className="w-3.5 h-3.5 mr-1.5" />
