@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { PageShell, Card, SectionLabel, Pill, StatCard, PrimaryButton, SecondaryButton } from "./theme";
+import { PageShell, Card, SectionLabel, Pill, StatCard, PrimaryButton, SecondaryButton, Loading } from "./theme";
 
 const TenantManagement = lazy(() => import("@/components/admin/TenantManagement"));
 
@@ -226,7 +226,7 @@ const DealerNetwork = ({
           <Card className="p-5">
             <SectionLabel>Manage dealers</SectionLabel>
             <div className="mt-3">
-              <Suspense fallback={<div className="py-8 text-center text-sm text-[#7A879C]">Loading manager…</div>}>
+              <Suspense fallback={<Loading label="Loading manager…" />}>
                 <TenantManagement onSetupDealer={(id) => onSetupDealer(id, tenants.find((t) => t.dealership_id === id)?.display_name || id)} />
               </Suspense>
             </div>
@@ -259,7 +259,7 @@ const DealerNetwork = ({
                 <span>Dealer</span><span>Status</span><span>Health</span><span>Key metrics</span><span className="text-right">Activity</span>
               </div>
               {loading ? (
-                <div className="px-5 py-10 text-center text-sm text-[#7A879C]">Loading dealer network…</div>
+                <Loading label="Loading dealer network…" className="px-5" />
               ) : filtered.length === 0 ? (
                 <div className="px-5 py-10 text-center text-sm text-[#7A879C]">No dealers match this view.</div>
               ) : (

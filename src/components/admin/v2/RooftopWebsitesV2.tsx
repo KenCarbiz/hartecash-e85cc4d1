@@ -5,13 +5,13 @@
  * V2-only.
  */
 import { lazy, Suspense } from "react";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const RooftopWebsites = lazy(() => import("@/components/admin/RooftopWebsites"));
 
 const RooftopWebsitesV2 = () => (
   <PageShell title="Rooftop Websites" subtitle="Give each rooftop its own URL and landing page — all rooftops share this admin, leads, and staff.">
-    <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+    <Suspense fallback={<Loading />}>
       <RooftopWebsites embedded />
     </Suspense>
   </PageShell>

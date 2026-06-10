@@ -23,11 +23,49 @@ import { cn } from "@/lib/utils";
 export const V2 = {
   ink: "#06194A",
   muted: "#53627A",
+  subtle: "#7A879C",
   line: "#E6EAF0",
   canvas: "#F4F6FA",
   purple: "#6D28D9",
   teal: "#0D9488",
 } as const;
+
+/**
+ * Suspense / lazy-load fallback used across every V2 surface. Replaces
+ * the ~19 hand-copied `<div className="py-10 text-center text-sm
+ * text-[#7A879C]">Loading…</div>` blocks so the muted colour and copy
+ * live in exactly one place.
+ */
+export const Loading = ({ label = "Loading…", className = "" }: { label?: string; className?: string }) => (
+  <div className={cn("py-10 text-center text-sm text-[#7A879C]", className)}>{label}</div>
+);
+
+/**
+ * Calm, consistent empty-state block — optional icon, a one-line title,
+ * and an optional hint. Standardises the per-page ad-hoc empty strings.
+ */
+export const EmptyState = ({
+  icon,
+  title,
+  hint,
+  className = "",
+}: {
+  icon?: ReactNode;
+  title: ReactNode;
+  hint?: ReactNode;
+  className?: string;
+}) => (
+  <div className={cn("flex flex-col items-center justify-center gap-2 px-5 py-12 text-center", className)}>
+    {icon && <span className="text-[#9AA6BC]">{icon}</span>}
+    <p className="text-sm font-medium text-[#53627A]">{title}</p>
+    {hint && <p className="text-[13px] text-[#7A879C]">{hint}</p>}
+  </div>
+);
+
+/** Single canonical "not yet wired" marker for preview features. */
+export const PreviewBadge = ({ children = "Soon" }: { children?: ReactNode }) => (
+  <Pill tone="gray">{children}</Pill>
+);
 
 /** Animated page wrapper with a title / subtitle / actions row. */
 export const PageShell = ({

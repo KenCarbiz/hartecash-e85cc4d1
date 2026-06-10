@@ -4,13 +4,13 @@
  * so promotions / referrals / testimonials are all preserved. V2-only.
  */
 import { lazy, Suspense } from "react";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const MarketingHub = lazy(() => import("@/components/admin/MarketingHub"));
 
 const MarketingV2 = ({ initialTab = "promotions" }: { initialTab?: "promotions" | "referrals" | "testimonials" }) => (
   <PageShell title="Marketing" subtitle="Promotions, referrals, and testimonials — your customer-acquisition content.">
-    <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+    <Suspense fallback={<Loading />}>
       <MarketingHub initialTab={initialTab} embedded />
     </Suspense>
   </PageShell>

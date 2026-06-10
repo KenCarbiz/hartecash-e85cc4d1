@@ -4,13 +4,13 @@
  * V2 PageShell. Full logic preserved. V2-only.
  */
 import { lazy, Suspense } from "react";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const StaffManagement = lazy(() => import("@/components/admin/StaffManagement"));
 
 const StaffV2 = () => (
   <PageShell title="Staff & Permissions" subtitle="Invite teammates, set roles, and control what each person can access.">
-    <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+    <Suspense fallback={<Loading />}>
       <StaffManagement />
     </Suspense>
   </PageShell>

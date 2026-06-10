@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import type { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import type { Appointment } from "@/lib/adminConstants";
-import { PageShell, Card, SectionLabel, Pill, StatCard, PrimaryButton } from "./theme";
+import { PageShell, Card, SectionLabel, Pill, StatCard, PrimaryButton, Loading } from "./theme";
 
 const AppointmentManager = lazy(() => import("@/components/admin/AppointmentManager"));
 
@@ -94,7 +94,7 @@ const AppointmentsView = ({ db }: { db: Db }) => {
           <Card className="p-5">
             <SectionLabel>Manage appointments</SectionLabel>
             <div className="mt-3">
-              <Suspense fallback={<div className="py-8 text-center text-sm text-[#7A879C]">Loading manager…</div>}>
+              <Suspense fallback={<Loading label="Loading manager…" />}>
                 <AppointmentManager
                   appointments={db.appointments}
                   setAppointments={db.setAppointments}

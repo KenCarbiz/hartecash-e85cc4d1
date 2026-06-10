@@ -5,13 +5,13 @@
  * preserved). V2-only.
  */
 import { lazy, Suspense } from "react";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const EmbedToolkit = lazy(() => import("@/components/admin/EmbedToolkit"));
 
 const WebsiteEmbedV2 = () => (
   <PageShell title="Website Embed" subtitle="Embed Autocurb into the dealership website to convert existing traffic into trade-in leads — customers never leave the dealer site.">
-    <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+    <Suspense fallback={<Loading />}>
       <EmbedToolkit embedded />
     </Suspense>
   </PageShell>

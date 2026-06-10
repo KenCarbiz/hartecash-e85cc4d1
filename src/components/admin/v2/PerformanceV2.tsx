@@ -12,7 +12,7 @@ import type { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { canViewExecutiveHUD } from "@/lib/adminConstants";
 import { cn } from "@/lib/utils";
 import ExecutiveKPIHub from "@/components/admin/ExecutiveKPIHub";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const ExecutiveHUD = lazy(() => import("@/components/admin/ExecutiveHUD"));
 const BDCHealthPanel = lazy(() => import("@/components/admin/BDCHealthPanel"));
@@ -59,7 +59,7 @@ const PerformanceV2 = ({ db, initialTab = "kpi" }: { db: Db; initialTab?: Tab })
         </div>
       )}
 
-      <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+      <Suspense fallback={<Loading />}>
         {tab === "kpi" && <ExecutiveKPIHub />}
         {tab === "hud" && showHud && <ExecutiveHUD onDrillDown={hudDrill} />}
         {tab === "bdc" && showBdcHealth && <BDCHealthPanel />}

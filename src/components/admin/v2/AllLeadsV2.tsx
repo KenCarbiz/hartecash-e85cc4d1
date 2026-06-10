@@ -18,7 +18,7 @@ import {
   ACCEPTED_WITH_APPOINTMENT_STATUSES, type Submission,
 } from "@/lib/adminConstants";
 import { cn } from "@/lib/utils";
-import { PageShell, Card, Pill, StatCard } from "./theme";
+import { PageShell, Card, Pill, StatCard, Loading } from "./theme";
 
 type Db = ReturnType<typeof useAdminDashboard>;
 
@@ -134,7 +134,7 @@ const AllLeadsV2 = ({ db }: { db: Db }) => {
             <span>Customer &amp; vehicle</span><span>Status</span><span>Source</span><span className="text-right">Offer</span><span className="text-right">Age</span>
           </div>
           {db.loading ? (
-            <div className="px-5 py-10 text-center text-sm text-[#7A879C]">Loading leads…</div>
+            <Loading label="Loading leads…" className="px-5" />
           ) : rows.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-[#7A879C]">No leads match this view.</div>
           ) : (

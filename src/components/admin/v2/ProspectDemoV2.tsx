@@ -4,13 +4,13 @@
  * Full logic preserved. V2-only.
  */
 import { lazy, Suspense } from "react";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const ProspectDemo = lazy(() => import("@/components/admin/ProspectDemo"));
 
 const ProspectDemoV2 = () => (
   <PageShell title="Prospect Demo" subtitle="Spin up a branded demo environment to show a prospective dealer.">
-    <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+    <Suspense fallback={<Loading />}>
       <ProspectDemo />
     </Suspense>
   </PageShell>

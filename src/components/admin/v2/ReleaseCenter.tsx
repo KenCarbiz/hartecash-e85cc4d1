@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { PageShell, Card, SectionLabel, Pill, StatCard, SecondaryButton } from "./theme";
+import { PageShell, Card, SectionLabel, Pill, StatCard, SecondaryButton, Loading } from "./theme";
 
 const ChangelogManagement = lazy(() => import("@/components/admin/ChangelogManagement"));
 
@@ -119,7 +119,7 @@ const ReleaseCenter = ({ canManage }: { canManage: boolean }) => {
           <Card className="p-5">
             <SectionLabel>Manage releases</SectionLabel>
             <div className="mt-3">
-              <Suspense fallback={<div className="py-8 text-center text-sm text-[#7A879C]">Loading editor…</div>}>
+              <Suspense fallback={<Loading label="Loading editor…" />}>
                 <ChangelogManagement />
               </Suspense>
             </div>

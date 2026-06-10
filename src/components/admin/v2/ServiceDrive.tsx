@@ -20,7 +20,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { ACCEPTED_WITH_APPOINTMENT_STATUSES, getStatusLabel } from "@/lib/adminConstants";
-import { PageShell, Card, SectionLabel, Pill, StatCard, PrimaryButton } from "./theme";
+import { PageShell, Card, SectionLabel, Pill, StatCard, PrimaryButton, Loading } from "./theme";
 
 type Db = ReturnType<typeof useAdminDashboard>;
 const APPT = new Set<string>(ACCEPTED_WITH_APPOINTMENT_STATUSES);
@@ -170,7 +170,7 @@ const ServiceDrive = ({ db, onNavigate }: { db: Db; onNavigate: (key: string) =>
               <button onClick={drillToLeads} className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#6D28D9] hover:underline">View all <ArrowRight className="h-3.5 w-3.5" /></button>
             </div>
             <div className="divide-y divide-[#F0F2F7] border-t border-[#F0F2F7]">
-              {loading && <div className="px-5 py-8 text-center text-sm text-[#7A879C]">Loading…</div>}
+              {loading && <Loading className="px-5" />}
               {!loading && rows.length === 0 && <div className="px-5 py-8 text-center text-sm text-[#7A879C]">No service-drive opportunities yet. Start one above.</div>}
               {rows.slice(0, 6).map((r) => {
                 const vehicle = [r.vehicle_year, r.vehicle_make, r.vehicle_model].filter(Boolean).join(" ");

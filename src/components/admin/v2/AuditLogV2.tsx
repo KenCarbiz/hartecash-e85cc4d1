@@ -5,13 +5,13 @@
  * preserved). V2-only.
  */
 import { lazy, Suspense } from "react";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const UnifiedAuditLog = lazy(() => import("@/components/admin/UnifiedAuditLog"));
 
 const AuditLogV2 = () => (
   <PageShell title="Audit Log" subtitle="Last 30 days across view-as sessions, rooftop ops, data exports, and Stripe events.">
-    <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading…</div>}>
+    <Suspense fallback={<Loading />}>
       <UnifiedAuditLog embedded />
     </Suspense>
   </PageShell>

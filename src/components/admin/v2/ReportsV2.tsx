@@ -7,13 +7,13 @@
  * preserved verbatim. V2-only; V1 untouched.
  */
 import { lazy, Suspense } from "react";
-import { PageShell } from "./theme";
+import { PageShell, Loading } from "./theme";
 
 const ReportsExport = lazy(() => import("@/components/admin/ReportsExport"));
 
 const ReportsV2 = () => (
   <PageShell title="Reports" subtitle="Generate filtered reports, preview the data, and export to CSV.">
-    <Suspense fallback={<div className="py-10 text-center text-sm text-[#7A879C]">Loading reports…</div>}>
+    <Suspense fallback={<Loading label="Loading reports…" />}>
       <ReportsExport embedded />
     </Suspense>
   </PageShell>

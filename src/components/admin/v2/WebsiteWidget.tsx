@@ -26,7 +26,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { cn } from "@/lib/utils";
-import { PageShell, Card, SectionLabel, Pill, StatCard, SecondaryButton } from "./theme";
+import { PageShell, Card, SectionLabel, Pill, StatCard, SecondaryButton, Loading } from "./theme";
 import InstallPanel from "./InstallPanel";
 
 const TradeWidgetAdmin = lazy(() => import("@/components/admin/TradeWidgetAdmin"));
@@ -223,7 +223,7 @@ const WebsiteWidget = ({ db }: { db: Db; onNavigate: (key: string) => void }) =>
           <Card className="p-5">
             <SectionLabel>Advanced settings &amp; embed variants</SectionLabel>
             <div className="mt-3">
-              <Suspense fallback={<div className="py-8 text-center text-sm text-[#7A879C]">Loading widget settings…</div>}>
+              <Suspense fallback={<Loading label="Loading widget settings…" />}>
                 <TradeWidgetAdmin />
               </Suspense>
             </div>
