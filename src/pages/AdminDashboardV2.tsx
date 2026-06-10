@@ -40,6 +40,7 @@ import ReEngagement from "@/components/admin/v2/ReEngagement";
 import AllLeadsV2 from "@/components/admin/v2/AllLeadsV2";
 import AppraiserQueueV2 from "@/components/admin/v2/AppraiserQueueV2";
 import BdcQueueV2 from "@/components/admin/v2/BdcQueueV2";
+import PerformanceV2 from "@/components/admin/v2/PerformanceV2";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -115,7 +116,8 @@ const AdminDashboardV2 = () => {
   const onAllLeads = baseSectionId === "submissions";
   const onAppraiserQueue = baseSectionId === "appraiser-queue";
   const onBdcQueue = baseSectionId === "bdc-hub" || baseSectionId === "bdc-queue" || baseSectionId === "bdc-calls";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue;
+  const onPerformance = ["performance", "executive", "gm-hud", "bdc-health", "manager-dispatch"].includes(baseSectionId);
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance;
 
   return (
     <PlatformProvider>
@@ -184,6 +186,11 @@ const AdminDashboardV2 = () => {
                   <BdcQueueV2
                     initialTab={baseSectionId === "bdc-calls" ? "calls" : "priority"}
                     onOpenSubmission={(id) => { const s = db.submissions.find((x) => x.id === id); if (s) db.handleView(s); }}
+                  />
+                ) : onPerformance ? (
+                  <PerformanceV2
+                    db={db}
+                    initialTab={baseSectionId === "gm-hud" ? "hud" : baseSectionId === "bdc-health" ? "bdc" : baseSectionId === "manager-dispatch" ? "dispatch" : "kpi"}
                   />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
