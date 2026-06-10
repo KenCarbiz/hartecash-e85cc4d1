@@ -756,7 +756,7 @@ window.addEventListener("message", function(e) {
 
       {/* ── Code Snippets ── */}
       <Tabs defaultValue="inventory" className="w-full">
-        <TabsList className={`grid w-full ${pptEnabled ? "grid-cols-10" : "grid-cols-9"}`}>
+        <TabsList className={`flex h-auto w-full flex-wrap gap-1 md:grid md:h-10 ${pptEnabled ? "md:grid-cols-10" : "md:grid-cols-9"}`}>
           <TabsTrigger value="inventory" className="gap-1.5 text-xs">
             <Sparkles className="w-3.5 h-3.5" /> Inventory-Aware
           </TabsTrigger>

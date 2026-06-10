@@ -40,7 +40,7 @@ const AdminHeaderV2 = ({ userName, userRole, dealerName, onLogout, onOpenMobileN
       <button
         type="button"
         onClick={onOpenMobileNav}
-        className="rounded-lg p-2 text-[#53627A] hover:bg-[#F4F6FA] md:hidden"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#53627A] hover:bg-[#F4F6FA] md:hidden"
         aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />
@@ -78,7 +78,7 @@ const AdminHeaderV2 = ({ userName, userRole, dealerName, onLogout, onOpenMobileN
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-2 rounded-xl py-1 pl-1 pr-2 transition hover:bg-[#F4F6FA]"
+            className="flex min-h-10 shrink-0 items-center gap-2 rounded-xl py-1 pl-1 pr-2 transition hover:bg-[#F4F6FA]"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-[12px] font-bold text-white">
               {initials}

@@ -114,7 +114,7 @@ const AllLeadsV2 = ({ db }: { db: Db }) => {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-[200px] flex-1">
+          <div className="relative w-full sm:min-w-[200px] sm:flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AA6BC]" />
             <input
               value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, phone, VIN, vehicle…"
@@ -155,8 +155,8 @@ const AllLeadsV2 = ({ db }: { db: Db }) => {
                     </div>
                     <div><Pill tone={closed ? "green" : dead ? "red" : isAccepted(s) ? "teal" : "purple"}>{getStatusLabel(s.progress_status)}</Pill></div>
                     <div className="text-[12px] text-[#53627A]">{sourceLabel(s.lead_source)}</div>
-                    <div className="text-right text-[13px] font-semibold text-[#0F7A3E]">{offer ? money(offer) : "—"}</div>
-                    <div className="text-right text-[12px] text-[#9AA6BC]">{relAge(s.created_at)}</div>
+                    <div className="text-[13px] font-semibold text-[#0F7A3E] lg:text-right">{offer ? money(offer) : "—"}</div>
+                    <div className="text-[12px] text-[#9AA6BC] lg:text-right">{relAge(s.created_at)}</div>
                   </button>
                 );
               })}
@@ -164,7 +164,7 @@ const AllLeadsV2 = ({ db }: { db: Db }) => {
           )}
 
           {/* Pagination */}
-          <div className="flex items-center justify-between border-t border-[#F0F2F7] px-5 py-3">
+          <div className="flex flex-col gap-2 border-t border-[#F0F2F7] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-[12px] text-[#7A879C]">{rows.length} shown · page {page} of {totalPages} · {db.total.toLocaleString()} total</span>
             <div className="flex items-center gap-2">
               <button onClick={() => db.setPage(Math.max(0, db.page - 1))} disabled={db.page === 0} className="inline-flex items-center gap-1 rounded-lg border border-[#E6EAF0] px-2.5 py-1.5 text-[12px] font-semibold text-[#53627A] disabled:opacity-40 hover:text-[#6D28D9]"><ChevronLeft className="h-3.5 w-3.5" /> Prev</button>

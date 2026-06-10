@@ -278,7 +278,7 @@ const RowCard = ({ row, suggestion, navigate, dismissFromQueue, acceptSuggestion
             {expected > 0 && reason === "declined" && <> · saw {money(expected)}</>}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
           {row.needs_appraisal && (
             <button onClick={() => dismissFromQueue(row)} title="Remove from queue" className="rounded-lg border border-[#E6EAF0] p-1.5 text-[#9AA6BC] hover:text-[#B91C1C]"><X className="h-4 w-4" /></button>
           )}
@@ -297,7 +297,7 @@ const RowCard = ({ row, suggestion, navigate, dismissFromQueue, acceptSuggestion
             {suggestion.photos_analyzed ? <> · {suggestion.photos_analyzed} photos</> : null}
             {suggestion.reason && <span className="text-[#7A879C]"> · {suggestion.reason}</span>}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
             <SecondaryButton onClick={() => dismissSuggestion(suggestion)}>Dismiss</SecondaryButton>
             <PrimaryButton onClick={() => acceptSuggestion(row, suggestion)}><Check className="h-4 w-4" /> Apply bump</PrimaryButton>
           </div>

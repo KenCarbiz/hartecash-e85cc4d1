@@ -300,7 +300,8 @@ const CommandCenter = ({
                   tick={{ fontSize: 11, fill: "#9AA6BC" }}
                   axisLine={false}
                   tickLine={false}
-                  interval={1}
+                  interval="preserveStartEnd"
+                  minTickGap={24}
                 />
                 <YAxis
                   tick={{ fontSize: 11, fill: "#9AA6BC" }}

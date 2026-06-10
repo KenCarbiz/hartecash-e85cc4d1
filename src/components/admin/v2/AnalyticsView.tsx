@@ -336,7 +336,8 @@ const SourceStoreTable = ({
   rows: TableRow[];
   onDrill: (key: string) => void;
 }) => (
-  <div className="border-t border-[#F0F2F7]">
+  <div className="overflow-x-auto border-t border-[#F0F2F7]">
+    <div className="min-w-[520px]">
     <div className="grid grid-cols-[1.6fr_repeat(4,1fr)] gap-2 bg-[#FAFBFD] px-5 py-2 text-[10px] font-bold uppercase tracking-wider text-[#9AA6BC]">
       <span>{firstCol}</span>
       <span className="text-right">Leads</span>
@@ -366,6 +367,7 @@ const SourceStoreTable = ({
           </span>
         </button>
       ))}
+    </div>
     </div>
   </div>
 );

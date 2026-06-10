@@ -161,7 +161,7 @@ const WebsiteWidget = ({ db }: { db: Db; onNavigate: (key: string) => void }) =>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#EEF1F6" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#9AA6BC" }} axisLine={false} tickLine={false} interval={1} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#9AA6BC" }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={24} />
                 <YAxis tick={{ fontSize: 11, fill: "#9AA6BC" }} axisLine={false} tickLine={false} allowDecimals={false} width={32} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #E6EAF0", fontSize: 12 }} />
                 <Area type="monotone" dataKey="leads" stroke="#6D28D9" strokeWidth={2.5} fill="url(#wleads)" />

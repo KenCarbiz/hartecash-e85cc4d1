@@ -8,7 +8,7 @@
  * accent bar. Responsive — static rail on desktop, slide-over drawer
  * on mobile.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -76,6 +76,15 @@ const AdminSidebarV2 = (props: Props) => {
   const groups = buildNavGroups(props);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
+  // Lock body scroll while the mobile drawer is open so the page behind
+  // the scrim doesn't drift on touch.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [mobileOpen]);
+
   // Resolve the brand logo the same way the customer surfaces do: the
   // autoCURB wordmark for the AutoCurb tenant, a white-label dealer's own
   // uploaded logo otherwise, or "" to fall back to the name treatment.
@@ -115,10 +124,10 @@ const AdminSidebarV2 = (props: Props) => {
         <button
           type="button"
           onClick={onMobileClose}
-          className="rounded-md p-1 text-[#7A879C] hover:bg-[#F4F6FA] md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-md text-[#7A879C] hover:bg-[#F4F6FA] md:hidden"
           aria-label="Close menu"
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </button>
       </div>
 
@@ -193,8 +202,8 @@ const AdminSidebarV2 = (props: Props) => {
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-[#06194A]/40" onClick={onMobileClose} />
-          <div className="absolute inset-y-0 left-0 w-[270px] border-r border-[#E6EAF0] shadow-2xl">
+          <div className="absolute inset-0 bg-[#06194A]/40 animate-in fade-in duration-200" onClick={onMobileClose} />
+          <div className="absolute inset-y-0 left-0 w-[248px] border-r border-[#E6EAF0] shadow-2xl animate-in slide-in-from-left duration-200">
             {rail}
           </div>
         </div>

@@ -412,11 +412,13 @@ const MyBusiness = ({ staffName, userEmail }: { staffName: string; userEmail?: s
       {tab === "performance" && (
         <Card className="overflow-hidden">
           <div className="px-5 py-4"><SectionLabel>Source analytics</SectionLabel><div className="mt-1 text-[15px] font-semibold text-[#06194A]">Opportunity generation by channel</div></div>
-          <div className="border-t border-[#F0F2F7]">
+          <div className="overflow-x-auto border-t border-[#F0F2F7]">
+            <div className="min-w-[440px]">
             <div className="grid grid-cols-[1.4fr_repeat(3,1fr)] gap-2 bg-[#FAFBFD] px-5 py-2 text-[10px] font-bold uppercase tracking-wider text-[#9AA6BC]"><span>Source</span><span className="text-right">Volume</span><span className="text-right">Acquired</span><span className="text-right">Conv.</span></div>
             <SourceRow name="Referral" volume={people.length} acquired={k.sold} />
             <SourceRow name="Lead Link" volume={assignedCount} acquired={null} />
             {["SMS", "Email", "Facebook", "QR", "Marketplace"].map((s) => <SourceRow key={s} name={s} volume={null} acquired={null} soon />)}
+            </div>
           </div>
         </Card>
       )}
