@@ -187,7 +187,7 @@ const InstallPanel = ({ dealershipId, width = 420 }: { dealershipId: string; wid
       )}
 
       {/* Verify */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#F0F2F7] px-4 py-3">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E6EAF0] px-4 py-3">
         <div className="flex items-center gap-2 text-[13px] text-[#3B4763]">
           <ShieldCheck className="h-4 w-4 text-[#9AA6BC]" />
           Installed it? Check your live site, then verify.

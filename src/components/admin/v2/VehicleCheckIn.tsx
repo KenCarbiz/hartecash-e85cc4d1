@@ -92,7 +92,7 @@ const VehicleCheckIn = ({ db, onNavigate }: { db: Db; onNavigate: (key: string) 
             <SectionLabel>Today's check-in activity</SectionLabel>
             <button onClick={() => onNavigate("submissions")} className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#6D28D9] hover:underline">View all <ArrowRight className="h-3.5 w-3.5" /></button>
           </div>
-          <div className="divide-y divide-[#F0F2F7] border-t border-[#F0F2F7]">
+          <div className="divide-y divide-[#E6EAF0] border-t border-[#E6EAF0]">
             {recent.length === 0 && <div className="px-5 py-8 text-center text-sm text-[#7A879C]">No check-ins yet today. Scan a VIN to get started.</div>}
             {recent.map((s) => {
               const vehicle = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ");
@@ -117,7 +117,7 @@ const VehicleCheckIn = ({ db, onNavigate }: { db: Db; onNavigate: (key: string) 
 
 const Tile = ({ icon, title, body, onClick }: { icon: React.ReactNode; title: string; body: string; onClick: () => void }) => (
   <button onClick={onClick} className="flex flex-col rounded-2xl border border-[#E6EAF0] bg-white p-5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-[#6D28D9]/30 hover:shadow-[0_10px_30px_-12px_rgba(15,23,42,0.18)]">
-    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-white">{icon}</span>
+    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEF0FF] text-[#6D28D9]">{icon}</span>
     <div className="mt-3 text-[15px] font-bold text-[#06194A]">{title}</div>
     <p className="mt-1 flex-1 text-[13px] text-[#53627A]">{body}</p>
     <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-[#6D28D9]">Open <ArrowRight className="h-3.5 w-3.5" /></span>

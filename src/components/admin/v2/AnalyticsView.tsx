@@ -222,9 +222,9 @@ const AnalyticsView = ({ db, onNavigate }: { db: Db; onNavigate: (key: string) =
                           )}
                         </span>
                       </div>
-                      <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-[#F0F2F7]">
+                      <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-[#E6EAF0]">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#6D28D9] to-[#0D9488]"
+                          className="h-full rounded-full bg-[#6D28D9]"
                           style={{ width: `${Math.max(pct(step.n, maxFunnel), 2)}%` }}
                         />
                       </div>
@@ -255,13 +255,13 @@ const AnalyticsView = ({ db, onNavigate }: { db: Db; onNavigate: (key: string) =
                           timeZone: "UTC",
                         })}
                       </span>
-                      <div className="relative h-5 flex-1 overflow-hidden rounded-md bg-[#F0F2F7]">
+                      <div className="relative h-5 flex-1 overflow-hidden rounded-md bg-[#E6EAF0]">
                         <div
                           className="h-full bg-[#EEF0FF]"
                           style={{ width: `${pct(c.leads, maxCohort)}%` }}
                         />
                         <div
-                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#6D28D9] to-[#0D9488]"
+                          className="absolute inset-y-0 left-0 bg-[#6D28D9]"
                           style={{ width: `${pct(c.accepted, maxCohort)}%` }}
                         />
                       </div>
@@ -336,7 +336,7 @@ const SourceStoreTable = ({
   rows: TableRow[];
   onDrill: (key: string) => void;
 }) => (
-  <div className="overflow-x-auto border-t border-[#F0F2F7]">
+  <div className="overflow-x-auto border-t border-[#E6EAF0]">
     <div className="min-w-[520px]">
     <div className="grid grid-cols-[1.6fr_repeat(4,1fr)] gap-2 bg-[#FAFBFD] px-5 py-2 text-[10px] font-bold uppercase tracking-wider text-[#9AA6BC]">
       <span>{firstCol}</span>
@@ -345,7 +345,7 @@ const SourceStoreTable = ({
       <span className="text-right">Conv.</span>
       <span className="text-right">Revenue</span>
     </div>
-    <div className="divide-y divide-[#F0F2F7]">
+    <div className="divide-y divide-[#E6EAF0]">
       {rows.map((r) => (
         <button
           key={r.key}

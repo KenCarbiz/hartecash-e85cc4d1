@@ -115,9 +115,9 @@ export const Card = ({
   </div>
 );
 
-/** Tiny upper-case section label in the accent colour. */
+/** Tiny upper-case section label — quiet, structural (muted, not accent). */
 export const SectionLabel = ({ children }: { children: ReactNode }) => (
-  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6D28D9]">
+  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7A879C]">
     {children}
   </div>
 );
@@ -192,7 +192,7 @@ export const StatCard = ({
       >
         <div>
           <div className="text-[12px] font-medium text-[#53627A]">{label}</div>
-          <div className="mt-1.5 text-[28px] font-bold leading-none tracking-tight text-[#06194A]">
+          <div className="mt-1.5 text-[22px] font-bold leading-none tracking-tight text-[#06194A]">
             {value}
           </div>
           {hint && <div className="mt-2 text-[12px] text-[#53627A]">{hint}</div>}

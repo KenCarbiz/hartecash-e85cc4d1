@@ -342,9 +342,9 @@ const CommandCenter = ({
                   <span className="truncate font-medium text-[#3B4763]">{d.label}</span>
                   <span className="text-[#7A879C]">{d.n}</span>
                 </div>
-                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#F0F2F7]">
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#E6EAF0]">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#6D28D9] to-[#0D9488]"
+                    className="h-full rounded-full bg-[#6D28D9]"
                     style={{ width: `${Math.max(d.pct, 4)}%` }}
                   />
                 </div>
@@ -369,7 +369,7 @@ const CommandCenter = ({
             View all <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
-        <div className="divide-y divide-[#F0F2F7] border-t border-[#F0F2F7]">
+        <div className="divide-y divide-[#E6EAF0] border-t border-[#E6EAF0]">
           {recent.length === 0 && (
             <div className="px-5 py-8 text-center text-sm text-[#7A879C]">
               {db.loading ? "Loading leads…" : "No leads yet."}

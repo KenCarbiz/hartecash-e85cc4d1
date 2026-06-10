@@ -26,13 +26,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { cn } from "@/lib/utils";
-import { PageShell, Card, SectionLabel, Pill, StatCard, SecondaryButton, Loading } from "./theme";
+import { PageShell, Card, SectionLabel, Pill, StatCard, SecondaryButton, Loading, PreviewBadge as SoonChip } from "./theme";
 import InstallPanel from "./InstallPanel";
 
 const TradeWidgetAdmin = lazy(() => import("@/components/admin/TradeWidgetAdmin"));
 
 type Db = ReturnType<typeof useAdminDashboard>;
-const SoonChip = () => <Pill tone="gray">Soon</Pill>;
 
 const WIDGET_TYPES = [
   { icon: PanelRightOpen, name: "Slide-Out Experience", desc: "Appears from the right. Recommended.", rec: true },
@@ -193,7 +192,7 @@ const WebsiteWidget = ({ db }: { db: Db; onNavigate: (key: string) => void }) =>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {WIDGET_TYPES.map((w) => (
               <div key={w.name} className={cn("rounded-xl border p-4", w.rec ? "border-[#6D28D9]/40 bg-[#FAF8FF]" : "border-[#E6EAF0]")}>
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#6D28D9] to-[#0D9488] text-white"><w.icon className="h-5 w-5" /></span>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EEF0FF] text-[#6D28D9]"><w.icon className="h-5 w-5" /></span>
                 <div className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-[#06194A]">{w.name}{w.rec && <Pill tone="purple">Recommended</Pill>}</div>
                 <p className="mt-1 text-[12px] text-[#7A879C]">{w.desc}</p>
                 <button onClick={() => setManage(true)} className="mt-2 text-[12px] font-semibold text-[#6D28D9] hover:underline">Configure →</button>
@@ -207,7 +206,7 @@ const WebsiteWidget = ({ db }: { db: Db; onNavigate: (key: string) => void }) =>
           <div className="flex items-center justify-between"><SectionLabel>Widget health</SectionLabel><SoonChip /></div>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {HEALTH.map((h) => (
-              <div key={h.label} className="flex items-center gap-2 rounded-xl border border-[#F0F2F7] px-3 py-2.5">
+              <div key={h.label} className="flex items-center gap-2 rounded-xl border border-[#E6EAF0] px-3 py-2.5">
                 <h.icon className="h-4 w-4 text-[#9AA6BC]" />
                 <div><div className="text-[12px] font-semibold text-[#06194A]">{h.label}</div><div className="flex items-center gap-1 text-[11px] text-[#9AA6BC]"><CircleAlert className="h-3 w-3" /> Pending</div></div>
               </div>
@@ -235,7 +234,7 @@ const WebsiteWidget = ({ db }: { db: Db; onNavigate: (key: string) => void }) =>
 };
 
 const Perf = ({ label, value, soon, icon }: { label: string; value: string | number; soon?: boolean; icon: React.ReactNode }) => (
-  <div className="rounded-xl border border-[#F0F2F7] bg-[#FAFBFD] p-3">
+  <div className="rounded-xl border border-[#E6EAF0] bg-[#FAFBFD] p-3">
     <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#9AA6BC]"><span className="text-[#6D28D9]">{icon}</span>{label}{soon && <SoonChip />}</div>
     <div className="mt-1 text-[22px] font-bold text-[#06194A]">{value}</div>
   </div>

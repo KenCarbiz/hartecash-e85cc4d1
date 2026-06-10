@@ -121,7 +121,7 @@ const AppointmentsView = ({ db }: { db: Db }) => {
                   <span className="text-[12px] text-[#7A879C]">{g.items.length}</span>
                 </div>
                 <Card className="overflow-hidden">
-                  <div className="divide-y divide-[#F0F2F7]">
+                  <div className="divide-y divide-[#E6EAF0]">
                     {g.items.map((a) => (
                       <button key={a.id} onClick={() => onView(a)} className="flex w-full items-center gap-4 px-5 py-3.5 text-left transition hover:bg-[#F8FAFC]">
                         <div className="flex w-16 shrink-0 flex-col items-center rounded-xl bg-[#F3F0FF] py-2">
