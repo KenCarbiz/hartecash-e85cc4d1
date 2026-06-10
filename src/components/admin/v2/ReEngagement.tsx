@@ -45,6 +45,16 @@ interface OfferRow {
   offer_expires_at?: string | null;
 }
 
+/** Row shape from get_reengagement_targets (opt-out + cadence filtered). */
+interface DueRow {
+  submission_id: string;
+  name: string | null;
+  vehicle: string | null;
+  days_left: number;
+  bucket: string;
+  suggested_trigger: string;
+}
+
 type Bucket = "expiring" | "active" | "expired" | "stale";
 
 const dayMs = 86_400_000;
@@ -69,6 +79,23 @@ const ReEngagement = ({ db }: { db: Db }) => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState<Record<string, "sending" | "sent">>({});
   const [copied, setCopied] = useState<string | null>(null);
+  // "Due now" = the consent + 8-day-cadence filtered targets the automated
+  // journey would message next. Powered by get_reengagement_targets (RLS-
+  // scoped to this tenant). Undefined until loaded; null if the RPC isn't
+  // deployed yet (graceful — the section just hides).
+  const [due, setDue] = useState<DueRow[] | null | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const rpc = supabase.rpc as unknown as (
+        fn: string, args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: unknown }>;
+      const { data, error } = await rpc("get_reengagement_targets", { p_dealership_id: tenant.dealership_id });
+      if (!cancelled) setDue(error ? null : ((data as DueRow[]) || []));
+    })();
+    return () => { cancelled = true; };
+  }, [tenant.dealership_id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -166,6 +193,31 @@ const ReEngagement = ({ db }: { db: Db }) => {
           <StatCard label="Expired — Buyable" value={kpis.expired} hint="Within 90 days" icon={<CalendarX className="h-5 w-5" />} tone="red" />
           <StatCard label="Open Pipeline" value={money(kpis.pipeline)} hint="Active + expiring offers" icon={<DollarSign className="h-5 w-5" />} tone="green" />
         </div>
+
+        {/* Due for automated outreach — opt-out + 8-day cadence already applied */}
+        {Array.isArray(due) && (
+          <Card className="p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2"><SectionLabel>Due for automated outreach</SectionLabel><Pill tone="purple">{due.length}</Pill></div>
+                <div className="mt-0.5 text-[12px] text-[#7A879C]">Exactly who the 90-day journey would message next — opt-outs and the 8-day cadence are already applied.</div>
+              </div>
+              <Pill tone="gray">Preview · sends nothing</Pill>
+            </div>
+            {due.length > 0 && (
+              <div className="mt-3 divide-y divide-[#F0F2F7] rounded-xl border border-[#F0F2F7]">
+                {due.slice(0, 8).map((t) => (
+                  <div key={t.submission_id} className="flex items-center gap-3 px-3 py-2 text-[13px]">
+                    <span className="min-w-0 flex-1 truncate font-medium text-[#06194A]">{t.name || "Customer"}<span className="text-[#7A879C]"> · {t.vehicle || "Vehicle"}</span></span>
+                    <Pill tone={t.bucket === "expiring" ? "amber" : "red"}>{t.bucket === "expiring" ? `${t.days_left}d left` : `expired ${-t.days_left}d`}</Pill>
+                    <span className="hidden font-mono text-[11px] text-[#9AA6BC] sm:block">{t.suggested_trigger}</span>
+                  </div>
+                ))}
+                {due.length > 8 && <div className="px-3 py-2 text-[12px] text-[#9AA6BC]">+{due.length - 8} more</div>}
+              </div>
+            )}
+          </Card>
+        )}
 
         {loading ? (
           <Card className="p-10 text-center text-sm text-[#7A879C]">Loading saved offers…</Card>

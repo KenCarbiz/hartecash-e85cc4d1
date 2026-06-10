@@ -376,3 +376,19 @@
 /* Admin Refresh UI/text scale is applied imperatively in ThemeProvider.tsx
    via document.documentElement.style.zoom and an injected style tag. See
    Wiring Brief §5 for rationale. No CSS rules needed here. */
+
+/* ── Admin V2 design-token scope ──────────────────────────────────────
+   Applied to the Admin V2 shell root (.admin-v2-scope) so EVERY left-bar
+   page — the bespoke V2 surfaces AND the classic shadcn-based sections
+   rendered inside V2 — inherits the V2 palette (purple primary, teal
+   accent, light-purple secondary) for a consistent feel/look/flow.
+   Scoped to the V2 subtree only; V1 (/admin) is untouched. Reversible. */
+.admin-v2-scope {
+  --primary: 263 70% 50%;            /* autoCURB purple #6D28D9 */
+  --primary-foreground: 0 0% 100%;
+  --ring: 263 70% 50%;
+  --secondary: 263 60% 96%;          /* light purple tint */
+  --secondary-foreground: 263 70% 38%;
+  --accent: 175 84% 32%;             /* teal #0D9488 */
+  --accent-foreground: 0 0% 100%;
+}
