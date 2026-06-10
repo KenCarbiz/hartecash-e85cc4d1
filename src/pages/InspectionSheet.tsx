@@ -49,13 +49,13 @@ type ConditionGrade = "" | "pass" | "caution" | "fail";
 
 const GRADE_CYCLE: ConditionGrade[] = ["", "pass", "caution", "fail"];
 
-// #9 — Dark-mode-friendly grade colors using HSL tokens
+// Grade colors aligned to the V2 Pill palette (calm, light, corporate).
 const gradeStyle = (g: ConditionGrade) => {
   switch (g) {
-    case "pass": return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-400/50 dark:border-emerald-500/40 ring-emerald-400/30";
-    case "caution": return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-400/50 dark:border-amber-500/40 ring-amber-400/30";
-    case "fail": return "bg-red-500/15 text-red-600 dark:text-red-400 border-red-400/50 dark:border-red-500/40 ring-red-400/30";
-    default: return "bg-muted/50 text-muted-foreground border-border";
+    case "pass": return "bg-[#E8F8EE] text-[#0F7A3E] border-[#0F7A3E]/25 ring-[#0F7A3E]/30";
+    case "caution": return "bg-[#FEF3E2] text-[#B45309] border-[#B45309]/25 ring-[#B45309]/30";
+    case "fail": return "bg-[#FEE2E2] text-[#B91C1C] border-[#B91C1C]/25 ring-[#B91C1C]/30";
+    default: return "bg-[#F4F6FA] text-[#7A879C] border-[#E6EAF0]";
   }
 };
 
@@ -113,24 +113,24 @@ const FULL_SECTION_DEFS = [
     key: "tires",
     label: "Tires & Brakes",
     icon: Gauge,
-    gradient: "from-blue-500/10 to-cyan-500/10 dark:from-blue-500/20 dark:to-cyan-500/20",
-    borderAccent: "border-l-blue-500",
+    gradient: "from-[#F4F6FA] to-white",
+    borderAccent: "border-l-[#6D28D9]",
     items: [] as string[], // special section
   },
   {
     key: "measurements",
     label: "Quick Measurements",
     icon: ThermometerSun,
-    gradient: "from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20",
-    borderAccent: "border-l-violet-500",
+    gradient: "from-[#F4F6FA] to-white",
+    borderAccent: "border-l-[#6D28D9]",
     items: [] as string[], // special section
   },
   {
     key: "exterior",
     label: "Exterior",
     icon: Paintbrush,
-    gradient: "from-sky-500/10 to-blue-500/10 dark:from-sky-500/20 dark:to-blue-500/20",
-    borderAccent: "border-l-sky-500",
+    gradient: "from-[#F4F6FA] to-white",
+    borderAccent: "border-l-[#6D28D9]",
     items: [
       // Organized: left-column items paired with right-column items (left side / right side of vehicle)
       "Hood", "Front Bumper",
@@ -151,8 +151,8 @@ const FULL_SECTION_DEFS = [
     key: "interior",
     label: "Interior",
     icon: Armchair,
-    gradient: "from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20",
-    borderAccent: "border-l-amber-500",
+    gradient: "from-[#F4F6FA] to-white",
+    borderAccent: "border-l-[#6D28D9]",
     items: [
       "Driver Seat", "Passenger Seat", "Rear Seats", "Headliner",
       "Dashboard", "Center Console", "Steering Wheel", "Carpet/Floor Mats",
@@ -164,8 +164,8 @@ const FULL_SECTION_DEFS = [
     key: "mechanical",
     label: "Mechanical",
     icon: Wrench,
-    gradient: "from-slate-500/10 to-zinc-500/10 dark:from-slate-500/20 dark:to-zinc-500/20",
-    borderAccent: "border-l-slate-500",
+    gradient: "from-[#F4F6FA] to-white",
+    borderAccent: "border-l-[#6D28D9]",
     items: [
       "Engine Start/Idle", "Engine Noise", "Oil Leaks", "Coolant Leaks",
       "Transmission Shift", "Differential", "Exhaust System",
@@ -178,8 +178,8 @@ const FULL_SECTION_DEFS = [
     key: "electrical",
     label: "Electrical",
     icon: Zap,
-    gradient: "from-yellow-500/10 to-amber-500/10 dark:from-yellow-500/20 dark:to-amber-500/20",
-    borderAccent: "border-l-yellow-500",
+    gradient: "from-[#F4F6FA] to-white",
+    borderAccent: "border-l-[#6D28D9]",
     items: [
       "A/C System", "Heater", "Power Windows", "Power Locks", "Power Mirrors",
       "Radio/Infotainment", "Speakers", "Backup Camera", "Navigation",
@@ -192,8 +192,8 @@ const FULL_SECTION_DEFS = [
     key: "glass",
     label: "Glass & Lights",
     icon: Eye,
-    gradient: "from-teal-500/10 to-emerald-500/10 dark:from-teal-500/20 dark:to-emerald-500/20",
-    borderAccent: "border-l-teal-500",
+    gradient: "from-[#F4F6FA] to-white",
+    borderAccent: "border-l-[#6D28D9]",
     items: [
       "Windshield Chips/Cracks", "Side Windows", "Rear Window",
       "Headlight Clarity", "Taillight Clarity", "Fog Lights",
@@ -352,7 +352,7 @@ const ChecklistSection = ({
   const allMarkedGood = items.every(i => grades[i] === "pass");
 
   return (
-    <Card className={`print:shadow-none print:border-foreground/30 break-inside-avoid border-l-4 ${borderAccent} overflow-hidden`}>
+    <Card className={`print:shadow-none print:border-foreground/30 break-inside-avoid rounded-2xl border-[#E6EAF0] border-l-4 ${borderAccent} overflow-hidden`}>
       <div className={`w-full text-left bg-gradient-to-r ${gradient}`}>
         <CardHeader className="pb-2 pt-3">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -374,7 +374,7 @@ const ChecklistSection = ({
               {label}
             </button>
             <button type="button" onClick={onToggle} className="ml-auto flex items-center gap-1.5 text-xs">
-              {allGood && <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px]">All Good ✓</Badge>}
+              {allGood && <Badge className="bg-[#E8F8EE] text-[#0F7A3E] border-[#0F7A3E]/25 text-[10px]">All Good ✓</Badge>}
               {!allGood && (
                 <Badge variant="secondary" className="text-[10px]">{checked}/{items.length}</Badge>
               )}
@@ -1312,7 +1312,7 @@ const InspectionSheet = () => {
   const progressPct = ACTIVE_ALL_ITEMS.length > 0 ? (totalChecked / ACTIVE_ALL_ITEMS.length) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-[#F4F6FA] pb-24">
       {/* ── Primary Header ── */}
       <div className="print:hidden sticky top-0 z-50 bg-primary text-primary-foreground shadow-lg">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -1343,20 +1343,20 @@ const InspectionSheet = () => {
                 <Smartphone className="h-4 w-4" /> Mobile
               </Button>
               {showMobileQR && (
-                <div className="absolute right-0 top-full mt-2 z-50 bg-card rounded-xl shadow-2xl p-5 w-64 text-center animate-in fade-in slide-in-from-top-2">
-                  <p className="text-sm font-bold text-card-foreground mb-1">📱 Scan to Inspect</p>
-                  <p className="text-xs text-muted-foreground mb-3">Open on your phone to walk around the vehicle</p>
-                  <div className="bg-white p-3 rounded-lg inline-block border shadow-sm mb-3">
+                <div className="absolute right-0 top-full mt-2 z-50 bg-white rounded-2xl border border-[#E6EAF0] shadow-[0_10px_40px_-12px_rgba(15,23,42,0.25)] p-5 w-64 text-center animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm font-semibold text-[#06194A] mb-1">Scan to Inspect</p>
+                  <p className="text-xs text-[#7A879C] mb-3">Open on your phone to walk around the vehicle</p>
+                  <div className="bg-white p-3 rounded-xl inline-block border border-[#E6EAF0] mb-3">
                     <QRCodeSVG value={`${window.location.origin}/inspect/${id}?mode=${inspectionMode === "full" ? "full" : "standard"}`} size={160} level="H" />
                   </div>
                   {submission?.inspection_pin && (
-                    <div className="bg-muted rounded-lg p-2 mb-2">
-                      <p className="text-[10px] text-muted-foreground mb-0.5">Access PIN</p>
-                      <p className="text-2xl font-mono font-black tracking-[0.3em] text-card-foreground">{submission.inspection_pin}</p>
+                    <div className="bg-[#F4F6FA] rounded-xl border border-[#E6EAF0] p-2.5 mb-2">
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-[#7A879C] mb-0.5">Access PIN</p>
+                      <p className="text-2xl font-mono font-bold tracking-[0.3em] text-[#06194A]">{submission.inspection_pin}</p>
                     </div>
                   )}
-                  <p className="text-[10px] text-muted-foreground">Point your phone camera at the code</p>
-                  <button onClick={() => setShowMobileQR(false)} className="mt-3 text-xs text-muted-foreground hover:text-foreground underline">Close</button>
+                  <p className="text-[10px] text-[#7A879C]">Point your phone camera at the code</p>
+                  <button onClick={() => setShowMobileQR(false)} className="mt-3 text-xs font-semibold text-[#6D28D9] hover:underline">Close</button>
                 </div>
               )}
             </div>
@@ -1552,7 +1552,7 @@ const InspectionSheet = () => {
           const hasEquipment = autoEquipment.length > 0 || customerOptional.length > 0;
 
           return (hasPowertrain || hasEquipment) ? (
-            <Card className="print:shadow-none print:border-foreground/30 border-l-4 border-l-primary bg-primary/5">
+            <Card className="print:shadow-none print:border-foreground/30 rounded-2xl border-[#E6EAF0] border-l-4 border-l-[#6D28D9] bg-white">
               <CardHeader className="pb-2 pt-3">
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <Shield className="h-4 w-4 text-primary" />
@@ -1633,7 +1633,7 @@ const InspectionSheet = () => {
 
         {/* Customer-Reported Issues */}
         {(submission.exterior_damage?.length || submission.interior_damage?.length || submission.mechanical_issues?.length || submission.engine_issues?.length) && (
-          <Card className="print:shadow-none print:border-foreground/30 border-l-4 border-l-amber-500 bg-amber-500/5">
+          <Card className="print:shadow-none print:border-foreground/30 rounded-2xl border-[#E6EAF0] border-l-4 border-l-[#B45309] bg-[#FFFBF3]">
             <CardHeader className="pb-2 pt-3">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -1665,7 +1665,7 @@ const InspectionSheet = () => {
 
         {/* AI Damage Detection */}
         {damageReports.length > 0 && allDamageItems.length > 0 && (
-          <Card className="print:shadow-none print:border-foreground/30 border-l-4 border-l-blue-500 bg-blue-500/5">
+          <Card className="print:shadow-none print:border-foreground/30 rounded-2xl border-[#E6EAF0] border-l-4 border-l-[#6D28D9] bg-white">
             <CardHeader className="pb-2 pt-3">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Camera className="h-4 w-4 text-blue-500" />
@@ -1855,7 +1855,7 @@ const InspectionSheet = () => {
         })}
 
         {/* Final Assessment */}
-        <Card className="print:shadow-none print:border-foreground/30 border-l-4 border-l-emerald-500 break-inside-avoid">
+        <Card className="print:shadow-none print:border-foreground/30 rounded-2xl border-[#E6EAF0] border-l-4 border-l-[#0F7A3E] break-inside-avoid">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <CheckCircle className="h-5 w-5 text-emerald-500" />
