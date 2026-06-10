@@ -114,7 +114,7 @@ const AdminDashboardV2 = () => {
   return (
     <PlatformProvider>
       <TenantViewBanner />
-      <div className="flex min-h-screen w-full bg-[#F4F6FA] text-[#06194A]">
+      <div className="admin-v2-scope flex min-h-screen w-full bg-[#F4F6FA] text-[#06194A]">
         <AdminSidebarV2
           activeKey={baseSectionId}
           onSelect={goToSection}
