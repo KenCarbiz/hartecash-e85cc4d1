@@ -5345,6 +5345,7 @@ export type Database = {
           obd_mil_on: boolean | null
           obd_odometer_verified: boolean | null
           obd_scan_completed: boolean | null
+          offer_expires_at: string | null
           offer_is_firm: boolean
           offer_locked_at: string | null
           offer_made_at: string | null
@@ -5513,6 +5514,7 @@ export type Database = {
           obd_mil_on?: boolean | null
           obd_odometer_verified?: boolean | null
           obd_scan_completed?: boolean | null
+          offer_expires_at?: string | null
           offer_is_firm?: boolean
           offer_locked_at?: string | null
           offer_made_at?: string | null
@@ -5681,6 +5683,7 @@ export type Database = {
           obd_mil_on?: boolean | null
           obd_odometer_verified?: boolean | null
           obd_scan_completed?: boolean | null
+          offer_expires_at?: string | null
           offer_is_firm?: boolean
           offer_locked_at?: string | null
           offer_made_at?: string | null
@@ -7579,6 +7582,10 @@ export type Database = {
         }[]
       }
       get_my_rewards: { Args: { p_dealership_id: string }; Returns: Json }
+      get_my_saved_offer: {
+        Args: { _dealership_id: string; _email: string; _phone: string }
+        Returns: Json
+      }
       get_objection_playbook_for_voice: {
         Args: { _dealership_id?: string }
         Returns: string
