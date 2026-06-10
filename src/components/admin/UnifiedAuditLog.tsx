@@ -29,10 +29,10 @@ type AuditRow = {
 const KIND_META: Record<AuditKind, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
   tenant_view:    { label: "View-as",    icon: Eye,            color: "text-warning" },
   tenant_edit:    { label: "Tenant edit",icon: Pencil,         color: "text-primary" },
-  rooftop_detach: { label: "Rooftop op", icon: ArrowRightLeft, color: "text-red-700"   },
+  rooftop_detach: { label: "Rooftop op", icon: ArrowRightLeft, color: "text-destructive"   },
   data_egress:    { label: "Data export",icon: FileSearch,     color: "text-info"   },
   stripe_event:   { label: "Stripe",     icon: Webhook,        color: "text-success" },
-  staff_action:   { label: "Staff action", icon: ShieldAlert,  color: "text-amber-600" },
+  staff_action:   { label: "Staff action", icon: ShieldAlert,  color: "text-warning" },
 };
 
 function fmtRelative(iso: string): string {

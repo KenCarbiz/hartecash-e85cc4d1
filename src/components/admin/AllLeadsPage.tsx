@@ -160,21 +160,21 @@ const statusMeta = (
 // non-semantic tones (red, orange, purple) stay on Tailwind literals
 // because they don't have a token equivalent yet.
 const pillCls: Record<StatusTone, string> = {
-  red: "text-red-600",
-  orange: "text-orange-600",
+  red: "text-destructive",
+  orange: "text-warning",
   green: "text-success",
   blue: "text-info",
-  purple: "text-violet-600",
+  purple: "text-primary",
   yellow: "text-warning",
   gray: "text-muted-foreground",
 };
 
 const dotCls: Record<StatusTone, string> = {
-  red: "bg-red-500",
-  orange: "bg-orange-500",
+  red: "bg-destructive/100",
+  orange: "bg-warning/100",
   green: "bg-success",
   blue: "bg-info",
-  purple: "bg-violet-500",
+  purple: "bg-primary",
   yellow: "bg-warning",
   gray: "bg-muted-foreground/50",
 };
@@ -202,7 +202,7 @@ const actionForLead = (s: Submission): ActionButton => {
     return {
       label: "Greet now",
       icon: ArrowRight,
-      cls: "bg-red-600 hover:bg-red-700 text-white",
+      cls: "bg-destructive hover:bg-destructive text-white",
       onClick: (_s, openFile) => openFile(),
     };
   }
@@ -210,7 +210,7 @@ const actionForLead = (s: Submission): ActionButton => {
     return {
       label: "Prep file",
       icon: ArrowRight,
-      cls: "bg-slate-900 hover:bg-slate-800 text-white",
+      cls: "bg-foreground hover:bg-foreground text-white",
       onClick: (_s, openFile) => openFile(),
     };
   }
@@ -218,7 +218,7 @@ const actionForLead = (s: Submission): ActionButton => {
     return {
       label: "Book appt",
       icon: Calendar,
-      cls: "bg-slate-900 hover:bg-slate-800 text-white",
+      cls: "bg-foreground hover:bg-foreground text-white",
       onClick: (_s, openFile) => openFile(),
     };
   }
@@ -244,7 +244,7 @@ const actionForLead = (s: Submission): ActionButton => {
     return {
       label: "Approve",
       icon: CheckCircle2,
-      cls: "bg-slate-900 hover:bg-slate-800 text-white",
+      cls: "bg-foreground hover:bg-foreground text-white",
       onClick: (_s, openFile) => openFile(),
     };
   }
@@ -252,7 +252,7 @@ const actionForLead = (s: Submission): ActionButton => {
   return {
     label: "Call",
     icon: PhoneIcon,
-    cls: "bg-slate-900 hover:bg-slate-800 text-white",
+    cls: "bg-foreground hover:bg-foreground text-white",
     onClick: (sub) => {
       if (sub.phone) clickToDial(sub.id);
     },
@@ -376,7 +376,7 @@ const AllLeadsPage = ({
             <Filter className="w-4 h-4 mr-1.5" /> Filter
           </Button>
           <Button
-            className="h-10 rounded-md bg-slate-900 hover:bg-slate-800 text-white"
+            className="h-10 rounded-md bg-foreground hover:bg-foreground text-white"
             onClick={onCreate}
           >
             <Plus className="w-4 h-4 mr-1.5" /> New lead
@@ -394,11 +394,11 @@ const AllLeadsPage = ({
           <div
             className={cn(
               "rounded-lg border-l-4 px-4 py-3 flex items-center justify-between gap-3",
-              isArrived ? "bg-red-50 border-l-red-500" : "bg-orange-50 border-l-orange-500",
+              isArrived ? "bg-destructive/10 border-l-destructive" : "bg-warning/10 border-l-warning",
             )}
           >
             <div className="flex items-center gap-3 min-w-0">
-              <span className={cn("w-2 h-2 rounded-full shrink-0 animate-pulse", isArrived ? "bg-red-500" : "bg-orange-500")} />
+              <span className={cn("w-2 h-2 rounded-full shrink-0 animate-pulse", isArrived ? "bg-destructive/100" : "bg-warning/100")} />
               <div className="min-w-0">
                 <div className="text-sm font-bold text-foreground truncate">
                   {banner.name || "A customer"} {isArrived ? "just arrived on the lot" : "is on the way"}
@@ -418,8 +418,8 @@ const AllLeadsPage = ({
                 className={cn(
                   "h-9 px-3.5 rounded-md font-bold",
                   isArrived
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : "bg-slate-900 hover:bg-slate-800 text-white",
+                    ? "bg-destructive hover:bg-destructive text-white"
+                    : "bg-foreground hover:bg-foreground text-white",
                 )}
                 onClick={() => onView(banner)}
               >
@@ -523,7 +523,7 @@ const AllLeadsPage = ({
                       className={cn(
                         "border-b border-border/50 last:border-b-0 transition-colors",
                         isArrived
-                          ? "bg-red-50 hover:bg-red-100/70 border-l-4 border-l-red-500"
+                          ? "bg-destructive/10 hover:bg-destructive/10/70 border-l-4 border-l-destructive"
                           : "hover:bg-muted/40",
                       )}
                     >

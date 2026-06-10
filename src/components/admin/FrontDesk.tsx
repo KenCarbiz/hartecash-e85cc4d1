@@ -335,8 +335,8 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCrea
       {/* KPI tiles */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Tile label="Today" value={counts.total} sub={counts.total === 1 ? "appointment" : "appointments"} />
-        <Tile label="Right now" value={counts.arrived} sub={counts.arrived === 1 ? "arrived" : "arrived"} valueClass="text-red-600" />
-        <Tile label="On the way" value={counts.onTheWay} sub={counts.onTheWay === 1 ? "customer" : "customers"} valueClass="text-orange-500" />
+        <Tile label="Right now" value={counts.arrived} sub={counts.arrived === 1 ? "arrived" : "arrived"} valueClass="text-destructive" />
+        <Tile label="On the way" value={counts.onTheWay} sub={counts.onTheWay === 1 ? "customer" : "customers"} valueClass="text-warning" />
       </section>
 
       {/* Today's schedule */}
@@ -363,11 +363,11 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCrea
                 const selfCheckedIn = !!(sub as { self_checkin_at?: string | null })?.self_checkin_at;
 
                 const rowBg = arrived
-                  ? "bg-red-50 border-l-4 border-l-red-500"
+                  ? "bg-destructive/10 border-l-4 border-l-destructive"
                   : "border-l-4 border-l-transparent";
 
                 const pill = arrived
-                  ? { label: "Arrived", cls: "text-red-700", dot: "bg-red-500" }
+                  ? { label: "Arrived", cls: "text-destructive", dot: "bg-destructive/100" }
                   : onTheWay
                     ? { label: "On the way", cls: "text-warning bg-warning/15 px-2 py-0.5 rounded", dot: "" }
                     : null;
@@ -421,7 +421,7 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCrea
                                 setAssignOpen(sub.id);
                               }}
                               disabled={!sub}
-                              className="h-9 px-3.5 rounded-md bg-red-600 hover:bg-red-700 text-white text-xs font-bold inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                              className="h-9 px-3.5 rounded-md bg-destructive hover:bg-destructive text-white text-xs font-bold inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition"
                             >
                               <Check className="w-3.5 h-3.5" />
                               Mark greeted

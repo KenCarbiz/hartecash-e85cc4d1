@@ -50,11 +50,11 @@ const statusTone = (status: string): "slate" | "blue" | "amber" | "emerald" | "r
 };
 
 const statusToneClasses: Record<string, string> = {
-  slate:   "bg-slate-100 text-slate-700 border-slate-200",
-  blue:    "bg-sky-50 text-info border-sky-200",
-  amber:   "bg-amber-50 text-amber-800 border-amber-200",
-  emerald: "bg-emerald-50 text-success border-emerald-200",
-  red:     "bg-red-50 text-red-700 border-red-200",
+  slate:   "bg-muted text-muted-foreground border-border",
+  blue:    "bg-info/10 text-info border-info",
+  amber:   "bg-warning/10 text-warning border-warning",
+  emerald: "bg-success/10 text-success border-success",
+  red:     "bg-destructive/10 text-destructive border-destructive",
 };
 
 const shortStatusLabel = (status: string): string => {
@@ -82,7 +82,7 @@ const intentFromSource = (s: Submission): { label: string; dotClass: string } =>
   switch (s.lead_source) {
     case "trade":
     case "in_store_trade":
-      return { label: "Trade-In", dotClass: "bg-blue-500" };
+      return { label: "Trade-In", dotClass: "bg-info/100" };
     case "inventory":
       return { label: "Sell", dotClass: "bg-success" };
     case "service":
@@ -219,8 +219,8 @@ const SubmissionsTable = ({
       )}
 
       {loading ? (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in">
-          <div className="divide-y divide-slate-100">
+        <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden animate-in fade-in">
+          <div className="divide-y divide-border">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 px-5 py-3">
                 <div className="flex-1 space-y-1.5">
@@ -248,13 +248,13 @@ const SubmissionsTable = ({
 
           if (totalIsZero) {
             return (
-              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-4 animate-in fade-in bg-white rounded-xl border border-dashed border-slate-200">
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-4 animate-in fade-in bg-white rounded-xl border border-dashed border-border">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <Inbox className="w-7 h-7 text-primary" />
                 </div>
                 <div className="text-center space-y-1 max-w-md">
-                  <p className="text-base font-semibold text-slate-900">No leads yet</p>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-base font-semibold text-foreground">No leads yet</p>
+                  <p className="text-sm text-muted-foreground">
                     As soon as a customer submits a trade-in through your website or
                     service drive, they'll land here. To start generating leads:
                   </p>
@@ -306,10 +306,10 @@ const SubmissionsTable = ({
         })()
       ) : (
         <>
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-slate-600 text-[11px] uppercase tracking-wider font-semibold">
+                <thead className="bg-muted text-muted-foreground text-[11px] uppercase tracking-wider font-semibold">
                   <tr>
                     <th className={`${cellPadX} py-2.5 text-left font-semibold`}>Customer</th>
                     <th className={`${cellPadX} py-2.5 text-left font-semibold`}>Vehicle</th>
@@ -335,24 +335,24 @@ const SubmissionsTable = ({
                       <tr
                         key={sub.id}
                         onClick={() => onView(sub)}
-                        className="border-t border-slate-100 hover:bg-slate-50/60 transition-colors cursor-pointer"
+                        className="border-t border-border hover:bg-muted/60 transition-colors cursor-pointer"
                       >
                         <td className={`${cellPadX} ${rowPad}`}>
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold text-slate-900 truncate">
+                            <div className="text-sm font-semibold text-foreground truncate">
                               {sub.name || "Unknown customer"}
                             </div>
-                            <div className="text-xs text-slate-500 truncate">
+                            <div className="text-xs text-muted-foreground truncate">
                               {sub.phone ? formatPhone(sub.phone) : "—"}
                             </div>
                           </div>
                         </td>
                         <td className={`${cellPadX} ${rowPad}`}>
                           <div className="min-w-0">
-                            <div className="text-sm text-slate-900 truncate">
+                            <div className="text-sm text-foreground truncate">
                               {vehicleLine}
                             </div>
-                            <div className="text-[11px] text-slate-400 font-mono truncate">
+                            <div className="text-[11px] text-muted-foreground font-mono truncate">
                               {sub.vin || sub.plate || "No VIN"}
                             </div>
                           </div>
@@ -360,16 +360,16 @@ const SubmissionsTable = ({
                         <td className={`${cellPadX} ${rowPad}`}>
                           <div className="flex items-center gap-2">
                             <span className={`w-2 h-2 rounded-full ${intent.dotClass}`} />
-                            <span className="text-sm text-slate-700">{intent.label}</span>
+                            <span className="text-sm text-muted-foreground">{intent.label}</span>
                           </div>
                         </td>
                         <td className={`${cellPadX} ${rowPad} text-right whitespace-nowrap`}>
                           {offerVal != null && offerVal > 0 ? (
-                            <span className="text-sm font-bold text-slate-900">
+                            <span className="text-sm font-bold text-foreground">
                               {isEstimate ? "~" : ""}${Math.floor(offerVal).toLocaleString()}
                             </span>
                           ) : (
-                            <span className="text-xs text-slate-400">—</span>
+                            <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </td>
                         <td className={`${cellPadX} ${rowPad}`} onClick={(e) => e.stopPropagation()}>
@@ -386,14 +386,14 @@ const SubmissionsTable = ({
                               }}
                             />
                           ) : (
-                            <span className="text-xs text-slate-400">—</span>
+                            <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </td>
                         <td className={`${cellPadX} ${rowPad}`}>
                           {sub.bb_market_days_supply != null ? (
                             <MdsPill mds={sub.bb_market_days_supply} variant="onLight" />
                           ) : (
-                            <span className="text-xs text-slate-400">—</span>
+                            <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </td>
                         <td className={`${cellPadX} ${rowPad}`}>
@@ -408,7 +408,7 @@ const SubmissionsTable = ({
                             variant="ghost"
                             size="sm"
                             onClick={(e) => { e.stopPropagation(); onView(sub); }}
-                            className="h-7 w-7 p-0 text-slate-400 hover:text-slate-700"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-muted-foreground"
                             aria-label="View customer file"
                           >
                             <Eye className="w-4 h-4" />

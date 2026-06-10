@@ -47,7 +47,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 const STATUS_COLORS: Record<string, string> = {
   active: "bg-success/15 text-success border-success/30",
   trial: "bg-warning/15 text-warning border-warning/30",
-  suspended: "bg-red-500/15 text-red-600 border-red-500/30",
+  suspended: "bg-destructive/100/15 text-destructive border-destructive/30",
   cancelled: "bg-muted text-muted-foreground border-border",
 };
 
@@ -311,7 +311,7 @@ const PlatformSubscriptions = () => {
       <Card
         className={`shadow-lg overflow-hidden relative transition-[box-shadow,background] ${
           dirty
-            ? "border-amber-400/60 ring-1 ring-amber-300/50 bg-amber-50/40 dark:bg-warning/5"
+            ? "border-warning/60 ring-1 ring-warning/50 bg-warning/10/40 dark:bg-warning/5"
             : "border-border/50"
         }`}
       >
@@ -328,7 +328,7 @@ const PlatformSubscriptions = () => {
                   {dirty && (
                     <Badge
                       variant="outline"
-                      className="text-micro font-bold uppercase tracking-wider border-amber-400/60 bg-warning/10 text-warning dark:text-amber-300 gap-1"
+                      className="text-micro font-bold uppercase tracking-wider border-warning/60 bg-warning/10 text-warning dark:text-warning gap-1"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
                       Unsaved changes
@@ -516,7 +516,7 @@ const PlatformSubscriptions = () => {
                               <div
                                 className={`w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center shrink-0 ${
                                   isComplimentary
-                                    ? "bg-success/15 text-success dark:text-emerald-300"
+                                    ? "bg-success/15 text-success dark:text-success"
                                     : "bg-primary/10 text-primary"
                                 }`}
                               >
@@ -542,11 +542,11 @@ const PlatformSubscriptions = () => {
                             {/* Price / Included */}
                             {isComplimentary ? (
                               <div className="space-y-0.5">
-                                <span className="inline-flex items-center gap-1 text-micro md:text-xs font-semibold text-success dark:text-emerald-300">
+                                <span className="inline-flex items-center gap-1 text-micro md:text-xs font-semibold text-success dark:text-success">
                                   <Gift className="w-2.5 h-2.5 md:w-3 md:h-3" />
                                   Included
                                 </span>
-                                <p className="text-micro md:text-[11px] text-success dark:text-emerald-400 leading-snug">
+                                <p className="text-micro md:text-[11px] text-success dark:text-success leading-snug">
                                   Free with {complimentaryFrom}
                                 </p>
                               </div>

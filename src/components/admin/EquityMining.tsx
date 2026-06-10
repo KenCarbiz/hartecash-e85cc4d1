@@ -296,8 +296,8 @@ const EquityMining = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
-            <Pickaxe className="w-5 h-5 text-success dark:text-emerald-400" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-success/20 to-teal-500/20 flex items-center justify-center">
+            <Pickaxe className="w-5 h-5 text-success dark:text-success" />
           </div>
           <div>
             <h2 className="text-2xl font-black text-card-foreground tracking-tight">
@@ -347,7 +347,7 @@ const EquityMining = () => {
             size="sm"
             onClick={sendBulkOutreach}
             disabled={bulkSending}
-            className="gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-sm"
+            className="gap-1.5 bg-gradient-to-r from-success to-teal-600 hover:from-success hover:to-teal-700 text-white shadow-sm"
           >
             {bulkSending ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -360,12 +360,12 @@ const EquityMining = () => {
       </div>
 
       {/* Service lead ingestion note */}
-      <div className="rounded-2xl border border-info/30 bg-gradient-to-r from-blue-500/8 via-blue-500/4 to-transparent p-4 flex items-start gap-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/15 border border-info/30 shrink-0">
-          <Info className="w-4 h-4 text-info dark:text-blue-400" />
+      <div className="rounded-2xl border border-info/30 bg-gradient-to-r from-info/8 via-info/4 to-transparent p-4 flex items-start gap-3">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-info/100/15 border border-info/30 shrink-0">
+          <Info className="w-4 h-4 text-info dark:text-info" />
         </div>
-        <div className="text-xs leading-relaxed text-blue-900 dark:text-blue-100">
-          <p className="font-bold text-info dark:text-blue-300 text-[11px] uppercase tracking-wider mb-0.5">
+        <div className="text-xs leading-relaxed text-info dark:text-info">
+          <p className="font-bold text-info dark:text-info text-[11px] uppercase tracking-wider mb-0.5">
             Capture service leads instantly
           </p>
           <p>
@@ -408,7 +408,7 @@ const EquityMining = () => {
                 <label className="text-micro font-bold text-muted-foreground uppercase tracking-wider">
                   Minimum Equity
                 </label>
-                <span className="text-[11px] font-bold text-success dark:text-emerald-400">
+                <span className="text-[11px] font-bold text-success dark:text-success">
                   {fmtUsd(minEquity)}
                 </span>
               </div>
@@ -431,44 +431,44 @@ const EquityMining = () => {
           label="Service Leads"
           value={kpis.total}
           icon={Users}
-          color="text-blue-500"
-          bg="from-blue-500/15 to-blue-600/5"
+          color="text-info"
+          bg="from-info/15 to-info/5"
         />
         <KpiCard
           label="Hot Leads"
           value={kpis.hotCount}
           icon={Flame}
           color="text-success"
-          bg="from-emerald-500/15 to-emerald-600/5"
+          bg="from-success/15 to-success/5"
         />
         <KpiCard
           label="Total Hot Equity"
           value={fmtUsd(kpis.totalHotEquity)}
           icon={DollarSign}
           color="text-success"
-          bg="from-emerald-500/15 to-emerald-600/5"
+          bg="from-success/15 to-success/5"
         />
         <KpiCard
           label="Outreach Sent"
           value={kpis.outreachCount}
           icon={Mail}
-          color="text-violet-500"
-          bg="from-violet-500/15 to-violet-600/5"
+          color="text-primary"
+          bg="from-primary/15 to-primary/5"
         />
         <KpiCard
           label="Converted"
           value={kpis.converted}
           icon={CheckCircle}
           color="text-warning"
-          bg="from-amber-500/15 to-amber-600/5"
+          bg="from-warning/15 to-warning/5"
         />
       </div>
 
       {/* Leads Table */}
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-border bg-gradient-to-r from-emerald-500/5 to-teal-500/5">
+        <div className="px-5 py-4 border-b border-border bg-gradient-to-r from-success/5 to-teal-500/5">
           <div className="flex items-center gap-2">
-            <Car className="w-4 h-4 text-success dark:text-emerald-400" />
+            <Car className="w-4 h-4 text-success dark:text-success" />
             <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
               Service Drive Leads by Estimated Equity
             </h3>
@@ -605,7 +605,7 @@ const EquityMining = () => {
                           <span
                             className={`font-semibold ${
                               days > 7
-                                ? "text-warning dark:text-amber-400"
+                                ? "text-warning dark:text-warning"
                                 : "text-card-foreground"
                             }`}
                           >
@@ -615,11 +615,11 @@ const EquityMining = () => {
                       </td>
                       <td className="px-4 py-3 text-center">
                         {wasSent ? (
-                          <Badge className="bg-emerald-100 text-success dark:bg-emerald-900/40 dark:text-emerald-300 border-0 text-micro">
+                          <Badge className="bg-success/10 text-success dark:bg-success/40 dark:text-success border-0 text-micro">
                             Sent
                           </Badge>
                         ) : lead.progress_status === "contacted" ? (
-                          <Badge className="bg-blue-100 text-info dark:bg-blue-900/40 dark:text-blue-300 border-0 text-micro">
+                          <Badge className="bg-info/10 text-info dark:bg-info/40 dark:text-info border-0 text-micro">
                             Contacted
                           </Badge>
                         ) : (
