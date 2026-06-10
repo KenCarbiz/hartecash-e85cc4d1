@@ -41,13 +41,18 @@ interface OfferRow {
   progress_status: string;
   status_updated_at: string | null;
   created_at: string;
+  /** Present once the offer_expiry migration is applied; preferred when set. */
+  offer_expires_at?: string | null;
 }
 
 type Bucket = "expiring" | "active" | "expired" | "stale";
 
 const dayMs = 86_400_000;
 const offerDate = (r: OfferRow) => new Date(r.status_updated_at || r.created_at);
-const daysLeftOf = (r: OfferRow) => Math.floor((offerDate(r).getTime() + OFFER_WINDOW * dayMs - Date.now()) / dayMs);
+// Real expiry once the migration is applied; otherwise derive the 7-day window.
+const expiryOf = (r: OfferRow) =>
+  r.offer_expires_at ? new Date(r.offer_expires_at) : new Date(offerDate(r).getTime() + OFFER_WINDOW * dayMs);
+const daysLeftOf = (r: OfferRow) => Math.floor((expiryOf(r).getTime() - Date.now()) / dayMs);
 const bucketOf = (r: OfferRow): Bucket => {
   const d = daysLeftOf(r);
   if (d >= 0 && d <= 3) return "expiring";
@@ -68,16 +73,22 @@ const ReEngagement = ({ db }: { db: Db }) => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("submissions")
-        .select("id, token, name, vehicle_year, vehicle_make, vehicle_model, offered_price, progress_status, status_updated_at, created_at")
-        .eq("dealership_id", tenant.dealership_id)
-        .gt("offered_price", 0)
-        .not("progress_status", "in", "(purchase_complete,dead_lead)")
-        .order("status_updated_at", { ascending: false })
-        .limit(500);
+      const base = "id, token, name, vehicle_year, vehicle_make, vehicle_model, offered_price, progress_status, status_updated_at, created_at";
+      const q = (cols: string) =>
+        supabase
+          .from("submissions")
+          .select(cols)
+          .eq("dealership_id", tenant.dealership_id)
+          .gt("offered_price", 0)
+          .not("progress_status", "in", "(purchase_complete,dead_lead)")
+          .order("status_updated_at", { ascending: false })
+          .limit(500);
+      // Prefer the real offer_expires_at column; fall back if the migration
+      // isn't applied yet (column missing) so the surface never breaks.
+      let res = await q(`${base}, offer_expires_at`);
+      if (res.error) res = await q(base);
       if (!cancelled) {
-        setRows(((data as unknown) as OfferRow[]) || []);
+        setRows(((res.data as unknown) as OfferRow[]) || []);
         setLoading(false);
       }
     })();
