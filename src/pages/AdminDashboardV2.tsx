@@ -124,7 +124,7 @@ const AdminDashboardV2 = () => {
           allowedSections={db.allowedSections}
           isPlatformAdmin={isPlatformAdmin}
           isReceptionist={db.userRole === "receptionist"}
-          enterpriseBetaEnabled={Boolean((siteConfig as any).enterprise_beta_enabled)}
+          enterpriseBetaEnabled={Boolean((siteConfig as { enterprise_beta_enabled?: boolean }).enterprise_beta_enabled)}
           locationCount={db.dealerLocations.length}
           submissionCount={db.total}
           appointmentCount={db.appointments.length}
