@@ -13,6 +13,8 @@ interface MarketingHubProps {
    *  "testimonials" → testimonials
    *  "marketing"    → promotions (default) */
   initialTab?: "promotions" | "referrals" | "testimonials";
+  /** When true, hide the built-in header (the V2 PageShell supplies it). */
+  embedded?: boolean;
 }
 
 /**
@@ -26,17 +28,19 @@ interface MarketingHubProps {
  * them out of the long Setup · Process list so a marketing admin sees
  * the full content surface as one destination.
  */
-const MarketingHub = ({ initialTab = "promotions" }: MarketingHubProps) => {
+const MarketingHub = ({ initialTab = "promotions", embedded = false }: MarketingHubProps) => {
   const [tab, setTab] = useState<string>(initialTab);
 
   return (
     <div className="space-y-6">
+      {!embedded && (
       <div>
         <h2 className="text-lg font-semibold text-card-foreground">Marketing</h2>
         <p className="text-sm text-muted-foreground">
           Promotions, referrals, and testimonials — your customer-acquisition content.
         </p>
       </div>
+      )}
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList>

@@ -15,6 +15,8 @@ interface IntegrationsHubProps {
    *  "vauto-integration"    → vauto
    *  "integrations"         → status (default — landing tab) */
   initialTab?: "status" | "api" | "vauto" | "white-label";
+  /** When true, hide the built-in header (the V2 PageShell supplies it). */
+  embedded?: boolean;
 }
 
 /**
@@ -29,17 +31,19 @@ interface IntegrationsHubProps {
  * as four separate sidebar entries in the Integrations group. Merging
  * keeps the wiring/health/keys workflow in one destination.
  */
-const IntegrationsHub = ({ initialTab = "status" }: IntegrationsHubProps) => {
+const IntegrationsHub = ({ initialTab = "status", embedded = false }: IntegrationsHubProps) => {
   const [tab, setTab] = useState<string>(initialTab);
 
   return (
     <div className="space-y-6">
+      {!embedded && (
       <div>
         <h2 className="text-lg font-semibold text-card-foreground">Integrations</h2>
         <p className="text-sm text-muted-foreground">
           Status, keys, and per-integration configuration in one place.
         </p>
       </div>
+      )}
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList>
