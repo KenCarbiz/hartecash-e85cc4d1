@@ -55,6 +55,7 @@ import RooftopWebsitesV2 from "@/components/admin/v2/RooftopWebsitesV2";
 import WebsiteEmbedV2 from "@/components/admin/v2/WebsiteEmbedV2";
 import AuditLogV2 from "@/components/admin/v2/AuditLogV2";
 import LocationsV2 from "@/components/admin/v2/LocationsV2";
+import SaasPricingV2 from "@/components/admin/v2/SaasPricingV2";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -145,7 +146,8 @@ const AdminDashboardV2 = () => {
   const onWebsiteEmbed = baseSectionId === "embed-toolkit";
   const onAuditLog = baseSectionId === "audit-log";
   const onLocations = baseSectionId === "locations";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports || onMarketing || onIntegrations || onGroups || onExport || onStaff || onProspectDemo || onStripeWebhooks || onSystemSettings || onImageCache || onRooftopWebsites || onWebsiteEmbed || onAuditLog || onLocations;
+  const onSaasPricing = baseSectionId === "pricing-model";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports || onMarketing || onIntegrations || onGroups || onExport || onStaff || onProspectDemo || onStripeWebhooks || onSystemSettings || onImageCache || onRooftopWebsites || onWebsiteEmbed || onAuditLog || onLocations || onSaasPricing;
 
   return (
     <PlatformProvider>
@@ -248,6 +250,8 @@ const AdminDashboardV2 = () => {
                   <AuditLogV2 />
                 ) : onLocations ? (
                   <LocationsV2 />
+                ) : onSaasPricing ? (
+                  <SaasPricingV2 />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
                     onNavigate={db.setActiveSection}
