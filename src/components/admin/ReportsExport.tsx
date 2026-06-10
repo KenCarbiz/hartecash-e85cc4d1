@@ -272,7 +272,7 @@ const ReportsExport = () => {
     <div className="space-y-6">
       {/* ── Header ─────────────────────────────────────── */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-        <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent px-6 py-4 border-b border-border/50">
+        <div className="bg-gradient-to-r from-success/10 via-teal-500/5 to-transparent px-6 py-4 border-b border-border/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
               <FileSpreadsheet className="w-5 h-5 text-success" />
@@ -385,8 +385,8 @@ const ReportsExport = () => {
           label="Total Leads"
           value={kpis.totalInRange.toLocaleString()}
           icon={Users}
-          color="text-blue-500"
-          bg="from-blue-500/5 to-transparent"
+          color="text-info"
+          bg="from-info/5 to-transparent"
           sub={`in selected ${dateFrom || dateTo ? "date range" : "dataset"}`}
         />
         <KpiCard
@@ -394,7 +394,7 @@ const ReportsExport = () => {
           value={`${kpis.conversionRate}%`}
           icon={Target}
           color="text-success"
-          bg="from-emerald-500/5 to-transparent"
+          bg="from-success/5 to-transparent"
           sub="completed / total leads"
         />
         <KpiCard
@@ -402,15 +402,15 @@ const ReportsExport = () => {
           value={kpis.avgOfferValue > 0 ? fmt(kpis.avgOfferValue) : "--"}
           icon={TrendingUp}
           color="text-warning"
-          bg="from-amber-500/5 to-transparent"
+          bg="from-warning/5 to-transparent"
           sub="across leads with offers"
         />
         <KpiCard
           label="Total Revenue"
           value={kpis.totalRevenue > 0 ? fmt(kpis.totalRevenue) : "--"}
           icon={DollarSign}
-          color="text-violet-500"
-          bg="from-violet-500/5 to-transparent"
+          color="text-primary"
+          bg="from-primary/5 to-transparent"
           sub="completed deal value"
         />
       </div>
@@ -418,9 +418,9 @@ const ReportsExport = () => {
       {/* ── Source Breakdown (conditional) ────────────────── */}
       {reportType === "by_source" && sourceBreakdown.length > 0 && (
         <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-          <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent px-6 py-3 border-b border-border/50">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 py-3 border-b border-border/50">
             <h3 className="text-sm font-bold text-card-foreground flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-indigo-500" />
+              <BarChart3 className="w-4 h-4 text-primary" />
               Lead Source Breakdown
             </h3>
           </div>
@@ -430,7 +430,7 @@ const ReportsExport = () => {
                 <span className="text-xs text-muted-foreground w-28 shrink-0 font-medium">{source}</span>
                 <div className="flex-1 h-7 bg-muted/30 rounded-full overflow-hidden relative">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500 flex items-center justify-end pr-2.5"
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-primary transition-all duration-500 flex items-center justify-end pr-2.5"
                     style={{ width: `${Math.max(pct, 4)}%` }}
                   >
                     {pct > 12 && <span className="text-micro font-bold text-white drop-shadow-sm">{count}</span>}
@@ -448,9 +448,9 @@ const ReportsExport = () => {
 
       {/* ── Preview Table ─────────────────────────────────── */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-        <div className="bg-gradient-to-r from-slate-500/10 via-gray-500/5 to-transparent px-6 py-3 border-b border-border/50 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-muted-foreground/10 via-muted-foreground/5 to-transparent px-6 py-3 border-b border-border/50 flex items-center justify-between">
           <h3 className="text-sm font-bold text-card-foreground flex items-center gap-2">
-            <Eye className="w-4 h-4 text-slate-500" />
+            <Eye className="w-4 h-4 text-muted-foreground" />
             Preview
             <Badge variant="outline" className="text-micro ml-1">{filteredData.length} total</Badge>
           </h3>
@@ -504,7 +504,7 @@ const ReportsExport = () => {
                           COMPLETED_STATUSES.includes(row.progress_status)
                             ? "bg-success/15 text-success"
                             : DEAD_STATUSES.includes(row.progress_status)
-                            ? "bg-red-500/15 text-red-600"
+                            ? "bg-destructive/100/15 text-destructive"
                             : ""
                         }`}
                       >
@@ -516,7 +516,7 @@ const ReportsExport = () => {
                     </TableCell>
                     <TableCell className="text-center">
                       {row.is_hot_lead && (
-                        <Flame className="w-3.5 h-3.5 text-orange-500 mx-auto" />
+                        <Flame className="w-3.5 h-3.5 text-warning mx-auto" />
                       )}
                     </TableCell>
                   </TableRow>
@@ -529,7 +529,7 @@ const ReportsExport = () => {
 
       {/* ── Export Actions ─────────────────────────────────── */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-        <div className="bg-gradient-to-r from-teal-500/10 via-cyan-500/5 to-transparent px-6 py-3 border-b border-border/50">
+        <div className="bg-gradient-to-r from-teal-500/10 via-info/5 to-transparent px-6 py-3 border-b border-border/50">
           <h3 className="text-sm font-bold text-card-foreground flex items-center gap-2">
             <Download className="w-4 h-4 text-teal-500" />
             Export Options
@@ -561,8 +561,8 @@ const ReportsExport = () => {
             {/* Copy to Clipboard */}
             <div className="rounded-xl border border-border bg-muted/20 p-4 flex flex-col gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
-                  <ClipboardCopy className="w-4.5 h-4.5 text-blue-500" />
+                <div className="w-9 h-9 rounded-lg bg-info/100/15 flex items-center justify-center shrink-0">
+                  <ClipboardCopy className="w-4.5 h-4.5 text-info" />
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-card-foreground">Copy to Clipboard</h4>

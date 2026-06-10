@@ -22,9 +22,9 @@ import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 
 const LOCATION_TYPE_OPTIONS = [
   { value: "primary", label: "Primary Store", icon: Store, color: "bg-primary/10 text-primary border-primary/20" },
-  { value: "sister_store", label: "Sister Store", icon: Building2, color: "bg-blue-500/10 text-info border-blue-200" },
-  { value: "used_car", label: "Used Car Center", icon: ShoppingCart, color: "bg-warning/10 text-warning border-amber-200" },
-  { value: "buying_center", label: "Buying Center", icon: Warehouse, color: "bg-success/10 text-success border-emerald-200" },
+  { value: "sister_store", label: "Sister Store", icon: Building2, color: "bg-info/100/10 text-info border-info" },
+  { value: "used_car", label: "Used Car Center", icon: ShoppingCart, color: "bg-warning/10 text-warning border-warning" },
+  { value: "buying_center", label: "Buying Center", icon: Warehouse, color: "bg-success/10 text-success border-success" },
 ];
 
 interface Location {
@@ -419,7 +419,7 @@ const LocationManagement = () => {
                       {ti.label}
                     </Badge>
                     {loc.temporarily_offline && (
-                      <Badge variant="outline" className="text-micro px-1.5 py-0 bg-warning/10 text-warning border-amber-200">⚠ Offline</Badge>
+                      <Badge variant="outline" className="text-micro px-1.5 py-0 bg-warning/10 text-warning border-warning">⚠ Offline</Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
@@ -546,7 +546,7 @@ const LocationManagement = () => {
                             </div>
                           </div>
                         ))}
-                        <div className={`flex items-start gap-3 p-3 rounded-lg border ${loc.temporarily_offline ? "border-amber-300 bg-warning/5" : "border-border/50 bg-muted/20"}`}>
+                        <div className={`flex items-start gap-3 p-3 rounded-lg border ${loc.temporarily_offline ? "border-warning bg-warning/5" : "border-border/50 bg-muted/20"}`}>
                           <Switch checked={!loc.temporarily_offline} onCheckedChange={() => toggleField(loc.id, "temporarily_offline", loc.temporarily_offline)} className="mt-0.5" />
                           <div>
                             <Label className={`text-sm font-medium ${loc.temporarily_offline ? "text-warning" : ""}`}>
@@ -723,7 +723,7 @@ const LocationManagement = () => {
                           <Link2 className="w-4 h-4 text-primary" />
                           <Label className="text-xs font-semibold">Custom Domain</Label>
                           {domainMap[loc.id] && (
-                            <Badge variant="outline" className="text-micro px-1.5 py-0 bg-success/10 text-success border-emerald-200 gap-1">
+                            <Badge variant="outline" className="text-micro px-1.5 py-0 bg-success/10 text-success border-success gap-1">
                               <CheckCircle2 className="w-3 h-3" /> Mapped
                             </Badge>
                           )}

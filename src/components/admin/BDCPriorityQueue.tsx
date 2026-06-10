@@ -81,7 +81,7 @@ const fmtAgo = (iso: string): string => {
 // Status pill: derive from progress_status with a few hot-state overrides
 const pillFor = (l: Lead): { label: string; cls: string; dot: string } | null => {
   if (l.progress_status === "customer_arrived")
-    return { label: "Arrived", cls: "bg-red-100 text-red-700", dot: "bg-red-500" };
+    return { label: "Arrived", cls: "bg-destructive/10 text-destructive", dot: "bg-destructive/100" };
   if (l.progress_status === "on_the_way")
     return { label: "On the way", cls: "bg-warning/15 text-warning", dot: "" };
   if (l.progress_status === "offer_accepted" || l.progress_status === "price_agreed")
@@ -93,14 +93,14 @@ const pillFor = (l: Lead): { label: string; cls: string; dot: string } | null =>
   if (l.progress_status === "new")
     return { label: "New", cls: "bg-muted text-muted-foreground", dot: "" };
   if (l.is_hot_lead)
-    return { label: "Hot", cls: "bg-red-100 text-red-700", dot: "bg-red-500" };
+    return { label: "Hot", cls: "bg-destructive/10 text-destructive", dot: "bg-destructive/100" };
   return null;
 };
 
 // Per-row subline — gives the BDC rep a one-glance "why this row".
 const sublineFor = (l: Lead, isSlaBreach: boolean): { text: string; cls: string } => {
   if (l.progress_status === "customer_arrived")
-    return { text: "Arrived · On the lot", cls: "text-red-600 font-semibold" };
+    return { text: "Arrived · On the lot", cls: "text-destructive font-semibold" };
   if (l.progress_status === "on_the_way")
     return { text: "On the way · Prep file", cls: "text-warning font-semibold" };
   if (l.progress_status === "offer_accepted" || l.progress_status === "price_agreed")
@@ -109,7 +109,7 @@ const sublineFor = (l: Lead, isSlaBreach: boolean): { text: string; cls: string 
     return { text: "SLA breach · Call immediately", cls: "text-info font-semibold" };
   if (l.appointment_set)
     return { text: "Booked · Confirm + remind", cls: "text-muted-foreground" };
-  return { text: "Keep warm", cls: "text-orange-600 font-semibold" };
+  return { text: "Keep warm", cls: "text-warning font-semibold" };
 };
 
 const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string) => void }) => {
@@ -243,8 +243,8 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
 
       {/* KPI tiles */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Tile label="Call now" value={counts.now} sub="score ≥ 80" valueClass="text-red-600" />
-        <Tile label="Today" value={counts.today} sub="score 65–80" valueClass="text-orange-500" />
+        <Tile label="Call now" value={counts.now} sub="score ≥ 80" valueClass="text-destructive" />
+        <Tile label="Today" value={counts.today} sub="score 65–80" valueClass="text-warning" />
         <Tile label="Later" value={counts.later} sub="score < 65" />
         <Tile label="SLA breach" value={counts.sla} sub="> 2h open" valueClass="text-info" />
       </section>
@@ -275,7 +275,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
                   key={lead.id}
                   className={cn(
                     "rounded-lg border bg-card hover:bg-muted/30 transition-colors p-4 flex items-center gap-4",
-                    lead.progress_status === "customer_arrived" && "border-l-4 border-l-red-500 bg-red-50 hover:bg-red-100/70",
+                    lead.progress_status === "customer_arrived" && "border-l-4 border-l-destructive bg-destructive/10 hover:bg-destructive/10/70",
                   )}
                 >
                   <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-foreground shrink-0">
@@ -355,7 +355,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
                     {lead.phone ? (
                       <>
                         <Button
-                          className="h-9 bg-slate-900 hover:bg-slate-800 text-white gap-1.5"
+                          className="h-9 bg-foreground hover:bg-foreground text-white gap-1.5"
                           onClick={() => clickToDial(lead.id)}
                         >
                           <Phone className="w-3.5 h-3.5" />

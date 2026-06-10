@@ -490,7 +490,7 @@ const PlatformPricingManager = () => {
           percentage off. The annual-equivalent monthly price and multiplier
           recompute live.
         </p>
-        <div className="mt-3 flex items-start gap-2 rounded-xl border border-success/30 bg-success/5 px-3 py-2 text-xs text-emerald-900 dark:text-emerald-200 max-w-2xl">
+        <div className="mt-3 flex items-start gap-2 rounded-xl border border-success/30 bg-success/5 px-3 py-2 text-xs text-success dark:text-success max-w-2xl">
           <span className="w-2 h-2 rounded-full bg-success mt-1 shrink-0 animate-pulse" />
           <p className="leading-snug">
             <span className="font-semibold">Live —</span> wired into the dealer
@@ -665,7 +665,7 @@ const PlatformPricingManager = () => {
                     <span
                       className={`text-lg font-bold ${
                         pct > 0
-                          ? "text-success dark:text-emerald-400"
+                          ? "text-success dark:text-success"
                           : "text-muted-foreground"
                       }`}
                       style={{ fontVariantNumeric: "tabular-nums" }}
@@ -678,19 +678,19 @@ const PlatformPricingManager = () => {
             })}
 
             {/* Enterprise row — no slider, just "Contact Sales" */}
-            <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-[200px_1fr_100px] items-center gap-4 bg-slate-900 text-slate-50 rounded-b-lg">
+            <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-[200px_1fr_100px] items-center gap-4 bg-foreground text-background rounded-b-lg">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-400/20 flex items-center justify-center shrink-0">
-                  <Factory className="w-4 h-4 text-amber-400" />
+                <div className="w-8 h-8 rounded-lg bg-warning/20 flex items-center justify-center shrink-0">
+                  <Factory className="w-4 h-4 text-warning" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Enterprise</p>
-                  <p className="text-[11px] text-slate-400">11+ rooftops</p>
+                  <p className="text-[11px] text-muted-foreground">11+ rooftops</p>
                 </div>
               </div>
-              <p className="text-sm text-slate-400">Custom pricing · negotiated per group</p>
+              <p className="text-sm text-muted-foreground">Custom pricing · negotiated per group</p>
               <div className="text-right">
-                <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-warning uppercase tracking-wider">
                   Contact Sales
                 </span>
               </div>
@@ -769,7 +769,7 @@ const PlatformPricingManager = () => {
                             key={vt.key}
                             className={`text-right px-4 py-2.5 font-semibold ${
                               changed
-                                ? "text-success dark:text-emerald-400"
+                                ? "text-success dark:text-success"
                                 : "text-muted-foreground"
                             }`}
                             style={{ fontVariantNumeric: "tabular-nums" }}
@@ -807,7 +807,7 @@ const PlatformPricingManager = () => {
                         key={vt.key}
                         className={`text-right px-4 py-2.5 font-semibold ${
                           changed
-                            ? "text-success dark:text-emerald-400"
+                            ? "text-success dark:text-success"
                             : "text-muted-foreground"
                         }`}
                         style={{ fontVariantNumeric: "tabular-nums" }}
@@ -947,7 +947,7 @@ function MainTierRow({
         >
           {annual != null ? (
             <>
-              <span className="text-sm font-semibold text-success dark:text-emerald-400">
+              <span className="text-sm font-semibold text-success dark:text-success">
                 ${annual.toLocaleString()}
               </span>
               <span className="text-micro text-muted-foreground">/mo</span>
@@ -1110,7 +1110,7 @@ function BundleRow({
         >
           {annual != null ? (
             <>
-              <span className="text-sm font-semibold text-success dark:text-emerald-400">
+              <span className="text-sm font-semibold text-success dark:text-success">
                 ${annual.toLocaleString()}
               </span>
               <span className="text-micro text-muted-foreground">/mo</span>
@@ -1220,7 +1220,7 @@ function MonthlyField({
     >
       <span
         className={`font-semibold ${
-          isOverride ? "text-warning dark:text-amber-400" : "text-card-foreground"
+          isOverride ? "text-warning dark:text-warning" : "text-card-foreground"
         }`}
       >
         ${displayed.toLocaleString()}

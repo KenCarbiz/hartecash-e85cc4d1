@@ -92,11 +92,11 @@ type QueueReason =
   | "declined";
 
 const REASON_META: Record<QueueReason, { label: string; color: string; icon: React.ElementType; priority: number }> = {
-  walk_in:     { label: "Walk-In",     color: "bg-red-500/15 text-red-600 border-red-500/30 dark:text-red-400", icon: Flame,    priority: 1 },
-  service:     { label: "Service",     color: "bg-orange-500/15 text-orange-600 border-orange-500/30 dark:text-orange-400", icon: Wrench, priority: 2 },
-  manual_entry:{ label: "Manual",      color: "bg-warning/15 text-warning border-warning/30 dark:text-amber-400", icon: Plus, priority: 3 },
-  flagged:     { label: "Flagged",     color: "bg-violet-500/15 text-violet-600 border-violet-500/30 dark:text-violet-400", icon: Sparkles, priority: 4 },
-  declined:    { label: "Declined",    color: "bg-blue-500/15 text-info border-info/30 dark:text-blue-400", icon: UserX, priority: 5 },
+  walk_in:     { label: "Walk-In",     color: "bg-destructive/100/15 text-destructive border-destructive/30 dark:text-destructive", icon: Flame,    priority: 1 },
+  service:     { label: "Service",     color: "bg-warning/100/15 text-warning border-warning/30 dark:text-warning", icon: Wrench, priority: 2 },
+  manual_entry:{ label: "Manual",      color: "bg-warning/15 text-warning border-warning/30 dark:text-warning", icon: Plus, priority: 3 },
+  flagged:     { label: "Flagged",     color: "bg-primary/15 text-primary border-primary/30 dark:text-primary", icon: Sparkles, priority: 4 },
+  declined:    { label: "Declined",    color: "bg-info/100/15 text-info border-info/30 dark:text-info", icon: UserX, priority: 5 },
 };
 
 const isStaleOffer = (row: QueueRow): boolean => {
@@ -451,14 +451,14 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
         <QueueTile
           label="Walk-ins"
           value={tileCounts.walk_ins}
-          valueClass="text-red-600"
+          valueClass="text-destructive"
           active={bucket === "walk_ins"}
           onClick={() => setBucket(bucket === "walk_ins" ? "all" : "walk_ins")}
         />
         <QueueTile
           label="Service drive"
           value={tileCounts.service}
-          valueClass="text-orange-500"
+          valueClass="text-warning"
           active={bucket === "service"}
           onClick={() => setBucket(bucket === "service" ? "all" : "service")}
         />
@@ -542,15 +542,15 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
             return (
               <div className="mb-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-[11px] font-bold tracking-[0.1em] text-red-600 uppercase inline-flex items-center gap-2">
+                  <h2 className="text-[11px] font-bold tracking-[0.1em] text-destructive uppercase inline-flex items-center gap-2">
                     <span className="relative flex h-2 w-2 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" aria-hidden="true" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" aria-hidden="true" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive/100 opacity-75" aria-hidden="true" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" aria-hidden="true" />
                     </span>
                     Customer present — {customerHere.length}
                   </h2>
                 </div>
-                <div className="space-y-2 rounded-xl border-2 border-red-500/30 bg-red-500/[0.03] p-2">
+                <div className="space-y-2 rounded-xl border-2 border-destructive/30 bg-destructive/100/[0.03] p-2">
                   {customerHere.map((row) => (
                     <QueueRowItem
                       key={row.id}
@@ -684,10 +684,10 @@ function QueueRowItem({
   // the queue reason. Falls back to the queue reason label when there's
   // no journey signal we can show distinctly.
   const pill = (() => {
-    if (row.progress_status === "customer_arrived") return { label: "Arrived", cls: "bg-red-100 text-red-700", dot: "bg-red-500" };
-    if (row.progress_status === "on_the_way") return { label: "On the way", cls: "bg-amber-100 text-warning", dot: "bg-warning" };
-    if (row.progress_status === "inspection_completed") return { label: "Inspected", cls: "bg-blue-100 text-info", dot: "bg-blue-500" };
-    if (row.progress_status === "offer_declined") return { label: "Declined", cls: "bg-slate-200 text-slate-700", dot: "bg-slate-500" };
+    if (row.progress_status === "customer_arrived") return { label: "Arrived", cls: "bg-destructive/10 text-destructive", dot: "bg-destructive/100" };
+    if (row.progress_status === "on_the_way") return { label: "On the way", cls: "bg-warning/10 text-warning", dot: "bg-warning" };
+    if (row.progress_status === "inspection_completed") return { label: "Inspected", cls: "bg-info/10 text-info", dot: "bg-info/100" };
+    if (row.progress_status === "offer_declined") return { label: "Declined", cls: "bg-muted text-muted-foreground", dot: "bg-muted0" };
     const m = REASON_META[reason];
     return { label: m.label, cls: m.color, dot: "" };
   })();
@@ -722,7 +722,7 @@ function QueueRowItem({
           <Button
             size="sm"
             onClick={onOpen}
-            className="bg-slate-900 hover:bg-slate-800 text-white gap-1.5"
+            className="bg-foreground hover:bg-foreground text-white gap-1.5"
           >
             <Gauge className="w-3.5 h-3.5" />
             Open appraisal
@@ -749,7 +749,7 @@ function QueueRowItem({
         const chipClass = isAutoApplied
           ? "bg-success/10 text-success border-success/20"
           : isBump
-            ? "bg-violet-500/10 text-violet-700 border-violet-500/20"
+            ? "bg-primary/10 text-primary border-primary/20"
             : "bg-warning/10 text-warning border-warning/20";
         return (
           <div className={`mx-3 mb-3 rounded-md border p-2.5 ${chipClass}`}>
