@@ -44,6 +44,8 @@ import PerformanceV2 from "@/components/admin/v2/PerformanceV2";
 import ReportsV2 from "@/components/admin/v2/ReportsV2";
 import MarketingV2 from "@/components/admin/v2/MarketingV2";
 import IntegrationsV2 from "@/components/admin/v2/IntegrationsV2";
+import GroupManagementV2 from "@/components/admin/v2/GroupManagementV2";
+import ExportDataV2 from "@/components/admin/v2/ExportDataV2";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -123,7 +125,9 @@ const AdminDashboardV2 = () => {
   const onReports = baseSectionId === "reports";
   const onMarketing = ["marketing", "promotions", "referrals", "testimonials"].includes(baseSectionId);
   const onIntegrations = ["integrations", "integrations-status", "api-access", "vauto-integration", "white-label"].includes(baseSectionId);
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports || onMarketing || onIntegrations;
+  const onGroups = baseSectionId === "groups";
+  const onExport = baseSectionId === "data-egress";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports || onMarketing || onIntegrations || onGroups || onExport;
 
   return (
     <PlatformProvider>
@@ -204,6 +208,10 @@ const AdminDashboardV2 = () => {
                   <MarketingV2 initialTab={baseSectionId === "referrals" ? "referrals" : baseSectionId === "testimonials" ? "testimonials" : "promotions"} />
                 ) : onIntegrations ? (
                   <IntegrationsV2 initialTab={baseSectionId === "api-access" ? "api" : baseSectionId === "vauto-integration" ? "vauto" : baseSectionId === "white-label" ? "white-label" : "status"} />
+                ) : onGroups ? (
+                  <GroupManagementV2 />
+                ) : onExport ? (
+                  <ExportDataV2 />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
                     onNavigate={db.setActiveSection}
