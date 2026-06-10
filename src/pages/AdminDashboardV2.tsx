@@ -36,6 +36,7 @@ import WebsiteWidget from "@/components/admin/v2/WebsiteWidget";
 import VehicleCheckIn from "@/components/admin/v2/VehicleCheckIn";
 import AppointmentsView from "@/components/admin/v2/AppointmentsView";
 import StoreSettings from "@/components/admin/v2/StoreSettings";
+import ReEngagement from "@/components/admin/v2/ReEngagement";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -107,7 +108,8 @@ const AdminDashboardV2 = () => {
   const onVehicleCheckIn = baseSectionId === "inspection-checkin";
   const onAppointments = baseSectionId === "accepted-appts";
   const onStoreSettings = baseSectionId === "store-settings-hub";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings;
+  const onReEngagement = baseSectionId === "reengagement";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement;
 
   return (
     <PlatformProvider>
@@ -166,6 +168,8 @@ const AdminDashboardV2 = () => {
                   <AppointmentsView db={db} />
                 ) : onStoreSettings ? (
                   <StoreSettings db={db} />
+                ) : onReEngagement ? (
+                  <ReEngagement db={db} />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
                     onNavigate={db.setActiveSection}

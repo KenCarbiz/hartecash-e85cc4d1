@@ -13,7 +13,7 @@ import {
   MapPin, Settings, Clock, Megaphone, Globe, Code2,
   PanelRightOpen, Activity, Users, CreditCard, Rocket, SlidersHorizontal,
   Image as ImageIcon, Send, Network, ScrollText, Target, Tag, Receipt,
-  LayoutDashboard, Briefcase, Gauge,
+  LayoutDashboard, Briefcase, Gauge, RefreshCw,
 } from "lucide-react";
 
 export type NavItem = {
@@ -101,10 +101,13 @@ export function buildNavGroups(flags: NavFlags): NavGroup[] {
     ]),
   ];
 
-  const outreach = f([
-    { key: "equity-mining", label: "Equity Mining", icon: TrendingUp },
-    { key: "voice-ai", label: "Voice AI", icon: Mic },
-  ]);
+  const outreach: NavItem[] = [
+    { key: "reengagement", label: "Re-engagement", icon: RefreshCw },
+    ...f([
+      { key: "equity-mining", label: "Equity Mining", icon: TrendingUp },
+      { key: "voice-ai", label: "Voice AI", icon: Mic },
+    ]),
+  ];
 
   const performance = f([
     { key: "performance", label: "Performance", icon: LineChart },
