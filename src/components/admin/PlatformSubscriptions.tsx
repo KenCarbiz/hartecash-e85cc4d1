@@ -51,7 +51,7 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-muted text-muted-foreground border-border",
 };
 
-const PlatformSubscriptions = () => {
+const PlatformSubscriptions = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { products: dbProducts, bundles: dbBundles, tiers: dbTiers, subscription, architecture, hasProduct, getActiveTier, entitledTierIds } = usePlatform();
   const { tenant } = useTenant();
   const { toast } = useToast();
@@ -298,12 +298,14 @@ const PlatformSubscriptions = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
+      {!embedded && (
       <div>
         <h1 className="text-2xl font-bold text-card-foreground tracking-tight">Platform & Billing</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Manage your AutoCurb Platform subscription across AutoCurb.io, AutoLabels.io, AutoFrame.io, and AutoFilm.io.
         </p>
       </div>
+      )}
 
       {/* Current Plan snapshot — reflects the dealer's saved sub OR
           the in-flight picker selection (live preview). The amber ring
