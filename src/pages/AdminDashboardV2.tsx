@@ -42,6 +42,8 @@ import AppraiserQueueV2 from "@/components/admin/v2/AppraiserQueueV2";
 import BdcQueueV2 from "@/components/admin/v2/BdcQueueV2";
 import PerformanceV2 from "@/components/admin/v2/PerformanceV2";
 import ReportsV2 from "@/components/admin/v2/ReportsV2";
+import MarketingV2 from "@/components/admin/v2/MarketingV2";
+import IntegrationsV2 from "@/components/admin/v2/IntegrationsV2";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -119,7 +121,9 @@ const AdminDashboardV2 = () => {
   const onBdcQueue = baseSectionId === "bdc-hub" || baseSectionId === "bdc-queue" || baseSectionId === "bdc-calls";
   const onPerformance = ["performance", "executive", "gm-hud", "bdc-health", "manager-dispatch"].includes(baseSectionId);
   const onReports = baseSectionId === "reports";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports;
+  const onMarketing = ["marketing", "promotions", "referrals", "testimonials"].includes(baseSectionId);
+  const onIntegrations = ["integrations", "integrations-status", "api-access", "vauto-integration", "white-label"].includes(baseSectionId);
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports || onMarketing || onIntegrations;
 
   return (
     <PlatformProvider>
@@ -196,6 +200,10 @@ const AdminDashboardV2 = () => {
                   />
                 ) : onReports ? (
                   <ReportsV2 />
+                ) : onMarketing ? (
+                  <MarketingV2 initialTab={baseSectionId === "referrals" ? "referrals" : baseSectionId === "testimonials" ? "testimonials" : "promotions"} />
+                ) : onIntegrations ? (
+                  <IntegrationsV2 initialTab={baseSectionId === "api-access" ? "api" : baseSectionId === "vauto-integration" ? "vauto" : baseSectionId === "white-label" ? "white-label" : "status"} />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
                     onNavigate={db.setActiveSection}
