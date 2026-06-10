@@ -79,7 +79,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { year, make, model, style, color, uvc, vin, angle, studio_only, token } = body;
+    const { year, make, model, style, color, uvc, vin, angle, studio_only, token, submission_token } = body;
 
     if (!year || !make || !model) {
       return new Response(JSON.stringify({ error: "year, make, and model are required" }), {
@@ -87,15 +87,10 @@ serve(async (req) => {
       });
     }
 
-    // Guard paid APIs (Black Book photo + Lovable AI image gen) from
-    // anonymous credit-burn abuse. Staff JWTs and valid submission
-    // tokens pass through unmetered; everyone else is per-IP capped.
-    const blocked = await paidApiGuard(req, corsHeaders, {
-      submissionToken: token ?? null,
-      anonMaxPerHour: 20,
-      scope: "generate-vehicle-image",
-    });
-    if (blocked) return blocked;
+    // Accept both `token` and `submission_token` so portal callers
+    // (which send `submission_token`) get the unmetered path instead
+    // of falling through to the per-IP anon cap.
+    const submissionTokenValue = token ?? submission_token ?? null;
 
     const colorSlug = (color || "white").toLowerCase().replace(/[^a-z0-9]/g, "_");
     const angleSlug = angle === "side" ? "side" : "3q";
@@ -166,9 +161,21 @@ serve(async (req) => {
       }
     }
 
+    // Guard the paid path only. Cache hits above are free and must not
+    // count against the per-IP cap — otherwise hero loads on a popular
+    // YMM (already cached) burn anon quota and trigger 429s with blank
+    // screens. Staff JWTs + valid submission tokens pass unmetered.
+    const blocked = await paidApiGuard(req, corsHeaders, {
+      submissionToken: submissionTokenValue,
+      anonMaxPerHour: 60,
+      scope: "generate-vehicle-image",
+    });
+    if (blocked) return blocked;
+
     // 2. Try Black Book photo API first (the exact-vehicle photo).
     let imageBytes: Uint8Array | null = null;
     let imageSource = "ai";
+
     const bbUsername = Deno.env.get("BLACKBOOK_USERNAME");
     const bbPassword = Deno.env.get("BLACKBOOK_PASSWORD");
     const yearNum = parseInt(year, 10);
