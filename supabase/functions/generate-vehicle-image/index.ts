@@ -161,9 +161,21 @@ serve(async (req) => {
       }
     }
 
+    // Guard the paid path only. Cache hits above are free and must not
+    // count against the per-IP cap — otherwise hero loads on a popular
+    // YMM (already cached) burn anon quota and trigger 429s with blank
+    // screens. Staff JWTs + valid submission tokens pass unmetered.
+    const blocked = await paidApiGuard(req, corsHeaders, {
+      submissionToken: submissionTokenValue,
+      anonMaxPerHour: 60,
+      scope: "generate-vehicle-image",
+    });
+    if (blocked) return blocked;
+
     // 2. Try Black Book photo API first (the exact-vehicle photo).
     let imageBytes: Uint8Array | null = null;
     let imageSource = "ai";
+
     const bbUsername = Deno.env.get("BLACKBOOK_USERNAME");
     const bbPassword = Deno.env.get("BLACKBOOK_PASSWORD");
     const yearNum = parseInt(year, 10);
