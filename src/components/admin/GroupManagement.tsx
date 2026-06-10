@@ -92,7 +92,7 @@ function statusBadge(s: Activation["status"]) {
  * Reads from dealer_groups, dealer_accounts, rooftop_activations.
  * RLS already restricts the tables to platform admins on this surface.
  */
-const GroupManagement = () => {
+const GroupManagement = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { toast } = useToast();
   const [groups, setGroups] = useState<DealerGroup[]>([]);
   const [accounts, setAccounts] = useState<DealerAccount[]>([]);
@@ -344,12 +344,14 @@ const GroupManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
+        {!embedded && (
         <div>
           <h2 className="text-lg font-semibold text-card-foreground">Group Management</h2>
           <p className="text-sm text-muted-foreground">
             Dealer groups, master MSAs, per-rooftop activations and pilot windows.
           </p>
         </div>
+        )}
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={reload} disabled={loading}>
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />

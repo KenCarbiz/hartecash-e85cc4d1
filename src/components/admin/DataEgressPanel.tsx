@@ -47,7 +47,7 @@ type EgressLogRow = {
  * Past exports are listed below the form so the dealer can re-download
  * within the 24-hour window without re-running the queries.
  */
-const DataEgressPanel = () => {
+const DataEgressPanel = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { toast } = useToast();
   const { tenant } = useTenant();
   const [selected, setSelected] = useState<Set<string>>(
@@ -156,16 +156,18 @@ const DataEgressPanel = () => {
 
   return (
     <div className="space-y-6">
+      {!embedded && (
       <div>
         <h2 className="text-lg font-semibold text-card-foreground">Export My Data</h2>
         <p className="text-sm text-muted-foreground">
           Your data is yours — pull it down as CSV any time, no charge, no rate limit.
         </p>
       </div>
+      )}
 
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 flex items-start gap-3">
+      <div className="rounded-xl border border-success/30 bg-success/10 px-5 py-4 flex items-start gap-3">
         <ShieldCheck className="w-5 h-5 text-success shrink-0 mt-0.5" />
-        <div className="text-sm text-emerald-900">
+        <div className="text-sm text-success">
           <strong className="block mb-1">Free data egress is in your contract.</strong>
           You can export all of your customer, lead, inspection, and communication data at any time.
           Exports include a provenance trail (what came from where) so you can hand the file to an OEM,
