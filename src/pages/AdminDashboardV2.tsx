@@ -41,6 +41,7 @@ import AllLeadsV2 from "@/components/admin/v2/AllLeadsV2";
 import AppraiserQueueV2 from "@/components/admin/v2/AppraiserQueueV2";
 import BdcQueueV2 from "@/components/admin/v2/BdcQueueV2";
 import PerformanceV2 from "@/components/admin/v2/PerformanceV2";
+import ReportsV2 from "@/components/admin/v2/ReportsV2";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -117,7 +118,8 @@ const AdminDashboardV2 = () => {
   const onAppraiserQueue = baseSectionId === "appraiser-queue";
   const onBdcQueue = baseSectionId === "bdc-hub" || baseSectionId === "bdc-queue" || baseSectionId === "bdc-calls";
   const onPerformance = ["performance", "executive", "gm-hud", "bdc-health", "manager-dispatch"].includes(baseSectionId);
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance;
+  const onReports = baseSectionId === "reports";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue || onPerformance || onReports;
 
   return (
     <PlatformProvider>
@@ -192,6 +194,8 @@ const AdminDashboardV2 = () => {
                     db={db}
                     initialTab={baseSectionId === "gm-hud" ? "hud" : baseSectionId === "bdc-health" ? "bdc" : baseSectionId === "manager-dispatch" ? "dispatch" : "kpi"}
                   />
+                ) : onReports ? (
+                  <ReportsV2 />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
                     onNavigate={db.setActiveSection}
