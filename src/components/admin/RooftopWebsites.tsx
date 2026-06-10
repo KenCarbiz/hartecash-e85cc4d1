@@ -38,7 +38,7 @@ function slugify(input: string): string {
   return input.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
 }
 
-const RooftopWebsites = () => {
+const RooftopWebsites = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
@@ -196,6 +196,7 @@ const RooftopWebsites = () => {
 
   return (
     <div className="space-y-6 max-w-5xl">
+      {!embedded && (
       <header>
         <h2 className="text-xl font-bold flex items-center gap-2 mb-1">
           <Globe className="w-5 h-5 text-primary" /> Rooftop Websites
@@ -205,6 +206,7 @@ const RooftopWebsites = () => {
           staff — only the public-facing site differs.
         </p>
       </header>
+      )}
 
       {/* Group hub */}
       {groupTenant && (
