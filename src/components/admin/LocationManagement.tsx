@@ -22,7 +22,7 @@ import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 
 const LOCATION_TYPE_OPTIONS = [
   { value: "primary", label: "Primary Store", icon: Store, color: "bg-primary/10 text-primary border-primary/20" },
-  { value: "sister_store", label: "Sister Store", icon: Building2, color: "bg-info/100/10 text-info border-info" },
+  { value: "sister_store", label: "Sister Store", icon: Building2, color: "bg-info/10 text-info border-info" },
   { value: "used_car", label: "Used Car Center", icon: ShoppingCart, color: "bg-warning/10 text-warning border-warning" },
   { value: "buying_center", label: "Buying Center", icon: Warehouse, color: "bg-success/10 text-success border-success" },
 ];

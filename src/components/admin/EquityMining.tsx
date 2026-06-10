@@ -361,7 +361,7 @@ const EquityMining = () => {
 
       {/* Service lead ingestion note */}
       <div className="rounded-2xl border border-info/30 bg-gradient-to-r from-info/8 via-info/4 to-transparent p-4 flex items-start gap-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-info/100/15 border border-info/30 shrink-0">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-info/15 border border-info/30 shrink-0">
           <Info className="w-4 h-4 text-info dark:text-info" />
         </div>
         <div className="text-xs leading-relaxed text-info dark:text-info">

@@ -367,7 +367,7 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCrea
                   : "border-l-4 border-l-transparent";
 
                 const pill = arrived
-                  ? { label: "Arrived", cls: "text-destructive", dot: "bg-destructive/100" }
+                  ? { label: "Arrived", cls: "text-destructive", dot: "bg-destructive" }
                   : onTheWay
                     ? { label: "On the way", cls: "text-warning bg-warning/15 px-2 py-0.5 rounded", dot: "" }
                     : null;

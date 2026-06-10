@@ -42,7 +42,7 @@ const TAG_OPTIONS = [
 const TAG_COLORS: Record<string, string> = {
   feature: "bg-accent/15 text-accent",
   improvement: "bg-primary/15 text-primary",
-  fix: "bg-warning/100/15 text-warning",
+  fix: "bg-warning/15 text-warning",
   security: "bg-success/15 text-success",
 };
 

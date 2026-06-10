@@ -82,7 +82,7 @@ const intentFromSource = (s: Submission): { label: string; dotClass: string } =>
   switch (s.lead_source) {
     case "trade":
     case "in_store_trade":
-      return { label: "Trade-In", dotClass: "bg-info/100" };
+      return { label: "Trade-In", dotClass: "bg-info" };
     case "inventory":
       return { label: "Sell", dotClass: "bg-success" };
     case "service":

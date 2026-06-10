@@ -92,11 +92,11 @@ type QueueReason =
   | "declined";
 
 const REASON_META: Record<QueueReason, { label: string; color: string; icon: React.ElementType; priority: number }> = {
-  walk_in:     { label: "Walk-In",     color: "bg-destructive/100/15 text-destructive border-destructive/30 dark:text-destructive", icon: Flame,    priority: 1 },
-  service:     { label: "Service",     color: "bg-warning/100/15 text-warning border-warning/30 dark:text-warning", icon: Wrench, priority: 2 },
+  walk_in:     { label: "Walk-In",     color: "bg-destructive/15 text-destructive border-destructive/30 dark:text-destructive", icon: Flame,    priority: 1 },
+  service:     { label: "Service",     color: "bg-warning/15 text-warning border-warning/30 dark:text-warning", icon: Wrench, priority: 2 },
   manual_entry:{ label: "Manual",      color: "bg-warning/15 text-warning border-warning/30 dark:text-warning", icon: Plus, priority: 3 },
   flagged:     { label: "Flagged",     color: "bg-primary/15 text-primary border-primary/30 dark:text-primary", icon: Sparkles, priority: 4 },
-  declined:    { label: "Declined",    color: "bg-info/100/15 text-info border-info/30 dark:text-info", icon: UserX, priority: 5 },
+  declined:    { label: "Declined",    color: "bg-info/15 text-info border-info/30 dark:text-info", icon: UserX, priority: 5 },
 };
 
 const isStaleOffer = (row: QueueRow): boolean => {
@@ -544,13 +544,13 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-[11px] font-bold tracking-[0.1em] text-destructive uppercase inline-flex items-center gap-2">
                     <span className="relative flex h-2 w-2 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive/100 opacity-75" aria-hidden="true" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" aria-hidden="true" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" aria-hidden="true" />
                     </span>
                     Customer present — {customerHere.length}
                   </h2>
                 </div>
-                <div className="space-y-2 rounded-xl border-2 border-destructive/30 bg-destructive/100/[0.03] p-2">
+                <div className="space-y-2 rounded-xl border-2 border-destructive/30 bg-destructive/[0.03] p-2">
                   {customerHere.map((row) => (
                     <QueueRowItem
                       key={row.id}
@@ -684,9 +684,9 @@ function QueueRowItem({
   // the queue reason. Falls back to the queue reason label when there's
   // no journey signal we can show distinctly.
   const pill = (() => {
-    if (row.progress_status === "customer_arrived") return { label: "Arrived", cls: "bg-destructive/10 text-destructive", dot: "bg-destructive/100" };
+    if (row.progress_status === "customer_arrived") return { label: "Arrived", cls: "bg-destructive/10 text-destructive", dot: "bg-destructive" };
     if (row.progress_status === "on_the_way") return { label: "On the way", cls: "bg-warning/10 text-warning", dot: "bg-warning" };
-    if (row.progress_status === "inspection_completed") return { label: "Inspected", cls: "bg-info/10 text-info", dot: "bg-info/100" };
+    if (row.progress_status === "inspection_completed") return { label: "Inspected", cls: "bg-info/10 text-info", dot: "bg-info" };
     if (row.progress_status === "offer_declined") return { label: "Declined", cls: "bg-muted text-muted-foreground", dot: "bg-muted0" };
     const m = REASON_META[reason];
     return { label: m.label, cls: m.color, dot: "" };

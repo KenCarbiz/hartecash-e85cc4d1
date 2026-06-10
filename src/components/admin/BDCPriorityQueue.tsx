@@ -81,7 +81,7 @@ const fmtAgo = (iso: string): string => {
 // Status pill: derive from progress_status with a few hot-state overrides
 const pillFor = (l: Lead): { label: string; cls: string; dot: string } | null => {
   if (l.progress_status === "customer_arrived")
-    return { label: "Arrived", cls: "bg-destructive/10 text-destructive", dot: "bg-destructive/100" };
+    return { label: "Arrived", cls: "bg-destructive/10 text-destructive", dot: "bg-destructive" };
   if (l.progress_status === "on_the_way")
     return { label: "On the way", cls: "bg-warning/15 text-warning", dot: "" };
   if (l.progress_status === "offer_accepted" || l.progress_status === "price_agreed")
@@ -93,7 +93,7 @@ const pillFor = (l: Lead): { label: string; cls: string; dot: string } | null =>
   if (l.progress_status === "new")
     return { label: "New", cls: "bg-muted text-muted-foreground", dot: "" };
   if (l.is_hot_lead)
-    return { label: "Hot", cls: "bg-destructive/10 text-destructive", dot: "bg-destructive/100" };
+    return { label: "Hot", cls: "bg-destructive/10 text-destructive", dot: "bg-destructive" };
   return null;
 };
 
@@ -275,7 +275,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
                   key={lead.id}
                   className={cn(
                     "rounded-lg border bg-card hover:bg-muted/30 transition-colors p-4 flex items-center gap-4",
-                    lead.progress_status === "customer_arrived" && "border-l-4 border-l-destructive bg-destructive/10 hover:bg-destructive/10/70",
+                    lead.progress_status === "customer_arrived" && "border-l-4 border-l-destructive bg-destructive/10 hover:bg-destructive/10",
                   )}
                 >
                   <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-foreground shrink-0">
