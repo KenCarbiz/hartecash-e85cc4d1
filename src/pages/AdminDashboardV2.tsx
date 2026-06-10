@@ -39,6 +39,7 @@ import StoreSettings from "@/components/admin/v2/StoreSettings";
 import ReEngagement from "@/components/admin/v2/ReEngagement";
 import AllLeadsV2 from "@/components/admin/v2/AllLeadsV2";
 import AppraiserQueueV2 from "@/components/admin/v2/AppraiserQueueV2";
+import BdcQueueV2 from "@/components/admin/v2/BdcQueueV2";
 import { COMMAND_CENTER_KEY, ANALYTICS_KEY } from "@/components/admin/v2/adminNavV2";
 
 const AdminDashboardV2 = () => {
@@ -113,7 +114,8 @@ const AdminDashboardV2 = () => {
   const onReEngagement = baseSectionId === "reengagement";
   const onAllLeads = baseSectionId === "submissions";
   const onAppraiserQueue = baseSectionId === "appraiser-queue";
-  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue;
+  const onBdcQueue = baseSectionId === "bdc-hub" || baseSectionId === "bdc-queue" || baseSectionId === "bdc-calls";
+  const onV2Custom = onCommandCenter || onAnalytics || onAvailability || onMyBusiness || onLaneDashboard || onReleaseCenter || onDealerNetwork || onServiceDrive || onWebsiteWidget || onVehicleCheckIn || onAppointments || onStoreSettings || onReEngagement || onAllLeads || onAppraiserQueue || onBdcQueue;
 
   return (
     <PlatformProvider>
@@ -178,6 +180,11 @@ const AdminDashboardV2 = () => {
                   <AllLeadsV2 db={db} />
                 ) : onAppraiserQueue ? (
                   <AppraiserQueueV2 userRole={db.userRole} isAppraiser={db.isAppraiser} />
+                ) : onBdcQueue ? (
+                  <BdcQueueV2
+                    initialTab={baseSectionId === "bdc-calls" ? "calls" : "priority"}
+                    onOpenSubmission={(id) => { const s = db.submissions.find((x) => x.id === id); if (s) db.handleView(s); }}
+                  />
                 ) : onDealerNetwork ? (
                   <DealerNetwork
                     onNavigate={db.setActiveSection}
