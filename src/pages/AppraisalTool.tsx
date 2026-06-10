@@ -1082,11 +1082,11 @@ export default function AppraisalTool() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-[#F4F6FA] pb-28">
       {/* ═══════════════════════════════════════ */}
       {/*  STICKY HEADER                          */}
       {/* ═══════════════════════════════════════ */}
-      <div className="sticky top-0 z-20 bg-gradient-to-br from-primary via-[hsl(210,100%,28%)] to-[hsl(215,90%,22%)] text-primary-foreground px-6 py-4 shadow-xl">
+      <div className="sticky top-0 z-20 bg-[#06194A] text-primary-foreground px-6 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -1242,10 +1242,10 @@ export default function AppraisalTool() {
         {/* HUD — Key Metrics Strip — Appraisal Value is DOMINANT scoreboard */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 mb-5">
           {/* DOMINANT — Appraisal Value card spans 2 cols */}
-          <div className={`col-span-2 rounded-xl border-2 p-4 text-center transition-all shadow-lg relative ${
+          <div className={`col-span-2 rounded-2xl border p-4 text-center transition-all shadow-[0_1px_2px_rgba(15,23,42,0.04)] relative ${
             sub.appraisal_finalized
-              ? "bg-emerald-500/10 border-emerald-500/40 ring-2 ring-emerald-500/30"
-              : "bg-primary/10 border-primary/40 ring-2 ring-primary/30"
+              ? "bg-[#E6FAF7] border-[#0D9488]/30"
+              : "bg-[#EEF0FF] border-[#6D28D9]/30"
           }`}>
             {/* Investment Tier badge — internal-only signal of how good this buy is.
                 Synthesizes MDS + cost-to-market + condition + AI agreement + holding cost. */}
@@ -1264,13 +1264,13 @@ export default function AppraisalTool() {
               />
             </div>
             <div className="text-[10px] uppercase tracking-[0.1em] font-bold text-muted-foreground mb-1">Appraisal Value</div>
-            <div className={`text-4xl font-black tracking-tight ${sub.appraisal_finalized ? "text-emerald-700 dark:text-emerald-400" : "text-primary"}`}>
+            <div className={`text-4xl font-black tracking-tight ${sub.appraisal_finalized ? "text-[#0F766E]" : "text-[#06194A]"}`}>
               ${Math.floor(finalValue + (managerOverride.amount || 0)).toLocaleString()}
             </div>
             {managerOverride.amount ? (
               <div className="text-xs font-bold text-amber-500 mt-1">MGR ADJ active</div>
             ) : sub.appraisal_finalized ? (
-              <div className="text-[10px] font-bold text-emerald-600 mt-1">
+              <div className="text-[10px] font-bold text-[#0F766E] mt-1">
                 ✓ Finalized {sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}
               </div>
             ) : lastSavedAt ? (
@@ -1300,19 +1300,19 @@ export default function AppraisalTool() {
         </div>
 
         {/* Vehicle Summary Bar — Commanding identity */}
-        <div className="bg-card rounded-xl border-2 border-primary/20 p-5 mb-4 shadow-md">
+        <div className="bg-white rounded-2xl border border-[#E6EAF0] p-5 mb-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <div className="flex items-center gap-3 mb-3">
-            <Car className="w-6 h-6 text-primary" />
+            <Car className="w-6 h-6 text-[#6D28D9]" />
             <span className="font-display text-lg font-black text-card-foreground tracking-wide">
               {sub.vehicle_year} {(sub.vehicle_make || "").toUpperCase()} {(sub.vehicle_model || "").toUpperCase()} {liveBbVehicle?.series || ""}
             </span>
             {(liveBbVehicle?.class_name || sub.bb_class_name) && (
-              <span className="text-[11px] font-bold bg-primary/15 text-primary px-2.5 py-1 rounded-full">{liveBbVehicle?.class_name || sub.bb_class_name}</span>
+              <span className="text-[11px] font-bold bg-[#EEF0FF] text-[#6D28D9] px-2.5 py-1 rounded-full">{liveBbVehicle?.class_name || sub.bb_class_name}</span>
             )}
             {bbLoading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
             <div className="ml-auto flex items-center gap-2">
               {sub.inspector_grade && (
-                <Badge className="bg-primary/15 text-primary border border-primary/30 text-[10px]">
+                <Badge className="bg-[#EEF0FF] text-[#6D28D9] border border-[#6D28D9]/20 text-[10px]">
                   <Shield className="w-3 h-3 mr-1" /> Inspector: {formatGrade(sub.inspector_grade)}
                 </Badge>
               )}
@@ -1360,12 +1360,12 @@ export default function AppraisalTool() {
 
             {/* ① SET CONDITION */}
             {bbVehicle && activeSettings && (
-              <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-xl border border-primary/20 p-4">
+              <div className="bg-[#F4F6FA] rounded-2xl border border-[#E6EAF0] p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">1</span>
-                  <span className="text-sm font-bold text-card-foreground uppercase tracking-wider">Set Condition</span>
+                  <span className="w-6 h-6 rounded-full bg-[#6D28D9] text-white text-xs font-black flex items-center justify-center">1</span>
+                  <span className="text-sm font-bold text-[#06194A] uppercase tracking-wider">Set Condition</span>
                   {sub?.ai_condition_score && (
-                    <Badge className="bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/30 text-[10px] ml-auto">
+                    <Badge className="bg-[#EEF0FF] text-[#6D28D9] border border-[#6D28D9]/20 text-[10px] ml-auto">
                       <Camera className="w-3 h-3 mr-1" /> AI Assessment: {formatGrade(sub.ai_condition_score)}
                     </Badge>
                   )}
@@ -1406,16 +1406,16 @@ export default function AppraisalTool() {
                       <button
                         key={cond}
                         onClick={() => setCondition(cond)}
-                        className={`rounded-xl border-2 p-3 text-center transition-all ${
+                        className={`rounded-xl border p-3 text-center transition-all ${
                           isActive
-                            ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md scale-[1.02]"
-                            : "border-border bg-card hover:border-primary/40 hover:shadow-sm"
+                            ? "border-[#6D28D9] bg-[#EEF0FF] shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+                            : "border-[#E6EAF0] bg-white hover:border-[#6D28D9]/40"
                         }`}
                       >
-                        <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                        <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isActive ? "text-[#6D28D9]" : "text-muted-foreground"}`}>
                           {CONDITION_LABELS[cond]}
                         </div>
-                        <div className={`text-lg font-bold ${isActive ? "text-primary" : "text-card-foreground"}`}>
+                        <div className={`text-lg font-bold ${isActive ? "text-[#6D28D9]" : "text-card-foreground"}`}>
                           ${bubbleHigh.toLocaleString()}
                         </div>
                         <div className="text-[10px] font-bold text-muted-foreground mt-0.5">
@@ -1563,7 +1563,7 @@ export default function AppraisalTool() {
                   </button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="mt-2 rounded-lg border border-primary/20 p-3 bg-gradient-to-b from-muted/20 to-transparent">
+                  <div className="mt-2 rounded-xl border border-[#E6EAF0] p-3 bg-[#F4F6FA]">
                     <div className="space-y-0.5">
                       {waterfallBlocks.map(block => (
                         <WaterfallBlockRow key={block.id} block={block} maxVal={maxVal}
@@ -1721,14 +1721,14 @@ export default function AppraisalTool() {
         );
 
         return (
-        <div className="fixed bottom-0 left-0 right-0 z-30 bg-[hsl(var(--primary))] border-t border-primary-foreground/15 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-[#06194A] border-t border-primary-foreground/15 shadow-[0_-6px_24px_-8px_rgba(15,23,42,0.35)]">
           <div className="max-w-7xl mx-auto px-6 py-3 flex flex-wrap items-end gap-x-4 gap-y-2">
             {sub.appraisal_finalized ? (
               <>
                 {/* Finalized state — show ACV + allow adjusting both ACV and Customer Offer */}
                 <div className="shrink-0">
                   <div className="text-[10px] text-primary-foreground/60 font-semibold uppercase tracking-wider">Finalized ACV</div>
-                  <div className="text-2xl font-black text-emerald-400">${finalValue.toLocaleString()}</div>
+                  <div className="text-2xl font-black text-[#5EEAD4]">${finalValue.toLocaleString()}</div>
                   {sub.appraisal_finalized_by && (
                     <div className="text-[10px] text-primary-foreground/50">
                       by {sub.appraisal_finalized_by} · {sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleDateString() : ""}
@@ -1766,7 +1766,7 @@ export default function AppraisalTool() {
 
                 {/* Customer Offer — what's quoted to the buyer */}
                 <div className="flex flex-col gap-1">
-                  <div className="text-[10px] text-emerald-300/80 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                  <div className="text-[10px] text-[#99F6E4]/90 font-semibold uppercase tracking-wider flex items-center gap-1.5">
                     Customer Offer {headroomBadge}
                   </div>
                   <div className="flex items-center gap-2">
@@ -1777,14 +1777,14 @@ export default function AppraisalTool() {
                         value={offerOverride != null ? offerOverride.toLocaleString("en-US") : ""}
                         onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setOfferOverride(raw ? Number(raw) : null); }}
                         placeholder={sub.offered_price ? sub.offered_price.toLocaleString("en-US") : "Quote to customer"}
-                        className="h-10 text-sm font-bold pl-7 bg-emerald-500/10 border-emerald-400/30 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-emerald-400/40"
+                        className="h-10 text-sm font-bold pl-7 bg-[#0D9488]/15 border-[#5EEAD4]/40 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-[#5EEAD4]/40"
                       />
                     </div>
                     <Button
                       onClick={handleSaveCustomerOffer}
                       disabled={savingOffer || (offerOverride == null || offerOverride <= 0)}
                       size="sm"
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg h-10 px-3"
+                      className="bg-[#0D9488] hover:bg-[#0F766E] text-white font-bold rounded-lg h-10 px-3"
                     >
                       {savingOffer ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
                     </Button>
@@ -1838,7 +1838,7 @@ export default function AppraisalTool() {
 
                 {/* Customer Offer input — what gets quoted to the buyer */}
                 <div className="flex flex-col gap-1">
-                  <div className="text-[10px] text-emerald-300/80 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                  <div className="text-[10px] text-[#99F6E4]/90 font-semibold uppercase tracking-wider flex items-center gap-1.5">
                     Customer Offer {headroomBadge}
                   </div>
                   <div className="flex items-center gap-2">
@@ -1849,14 +1849,14 @@ export default function AppraisalTool() {
                         value={offerOverride != null ? offerOverride.toLocaleString("en-US") : ""}
                         onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setOfferOverride(raw ? Number(raw) : null); }}
                         placeholder={sub.offered_price ? sub.offered_price.toLocaleString("en-US") : "Quote to customer"}
-                        className="h-10 text-sm font-bold pl-7 bg-emerald-500/10 border-emerald-400/30 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-emerald-400/40"
+                        className="h-10 text-sm font-bold pl-7 bg-[#0D9488]/15 border-[#5EEAD4]/40 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-[#5EEAD4]/40"
                       />
                     </div>
                     <Button
                       onClick={handleSaveCustomerOffer}
                       disabled={savingOffer || (offerOverride == null || offerOverride <= 0)}
                       size="sm"
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg h-10 px-3"
+                      className="bg-[#0D9488] hover:bg-[#0F766E] text-white font-bold rounded-lg h-10 px-3"
                     >
                       {savingOffer ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
                     </Button>
@@ -1868,7 +1868,7 @@ export default function AppraisalTool() {
                 <Button
                   onClick={handleFinalize}
                   disabled={saving || (acvOverride == null && finalValue <= 0)}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base px-5 h-10 rounded-lg shadow-lg shadow-emerald-500/30"
+                  className="bg-[#0D9488] hover:bg-[#0F766E] text-white font-bold text-base px-5 h-10 rounded-lg shadow-lg shadow-[#0D9488]/30"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Lock className="w-4 h-4 mr-1.5" />}
                   Finalize Appraisal
@@ -1884,8 +1884,8 @@ export default function AppraisalTool() {
       <Dialog open={showFinalizeSuccess} onOpenChange={setShowFinalizeSuccess}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
-              <CheckCircle className="w-6 h-6 text-emerald-500" />
+            <DialogTitle className="flex items-center gap-2 text-[#0F766E]">
+              <CheckCircle className="w-6 h-6 text-[#0D9488]" />
               Appraisal Finalized
             </DialogTitle>
             <DialogDescription>
@@ -1893,9 +1893,9 @@ export default function AppraisalTool() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="rounded-xl bg-emerald-500/10 border-2 border-emerald-500/30 p-5 text-center mb-4">
+            <div className="rounded-2xl bg-[#E6FAF7] border border-[#0D9488]/30 p-5 text-center mb-4">
               <div className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-1">Finalized ACV</div>
-              <div className="text-4xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
+              <div className="text-4xl font-black text-[#0F766E] tracking-tight">
                 ${(acvOverride != null && acvOverride > 0 ? acvOverride : finalValue).toLocaleString()}
               </div>
             </div>
