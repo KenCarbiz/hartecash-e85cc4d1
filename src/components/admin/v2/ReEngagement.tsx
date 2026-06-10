@@ -73,6 +73,23 @@ const ReEngagement = ({ db }: { db: Db }) => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Prefer the authoritative server-side targeting RPC. Fall back to
+      // direct table reads (and again to the legacy column-less query) so
+      // the surface keeps working through any migration ordering.
+      const rpc = await (supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message?: string } | null }>)(
+        "get_reengagement_targets",
+        { p_dealership_id: tenant.dealership_id },
+      );
+      if (!rpc.error && Array.isArray(rpc.data)) {
+        if (!cancelled) {
+          setRows((rpc.data as OfferRow[]) || []);
+          setLoading(false);
+        }
+        return;
+      }
       const base = "id, token, name, vehicle_year, vehicle_make, vehicle_model, offered_price, progress_status, status_updated_at, created_at";
       const q = (cols: string) =>
         supabase
@@ -83,8 +100,6 @@ const ReEngagement = ({ db }: { db: Db }) => {
           .not("progress_status", "in", "(purchase_complete,dead_lead)")
           .order("status_updated_at", { ascending: false })
           .limit(500);
-      // Prefer the real offer_expires_at column; fall back if the migration
-      // isn't applied yet (column missing) so the surface never breaks.
       let res = await q(`${base}, offer_expires_at`);
       if (res.error) res = await q(base);
       if (!cancelled) {
