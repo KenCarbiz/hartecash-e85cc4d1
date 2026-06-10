@@ -121,7 +121,7 @@ function buildCSVContent(rows: SubmissionRow[]): string {
 
 /* ── component ───────────────────────────────────────── */
 
-const ReportsExport = () => {
+const ReportsExport = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { toast } = useToast();
 
   /* state */
@@ -272,7 +272,8 @@ const ReportsExport = () => {
     <div className="space-y-6">
       {/* ── Header ─────────────────────────────────────── */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-        <div className="bg-gradient-to-r from-success/10 via-teal-500/5 to-transparent px-6 py-4 border-b border-border/50">
+        {!embedded && (
+        <div className="bg-gradient-to-r from-success/10 via-accent/5 to-transparent px-6 py-4 border-b border-border/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
               <FileSpreadsheet className="w-5 h-5 text-success" />
@@ -283,6 +284,7 @@ const ReportsExport = () => {
             </div>
           </div>
         </div>
+        )}
 
         <div className="p-6 space-y-6">
           {/* ── Filters Row ──────────────────────────────── */}
