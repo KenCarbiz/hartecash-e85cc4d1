@@ -152,9 +152,6 @@ const BrandFooter = () => {
           <span>
             © {year} {showDealerName ? dealerName : "All rights reserved"}
           </span>
-          <Link to="/reviews" className="hover:text-foreground transition-colors">
-            Customer reviews
-          </Link>
           <Link to="/privacy" className="hover:text-foreground transition-colors">
             Privacy
           </Link>
